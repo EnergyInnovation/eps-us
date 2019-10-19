@@ -60,11 +60,11 @@ Settings = 3
 # Transportation Sector Policies
 ElecPsgrLDVs = (False,"Percent Nonelec Vehicles Shifted to Elec[passenger,LDVs]","ElecPsgrLDVs",[0,1])
 ElecPsgrHDVs = (False,"Percent Nonelec Vehicles Shifted to Elec[passenger,HDVs]","ElecPsgrHDVs",[0,1])
-Feebate = (False,"LDVs Feebate Rate","Feebate",[0,2000])
+Feebate = (False,"LDVs Feebate Rate","Feebate",[0,1])
 FuelEconLDVs = (False,"Percentage Additional Improvement of Fuel Economy Std[LDVs]","FuelEconLDVs",[0,1])
 FuelEconHDVs = (False,"Percentage Additional Improvement of Fuel Economy Std[HDVs]","FuelEconHDVs",[0,.66])
 PsgrTDM = (False,"Fraction of TDM Package Implemented[passenger]","PsgrTDM",[0,1])
-FrgtTDM = (False,"Fraction of TDM Package Implemented[frgt]","FrgtTDM",[0,1])
+FrgtTDM = (False,"Fraction of TDM Package Implemented[freight]","FrgtTDM",[0,1])
 
 # Buildings and Appliances Sector Policies
 RebateHeating = (False,"Boolean Rebate Program for Efficient Components[heating]","RebateHeating",[0,1])

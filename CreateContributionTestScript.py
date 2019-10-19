@@ -21,7 +21,7 @@ OutputVarsFile = "OutputVarsToExport.lst" # The name of the file containing a li
 # Other Settings
 # --------------
 RunName = "MostRecentRun" # The desired name for all runs performed.  Used as the filename for the VDF files that Vensim creates
-EnableOrDisableGroups = "Enable" # Should each group be enabled or disabled in turn?
+EnableOrDisableGroups = "Disable" # Should each group be enabled or disabled in turn?
 								 # Essentially, this is testing either the contribution of a group in the proximity of the
 								 # BAU case ("Enable") or in the proximity of a scenario defined in the non-zero values of
 								 # the policies listed below ("Disable").
@@ -62,11 +62,11 @@ Group = 4
 # Transportation Sector Policies
 ElecPsgrLDVs = (False,"Percent Nonelec Vehicles Shifted to Elec[passenger,LDVs]","ElecPsgrLDVs",[0,1],1)
 ElecPsgrHDVs = (False,"Percent Nonelec Vehicles Shifted to Elec[passenger,HDVs]","ElecPsgrHDVs",[0,1],2)
-Feebate = (False,"LDVs Feebate Rate","Feebate",[0,2000],3)
+Feebate = (False,"LDVs Feebate Rate","Feebate",[0,1],3)
 FuelEconLDVs = (False,"Percentage Additional Improvement of Fuel Economy Std[LDVs]","FuelEconLDVs",[0,1],4)
 FuelEconHDVs = (False,"Percentage Additional Improvement of Fuel Economy Std[HDVs]","FuelEconHDVs",[0,.66],5)
 PsgrTDM = (False,"Fraction of TDM Package Implemented[passenger]","PsgrTDM",[0,1],6)
-FrgtTDM = (False,"Fraction of TDM Package Implemented[frgt]","FrgtTDM",[0,1],106)
+FrgtTDM = (False,"Fraction of TDM Package Implemented[freight]","FrgtTDM",[0,1],106)
 
 # Buildings and Appliances Sector Policies
 RebateHeating = (False,"Boolean Rebate Program for Efficient Components[heating]","RebateHeating",[0,1],7)
