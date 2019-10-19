@@ -149,9 +149,9 @@ IndstEffStdsOtherInd = (False,"Percentage Improvement in Eqpt Efficiency Standar
 CroplandMgmt = (False,"Fraction of Abatement from Cropland Management Achieved","CroplandMgmt",[0,1])
 RiceCultivMeasures = (False,"Fraction of Abatement from Rice Cultivation Measures Achieved","RiceCultivMeasures",[0,1])
 LivestockMeasures = (False,"Fraction of Abatement from Livestock Measures Achieved","LivestockMeasures",[0,1])
-SetAsides = (False,"Fraction of Abatement from Forest Set Asides Achieved","SetAsides",[0,1])
-AfforestAndReforest = (False,"Fraction of Abatement from Afforestation and Reforestation Achieved","AfforestAndReforest",[0,.45])
-ImprForestMgmt = (False,"Fraction of Abatement from Improved Forest Management Achieved","ImprForestMgmt",[0,1])
+SetAsides = (False,"Fraction of Forest Set Asides Achieved","SetAsides",[0,1])
+AfforestAndReforest = (False,"Fraction of Afforestation and Reforestation Achieved","AfforestAndReforest",[0,1])
+ImprForestMgmt = (False,"Fraction of Improved Forest Management Achieved","ImprForestMgmt",[0,1])
 
 # District Heat Policies
 ConvertNonCHPHeat = (False,"Fraction of Non CHP Heat Production Converted to CHP","ConvertNonCHPHeat",[0,1])
