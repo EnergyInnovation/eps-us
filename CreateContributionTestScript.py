@@ -3,8 +3,9 @@
 # Developed by Jeffrey Rissman
 #
 # This is a Python script that is used to generate a Vensim command script.
-# The Vensim command script will perform one run with all enabled policies
-# and one run with each defined subset (or "group") within the set of enabled
+# The Vensim command script will perform one run with all selected policies
+# enabled, one run with all policies disabled (a BAU run),
+# and one run with each defined subset (or "group") within the set of selected
 # policies turned off or turned on (depending on a user setting in this script).
 
 
@@ -25,7 +26,8 @@ EnableOrDisableGroups = "Disable" # Should each group be enabled or disabled in 
 								 # Essentially, this is testing either the contribution of a group in the proximity of the
 								 # BAU case ("Enable") or in the proximity of a scenario defined in the non-zero values of
 								 # the policies listed below ("Disable").
-
+PolicySchedule = 1 # The number of the policy implementation schedule file to be used (in InputData/plcy-schd/FoPITY)
+								 
 
 # Index definitions
 # -----------------
@@ -257,6 +259,10 @@ def PerformRunsWithEnabledGroups():
 				if len(EnabledPolicies) > 0:
 					EnabledPolicies += ", "
 				EnabledPolicies += Policy[ShortName]
+
+		# We include a SETVAL instruction to select the correct policy implementation schedule file
+		f.write("SIMULATE>SETVAL|Policy Implementation Schedule Selector=" + str(PolicySchedule) + "\n")
+		
 		# We perform our run and log the output
 		f.write("MENU>RUN|O\n")
 		f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|+!||||:")
@@ -264,6 +270,10 @@ def PerformRunsWithEnabledGroups():
 		f.write("\tEnabledPolicies=" + EnabledPolicies + "\n\n")
 	
 	# Finally, we do a run with all of the policy groups enabled (a full policy case run)
+	
+	# We include a SETVAL instruction to select the correct policy implementation schedule file
+	f.write("SIMULATE>SETVAL|Policy Implementation Schedule Selector=" + str(PolicySchedule) + "\n")
+	
 	f.write("MENU>RUN|O\n")
 	f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|+!||||:")
 	f.write("\tEnabledPolicyGroup=All")
@@ -274,6 +284,10 @@ def PerformRunsWithDisabledGroups():
 	# First, we do a run with all of the groups enabled
 	for Policy in Policies:
 		f.write("SIMULATE>SETVAL|" + Policy[LongName] + "=" + str(Policy[Settings][1]) + "\n")
+	
+	# We include a SETVAL instruction to select the correct policy implementation schedule file
+	f.write("SIMULATE>SETVAL|Policy Implementation Schedule Selector=" + str(PolicySchedule) + "\n")
+	
 	f.write("MENU>RUN|O\n")
 	f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|||||:")
 	f.write("\tDisabledPolicyGroup=None")
@@ -294,6 +308,10 @@ def PerformRunsWithDisabledGroups():
 				if len(DisabledPolicies) > 0:
 					DisabledPolicies += ", "
 				DisabledPolicies += Policy[ShortName]
+		
+		# We include a SETVAL instruction to select the correct policy implementation schedule file
+		f.write("SIMULATE>SETVAL|Policy Implementation Schedule Selector=" + str(PolicySchedule) + "\n")
+		
 		# We perform our run and log the output
 		f.write("MENU>RUN|O\n")
 		f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|+!||||:")
