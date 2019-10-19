@@ -14,7 +14,7 @@
 ModelFile = "EPS.mdl" # The name of the Vensim model file (typically with .mdl or .vpm extension)
 OutputScript = "GeneratedDataLoggingScript.cmd" # The desired filename of the Vensim command script to be generated
 OutputVarsFile = "OutputVarsToExport.lst" # The name of the file containing a list of variables to be included in the RunResultsFile
-SettingsFiles = ["","Scenario_CPP.cin","Scenario_EI.cin","Scenario_CO2eMin.cin"]
+SettingsFiles = ["","Scenario_NDC.cin","Scenario_EI.cin","Scenario_CO2eMin.cin"]
 	# This is the list of settings files to be tested, with .cin extensions.
 	# Include a blank entry (e.g. "") to include BAU case.
 
