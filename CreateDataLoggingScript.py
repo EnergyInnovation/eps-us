@@ -14,7 +14,7 @@
 ModelFile = "EPS.mdl" # The name of the Vensim model file (typically with .mdl or .vpm extension)
 OutputScript = "GeneratedDataLoggingScript.cmd" # The desired filename of the Vensim command script to be generated
 OutputVarsFile = "OutputVarsToExport.lst" # The name of the file containing a list of variables to be included in the RunResultsFile
-SettingsFiles = ["","Scenario_NDC.cin","Scenario_EI.cin","Scenario_CO2eMin.cin"]
+SettingsFiles = ["","Scenario_NDC.cin","Scenario_NetZero.cin"]
 	# This is the list of settings files to be tested, with .cin extensions.
 	# Include a blank entry (e.g. "") to include BAU case.
 
@@ -42,6 +42,17 @@ for SettingsFile in SettingsFiles:
 	f.write("MENU>RUN|O\n")
 	f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|||||:")
 	f.write(RunName)
+	f.write("\n")
+
+	# We instruct Vensim to delete the .vdf file, to prevent it from getting picked up by
+	# sync software, such as DropBox or Google Drive.  If sync software locks the file,
+	# Vensim won't be able to overwrite it on the next model run, ruining the batch.
+	# Due to file format changes in Vensim 8, the command needs a different file extenstion
+	# depending on whether this script is run in Vensim 7 or Vensim 8.
+	# Vensim 7:
+	f.write("FILE>DELETE|" + RunName + ".vdf")
+	# Vensim 8:
+	# f.write("FILE>DELETE|" + RunName + ".vdfx")
 	f.write("\n\n")
 
 # Since Vensim fails to clear the savelist entry in the program after script execution, we need to do it here
