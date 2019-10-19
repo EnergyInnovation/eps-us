@@ -100,7 +100,7 @@ RetrofittingEnvelope = (False,"Fraction of Commercial Components Replaced Annual
 RetrofittingLighting = (False,"Fraction of Commercial Components Replaced Annually due to Retrofitting Policy[lighting]","RetrofittingLighting",[0,.034],22)
 RetrofittingAppliances = (False,"Fraction of Commercial Components Replaced Annually due to Retrofitting Policy[appliances]","RetrofittingAppliances",[0,.034],23)
 RetrofittingOther = (False,"Fraction of Commercial Components Replaced Annually due to Retrofitting Policy[other component]","RetrofittingOther",[0,.034],24)
-DistSolarCarveOut = (False,"Min Fraction of Buildings Elec Demand to be Met by Distributed Solar PV","DistSolarCarveOut",[0,.04],25)
+DistSolarCarveOut = (False,"Min Fraction of Total Elec Demand to be Met by Distributed Solar PV","DistSolarCarveOut",[0,.04],25)
 DistSolarSubsidy = (False,"Perc Subsidy for Distributed Solar PV Capacity","DistSolarSubsidy",[0,.5],26)
 
 # Electricity Supply Sector Policies
@@ -112,11 +112,11 @@ SubsidySolarPV = (False,"Subsidy for Elec Production by Fuel[solar PV es]","Subs
 SubsidySolarTherm = (False,"Subsidy for Elec Production by Fuel[solar thermal es]","SubsidySolarTherm",[0,35],32)
 SubsidyBiomass = (False,"Subsidy for Elec Production by Fuel[biomass es]","SubsidyBiomass",[0,35],33)
 EarlyRetCoal = (False,"Annual Additional Capacity Retired due to Early Retirement Policy[coal es]","EarlyRetCoal",[0,10000],34)
-EarlyRetNatGas = (False,"Annual Additional Capacity Retired due to Early Retirement Policy[natural gas es]","EarlyRetNatGas",[0,10000],35)
+EarlyRetNatGas = (False,"Annual Additional Capacity Retired due to Early Retirement Policy[natural gas nonpeaker es]","EarlyRetNatGas",[0,10000],35)
 EarlyRetNuclear = (False,"Annual Additional Capacity Retired due to Early Retirement Policy[nuclear es]","EarlyRetNuclear",[0,10000],36)
 EarlyRetHydro = (False,"Annual Additional Capacity Retired due to Early Retirement Policy[hydro es]","EarlyRetHydro",[0,10000],37)
 LifeExtCoal = (False,"Generation Capacity Lifetime Extension[coal es]","LifeExtCoal",[0,20],38)
-LifeExtNatGas = (False,"Generation Capacity Lifetime Extension[natural gas es]","LifeExtNatGas",[0,20],39)
+LifeExtNatGas = (False,"Generation Capacity Lifetime Extension[natural gas nonpeaker es]","LifeExtNatGas",[0,20],39)
 LifeExtNuclear = (False,"Generation Capacity Lifetime Extension[nuclear es]","LifeExtNuclear",[0,20],40)
 LifeExtHydro = (False,"Generation Capacity Lifetime Extension[hydro es]","LifeExtHydro",[0,20],41)
 LifeExtWind = (False,"Generation Capacity Lifetime Extension[wind es]","LifeExtWind",[0,20],42)
