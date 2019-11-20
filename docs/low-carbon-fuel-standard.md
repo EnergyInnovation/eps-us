@@ -1,0 +1,9 @@
+---
+layout: page
+title:  "Low Carbon Fuel Standard"
+---
+A low carbon fuel standard (LCFS) is a flexible, performance standard requiring the substitution of lower carbon transportation fuels for conventional petroleum-based fuels such as gasoline and diesel.  LCFS standards are typically expressed as the percentage improvement required in carbon intensity compare to the carbon intensity of petroleum fuels compared to a start year.  This requires establishing the carbon intensity of substitutes for petroleum fuels in order to evaluate the overall carbon intensity of transportation fuels.
+
+LCFS design should embrace the principles of fuel and technology neutrality in order to pursue the lowest cost carbon reductions across options.  Cost-effectiveness should also be enhanced through allowing credit trading. With credit trading, fuel providers that exceed the standard receive credits they can sell to other companies.  Credits can be banked over time to offer additional flexibility and to encourage early over-compliance.  In light of unknowns about future technical potential and cost, a cost cap on LCFS credits is recommended.  With a cost cap, the government makes available unlimited credits at the level of the cost cap in order to ensure prices do not rise above that level.
+
+An LCFS is best designed to take into account the full lifecycle of greenhouse gas emissions for jurisdictions able to develop the necessary technical capacity or willing to borrow from existing programs.  This means that emission reductions are possible from “well to wheels,” i.e., from the energy source all the way to use in-vehicle, enabling exploitation of emission reduction opportunities throughout the supply chain.

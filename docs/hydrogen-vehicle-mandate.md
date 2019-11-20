@@ -1,0 +1,7 @@
+---
+layout: page
+title:  "Hydrogen Vehicle Sales Mandate"
+---
+Hydrogen fuel cell vehicles (FCVs) are an emerging technology, and hydrogen charging infrastructure is not yet widespread in any country (though Japan is making great strides).  As such, it may be best for programs to start by targeting specific use cases for hydrogen vehicles, such as corporate fleet vehicles or city buses with access to a dedicated hydrogen charging station in a central depot, garage, or holding facility.  Government may purchase and use FCVs, such as a city deciding to acquire FCV buses to supplement an existing urban bus fleet.  These purchases are often made to investigate technology options for government services and are not made on the basis of least cost (i.e. the cheapest bus).  As such, they can be represented as a hydrogen vehicle sales target or mandate.
+
+With sufficient access to hydrogen charging infrastructure, the process of owning, driving, and refueling a hydrogen FCV is similar to the process for a conventional gasoline or diesel vehicle.  As such, the main barrier to hydrogen FCV adoption may be the availability of charging stations.  Policies similar to those used to promote [electric vehicle charging station deployment](ev-charger-deployment.html) may be used, except hydrogen stations have similaries to gas stations and are unlikely to be located inside homes.

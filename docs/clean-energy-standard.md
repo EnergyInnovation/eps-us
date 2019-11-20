@@ -1,0 +1,9 @@
+---
+layout: page
+title:  "Clean Energy Standard"
+---
+A Clean Energy Standard (CES) mandates a specific percentage of electricity to be produced from non-emitting sources each year.  A CES should stress continuous improvement by regularly ratcheting up the proportion of qualifying sources, beginning with a relatively modest increase over existing levels and steadily increasing over time.  This time horizon—best when 20 years or longer—provides time to incorporate non-emitting into the grid, helps overcome planning challenges, and sets clear goals for investors.  Programs should also specify that qualifying sources must be new or very recently built to avoid windfalls to existing generation.  CES programs guarantee a minimum market size relative to demand, reducing uncertainty for manufacturers and investors, and increasing potential returns for research and development in non-emitting technologies. 
+
+Clean energy standards should reward performance, not investment, by allowing for a broad set of resources to qualify, and allowing the market to determine which technologies are built and can achieve compliance at the lowest cost.  Similarly, the best-designed policies make bid pricing transparent.  Care must be taken to set targets at the appropriate level for the market so as to avoid rewarding inefficient generation in cases where the target is too large relative to resource availability. 
+
+Sometimes, CES requirements are met by electricity suppliers through a system of tradable clean energy credits (CECs), with each MWh of generation assigned a unique tracking number.  Using a credit system allows suppliers lacking adequate qualifying resources to purchase credits rather than investing in non-emitting generation of their own, helping to minimize the overall cost of compliance.  Non-complying suppliers should be penalized well above the market credit value to provide a sufficient incentive for participation.

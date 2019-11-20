@@ -1,0 +1,9 @@
+---
+layout: page
+title:  "Demand Response"
+---
+Demand response (DR) operates by calling on utility customers—typically large commercial or industrial users—to temporarily reduce loads, thus reducing peak system demand.  Demand response can also be used to provide “up-regulation,” which means that loads can be called into action during times of excess electricity supply.  Typically, utilities will contract with large customers using interruptible load rates coupled with payments for load curtailment.  During a peak load event, utilities can either call DR customers and ask them to reduce load, or alternatively, can remotely disable systems that will reduce demand.  Spread across multiple large customers—or many smaller customers—DR can reduce peak demand, mitigate the need for new capacity, and build a more flexible power system.  Because the cost of paying utility customers to curtail load in certain hours is significantly less than the marginal cost of building and operating a new plant, DR can often meet demand requirements at much lower cost than expanding capacity.
+
+DR is part of a larger portfolio of resources called demand-side management (DSM) programs. Supply planning should also include DSM programs as an option to meet capacity at lower cost than building new generation sources.  DSM programs include end-use energy efficiency, demand response, load management programs, and tariffs to reduce or shift peak demand and make the load profile more flexible.
+
+*For a more detailed discussion, see [the applicable chapter](https://www.energypolicy.solutions/policies/complementary-electricity-policies/) of Designing Climate Solutions, our book on smart energy and climate policy design.*
