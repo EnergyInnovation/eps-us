@@ -467,11 +467,9 @@ f = open(OutputScript, 'w')
 f.write('SPECIAL>LOADMODEL|"' + ModelFile + '"\n')
 f.write("SIMULATE>RUNNAME|" + RunName + "\n")
 
-# The following options may be useful in certain cases, but they cause Vensim to
-# produce an output window for each simulation that acknowledges the completion of
-# the command.  These output windows accumulate over the course of many runs and
-# cause slow-downs (and potentially crashes).  Therefore, these lines are usually
-# best left commented out, unless you are doing only a few runs.
+# The following options may be useful in certain cases, but they may slow Vensim down
+# or increase the odds that Vensim crashes during execution of a batch of runs (though
+# it is hard to tell for sure).  These lines are usually best left commented out.
 # f.write("SPECIAL>NOINTERACTION\n")
 # f.write("SIMULATE>SAVELIST|" + OutputVarsFile + "\n")
 f.write("\n")
@@ -534,9 +532,9 @@ for PolicySettingCombination in PolicySettingCombinations:
 	# Due to file format changes in Vensim 8, the command needs a different file extenstion
 	# depending on whether this script is run in Vensim 7 or Vensim 8.
 	# Vensim 7:
-	f.write("FILE>DELETE|" + RunName + ".vdf")
+	# f.write("FILE>DELETE|" + RunName + ".vdf")
 	# Vensim 8:
-	# f.write("FILE>DELETE|" + RunName + ".vdfx")
+	f.write("FILE>DELETE|" + RunName + ".vdfx")
 	f.write("\n\n")
 
 # We are done writing the Vensim command script and therefore close the file.

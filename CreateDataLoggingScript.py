@@ -50,9 +50,9 @@ for SettingsFile in SettingsFiles:
 	# Due to file format changes in Vensim 8, the command needs a different file extenstion
 	# depending on whether this script is run in Vensim 7 or Vensim 8.
 	# Vensim 7:
-	f.write("FILE>DELETE|" + RunName + ".vdf")
+	# f.write("FILE>DELETE|" + RunName + ".vdf")
 	# Vensim 8:
-	# f.write("FILE>DELETE|" + RunName + ".vdfx")
+	f.write("FILE>DELETE|" + RunName + ".vdfx")
 	f.write("\n\n")
 
 # Since Vensim fails to clear the savelist entry in the program after script execution, we need to do it here
