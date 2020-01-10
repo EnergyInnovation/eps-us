@@ -24,6 +24,7 @@ This page tracks updates that have been made with each version of the Energy Pol
 	* Fixed R&D levers to refer to LPG and hydrogen vehicles instead of nonroad vehicles
 	* Improve subscript usage in energy use total variables
 	* Improve accuracy of assignment of process emissions abatement to correct pollutants
+	* Corrections to hydrogen production efficiencies in hydgn/HPEbP
 
 ### **2.0.0 - Oct 7, 2019**
 
