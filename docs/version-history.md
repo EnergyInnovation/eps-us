@@ -4,6 +4,27 @@ title:	"Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **2.1.0 - Jan 13, 2019**
+
+* Note that starting with this release, Vensim 8 or later (64-bit) is required to run the Energy Policy Simulator. Update your copy of Vensim Model Reader for free from [Ventana Systems' website](https://vensim.com/free-download/).*
+
+* New Features
+	* New Sector: Geoengineering.  Currently, the geoengineering sector includes one technology, direct air capture (DAC), and its associated policy.
+	* Implemented cost-driven power plant retrofitting (such as coal-to-gas) and fuel type shifting (for instance, between crude oil, heavy fuel oil, and diesel)
+	* New Policy: Subsidize electricity capacity construction
+* Data Updates
+	* Data on BAU industrial process emissions, abatement potentials, and costs (indst/BPEiC, indst/PERAC) has been updated to the latest sources, greatly streamlined, and can be toggled to select any country, facilitating EPS adaptations.  Industrial process emissions policy levers updated accordingly.
+	* Updated to latest data in elec/CCAMC (from EIA, LBNL, and NREL)
+	* Updated to latest GREET model data in fuels/BFPIaE, fuels/PEI, web-app/BCF
+	* Updated data in endo-learn/BGSaWC, elec/EoPPFTSwFP, elec/ARpUIiRC, elec/BDSBaPCF, and fuels/BS
+* Bug Fixes and Minor Improvements
+	* Added graphs of GHG emissions, energy-related CO2 emissions, and energy use per unit BAU GDP.  These graphs not shown in the U.S. web interface by default but are available in Vensim and can be exposed in the web interface in regional EPS adaptations.
+	* The model now tracks fuel-cost-driven changes in cargo distance transported down to the vehicle technology (engine type) level
+	* Certain multi-line graphs changed to stacked area, to take advantage of new support for mixed-sign data series in stacked area charts
+	* Fixed R&D levers to refer to LPG and hydrogen vehicles instead of nonroad vehicles
+	* Improve subscript usage in energy use total variables
+	* Improve accuracy of assignment of process emissions abatement to correct pollutants
+
 ### **2.0.0 - Oct 7, 2019**
 
 * New Hydrogen Supply Sector
