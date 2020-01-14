@@ -4,7 +4,7 @@ title:	"Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
-### **2.1.0 - Jan 13, 2019**
+### **2.1.0 - Jan 16, 2019**
 
 * Note that starting with this release, Vensim 8 or later (64-bit) is required to run the Energy Policy Simulator. Update your copy of Vensim Model Reader for free from [Ventana Systems' website](https://vensim.com/free-download/).*
 
@@ -12,6 +12,7 @@ This page tracks updates that have been made with each version of the Energy Pol
 	* New Sector: Geoengineering.  Currently, the geoengineering sector includes one technology, direct air capture (DAC), and its associated policy.
 	* Implemented cost-driven power plant retrofitting (such as coal-to-gas) and fuel type shifting (for instance, between crude oil, heavy fuel oil, and diesel)
 	* New Policy: Subsidize electricity capacity construction
+	* CSV Export Tool now can build its own file list, removing the need for manual updates to this tool (except for changes in number or names of custom policy schedules)
 * Data Updates
 	* Data on BAU industrial process emissions, abatement potentials, and costs (indst/BPEiC, indst/PERAC) has been updated to the latest sources, greatly streamlined, and can be toggled to select any country, facilitating EPS adaptations.  Industrial process emissions policy levers updated accordingly.
 	* Updated to latest data in elec/CCAMC (from EIA, LBNL, and NREL)
