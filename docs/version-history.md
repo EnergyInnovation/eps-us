@@ -4,9 +4,9 @@ title:	"Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
-### **2.1.0 - Jan 16, 2019**
+### **2.1.0 - Jan 21, 2019**
 
-* Note that starting with this release, Vensim 8 or later (64-bit) is required to run the Energy Policy Simulator. Update your copy of Vensim Model Reader for free from [Ventana Systems' website](https://vensim.com/free-download/).*
+Note that starting with this release, Vensim 8 or later (64-bit) is required to run the Energy Policy Simulator. Update your copy of Vensim Model Reader for free from [Ventana Systems' website](https://vensim.com/free-download/).
 
 * New Features
 	* New Sector: Geoengineering.  Currently, the geoengineering sector includes one technology, direct air capture (DAC), and its associated policy.
