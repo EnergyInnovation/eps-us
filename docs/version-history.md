@@ -26,6 +26,7 @@ Note that starting with this release, Vensim 8 or later (64-bit) is required to 
 	* Improve subscript usage in energy use total variables
 	* Improve accuracy of assignment of process emissions abatement to correct pollutants
 	* Corrections to hydrogen production efficiencies in hydgn/HPEbP
+	* The policy to change electricity imports is now subscripted by electricity source (power plant type) in the foreign country
 
 ### **2.0.0 - Oct 7, 2019**
 
