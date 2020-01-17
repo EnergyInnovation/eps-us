@@ -50,7 +50,7 @@ Links to doc pages are followed by a number indicating the version of the EPS co
   * [Carbon Capture and Sequestration](ccs.html) - 1.1.4
   * [Fuels](fuels.html) - 1.1.4
   * [Cumulators](cumulators.html) - 1.1.4
-  * [Cost Outputs](cost-outputs.html) - 1.1.4
+  * [Cost Outputs](cost-outputs.html) - 2.1.0
   * [Additional Outputs](additional-outputs.html) - 1.1.4
   * [Web Application Support Variables](web-app-support.html) - 1.1.4
   * [Debugging Assistance](debugging-assistance.html) - 1.1.4
