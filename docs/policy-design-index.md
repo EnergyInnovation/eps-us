@@ -140,4 +140,6 @@ title: Policy Descriptions
 
 #### R&D Policies
 
+[Direct Air Capture](direct-air-capture.html)
+
 [Research and Development](research-and-development.html)
