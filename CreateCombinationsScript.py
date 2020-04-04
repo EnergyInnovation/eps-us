@@ -302,7 +302,8 @@ PotentialPolicies = (
 	(False,"Fraction of Hydrogen Production Pathways Shifted","Shift Hydrogen Production to Electrolysis",[0,1],"Hydrogen Electrolysis"),
 
 	# Cross-Sector Policies
-	(False,"Fraction of Potential Additional CCS Achieved","Carbon Capture and Sequestration",[0,1],"Carbon Capture and Sequestration"),
+	(False,"Fraction of Potential Additional CCS Achieved[electricity sector]","Carbon Capture and Sequestration - Electricity Sector",[0,1],"Carbon Capture and Sequestration"),
+	(False,"Fraction of Potential Additional CCS Achieved[industry sector]","Carbon Capture and Sequestration - Industry Sector",[0,1],"Carbon Capture and Sequestration"),
 	(False,"Additional Carbon Tax Rate[transportation sector]","Carbon Tax - Transportation Sector",[0,300],"Carbon Tax"),
 	(False,"Additional Carbon Tax Rate[electricity sector]","Carbon Tax - Electricity Sector",[0,300],"Carbon Tax"),
 	(False,"Additional Carbon Tax Rate[residential buildings sector]","Carbon Tax - Residential Bldg Sector",[0,300],"Carbon Tax"),
