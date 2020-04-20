@@ -17,7 +17,7 @@ Before downloading the model, you should install a copy of Vensim Model Reader. 
 
 Once Model Reader is installed, you should download the EPS by clicking the button below.
 
-<p><a href="https://github.com/Energy-Innovation/eps-us/archive/2.1.0.zip" class="btn">Download the Energy Policy Simulator</a></p>
+<p><a href="https://github.com/Energy-Innovation/eps-us/archive/2.1.1.zip" class="btn">Download the Energy Policy Simulator</a></p>
 
 A compressed archive (.zip file) will be downloaded named "eps-" followed by the model's current version number.  It is necessary to extract the files from the archive before running the model.  On Windows, .zip archives look similar to folders, and you can double-click on them to open them and even open the files inside them.  **This does not mean you have extracted the files from the archive.**  (Vensim cannot write files into a .zip archive, so Vensim will not be able to run the model properly, as this process generates an output file containing the run results.)  To extract the files, right-click on the .zip archive and select "Extract All..." then click "Extract" in the dialogue box that appears.  This will generate an uncompressed folder containing the model files.  You should now delete the .zip archive, so that there is no possibility of accidentally running the copy of the model that is still located inside the .zip archive.
 

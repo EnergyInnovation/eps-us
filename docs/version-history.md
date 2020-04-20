@@ -4,6 +4,24 @@ title:	"Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **2.1.1 - Apr 27, 2020**
+
+* Major Improvements
+	* Added capability to simulate COVID-19 recession impacts, adjustable in the web interface via a policy-like slider and implementation schedule.  This simulates effects of exogenous GDP changes on demand for energy, energy-using services, and products.  It can be adapted for different countries or reconfigured to represent other economic recessions (or booms) via updated input data.
+	* The CCS policy lever has been overhauled.  It now is set in terms of a percentage of CO<sub>2</sub> captured, is subscripted by sector (electricity and industry sectors), and can be used to capture industrial process CO<sub>2</sub> and CO<sub>2</sub> from fuel burned to power the CCS process itself.
+* Minor Improvements
+	* Added graphs of industry sector energy-related CO<sub>2</sub>e emissions by industry and by pollutant to web interface
+	* Vehicle maintenance costs are now included and are considered in vehicle technology selection
+	* When new peaker plants are built to meet peak electricity demand, cost-based allocation is used instead of allocating proportinally to existing peaker capacity
+	* Output graph definitions in WebAppData now have an include/exclude flag, and localizing units is easier thanks to a new unit selection tab
+	* Added three *X*-per-unit-BAU-GDP output graphs to WebAppData (unflagged for U.S.) to support regions where this metric is commonly used, such as India
+	* Non-country multipliers for industrial process emissions (indst/BPEiC and indst/PERAC) now accept time series values
+	* Updated input data in elec/ARpUIiRC, elec/DRC, elec/DRCo, elec/CCaMC, and trans/BVTStL
+* Bug Fixes
+	* Added missing non-country multiplier for cement process emissions (in indst/BPEiC and indst/PERAC)
+	* Nuclear lifetime extension policy is no longer shown in U.S. web app because BAU data already incorporate extensions (to 80-year operating lifetimes) except where a plant is known to be closing sooner
+	* Labor now correctly receives a share of revenues from building retrofitting and from distributed solar deployment
+
 ### **2.1.0 - Jan 21, 2020**
 
 Note that starting with this release, Vensim 8 or later (64-bit) is required to run the Energy Policy Simulator. Update your copy of Vensim Model Reader for free from [Ventana Systems' website](https://vensim.com/free-download/).
