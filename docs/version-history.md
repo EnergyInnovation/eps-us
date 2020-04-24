@@ -17,7 +17,7 @@ This page tracks updates that have been made with each version of the Energy Pol
 	* Added three *X*-per-unit-BAU-GDP output graphs to WebAppData (unflagged for U.S.) to support regions where this metric is commonly used, such as India
 	* Non-country multipliers for industrial process emissions (indst/BPEiC and indst/PERAC) now accept time series values
 	* Updated input data in elec/ARpUIiRC, elec/DRC, elec/DRCo, elec/CCaMC, and trans/BVTStL
-	* The relationship between increases in transmission capacity and the usable fraction of flexibility points is now governed by an input variable (elec/ETCCwTC) rather than a hard-coded relationship, giving the EPS the flexibility to better represent renewables deployment and curtailment in power systems facing varying degrees of transmission constraints
+	* The relationship between increases in transmission capacity and the usable fraction of flexibility points is now governed by an input variable (elec/EoTCCwTC) rather than a hard-coded relationship, giving the EPS the flexibility to better represent renewables deployment and curtailment in power systems facing varying degrees of transmission constraints
 * Bug Fixes
 	* Added missing non-country multiplier for cement process emissions (in indst/BPEiC and indst/PERAC)
 	* Nuclear lifetime extension policy is no longer shown in U.S. web app because BAU data already incorporate extensions (to 80-year operating lifetimes) except where a plant is known to be closing sooner
