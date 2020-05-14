@@ -24,7 +24,7 @@ Links to doc pages are followed by a number indicating the version of the EPS co
   * [How the EPS Avoids Double Counting Policy Effects](how-the-eps-avoids-double-counting.html) - 1.4.3
   * [Comparing Results to Reality or Other Models](comparing-results.html) - 1.4.2
   * [Notes on Carbon Tax Revenue Use](carbon-tax-revenue-use.html) - 1.4.2
-  * [Evaluating Policy Packages' Financial Effects](evaluating-package-financials.htm) - 2.1.0
+  * [Evaluating Policy Packages' Financial Effects](evaluating-package-financials.html) - 2.1.0
   * [Notes on Unit Conversion](unit-conversion.html) - 1.4.3
 * About the Web Interface
   * [Web Interface Tutorial](online-model-tutorial.html) - 1.4.3
