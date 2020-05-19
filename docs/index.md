@@ -70,5 +70,5 @@ Links to doc pages are followed by a number indicating the version of the EPS co
 * [Acknowledgement of Contributors and Reviewers](acknowledgement.html) - 1.4.3
 * [Contact Us](contact.html) - 1.1.1
 * [Software License Information](software-license.html) - 1.0.0
-* [Version History](version-history.html) - 2.0.0
+* [Version History](version-history.html) - 2.1.1
   * [Archived Model Releases](archived-releases.html) - 2.0.0
