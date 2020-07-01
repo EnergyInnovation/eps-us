@@ -1,4 +1,124 @@
 {UTF-8}
+Change in Revenue from Buildings Sector Subsidies and Rebates by Entity[Cash Flow Entity\
+		]=
+	SUM(
+	  Subsidy Paid on Distributed Solar Capacity[Building Type!]
+	  * FoBObE Fraction of Buildings Owned by Entity[Cash Flow Entity,Building Type!]
+	)
+	+ SUM(
+	    Building Component Rebate Amount Paid[Building Type!,Building Component!]
+	    * FoBObE Fraction of Buildings Owned by Entity[Cash Flow Entity,Building Type!]
+	  )
+	~	$
+	~		|
+
+Buildings Sector Change in Nonenergy Expenditures by Entity[Cash Flow Entity] :EXCEPT:\
+		    [government]=
+	SUM(
+	  Change in Amount Spent on Building Components[Building Type!,Building Component!]
+	  * FoBObE Fraction of Buildings Owned by Entity[Cash Flow Entity,Building Type!]
+	)
+	+ SUM(
+	    Change in Amount Spent on Distributed Solar Capacity[Building Type!]
+	    * FoBObE Fraction of Buildings Owned by Entity[Cash Flow Entity,Building Type!]
+	  )
+	
+	+ SUM(Building Component Rebate Amount Paid by Entity[Building Type!,Building Component\
+		!,Cash Flow Entity]) ~~|
+Buildings Sector Change in Nonenergy Expenditures by Entity[government]=
+	SUM(
+	  Change in Amount Spent on Building Components[Building Type!,Building Component!]
+	  * FoBObE Fraction of Buildings Owned by Entity[government,Building Type!]
+	)
+	+ SUM(
+	    Change in Amount Spent on Distributed Solar Capacity[Building Type!]
+	    * FoBObE Fraction of Buildings Owned by Entity[government,Building Type!]
+	  )
+	+ SUM(Subsidy Paid on Distributed Solar Capacity[Building Type!])
+	
+	{+ SUM(Building Component Rebate Amount Paid by Entity[Building Type!,Building Component!,government])}
+	~	$
+	~		|
+
+RPbBCT Rebate Percentage by Building Component Type[Building Type,Building Component]\
+		=
+	GET DIRECT CONSTANTS(
+	   'InputData/bldgs/RPbBCT/RPbBCT.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Dmnl
+	~		|
+
+Building Component Rebate Amount Paid[Building Type,Building Component]=
+	Amount Spent on Rebate Qualifying Components[Building Type,Building Component]
+	* RPbBCT Rebate Percentage by Building Component Type[Building Type,Building Component\
+		]
+	* Boolean Rebate Program for Efficient Components This Year[Building Type,Building Component\
+		]
+	~	$
+	~		|
+
+Building Component Rebate Amount Paid by Entity[Building Type,Building Component,Cash Flow Entity\
+		] :EXCEPT: [Building Type,Building Component,energy supplier cash flow entity]=
+	0 ~~|
+Building Component Rebate Amount Paid by Entity[Building Type,Building Component,electricity suppliers\
+		]=
+	Building Component Rebate Amount Paid[Building Type,Building Component]
+	* ZIDZ(
+	    Components Energy Use[Building Type,electricity bf,Building Component],
+	
+	    SUM(Components Energy Use[Building Type,Building Fuel!,Building Component])
+	  ) ~~|
+Building Component Rebate Amount Paid by Entity[Building Type,Building Component,coal suppliers\
+		]=
+	Building Component Rebate Amount Paid[Building Type,Building Component]
+	* ZIDZ(
+	    Components Energy Use[Building Type,hard coal bf,Building Component],
+	
+	    SUM(Components Energy Use[Building Type,Building Fuel!,Building Component])
+	  ) ~~|
+Building Component Rebate Amount Paid by Entity[Building Type,Building Component,natural gas and petroleum suppliers\
+		]=
+	Building Component Rebate Amount Paid[Building Type,Building Component]
+	* ZIDZ(
+	    Components Energy Use[Building Type,natural gas bf,Building Component]
+	    + Components Energy Use[Building Type,petroleum diesel bf,Building Component]
+	    + Components Energy Use[Building Type,kerosene bf,Building Component]
+	    + Components Energy Use[Building Type,heavy or residual fuel oil bf,Building Component\
+		]
+	    + Components Energy Use[Building Type,LPG propane or butane bf,Building Component\
+		],
+	
+	    SUM(Components Energy Use[Building Type,Building Fuel!,Building Component])
+	  ) ~~|
+Building Component Rebate Amount Paid by Entity[Building Type,Building Component,biomass and biofuel suppliers\
+		]=
+	Building Component Rebate Amount Paid[Building Type,Building Component]
+	* ZIDZ(
+	    Components Energy Use[Building Type,biomass bf,Building Component],
+	
+	    SUM(Components Energy Use[Building Type,Building Fuel!,Building Component])
+	  ) ~~|
+Building Component Rebate Amount Paid by Entity[Building Type,Building Component,other energy suppliers\
+		]=
+	Building Component Rebate Amount Paid[Building Type,Building Component]
+	* ZIDZ(
+	    Components Energy Use[Building Type,heat bf,Building Component]
+	    + Components Energy Use[Building Type,hydrogen bf,Building Component],
+	
+	    SUM(Components Energy Use[Building Type,Building Fuel!,Building Component])
+	  )
+	~	$
+	~		|
+
+Amount Spent on Rebate Qualifying Components[Building Type,Building Component]=
+	Amount Spent on Building Components[Building Type,Building Component]
+	* Fraction New Components by Quality Level[Building Type,Building Component,rebate qualifying\
+		]
+	~	$
+	~		|
+
 Total Change in Tax Revenues=
 	QUANTUM(
 	  Buildings Subtotal Change in Tax Revenues
@@ -642,29 +762,6 @@ Change in Amount Spent on EV Chargers=
 	~	$
 	~		|
 
-Buildings Sector Change in Nonenergy Expenditures by Entity[Cash Flow Entity] :EXCEPT:\
-		       [government]=
-	SUM(
-	  Change in Amount Spent on Building Components[Building Type!,Building Component!]
-	  * FoBObE Fraction of Buildings Owned by Entity[Cash Flow Entity,Building Type!]
-	)
-	+ SUM(
-	    Change in Amount Spent on Distributed Solar Capacity[Building Type!]
-	    * FoBObE Fraction of Buildings Owned by Entity[Cash Flow Entity,Building Type!]
-	  ) ~~|
-Buildings Sector Change in Nonenergy Expenditures by Entity[government]=
-	SUM(
-	  Change in Amount Spent on Building Components[Building Type!,Building Component!]
-	  * FoBObE Fraction of Buildings Owned by Entity[government,Building Type!]
-	)
-	+ SUM(
-	    Change in Amount Spent on Distributed Solar Capacity[Building Type!]
-	    * FoBObE Fraction of Buildings Owned by Entity[government,Building Type!]
-	  )
-	+ SUM(Subsidy Paid on Distributed Solar Capacity[Building Type!])
-	~	$
-	~		|
-
 BAU Cost per Unit Distributed Solar Capacity=
 	Start Year Cost per Unit Distributed Solar Capacity
 	* BAU This Year Distributed Solar Capacity Costs as Fraction of First Year Capacity Costs
@@ -726,13 +823,14 @@ SYSoCCtaSC Start Year Share of Distributed Solar Costs that are Soft Costs=
 
 Buildings Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC Code] :EXCEPT:\
 		   [ISIC 27],[ISIC 41T43]=
-	Change in Revenue from Distributed Solar Cap Subsidy by Entity[nonenergy industries]
+	Change in Revenue from Buildings Sector Subsidies and Rebates by Entity[nonenergy industries\
+		]
 	* Percent of Output by Nonenergy Industry ISIC Code[ISIC Code] ~~|
 Buildings Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC 27 {Electrical equipment}\
 		]=
 	SUM(Change in Amount Spent on Distributed Solar Capacity[Building Type!])
 	
-	+ Change in Revenue from Distributed Solar Cap Subsidy by Entity[nonenergy industries\
+	+ Change in Revenue from Buildings Sector Subsidies and Rebates by Entity[nonenergy industries\
 		]
 	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 27] ~~|
 Buildings Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC 41T43 {Construction}\
@@ -740,7 +838,7 @@ Buildings Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC 41T43 {C
 	SUM(Change in Amount Spent on Building Components[Building Type!,Building Component!\
 		])
 	
-	+ Change in Revenue from Distributed Solar Cap Subsidy by Entity[nonenergy industries\
+	+ Change in Revenue from Buildings Sector Subsidies and Rebates by Entity[nonenergy industries\
 		]
 	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 41T43]
 	~	$
@@ -749,7 +847,8 @@ Buildings Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC 41T43 {C
 Buildings Sector Change in Revenue by Entity[government]=
 	SUM(Change in Buildings Fuel Taxes Paid[Building Type!,Building Component!,Building Fuel\
 		!])
-	+ Change in Revenue from Distributed Solar Cap Subsidy by Entity[government] ~~|
+	+ Change in Revenue from Buildings Sector Subsidies and Rebates by Entity[government\
+		] ~~|
 Buildings Sector Change in Revenue by Entity[nonenergy industries]=
 	SUM(Buildings Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC Code!])
 	
@@ -757,32 +856,34 @@ Buildings Sector Change in Revenue by Entity[nonenergy industries]=
 	{change in revenue from distributed solar capacity subsidies is already included in Buildings Sector Change in Nonenergy Industry Revenue by ISIC Code}\
 		 ~~|
 Buildings Sector Change in Revenue by Entity[labor and consumers]=
-	Change in Revenue from Distributed Solar Cap Subsidy by Entity[labor and consumers] ~~|
+	Change in Revenue from Buildings Sector Subsidies and Rebates by Entity[labor and consumers\
+		] ~~|
 Buildings Sector Change in Revenue by Entity[foreign entities]=
 	0 ~~|
 Buildings Sector Change in Revenue by Entity[electricity suppliers]=
 	Buildings Sector Change in Fuel Industry Cash Flow[electricity bf]
-	+ Change in Revenue from Distributed Solar Cap Subsidy by Entity[electricity suppliers\
+	+ Change in Revenue from Buildings Sector Subsidies and Rebates by Entity[electricity suppliers\
 		] ~~|
 Buildings Sector Change in Revenue by Entity[coal suppliers]=
 	Buildings Sector Change in Fuel Industry Cash Flow[hard coal bf]
-	+ Change in Revenue from Distributed Solar Cap Subsidy by Entity[coal suppliers] ~~|
+	+ Change in Revenue from Buildings Sector Subsidies and Rebates by Entity[coal suppliers\
+		] ~~|
 Buildings Sector Change in Revenue by Entity[natural gas and petroleum suppliers]=
 	Buildings Sector Change in Fuel Industry Cash Flow[natural gas bf]
 	+ Buildings Sector Change in Fuel Industry Cash Flow[petroleum diesel bf]
 	+ Buildings Sector Change in Fuel Industry Cash Flow[kerosene bf]
 	+ Buildings Sector Change in Fuel Industry Cash Flow[heavy or residual fuel oil bf]
 	+ Buildings Sector Change in Fuel Industry Cash Flow[LPG propane or butane bf]
-	+ Change in Revenue from Distributed Solar Cap Subsidy by Entity[natural gas and petroleum suppliers\
+	+ Change in Revenue from Buildings Sector Subsidies and Rebates by Entity[natural gas and petroleum suppliers\
 		] ~~|
 Buildings Sector Change in Revenue by Entity[biomass and biofuel suppliers]=
 	Buildings Sector Change in Fuel Industry Cash Flow[biomass bf]
-	+ Change in Revenue from Distributed Solar Cap Subsidy by Entity[biomass and biofuel suppliers\
+	+ Change in Revenue from Buildings Sector Subsidies and Rebates by Entity[biomass and biofuel suppliers\
 		] ~~|
 Buildings Sector Change in Revenue by Entity[other energy suppliers]=
 	Buildings Sector Change in Fuel Industry Cash Flow[heat bf]
 	+ Buildings Sector Change in Fuel Industry Cash Flow[hydrogen bf]
-	+ Change in Revenue from Distributed Solar Cap Subsidy by Entity[other energy suppliers\
+	+ Change in Revenue from Buildings Sector Subsidies and Rebates by Entity[other energy suppliers\
 		]
 	~	$
 	~		|
@@ -2079,14 +2180,6 @@ Electricity Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC Code]=
 	
 	+ Change in Demand Response Costs by Recipient[nonenergy industries]
 	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC Code]
-	~	$
-	~		|
-
-Change in Revenue from Distributed Solar Cap Subsidy by Entity[Cash Flow Entity]=
-	SUM(
-	  Subsidy Paid on Distributed Solar Capacity[Building Type!]
-	  * FoBObE Fraction of Buildings Owned by Entity[Cash Flow Entity,Building Type!]
-	)
 	~	$
 	~		|
 
@@ -23700,14 +23793,7 @@ Boolean Rebate Program for Efficient Components[Building Component]=
 	0,	{appliances}
 	0	{other component}
 	~	Dmnl [0,1]
-	~	Typical rebate amounts represented by this policy lever may be $50-$100 for a \
-		clothes washer and $25-50 for a dishwasher or refrigerator.  From:
-		Datta, S. and Gulati, S.
-		2011
-		Utility Rebates for ENERGY STAR Appliances: Are They Effective?
-		http://www.cepe.ethz.ch/publications/workingPapers/CEPE_WP81.pdf
-		Page 7, first paragraph
-	|
+	~		|
 
 CtIEPpUESoS Cost to Implement Efficiency Policy per Unit Energy Saved or Shifted[Industry Energy Efficiency Policy\
 		]:=
@@ -27312,7 +27398,7 @@ Vensim updates the values of stock variables based on inflows/outflows at the en
 1,243,867,3,0,0,0,0,0,64,0,-1--1--1,,1|(2160,564)|
 1,244,246,63,4,0,0,22,0,0,0,-1--1--1,,1|(6941,326)|
 1,245,246,71,100,0,0,22,0,0,0,-1--1--1,,1|(6815,326)|
-11,246,47420,6877,326,6,9,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+11,246,47552,6877,326,6,9,34,3,0,0,1,0,0,0,0,0,0,0,0,0
 10,247,New Generation Capacity,6877,357,65,22,40,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,248,New Generation Capacity,6236,-651,59,22,8,3,0,4,-1,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
 10,249,New Generation Capacity,2536,1448,65,22,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
@@ -28971,7 +29057,7 @@ The portion of non-energy industries' revenue going to labor (e.g. payments to t
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Buildings - Main
-$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,120,0
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,100,0
 10,1,Components Potential Energy Use,2888,1619,75,22,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 10,2,Fraction New Components by Quality Level,3122,677,84,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 10,3,PEUDfSbQL Perc E Use Difference from Std by Quality Level,2574,677,69,33,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
@@ -29384,150 +29470,171 @@ Since input BCEU data may not be perfectly in sync with input lifetime (CL) data
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Buildings - Cash Flow
-$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,80,0
-10,1,Amount Spent on Building Components,1765,-665,76,22,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,2,Amount Spent on Buildings Fuels,178,-788,62,22,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,3,BAU Buildings Fuel Cost per Unit Energy,178,-468,79,19,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,4,BAU Amount Spent on Buildings Fuels,178,-576,73,22,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,5,3,4,0,0,0,0,0,64,0,-1--1--1,,1|(178,-513)|
-10,6,Buildings Sector Change in Fuel Industry Cash Flow,398,-678,68,28,8,131,0,20,0,0,0,0,-1--1--1,255-192-128,|12|I|0-0-0,0,0,0,0,0,0
-10,7,FoBObE Fraction of Buildings Owned by Entity,178,988,94,22,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,8,Total Tax Paid on Buildings Fuels,607,-788,64,22,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,9,BAU Total Tax Paid on Buildings Fuels,607,-576,74,22,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,10,Change in Buildings Fuel Taxes Paid,607,-678,70,22,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,11,9,10,0,0,0,0,0,64,0,-1--1--1,,1|(607,-620)|
-1,12,8,10,0,0,0,0,0,64,0,-1--1--1,,1|(607,-740)|
-1,13,10,6,0,0,0,0,0,64,0,-1--1--1,,1|(509,-678)|
-10,14,Change in Amount Spent on Building Components,1765,-556,85,19,8,3,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
-10,15,Change in Amount Spent on Buildings Fuels,178,-678,83,19,8,3,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
-10,16,Percent Change in Component Cost due to Carbon Tax,2013,-665,86,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,17,16,1,0,0,0,0,0,64,0,-1--1--1,,1|(1891,-665)|
-10,18,ECiCpCU Embedded Carbon in Components per Currency Unit,2013,-785,98,31,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,19,18,16,0,0,0,0,0,64,0,-1--1--1,,1|(2013,-732)|
-10,20,Buildings Fuel Cost per Unit Energy,178,-902,72,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,21,20,2,0,0,0,0,0,64,0,-1--1--1,,1|(178,-853)|
-10,22,EoCPwEU Elasticity of Component Price wrt Energy Use,1473,-665,83,31,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,23,Percent Change in Components Energy Use,1473,-785,90,22,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,24,23,1,0,0,0,0,0,64,0,-1--1--1,,1|(1612,-727)|
-12,25,0,2011,-377,328,23,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
-The rebate program being represented is funded by utilities, but it saves them money overall.  Due to this fact, as well as a lack of data, we do not assign the rebate program any cash flow impact.
-10,26,BASoBC BAU Amount Spent on Building Components,1765,-445,78,34,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-1,27,22,1,0,0,0,0,0,64,0,-1--1--1,,1|(1615,-665)|
-12,28,0,373,-985,335,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,90,0
+10,1,Amount Spent on Building Components,1373,-1038,76,22,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,2,Amount Spent on Buildings Fuels,-214,-1161,62,22,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,3,BAU Buildings Fuel Cost per Unit Energy,-214,-841,79,19,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,4,BAU Amount Spent on Buildings Fuels,-214,-949,73,22,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,5,3,4,0,0,0,0,0,64,0,-1--1--1,,1|(-214,-886)|
+10,6,Buildings Sector Change in Fuel Industry Cash Flow,6,-1051,68,28,8,131,0,20,0,0,0,0,-1--1--1,255-192-128,|12|I|0-0-0,0,0,0,0,0,0
+10,7,FoBObE Fraction of Buildings Owned by Entity,-214,615,94,22,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,8,Total Tax Paid on Buildings Fuels,215,-1161,64,22,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,9,BAU Total Tax Paid on Buildings Fuels,215,-949,74,22,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,10,Change in Buildings Fuel Taxes Paid,215,-1051,70,22,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,11,9,10,0,0,0,0,0,64,0,-1--1--1,,1|(215,-993)|
+1,12,8,10,0,0,0,0,0,64,0,-1--1--1,,1|(215,-1113)|
+1,13,10,6,0,0,0,0,0,64,0,-1--1--1,,1|(116,-1051)|
+10,14,Change in Amount Spent on Building Components,1373,-929,85,19,8,3,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
+10,15,Change in Amount Spent on Buildings Fuels,-214,-1051,83,19,8,3,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
+10,16,Percent Change in Component Cost due to Carbon Tax,1621,-1038,86,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,17,16,1,0,0,0,0,0,64,0,-1--1--1,,1|(1499,-1038)|
+10,18,ECiCpCU Embedded Carbon in Components per Currency Unit,1621,-1158,98,31,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,19,18,16,0,0,0,0,0,64,0,-1--1--1,,1|(1621,-1105)|
+10,20,Buildings Fuel Cost per Unit Energy,-214,-1275,72,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,21,20,2,0,0,0,0,0,64,0,-1--1--1,,1|(-214,-1226)|
+10,22,EoCPwEU Elasticity of Component Price wrt Energy Use,1081,-1038,83,31,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,23,Percent Change in Components Energy Use,1081,-1158,90,22,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,24,23,1,0,0,0,0,0,64,0,-1--1--1,,1|(1220,-1100)|
+10,25,BASoBC BAU Amount Spent on Building Components,1373,-818,78,34,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+1,26,22,1,0,0,0,0,0,64,0,-1--1--1,,1|(1223,-1038)|
+12,27,0,-19,-1358,335,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Change in Fuel Costs and Taxes
-12,29,0,1588,-985,779,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+12,28,0,1196,-1358,779,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Change in Building Component Costs and Taxes
-10,30,New Components Potential Energy Use after Fuel Shifting,1473,-897,75,30,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,31,30,23,0,0,0,0,0,64,0,-1--1--1,,1|(1473,-844)|
-10,32,Additional Carbon Tax Rate This Year,2250,-665,69,19,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-1,33,32,16,0,0,0,0,0,64,0,-1--1--1,,1|(2147,-665)|
-10,34,RnD Building Capital Cost Perc Reduction This Year,1765,-785,78,34,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-1,35,34,1,0,0,0,0,0,64,0,-1--1--1,,1|(1765,-726)|
-10,36,Components Energy Use,398,-788,46,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,37,36,2,0,0,0,0,0,128,0,-1--1--1,,1|(303,-788)|
-10,38,Buildings Fuel Tax Amount per Unit Energy,607,-902,90,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,39,BAU Buildings Fuel Tax Amount per Unit Energy,607,-468,90,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,40,38,8,0,0,0,0,0,128,0,-1--1--1,,1|(607,-853)|
-1,41,36,8,0,0,0,0,0,128,0,-1--1--1,,1|(487,-788)|
-1,42,39,9,0,0,0,0,0,128,0,-1--1--1,,1|(607,-513)|
-12,43,0,716,-183,678,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,29,New Components Potential Energy Use after Fuel Shifting,1081,-1270,75,30,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,30,29,23,0,0,0,0,0,64,0,-1--1--1,,1|(1081,-1217)|
+10,31,Additional Carbon Tax Rate This Year,1858,-1038,69,19,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+1,32,31,16,0,0,0,0,0,64,0,-1--1--1,,1|(1755,-1038)|
+10,33,RnD Building Capital Cost Perc Reduction This Year,1373,-1158,78,34,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+1,34,33,1,0,0,0,0,0,64,0,-1--1--1,,1|(1373,-1099)|
+10,35,Components Energy Use,6,-1161,46,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,36,35,2,0,0,0,0,0,128,0,-1--1--1,,1|(-89,-1161)|
+10,37,Buildings Fuel Tax Amount per Unit Energy,215,-1275,90,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,38,BAU Buildings Fuel Tax Amount per Unit Energy,215,-841,90,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,39,37,8,0,0,0,0,0,128,0,-1--1--1,,1|(215,-1226)|
+1,40,35,8,0,0,0,0,0,128,0,-1--1--1,,1|(94,-1161)|
+1,41,38,9,0,0,0,0,0,128,0,-1--1--1,,1|(215,-886)|
+12,42,0,324,-556,678,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Change in Distributed Solar Costs and Subsidy
-10,44,CpUDSC Cost per Unit Distributed Solar Capacity,162,-3,84,19,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,45,Perc Subsidy for Distributed Solar PV Capacity,1298,112,60,32,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,46,Subsidy Paid on Distributed Solar Capacity,1076,112,58,28,8,3,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
-1,47,45,46,0,0,0,0,0,128,0,-1--1--1,,1|(1193,112)|
-10,48,Buildings Sector Change in Nonenergy Industry Revenue by ISIC Code,1335,873,97,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0,0,0,0,0,0,0
-1,49,2,15,0,0,0,0,0,128,0,-1--1--1,,1|(178,-738)|
-1,50,4,15,0,0,0,0,0,128,0,-1--1--1,,1|(178,-621)|
-1,51,15,6,0,0,0,0,0,128,0,-1--1--1,,1|(289,-678)|
-1,52,1,14,0,0,0,0,0,128,0,-1--1--1,,1|(1765,-616)|
-1,53,26,14,0,0,0,0,0,128,0,-1--1--1,,1|(1765,-501)|
-10,54,BAU This Year Increase in Distributed Electricity Source Capacity,778,312,83,29,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,55,Start Year Cost per Unit Distributed Solar Capacity,162,112,84,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,56,44,55,0,0,0,0,0,128,1,-1--1--1,,1|(162,48)|
-10,57,Cost per Unit Distributed Solar Capacity,513,-3,54,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,58,BAU Cost per Unit Distributed Solar Capacity,513,215,84,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,59,55,57,0,0,0,0,0,128,0,-1--1--1,,1|(333,57)|
-1,60,55,58,0,0,0,0,0,128,0,-1--1--1,,1|(331,162)|
-10,61,BAU Amount Spent on Distributed Solar Capacity,778,215,84,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,62,57,64,0,0,0,0,0,128,0,-1--1--1,,1|(638,-3)|
-1,63,54,61,0,0,0,0,0,128,0,-1--1--1,,1|(778,266)|
-10,64,Amount Spent on Distributed Solar Capacity,778,-3,56,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,65,58,61,0,0,0,0,0,128,0,-1--1--1,,1|(639,215)|
-10,66,Cost per Unit Distributed Solar Capacity,1076,215,87,24,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,67,66,46,0,0,0,0,0,128,0,-1--1--1,,1|(1076,173)|
-10,68,Change in Amount Spent on Distributed Solar Capacity,778,112,97,23,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|192-192-192,0,0,0,0,0,0
-1,69,61,68,0,0,0,0,0,128,0,-1--1--1,,1|(778,173)|
-1,70,64,68,0,0,0,0,0,128,0,-1--1--1,,1|(778,50)|
-10,71,Amount Spent on Retrofitting Buildings,1473,-556,66,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,72,One Year,1081,-498,45,9,8,130,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,73,This Year Increase in Distributed Electricity Source Capacity,778,-112,73,28,8,130,0,7,0,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,74,73,64,0,0,0,0,0,128,0,-1--1--1,,1|(778,-64)|
-10,75,This Year Increase in Distributed Electricity Source Capacity,1076,-3,72,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,76,75,46,0,0,0,0,0,128,0,-1--1--1,,1|(1076,48)|
-10,77,BAU Components Energy Use,398,-576,65,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,78,77,9,0,0,0,0,0,128,0,-1--1--1,,1|(491,-576)|
-1,79,77,4,0,0,0,0,0,128,0,-1--1--1,,1|(299,-576)|
-12,80,0,2235,-766,101,50,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,43,CpUDSC Cost per Unit Distributed Solar Capacity,-230,-376,84,19,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,44,Perc Subsidy for Distributed Solar PV Capacity,906,-261,60,32,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,45,Subsidy Paid on Distributed Solar Capacity,684,-261,58,28,8,3,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
+1,46,44,45,0,0,0,0,0,128,0,-1--1--1,,1|(801,-261)|
+10,47,Buildings Sector Change in Nonenergy Industry Revenue by ISIC Code,943,500,97,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0,0,0,0,0,0,0
+1,48,2,15,0,0,0,0,0,128,0,-1--1--1,,1|(-214,-1111)|
+1,49,4,15,0,0,0,0,0,128,0,-1--1--1,,1|(-214,-994)|
+1,50,15,6,0,0,0,0,0,128,0,-1--1--1,,1|(-103,-1051)|
+1,51,1,14,0,0,0,0,0,128,0,-1--1--1,,1|(1373,-989)|
+1,52,25,14,0,0,0,0,0,128,0,-1--1--1,,1|(1373,-874)|
+10,53,BAU This Year Increase in Distributed Electricity Source Capacity,386,-61,83,29,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,54,Start Year Cost per Unit Distributed Solar Capacity,-230,-261,84,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,55,43,54,0,0,0,0,0,128,1,-1--1--1,,1|(-230,-325)|
+10,56,Cost per Unit Distributed Solar Capacity,121,-376,54,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,57,BAU Cost per Unit Distributed Solar Capacity,121,-158,84,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,58,54,56,0,0,0,0,0,128,0,-1--1--1,,1|(-59,-316)|
+1,59,54,57,0,0,0,0,0,128,0,-1--1--1,,1|(-61,-211)|
+10,60,BAU Amount Spent on Distributed Solar Capacity,386,-158,84,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,61,56,63,0,0,0,0,0,128,0,-1--1--1,,1|(245,-376)|
+1,62,53,60,0,0,0,0,0,128,0,-1--1--1,,1|(386,-107)|
+10,63,Amount Spent on Distributed Solar Capacity,386,-376,56,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,64,57,60,0,0,0,0,0,128,0,-1--1--1,,1|(246,-158)|
+10,65,Cost per Unit Distributed Solar Capacity,684,-158,87,24,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,66,65,45,0,0,0,0,0,128,0,-1--1--1,,1|(684,-200)|
+10,67,Change in Amount Spent on Distributed Solar Capacity,386,-261,97,23,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|192-192-192,0,0,0,0,0,0
+1,68,60,67,0,0,0,0,0,128,0,-1--1--1,,1|(386,-200)|
+1,69,63,67,0,0,0,0,0,128,0,-1--1--1,,1|(386,-323)|
+10,70,Amount Spent on Retrofitting Buildings,1081,-929,66,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,71,One Year,689,-871,45,9,8,130,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,72,This Year Increase in Distributed Electricity Source Capacity,386,-485,73,28,8,130,0,7,0,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,73,72,63,0,0,0,0,0,128,0,-1--1--1,,1|(386,-437)|
+10,74,This Year Increase in Distributed Electricity Source Capacity,684,-376,72,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,75,74,45,0,0,0,0,0,128,0,-1--1--1,,1|(684,-325)|
+10,76,BAU Components Energy Use,6,-949,65,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,77,76,9,0,0,0,0,0,128,0,-1--1--1,,1|(98,-949)|
+1,78,76,4,0,0,0,0,0,128,0,-1--1--1,,1|(-93,-949)|
+12,79,0,1843,-1139,101,50,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 We assume embedded carbon is energy-related CO2, and thus is not affected by the control levers governing whether the carbon tax applies to process emissions or non-CO2 gases.
-10,81,Energy Use Reduction from Retrofitting Preexisting Buildings,933,-665,80,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,82,Last Year Energy Use Reduction from Retrofitting Preexisting Buildings,1201,-665,86,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,83,81,82,0,0,0,0,0,128,0,-1--1--1,,1|(1057,-665)|
-10,84,Energy Use Reduction from Buildings Retrofit This Year,1201,-556,71,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,85,81,84,0,0,0,0,0,128,0,-1--1--1,,1|(1059,-613)|
-1,86,82,84,0,0,0,0,0,128,0,-1--1--1,,1|(1201,-618)|
-10,87,BRESaC Retrofitting Cost per Unit Energy Saved,1473,-445,68,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,88,87,71,0,0,0,0,0,128,0,-1--1--1,,1|(1473,-497)|
-1,89,84,71,0,0,0,0,0,128,0,-1--1--1,,1|(1332,-556)|
-1,90,26,1,1,0,0,0,0,128,0,-1--1--1,,1|(1675,-553)|
-10,91,Hypothetical BAU New Components Energy Use after Fuel Shifting,1201,-785,82,30,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,92,91,23,0,0,0,0,0,128,0,-1--1--1,,1|(1326,-785)|
-12,93,0,571,525,518,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,80,Energy Use Reduction from Retrofitting Preexisting Buildings,541,-1038,80,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,81,Last Year Energy Use Reduction from Retrofitting Preexisting Buildings,809,-1038,86,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,82,80,81,0,0,0,0,0,128,0,-1--1--1,,1|(665,-1038)|
+10,83,Energy Use Reduction from Buildings Retrofit This Year,809,-929,71,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,84,80,83,0,0,0,0,0,128,0,-1--1--1,,1|(667,-986)|
+1,85,81,83,0,0,0,0,0,128,0,-1--1--1,,1|(809,-991)|
+10,86,BRESaC Retrofitting Cost per Unit Energy Saved,1081,-818,68,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,87,86,70,0,0,0,0,0,128,0,-1--1--1,,1|(1081,-870)|
+1,88,83,70,0,0,0,0,0,128,0,-1--1--1,,1|(940,-929)|
+1,89,25,1,1,0,0,0,0,128,0,-1--1--1,,1|(1283,-926)|
+10,90,Hypothetical BAU New Components Energy Use after Fuel Shifting,809,-1158,82,30,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,91,90,23,0,0,0,0,0,128,0,-1--1--1,,1|(934,-1158)|
+12,92,0,179,152,518,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Allocating Changes in Expenditures
-10,94,Buildings Sector Change in Energy Expenditures by Entity,423,988,76,31,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-10,95,Buildings Sector Change in Nonenergy Expenditures by Entity,945,988,75,28,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-10,96,Change in Amount Spent on Buildings Fuels,423,871,83,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,97,7,94,0,0,0,0,0,128,0,-1--1--1,,1|(303,988)|
-10,98,Change in Amount Spent on Building Components,945,724,84,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,99,Change in Amount Spent on Distributed Solar Capacity,945,796,95,23,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,100,FoBObE Fraction of Buildings Owned by Entity,698,988,89,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,101,100,95,0,0,0,0,0,128,0,-1--1--1,,1|(821,988)|
-1,102,99,95,0,0,0,0,0,128,0,-1--1--1,,1|(945,882)|
-1,103,98,95,0,0,0,0,0,128,0,-1--1--1,,1|(945,844)|
-1,104,96,94,0,0,0,0,0,128,0,-1--1--1,,1|(423,916)|
-10,105,Subsidy Paid on Distributed Solar Capacity,945,871,91,22,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,106,105,95,0,0,0,0,0,128,0,-1--1--1,,1|(945,919)|
-12,107,0,1588,525,417,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,93,Buildings Sector Change in Energy Expenditures by Entity,31,615,76,31,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+10,94,Buildings Sector Change in Nonenergy Expenditures by Entity,553,615,75,28,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+10,95,Change in Amount Spent on Buildings Fuels,31,498,83,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,96,7,93,0,0,0,0,0,128,0,-1--1--1,,1|(-89,615)|
+10,97,Change in Amount Spent on Building Components,553,351,84,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,98,Change in Amount Spent on Distributed Solar Capacity,553,423,95,23,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,99,FoBObE Fraction of Buildings Owned by Entity,306,615,89,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,100,99,94,0,0,0,0,0,128,0,-1--1--1,,1|(429,615)|
+1,101,98,94,0,0,0,0,0,128,0,-1--1--1,,1|(553,509)|
+1,102,97,94,0,0,0,0,0,128,0,-1--1--1,,1|(553,471)|
+1,103,95,93,0,0,0,0,0,128,0,-1--1--1,,1|(31,543)|
+10,104,Subsidy Paid on Distributed Solar Capacity,553,498,91,22,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,105,104,94,0,0,0,0,0,128,0,-1--1--1,,1|(553,546)|
+12,106,0,1196,152,417,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Allocating Changes in Revenue
-10,108,Buildings Sector Change in Revenue by Entity,1589,873,78,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-10,109,Buildings Sector Change in Fuel Industry Cash Flow,1836,731,91,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,110,Change in Buildings Fuel Taxes Paid,1589,731,67,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,111,109,108,0,0,0,0,0,128,0,-1--1--1,,1|(1718,798)|
-1,112,48,108,0,0,0,0,0,128,0,-1--1--1,,1|(1464,873)|
-10,113,Subsidy Paid on Distributed Solar Capacity,1836,1001,90,21,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,114,113,119,0,0,0,0,0,128,0,-1--1--1,,1|(1713,1001)|
-10,115,FoBObE Fraction of Buildings Owned by Entity,1589,1115,89,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,116,115,119,0,0,0,0,0,128,0,-1--1--1,,1|(1589,1069)|
-10,117,Percent of Output by Nonenergy Industry ISIC Code,1335,1001,73,28,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,118,117,48,0,0,0,0,0,128,0,-1--1--1,,1|(1335,944)|
-10,119,Change in Revenue from Distributed Solar Cap Subsidy by Entity,1589,1001,78,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,120,119,108,0,0,0,0,0,128,0,-1--1--1,,1|(1589,939)|
-1,121,119,48,0,0,0,0,0,128,0,-1--1--1,,1|(1468,940)|
-10,122,Percent of Output by Nonenergy Industry ISIC Code,178,1167,74,28,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,123,Buildings Sector Change in Nonenergy Industry Expenditures by ISIC Code,423,1167,92,28,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0,0,0,0,0,0,0
-1,124,94,123,0,0,0,0,0,128,0,-1--1--1,,1|(423,1072)|
-1,125,122,123,0,0,0,0,0,128,0,-1--1--1,,1|(285,1167)|
-1,126,95,123,0,0,0,0,0,128,0,-1--1--1,,1|(694,1073)|
-1,127,71,1,0,0,0,0,0,128,0,-1--1--1,,1|(1607,-606)|
-10,128,Change in Amount Spent on Building Components,1335,630,84,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,129,128,48,0,0,0,0,0,128,0,-1--1--1,,1|(1335,740)|
-10,130,Change in Amount Spent on Distributed Solar Capacity,1335,731,101,22,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,131,130,48,0,0,0,0,0,128,0,-1--1--1,,1|(1335,792)|
-10,132,This Year Distributed Solar Capacity Costs as Fraction of First Year Capacity Costs,513,-112,102,28,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,133,BAU This Year Distributed Solar Capacity Costs as Fraction of First Year Capacity Costs,513,312,116,28,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,134,132,57,0,0,0,0,0,128,0,-1--1--1,,1|(513,-64)|
-1,135,133,58,0,0,0,0,0,128,0,-1--1--1,,1|(513,267)|
-1,136,110,108,0,0,0,0,0,128,0,-1--1--1,,1|(1589,795)|
+10,107,Buildings Sector Change in Revenue by Entity,1197,500,78,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+10,108,Buildings Sector Change in Fuel Industry Cash Flow,1444,358,91,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,109,Change in Buildings Fuel Taxes Paid,1197,358,67,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,110,108,107,0,0,0,0,0,128,0,-1--1--1,,1|(1326,425)|
+1,111,47,107,0,0,0,0,0,128,0,-1--1--1,,1|(1072,500)|
+10,112,Subsidy Paid on Distributed Solar Capacity,1444,628,90,21,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,113,112,118,0,0,0,0,0,128,0,-1--1--1,,1|(1325,628)|
+10,114,FoBObE Fraction of Buildings Owned by Entity,1197,742,89,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,115,114,118,0,0,0,0,0,128,0,-1--1--1,,1|(1197,697)|
+10,116,Percent of Output by Nonenergy Industry ISIC Code,943,628,73,28,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,117,116,47,0,0,0,0,0,128,0,-1--1--1,,1|(943,571)|
+10,118,Change in Revenue from Buildings Sector Subsidies and Rebates by Entity,1197,628,85,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,119,118,107,0,0,0,0,0,128,0,-1--1--1,,1|(1197,566)|
+1,120,118,47,0,0,0,0,0,128,0,-1--1--1,,1|(1075,566)|
+10,121,Percent of Output by Nonenergy Industry ISIC Code,-214,794,74,28,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,122,Buildings Sector Change in Nonenergy Industry Expenditures by ISIC Code,31,794,92,28,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0,0,0,0,0,0,0
+1,123,93,122,0,0,0,0,0,128,0,-1--1--1,,1|(31,699)|
+1,124,121,122,0,0,0,0,0,128,0,-1--1--1,,1|(-107,794)|
+1,125,94,122,0,0,0,0,0,128,0,-1--1--1,,1|(301,700)|
+1,126,70,1,0,0,0,0,0,128,0,-1--1--1,,1|(1215,-979)|
+10,127,Change in Amount Spent on Building Components,943,257,84,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,128,127,47,0,0,0,0,0,128,0,-1--1--1,,1|(943,367)|
+10,129,Change in Amount Spent on Distributed Solar Capacity,943,358,101,22,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,130,129,47,0,0,0,0,0,128,0,-1--1--1,,1|(943,419)|
+10,131,This Year Distributed Solar Capacity Costs as Fraction of First Year Capacity Costs,121,-485,102,28,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,132,BAU This Year Distributed Solar Capacity Costs as Fraction of First Year Capacity Costs,121,-61,116,28,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,133,131,56,0,0,0,0,0,128,0,-1--1--1,,1|(121,-437)|
+1,134,132,57,0,0,0,0,0,128,0,-1--1--1,,1|(121,-106)|
+1,135,109,107,0,0,0,0,0,128,0,-1--1--1,,1|(1197,422)|
+12,136,0,1475,-556,390,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+Calculating Efficient Component Rebate Payments
+10,137,Fraction New Components by Quality Level,1206,-322,94,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+12,138,0,1350,-489,262,33,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+All rebate-qualifying components receive the rebate, not just the ones where the purchase decision was altered due to the rebate policy, to capture the "free riders" who get the rebate but would have bought the efficient component anyway.
+10,139,Amount Spent on Building Components,1496,-413,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,140,Amount Spent on Rebate Qualifying Components,1496,-322,81,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,141,139,140,0,0,0,0,0,128,0,-1--1--1,,1|(1496,-374)|
+1,142,137,140,0,0,0,0,0,128,0,-1--1--1,,1|(1350,-322)|
+10,143,Boolean Rebate Program for Efficient Components This Year,1210,-216,109,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,144,RPbBCT Rebate Percentage by Building Component Type,1758,-217,73,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,145,Building Component Rebate Amount Paid,1498,-217,67,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,146,140,145,0,0,0,0,0,128,0,-1--1--1,,1|(1496,-276)|
+1,147,144,145,0,0,0,0,0,128,0,-1--1--1,,1|(1632,-217)|
+1,148,143,145,0,0,0,0,0,128,0,-1--1--1,,1|(1368,-216)|
+10,149,Building Component Rebate Amount Paid by Entity,553,270,94,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,150,Building Component Rebate Amount Paid,280,351,71,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,151,Components Energy Use,275,270,46,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,152,151,149,0,0,0,0,0,128,0,-1--1--1,,1|(383,270)|
+1,153,150,149,0,0,0,0,0,128,0,-1--1--1,,1|(407,312)|
+10,155,Building Component Rebate Amount Paid,1443,725,71,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,157,149,94,0,0,0,0,0,128,0,-1--1--1,,1|(553,431)|
+1,158,155,118,0,0,0,0,0,128,0,-1--1--1,,1|(1339,684)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Industry - Main
@@ -32729,39 +32836,39 @@ Conversion Factors for Output Graphs
 10,64,Grams per Thousand Metric Tons Pollutant,-5036,2018,82,22,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 1,65,63,41,0,0,0,0,0,64,0,-1--1--1,,1|(-5039,1711)|
 1,66,64,40,0,0,0,0,0,64,0,-1--1--1,,1|(-5036,2063)|
-12,67,0,-5661,246,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,67,396128,-5661,246,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_CO2e_Emissions_(Total)
-12,68,0,13933,1623,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,68,396126,13933,1623,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Electricity_Consumption_(Total)
-12,69,0,13933,1988,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,69,396122,13933,1988,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Hard_Coal_Consumption_(Total)
-12,70,0,13939,2719,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,70,396118,13939,2719,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Natural_Gas_Consumption_(Total)
-12,71,0,-4452,227,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,71,396120,-4452,227,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Pollutant_CO2_Emissions
-12,72,0,-4452,3460,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,72,396116,-4452,3460,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Pollutant_VOC_Emissions
-12,73,0,-4452,4126,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,73,396114,-4452,4126,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Pollutant_CO_Emissions
-12,74,0,-4452,3112,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,74,396112,-4452,3112,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Pollutant_NOx_Emissions
-12,75,0,-4452,2089,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,75,396110,-4452,2089,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Pollutant_PM10_Emissions
-12,76,0,-4452,1737,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,76,658248,-4452,1737,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Pollutant_PM25_Emissions
-12,77,0,-4452,3799,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,77,658246,-4452,3799,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Pollutant_SOx_Emissions
-12,78,0,-4452,596,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,78,4131224,-4452,596,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Pollutant_CH4_Emissions
-12,79,0,-4452,988,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,79,2231106,-4452,988,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Pollutant_N2O_Emissions
-12,80,0,5329,1339,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,80,854846,5329,1339,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Electricity_Generation_Capacity_by_Type
-12,81,0,5329,1785,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,81,9767344,5329,1785,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Electricity_Generation_Capacity_Change_due_to_Policies
-12,82,0,5329,227,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,82,3214072,5329,227,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Electricity_Output_by_Source
-12,83,0,5329,733,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,83,2296480,5329,733,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Electricity_Output_Change_due_to_Policies
 10,84,Elec Demand Including TnD Losses,13186,1640,86,22,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 1,85,84,8,0,0,0,0,0,64,0,-1--1--1,,1|(13309,1640)|
@@ -32770,9 +32877,9 @@ Output_Electricity_Output_Change_due_to_Policies
 10,88,Output Social Benefits from Emissions Reduction,3571,584,92,22,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,89,87,88,0,0,0,0,0,64,0,-1--1--1,,1|(3571,527)|
 1,90,86,88,0,0,0,0,0,64,0,-1--1--1,,1|(3438,584)|
-12,91,0,2860,207,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,91,2558622,2860,207,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Financial_Cash_Flow_Change_by_Entity
-12,92,0,4100,565,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,92,4131190,4100,565,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Financial_Monetary_Value_of_Public_Health_and_Climate_Benefits
 10,93,Electricity Generation Capacity,4560,1788,78,22,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,94,BAU Electricity Generation Capacity,4560,2028,78,22,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
@@ -32784,7 +32891,7 @@ Output_Financial_Monetary_Value_of_Public_Health_and_Climate_Benefits
 1,100,98,99,0,0,0,0,0,64,0,-1--1--1,,1|(-5171,1381)|
 10,101,Grams per Million Metric Tons Pollutant,-5039,1269,82,22,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 1,102,101,99,0,0,0,0,0,64,0,-1--1--1,,1|(-5039,1318)|
-12,103,0,-4452,1360,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,103,2951994,-4452,1360,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Pollutant_F_Gas_Emissions
 10,104,Total Pollutant Emissions,-5277,2479,54,18,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,105,Total Pollutant Emissions,-5277,2816,54,18,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
@@ -32796,14 +32903,14 @@ Output_Pollutant_F_Gas_Emissions
 1,111,107,109,0,0,0,0,0,128,0,-1--1--1,,1|(-5036,2753)|
 1,112,104,108,0,0,0,0,0,128,0,-1--1--1,,1|(-5164,2479)|
 1,113,106,108,0,0,0,0,0,128,0,-1--1--1,,1|(-5036,2419)|
-12,114,0,-4452,2444,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,114,3934690,-4452,2444,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Pollutant_BC_Emissions
-12,115,0,-4452,2774,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,115,2689202,-4452,2774,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Pollutant_OC_Emissions
 10,116,Output Total Change in CapEx and OpEx,-157,1573,74,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,117,OCCF Dollars per Large Output Currency Unit,-157,1467,88,22,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 1,118,117,116,0,0,0,0,0,128,0,-1--1--1,,1|(-157,1514)|
-12,119,0,389,1540,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,119,6884074,389,1540,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Financial_Total_Change_in_Capital_Fuel_and_OM_Expenditures
 10,120,GWP by Pollutant,-6262,1127,34,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,121,Grams per Million Metric Tons CO2e,-5983,907,66,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
@@ -32822,12 +32929,12 @@ Output_Financial_Total_Change_in_Capital_Fuel_and_OM_Expenditures
 10,134,OCCF Dollars per Large Output Currency Unit,-157,131,87,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 1,135,134,133,0,0,0,0,0,128,0,-1--1--1,,1|(-157,172)|
 1,136,132,133,0,0,0,0,0,128,0,-1--1--1,,1|(-310,231)|
-12,137,0,389,216,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,137,2558128,389,216,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Financial_Total_Change_in_Capital_Fuel_and_OM_Expenditures_RevNeu
 10,138,Human Lives Saved from Reduced Particulate Pollution,3333,184,69,27,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,139,Output Human Lives Saved from Reduced Particulate Pollution,3571,184,69,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,140,138,139,0,0,0,0,0,128,0,-1--1--1,,1|(3445,184)|
-12,141,0,4108,237,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,141,4655884,4108,237,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Human_Lives_Saved_from_Reduced_Particulate_Pollution
 10,142,Output Distributed Solar PV Capacity,4819,1419,60,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,143,Output Non Solar Distributed Capacity,4819,1497,66,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
@@ -32862,7 +32969,7 @@ Output_Human_Lives_Saved_from_Reduced_Particulate_Pollution
 1,172,171,116,0,0,0,0,0,128,0,-1--1--1,,1|(-310,1573)|
 1,173,146,143,0,0,0,0,0,128,0,-1--1--1,,1|(4680,1455)|
 10,174,Output Total Petroleum Fuels Consumption,13428,3121,75,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-12,175,0,13939,3080,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,175,4393596,13939,3080,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Petroleum_Fuels_Consumption
 10,176,First Year NPV of CapEx and OpEx through This Year,-1620,1232,89,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,177,Output First Year NPV of CapEx and OpEx through This Year,-1298,1232,84,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
@@ -32899,7 +33006,7 @@ Output_Petroleum_Fuels_Consumption
 10,208,Output Liquid Biofuels Primary Energy Use,13355,401,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,209,200,208,0,0,0,0,0,128,0,-1--1--1,,1|(13219,357)|
 1,210,201,208,0,0,0,0,0,128,0,-1--1--1,,1|(13355,271)|
-12,211,0,13940,223,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,211,5311260,13940,223,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_TPE_by_Energy_Source
 10,212,Electricity Fuel Use,13109,708,52,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,213,Industrial Fuel Use,13109,977,50,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
@@ -32924,7 +33031,7 @@ Output_TPE_by_Energy_Source
 1,232,229,220,0,0,0,0,0,128,0,-1--1--1,,1|(13355,868)|
 1,233,229,219,0,0,0,0,0,128,0,-1--1--1,,1|(13355,736)|
 1,234,229,218,0,0,0,0,0,128,0,-1--1--1,,1|(13355,650)|
-12,235,0,13940,678,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,235,1640616,13940,678,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_TPE_by_Sector
 10,236,Total Energy Related Emissions,-4046,321,62,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,237,Grams per Million Metric Tons Pollutant,-3778,145,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
@@ -32934,7 +33041,7 @@ Output_TPE_by_Sector
 10,241,Output Energy Related CO2 Emissions from Buildings Sector,-3778,235,106,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,242,236,241,0,0,0,0,0,128,0,-1--1--1,,1|(-3926,282)|
 1,243,237,241,0,0,0,0,0,128,0,-1--1--1,,1|(-3778,180)|
-12,244,0,-3236,222,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,244,2362062,-3236,222,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Energy_Related_CO2_by_Sector
 10,245,Industrial Fuel Use,-4081,889,50,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,246,Total Energy Related Emissions,-4081,1240,62,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
@@ -32958,7 +33065,7 @@ Output_Energy_Related_CO2_by_Sector
 1,264,263,259,0,0,0,0,0,128,0,-1--1--1,,1|(-3528,1173)|
 1,265,263,258,0,0,0,0,0,128,0,-1--1--1,,1|(-3528,1114)|
 1,266,263,257,0,0,0,0,0,128,0,-1--1--1,,1|(-3528,1054)|
-12,267,0,-3236,882,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,267,2755258,-3236,882,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Energy_Related_CO2_by_Sector_with_Reallocated_Energy_Carrier_Emissions
 10,268,Direct Buildings Pollutant Emissions,-4076,1918,66,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,269,Electricity Sector Pollutant Emissions,-4076,2100,66,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
@@ -32979,7 +33086,7 @@ Output_Energy_Related_CO2_by_Sector_with_Reallocated_Energy_Carrier_Emissions
 1,284,277,280,0,0,0,0,0,128,0,-1--1--1,,1|(-3537,2080)|
 1,285,277,279,0,0,0,0,0,128,0,-1--1--1,,1|(-3537,2038)|
 1,286,277,278,0,0,0,0,0,128,0,-1--1--1,,1|(-3537,1956)|
-12,287,0,-3242,1970,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,287,3345092,-3242,1970,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Energy_Related_CO2_by_Fuel
 10,288,Total Energy Related Emissions in CO2e,-6501,1782,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,289,Process Emissions in CO2e,-6501,1873,64,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
@@ -32990,15 +33097,15 @@ Output_Energy_Related_CO2_by_Fuel
 1,294,289,292,0,0,0,0,0,128,0,-1--1--1,,1|(-6386,1873)|
 1,295,290,292,0,0,0,0,0,128,0,-1--1--1,,1|(-6261,1770)|
 1,296,290,291,0,0,0,0,0,128,0,-1--1--1,,1|(-6261,1724)|
-12,297,0,-5661,1757,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,297,4000536,-5661,1757,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_CO2e_Emissions_by_Source_Type
-12,298,0,13939,2342,172,104,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,298,4196828,13939,2342,172,104,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Lignite_Consumption_(Total)
 10,299,Output Passenger Dist Transported,8424,1349,57,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,300,Output Freight Dist Transported,8424,1718,61,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-12,301,0,8997,1304,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,301,4260218,8997,1304,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_Passenger_Distance_by_Mode
-12,302,0,8997,1664,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,302,4459176,8997,1664,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_Freight_Distance_by_Mode
 10,303,Vehicles,6964,1953,37,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,304,Vehicles per Million Vehicles,-7003,732,64,19,8,3,0,4,0,0,0,0,-1--1--1,192-255-192,|12||0-0-0,0,0,0,0,0,0
@@ -33006,23 +33113,23 @@ Transportation_Freight_Distance_by_Mode
 10,306,Output Vehicles in Millions,7161,1953,59,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,307,305,306,0,0,0,0,0,128,0,-1--1--1,,1|(7161,1903)|
 1,308,303,306,0,0,0,0,0,128,0,-1--1--1,,1|(7044,1953)|
-12,309,0,7776,1940,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,309,4197084,7776,1940,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_Passenger_LDVs_by_Technology
-12,310,0,7776,2986,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,310,3541804,7776,2986,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_Freight_HDVs_by_Technology
 10,311,Transportation Sector Fuel Used,8179,639,61,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,312,Output Transportation Sector Fuel Used by Fuel,8424,639,82,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,313,311,312,0,0,0,0,0,128,0,-1--1--1,,1|(8284,639)|
 10,314,BpTPEU BTU per Large Primary Energy Unit,8424,529,88,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 1,315,314,312,0,0,0,0,0,128,0,-1--1--1,,1|(8424,577)|
-12,316,0,8997,588,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,316,2558126,8997,588,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_Sector_Fuel_Used_by_Fuel
 10,317,Transportation Pollutant Emissions Disaggregated,8179,279,70,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,318,Output Transportation Pollutant Emissions by Vehicle Type,8424,279,71,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,319,Grams per Million Metric Tons Pollutant,8424,149,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 1,320,319,318,0,0,0,0,0,128,0,-1--1--1,,1|(8424,202)|
 1,321,317,318,0,0,0,0,0,128,0,-1--1--1,,1|(8294,279)|
-12,322,0,8997,225,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,322,6228466,8997,225,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_CO2_Emissions_by_Vehicle_Type
 10,323,BCF Vehicle Fuel Economy Unit Conversion Factors,-6789,890,64,30,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
 10,324,CDCF Passenger Miles per Passenger Distance Output Unit,-7003,585,104,23,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
@@ -33042,7 +33149,7 @@ Transportation_CO2_Emissions_by_Vehicle_Type
 10,338,Output Total CO2e Emissions,-6501,643,59,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,339,Output Total CO2e Emissions Excluding LULUCF,-6261,643,98,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,340,338,339,0,0,0,0,0,128,0,-1--1--1,,1|(-6407,643)|
-12,341,0,-5661,618,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,341,4393608,-5661,618,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_CO2e_Emissions_(Total_Excluding_LULUCF)
 12,342,0,-6028,-47,564,22,3,135,0,12,-1,3,0,0,-1--1--1,255-192-128,|18||0-0-0,0,0,0,0,0,0
 Emissions: CO2e
@@ -33052,7 +33159,7 @@ Total (includes land use)
 Total (excludes land use)
 12,345,0,-6028,836,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 By Sector
-12,346,0,-5661,1014,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,346,3869428,-5661,1014,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_CO2e_Emissions_by_Sector
 1,347,120,5,0,0,0,0,0,128,0,-1--1--1,,1|(-6261,1223)|
 1,348,121,6,0,0,0,0,0,128,0,-1--1--1,,1|(-5983,1109)|
@@ -33070,7 +33177,7 @@ By Pollutant
 1,358,353,354,0,0,0,0,0,128,0,-1--1--1,,1|(-6129,2294)|
 1,359,355,354,0,0,0,0,0,128,0,-1--1--1,,1|(-5983,2232)|
 1,360,356,353,0,0,0,0,0,128,0,-1--1--1,,1|(-6261,2232)|
-12,361,0,-5661,2252,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,361,3607356,-5661,2252,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_CO2e_Emissions_by_Pollutant
 12,362,0,-4821,-47,564,22,3,135,0,12,-1,3,0,0,-1--1--1,255-192-128,|18||0-0-0,0,0,0,0,0,0
 Emissions (by Pollutant)
@@ -33170,7 +33277,7 @@ Levelized Cost of Electricity (after subsidies)
 10,415,Cost per Unit New Elec Output,5773,252,66,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,416,Output Cost per Unit New Elec Output,6014,252,68,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,417,415,416,0,0,0,0,0,128,0,-1--1--1,,1|(5885,252)|
-12,418,0,6564,226,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,418,4524686,6564,226,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Levelized_Cost_of_Electricity_after_subsidies
 12,419,0,6199,417,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Curtailed Electricity from Renewables
@@ -33179,7 +33286,7 @@ Curtailed Electricity from Renewables
 10,422,Output Curtailed Electricity Output,6014,597,56,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,423,421,422,0,0,0,0,0,128,0,-1--1--1,,1|(6014,535)|
 1,424,420,422,0,0,0,0,0,128,0,-1--1--1,,1|(5888,597)|
-12,425,0,6564,582,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,425,4065662,6564,582,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Curtailed_Electricity_from_Renewables
 12,426,0,1259,-47,564,22,3,135,0,12,-1,3,0,0,-1--1--1,255-192-128,|18||0-0-0,0,0,0,0,0,0
 Financial: Jobs, GDP, and Earnings
@@ -33200,15 +33307,15 @@ Sales: Cars and SUVs
 1,436,433,434,0,0,0,0,0,128,0,-1--1--1,,1|(7161,185)|
 10,437,One Year,5701,144,43,11,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
 1,438,437,434,0,1,0,0,0,64,0,-1--1--1,,1|(6415,190)|
-12,439,0,7776,222,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,439,3869084,7776,222,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_Passenger_LDV_Sales_by_Technology
 12,440,0,7421,418,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Sales: Buses
-12,441,0,7776,577,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,441,4721390,7776,577,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_Passenger_HDV_Sales_by_Technology
 12,442,0,7421,773,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Sales: Light Freight Trucks
-12,443,0,7797,947,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,443,2097648,7797,947,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_Freight_LDV_Sales_by_Technology
 10,444,Vehicles per Thousand Vehicles,-7003,797,60,19,8,3,0,4,0,0,0,0,-1--1--1,192-255-192,|12||0-0-0,0,0,0,0,0,0
 10,445,New Vehicles,6964,587,54,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
@@ -33222,12 +33329,12 @@ Transportation_Freight_LDV_Sales_by_Technology
 12,453,0,7421,1105,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Sales: Medium & Heavy Freight Trucks
 10,454,Output New Vehicles in Thousands,7161,1216,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-12,455,0,7776,1275,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,455,3738352,7776,1275,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_Freight_HDV_Sales_by_Technology
 12,456,0,7421,1447,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Sales: Motorbikes
 10,457,Output New Vehicles in Thousands,7161,1566,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-12,458,0,7776,1609,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,458,5244246,7776,1609,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_Motorbike_Sales_by_Technology
 12,459,0,7421,2137,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Fleet Composition: Buses
@@ -33236,11 +33343,11 @@ Fleet Composition: Buses
 10,462,Output Vehicles in Thousands,7161,2318,59,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,463,461,462,0,0,0,0,0,128,0,-1--1--1,,1|(7161,2262)|
 1,464,460,462,0,0,0,0,0,128,0,-1--1--1,,1|(7044,2318)|
-12,465,0,7776,2305,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,465,4327940,7776,2305,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_Passenger_HDVs_by_Technology
 12,466,0,7421,2492,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Fleet Composition: Light Freight Trucks
-12,467,0,7776,2651,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,467,3672492,7776,2651,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_Freight_LDVs_by_Technology
 12,468,0,7421,2824,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Fleet Composition: Medium & Heavy Freight Trucks
@@ -33249,7 +33356,7 @@ Fleet Composition: Medium & Heavy Freight Trucks
 Fleet Composition: Motorbikes
 10,471,Output Vehicles in Millions,7161,2612,64,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,472,Output Vehicles in Millions,7161,3268,64,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-12,473,0,7776,3331,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,473,4655744,7776,3331,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_Motorbikes_by_Technology
 12,474,0,8640,-47,564,22,3,135,0,12,-1,3,0,0,-1--1--1,255-192-128,|18||0-0-0,0,0,0,0,0,0
 Transport: Travel Demand, Fuel Use, and Emissions
@@ -33266,7 +33373,7 @@ By Industry (including feedstocks)
 10,481,Output Industrial Fuel Use by Industry,9665,252,69,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,482,480,481,0,0,0,0,0,128,0,-1--1--1,,1|(9665,200)|
 1,483,479,481,0,0,0,0,0,128,0,-1--1--1,,1|(9522,252)|
-12,484,0,10226,221,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,484,4655792,10226,221,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Industry_Fuel_Use_Including_Feedstocks_by_Industry
 12,485,0,9867,418,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 By Fuel (including feedstocks)
@@ -33275,7 +33382,7 @@ By Fuel (including feedstocks)
 10,488,Output Industrial Fuel Use by Fuel,9665,599,69,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,489,487,488,0,0,0,0,0,128,0,-1--1--1,,1|(9665,545)|
 1,490,486,488,0,0,0,0,0,128,0,-1--1--1,,1|(9522,599)|
-12,491,0,10226,584,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,491,7669598,10226,584,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Industry_Fuel_Use_Including_Feedstocks_by_Fuel
 12,492,0,11097,-47,564,22,3,135,0,12,-1,3,0,0,-1--1--1,255-192-128,|18||0-0-0,0,0,0,0,0,0
 Industry: Emissions
@@ -33286,7 +33393,7 @@ Process Emissions by Industry
 10,496,Output Process Emissions in CO2e by Industry,10897,966,86,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,497,495,496,0,0,0,0,0,128,0,-1--1--1,,1|(10897,911)|
 1,498,494,496,0,0,0,0,0,128,0,-1--1--1,,1|(10761,966)|
-12,499,0,11471,938,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,499,4458916,11471,938,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Industry_Process_Emissions_by_Industry
 12,500,0,11097,1153,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Process Emissions by Pollutant
@@ -33295,7 +33402,7 @@ Process Emissions by Pollutant
 10,503,Output Process Emissions in CO2e by Pollutant,10897,1330,87,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,504,502,503,0,0,0,0,0,128,0,-1--1--1,,1|(10897,1276)|
 1,505,501,503,0,0,0,0,0,128,0,-1--1--1,,1|(10761,1330)|
-12,506,0,11471,1319,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,506,4262612,11471,1319,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Industry_Process_Emissions_by_Pollutant
 12,507,0,12340,-47,564,22,3,135,0,12,-1,3,0,0,-1--1--1,255-192-128,|18||0-0-0,0,0,0,0,0,0
 Buildings: Energy Use
@@ -33306,7 +33413,7 @@ By Building Component
 10,511,Output Components Energy Use by Component,12094,246,88,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,512,510,511,0,0,0,0,0,128,0,-1--1--1,,1|(12094,189)|
 1,513,509,511,0,0,0,0,0,128,0,-1--1--1,,1|(11950,246)|
-12,514,0,12697,221,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,514,4786866,12697,221,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Buildings_Energy_Use_by_Building_Component
 12,515,0,12340,418,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 By Building Type
@@ -33315,11 +33422,11 @@ By Building Type
 10,518,Output Components Energy Use by Building Type,12094,598,96,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,519,517,518,0,0,0,0,0,128,0,-1--1--1,,1|(12094,543)|
 1,520,516,518,0,0,0,0,0,128,0,-1--1--1,,1|(11946,598)|
-12,521,0,12697,585,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,521,4393408,12697,585,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Buildings_Energy_Use_by_Building_Type
 12,522,0,12340,774,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 By Energy Source
-12,523,0,12697,941,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,523,3803866,12697,941,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Buildings_Energy_Use_by_Energy_Source
 10,524,Components Energy Use,11863,978,46,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,525,BpTPEU BTU per Large Primary Energy Unit,12094,872,68,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
@@ -33367,7 +33474,7 @@ Biomass Consumption
 10,555,Output Total Biomass Consumption,13428,3954,70,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,556,554,555,0,0,0,0,0,128,0,-1--1--1,,1|(13428,3894)|
 1,557,553,555,0,0,0,0,0,128,0,-1--1--1,,1|(13292,3954)|
-12,558,0,13939,3925,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,558,3803874,13939,3925,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Biomass_Consumption
 12,559,0,13574,3408,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Liquid Biofuels Consumption
@@ -33376,7 +33483,7 @@ Liquid Biofuels Consumption
 10,562,Output Total Liquid Biofuels Consumption,13428,3599,70,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,563,561,562,0,0,0,0,0,128,0,-1--1--1,,1|(13428,3541)|
 1,564,560,562,0,0,0,0,0,128,0,-1--1--1,,1|(13292,3599)|
-12,565,0,13939,3561,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,565,3869412,13939,3561,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Liquid_Biofuels_Consumption
 12,566,0,-6789,957,93,38,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 This conversion factor is not used on this sheet, but it is used on the Transportation - Main sheet.
@@ -33387,31 +33494,31 @@ This conversion factor is not used on this sheet, but it is used on the Transpor
 10,571,District Heat and Hydrogen Fuel Cost per Unit Energy,15585,487,95,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,572,BCF BTU per Small Fuel Output Unit,15844,153,71,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,573,OCCF Dollars per Small Output Currency Unit,15844,487,87,22,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-12,574,0,16415,218,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,574,4459158,16415,218,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Fuel_Cost_by_Sector_Electricity
 12,575,0,16053,937,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Lignite
-12,576,0,16415,1109,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,576,3999916,16415,1109,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Fuel_Cost_by_Sector_Lignite
 12,577,0,16053,595,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Hard Coal
-12,578,0,16415,754,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,578,4459156,16415,754,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Fuel_Cost_by_Sector_Hard_Coal
 12,579,0,16053,1284,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Natural Gas
-12,580,0,16415,1454,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,580,4917942,16415,1454,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Fuel_Cost_by_Sector_Natural_Gas
 12,581,0,16053,1634,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Petroleum Gasoline
-12,582,0,16415,1800,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,582,7276828,16415,1800,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Fuel_Cost_by_Sector_Petroleum_Gasoline
 12,583,0,16053,1980,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Petroleum Diesel
-12,584,0,16415,2152,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,584,2296490,16415,2152,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Fuel_Cost_by_Sector_Petroleum_Diesel
 12,585,0,16053,2332,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Biomass
-12,586,0,16415,2492,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,586,985270,16415,2492,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Fuel_Cost_by_Sector_Biomass
 12,587,0,17294,-47,564,22,3,135,0,12,-1,3,0,0,-1--1--1,255-192-128,|18||0-0-0,0,0,0,0,0,0
 Technology Costs
@@ -33427,7 +33534,7 @@ Batteries
 10,596,kW per MW,-7003,232,62,23,8,131,0,4,0,0,0,0,-1--1--1,192-255-192,|12||0-0-0,0,0,0,0,0,0
 10,597,kW per MW,17121,177,51,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 1,598,597,592,0,0,0,0,0,128,0,-1--1--1,,1|(17121,221)|
-12,599,0,17653,220,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,599,3017528,17653,220,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Technology_Costs_Batteries
 12,600,0,17294,493,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 CCS Capital Equipment
@@ -33436,24 +33543,24 @@ CCS Capital Equipment
 10,603,Output Capital Cost of Epqt to Sequester One Ton of CO2 per Year,17121,720,76,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,604,602,603,0,0,0,0,0,128,0,-1--1--1,,1|(17121,651)|
 1,605,601,603,0,0,0,0,0,128,0,-1--1--1,,1|(16995,720)|
-12,606,0,17653,651,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,606,1641122,17653,651,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Technology_Costs_CCS
 12,607,0,17294,857,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Onshore Wind Turbines
 10,608,Construction Cost per Unit Capacity before Construction Subsidies,16883,1066,83,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,609,Output Construction Cost per Unit Capacity before Construction Subsidies,17121,1066,86,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,610,608,609,0,0,0,0,0,128,0,-1--1--1,,1|(16993,1066)|
-12,611,0,17653,1021,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,611,4131214,17653,1021,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Technology_Costs_Onshore_Wind
 12,612,0,17294,1205,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Offshore Wind Turbines
 10,613,Output Construction Cost per Unit Capacity before Construction Subsidies,17121,1358,90,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-12,614,0,17653,1378,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,614,985272,17653,1378,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Technology_Costs_Offshore_Wind
 12,615,0,17294,1565,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Offshore Wind Turbines
 10,616,Output Construction Cost per Unit Capacity before Construction Subsidies,17121,1718,99,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-12,617,0,17653,1730,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,617,985276,17653,1730,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Technology_Costs_Solar_PV
 10,618,Output Electricity Generation by Type,4819,235,64,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,619,26,618,0,0,0,0,0,128,0,-1--1--1,,1|(4688,233)|
@@ -33530,9 +33637,9 @@ Total by Pollutant
 10,684,Waste Management CO2e Emissions,10625,526,69,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 1,685,684,680,0,0,0,0,0,128,0,-1--1--1,,1|(10746,563)|
 1,686,683,680,0,0,0,0,0,128,0,-1--1--1,,1|(10746,652)|
-12,687,0,11471,214,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,687,4000498,11471,214,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Industry_Total_Emissions_by_Industry
-12,688,0,11471,576,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,688,5900836,11471,576,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Industry_Total_Emissions_by_Pollutant
 10,689,Total Change in Fuel Expenditures,-445,341,71,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,690,Total Change in OM Expenditures,-445,420,71,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
@@ -33555,7 +33662,7 @@ Fuel Use by Vehicle Type
 10,706,Output Transportation Sector Fuel Used by Vehicle Type,8424,971,71,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,707,704,706,0,0,0,0,0,128,0,-1--1--1,,1|(8424,903)|
 1,708,705,706,0,0,0,0,0,128,0,-1--1--1,,1|(8289,971)|
-12,709,0,8997,949,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,709,8784154,8997,949,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_Fuel_Used_by_Vehicle_Type
 10,710,OCCF Dollars per Medium Output Currency Unit,-6789,162,89,22,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
 10,711,OCCF Dollars per Medium Output Currency Unit,17121,946,93,21,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
@@ -33595,7 +33702,7 @@ Energy Exports
 10,743,BCF BTU per Energy Import Export Output Unit,14599,4350,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 1,744,743,740,0,0,0,0,0,128,0,-1--1--1,,1|(14599,4394)|
 1,745,736,740,0,0,0,0,0,128,0,-1--1--1,,1|(14474,4508)|
-12,746,0,15173,832,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,746,4262334,15173,832,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Change_in_Energy_Exports
 10,747,Output Change in Refined Petroleum Fuels Exports,14605,979,82,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 10,748,Output Change in Liquid Biofuels Exports,14605,1067,74,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
@@ -33617,7 +33724,7 @@ Energy Imports
 1,763,736,757,0,0,0,0,0,128,0,-1--1--1,,1|(14454,4565)|
 1,764,736,758,0,0,0,0,0,128,0,-1--1--1,,1|(14472,4615)|
 1,765,736,759,0,0,0,0,0,128,0,-1--1--1,,1|(14471,4668)|
-12,766,0,15173,4484,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,766,4262318,15173,4484,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Change_in_Energy_Imports
 10,767,Total CO2e Emissions by Sector,-6262,1021,69,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,768,Output Total CO2e Emissions by Sector,-5983,1021,65,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
@@ -33646,25 +33753,25 @@ Transportation
 10,784,Output Total CO2e Emissions by Sector,-6261,4332,69,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,785,Output Buildings Sector CO2e Emissions,-6261,2933,81,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,786,Output Waste Management CO2e Emissions,-6261,4685,97,23,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-12,787,0,-5661,2616,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,787,5179896,-5661,2616,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_CO2e_Emissions_from_Agriculture
-12,788,0,-5661,2954,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,788,6750688,-5661,2954,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_CO2e_Emissions_from_Buildings
-12,789,0,-5661,3308,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,789,4983500,-5661,3308,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_CO2e_Emissions_from_Electricity
-12,790,0,-5661,3666,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,790,4327850,-5661,3666,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_CO2e_Emissions_from_Industry
-12,791,0,-5661,4014,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,791,4131180,-5661,4014,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_CO2e_Emissions_from_Land_Use
-12,792,0,-5661,4372,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,792,4131564,-5661,4372,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_CO2e_Emissions_from_Transportation
-12,793,0,-5661,4714,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,793,4000160,-5661,4714,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_CO2e_Emissions_from_Waste_Management
 10,794,Output Industry Sector Excluding Ag and Waste CO2e Emissions,-6261,3654,79,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 12,795,0,-6028,4875,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 District Heat & Hydrogen
 10,796,Output Total CO2e Emissions by Sector,-6261,5020,69,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-12,797,0,-5661,5034,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,797,4262274,-5661,5034,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_CO2e_Emissions_from_District_Heating
 12,798,0,6199,772,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Water Withdrawals by Power Plants
@@ -33681,9 +33788,9 @@ Water Withdrawals by Power Plants
 1,809,802,803,0,0,0,0,0,128,0,-1--1--1,,1|(6014,944)|
 12,810,0,6199,1156,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Water Consumption by Power Plants
-12,811,0,6564,938,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,811,4262256,6564,938,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Water_Withdrawals_by_Power_Plants
-12,812,0,6564,1332,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,812,4393366,6564,1332,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Water_Consumption_by_Power_Plants
 12,813,0,4968,2474,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Electricity Demand by Sector
@@ -33692,7 +33799,7 @@ Electricity Demand by Sector
 10,816,Output Waste Management Electricity Use,4819,2986,74,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,817,814,815,0,0,0,0,0,128,0,-1--1--1,,1|(4678,2898)|
 1,818,814,816,0,0,0,0,0,128,0,-1--1--1,,1|(4670,2934)|
-12,819,0,5329,2657,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,819,3476184,5329,2657,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Electricity_Demand_by_Sector
 10,820,MWh per BTU,4819,2547,58,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,821,MWh per TWh,4819,3149,59,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
@@ -33723,7 +33830,7 @@ Hydrogen Electrolyzers
 1,845,841,844,0,0,0,0,0,128,0,-1--1--1,,1|(16995,2092)|
 1,846,842,844,0,0,0,0,0,128,0,-1--1--1,,1|(16984,2157)|
 1,847,843,844,0,0,0,0,0,128,0,-1--1--1,,1|(17121,2093)|
-12,848,0,17653,2082,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,848,4129220,17653,2082,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Technology_Costs_Hydrogen_Electrolyzers
 10,849,Hydrogen Sector Pollutant Emissions,-4076,2343,66,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 1,850,849,272,0,0,0,0,0,128,0,-1--1--1,,1|(-3956,2228)|
@@ -33786,11 +33893,11 @@ Hydrogen Consumption
 1,899,898,892,0,0,0,0,0,128,0,-1--1--1,,1|(13428,4933)|
 1,900,897,891,0,0,0,0,0,128,0,-1--1--1,,1|(13428,4611)|
 1,901,896,890,0,0,0,0,0,128,0,-1--1--1,,1|(13428,4274)|
-12,902,0,13939,4287,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,902,4065876,13939,4287,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_LPG_Consumption
-12,903,0,13939,4632,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,903,3934588,13939,4632,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_MSW_Consumption
-12,904,0,13939,4953,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,904,4458886,13939,4953,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Hydrogen_Consumption
 12,905,0,13335,0,326,19,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 For energy carriers (electricity, heat, hydrogen), these totals only include the carriers generated in their own sectors and sold commercially, not energy carriers generated and used within the same facility.
@@ -33813,7 +33920,7 @@ Energy Import Expenditures
 1,920,908,914,0,0,0,0,0,128,0,-1--1--1,,1|(14476,2206)|
 1,921,908,915,0,0,0,0,0,128,0,-1--1--1,,1|(14488,2249)|
 1,922,908,916,0,0,0,0,0,128,0,-1--1--1,,1|(14482,2289)|
-12,923,0,15173,2061,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,923,3869408,15173,2061,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Change_in_Energy_Export_Revenue
 10,924,Output Change in Energy Import Expenditures Including Electricity,14599,5732,82,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 10,925,Output Change in Refined Petroleum Fuels Import Expenditures,14599,5856,82,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
@@ -33828,7 +33935,7 @@ Output_Change_in_Energy_Export_Revenue
 1,934,932,925,0,0,0,0,0,128,0,-1--1--1,,1|(14599,5729)|
 1,935,932,926,0,0,0,0,0,128,0,-1--1--1,,1|(14599,5782)|
 1,936,932,927,0,0,0,0,0,128,0,-1--1--1,,1|(14599,5842)|
-12,937,0,15173,5699,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,937,3672506,15173,5699,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Change_in_Energy_Import_Expenditures
 12,938,0,14815,676,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Change in Energy Exports
@@ -33894,13 +34001,13 @@ Change in Energy Import Expenditures
 1,995,946,951,0,0,0,0,0,128,0,-1--1--1,,1|(14605,246)|
 1,996,946,952,0,0,0,0,0,128,0,-1--1--1,,1|(14605,294)|
 1,997,946,953,0,0,0,0,0,128,0,-1--1--1,,1|(14605,338)|
-12,998,0,15173,228,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,998,2820266,15173,228,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Energy_Exports
-12,999,0,15173,1455,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,999,8456106,15173,1455,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Energy_Export_Revenue
-12,1000,0,15173,3816,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1000,4852350,15173,3816,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Energy_Imports
-12,1001,0,15173,5044,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1001,4262310,15173,5044,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Energy_Import_Expenditures
 10,1002,Output Fuel Costs per Unit Energy by Sector,15844,772,76,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,1003,Output Fuel Costs per Unit Energy by Sector,15844,1111,76,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
@@ -33935,7 +34042,7 @@ Hydrogen
 1,1027,859,1021,0,0,0,0,0,128,0,-1--1--1,,1|(2314,601)|
 1,1028,859,1022,0,0,0,0,0,128,0,-1--1--1,,1|(2314,643)|
 1,1029,859,1023,0,0,0,0,0,128,0,-1--1--1,,1|(2314,559)|
-12,1030,0,2860,607,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1030,3147956,2860,607,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Financial_Government_Cash_Flow_Components
 12,1031,0,2487,2105,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Electricity Suppliers Cash Flow Components
@@ -33950,7 +34057,7 @@ Other Energy Suppliers Cash Flow Components
 10,1036,Output Change in Energy Expenditures by Entity Inverted,2314,1241,108,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,1037,Output Change in Nonenergy Expenditures by Entity Inverted,2314,1307,106,22,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,1038,Output Change in Cash Flow by Entity,2314,1373,70,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-12,1039,0,2860,1126,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1039,4327812,2860,1126,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Financial_Nonenergy_Industries_Cash_Flow_Components
 10,1040,Output Change in Revenue by Entity,2314,1520,62,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,1041,Output Change in Energy Expenditures by Entity Inverted,2314,1576,107,22,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
@@ -33975,27 +34082,27 @@ Output_Financial_Nonenergy_Industries_Cash_Flow_Components
 10,1060,Output Change in Energy Expenditures by Entity Inverted,2314,3652,111,23,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,1061,Output Change in Nonenergy Expenditures by Entity Inverted,2314,3706,108,23,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,1062,Output Change in Cash Flow by Entity,2314,3757,70,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-12,1063,0,2860,1594,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1063,4196832,2860,1594,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Financial_Labor_and_Consumers_Cash_Flow_Components
-12,1064,0,2860,1926,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1064,3869398,2860,1926,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Financial_Foreign_Entities_Cash_Flow_Components
-12,1065,0,2860,2254,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1065,7080530,2860,2254,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Financial_Electricity_Suppliers_Cash_Flow_Components
-12,1066,0,2860,2592,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1066,4327848,2860,2592,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Financial_Coal_Suppliers_Cash_Flow_Components
-12,1067,0,2860,2956,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1067,2886354,2860,2956,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Financial_NGPS_Cash_Flow_Components
-12,1068,0,2860,3318,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1068,985274,2860,3318,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Financial_Biomass_and_Biofuel_Suppliers_Cash_Flow_Components
-12,1069,0,2860,3640,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1069,4327898,2860,3640,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Financial_Other_Energy_Suppliers_Cash_Flow_Components
-12,1070,0,16415,2848,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1070,4590196,16415,2848,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Fuel_Cost_by_Sector_Crude_Oil
-12,1071,0,16415,3168,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1071,6817712,16415,3168,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Fuel_Cost_by_Sector_Heavy_or_Residual_Fuel_Oil
-12,1072,0,16415,3477,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1072,6031828,16415,3477,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Fuel_Cost_by_Sector_LPG_Propane_or_Butane
-12,1073,0,16415,3787,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1073,4129244,16415,3787,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Fuel_Cost_by_Sector_Hydrogen
 12,1074,0,16362,1,255,22,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 Graphs in this column are displayed as decadal bar graphs in the web interface.  Vensim doesn't support this graph type, so they are shown as line graphs here.
@@ -34036,9 +34143,9 @@ By Fuel (excluding feedstocks)
 1,1107,1106,1103,0,0,0,0,0,64,0,-1--1--1,,1|(9518,953)|
 10,1108,BpTPEU BTU per Large Primary Energy Unit,9665,843,85,21,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 1,1109,1108,1103,0,0,0,0,0,128,0,-1--1--1,,1|(9665,891)|
-12,1110,0,10220,934,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1110,5966120,10220,934,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Industry_Fuel_Use_Excluding_Feedstocks_by_Industry
-12,1111,0,10224,1308,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1111,4458898,10224,1308,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Industry_Fuel_Use_Excluding_Feedstocks_by_Fuel
 10,1112,Output Refined Petroleum Fuels Consumption,13428,3224,88,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 10,1113,Output Crude Oil Consumption,13428,3312,60,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
@@ -34080,9 +34187,9 @@ Change in Energy Production
 1,1146,1123,1127,0,0,0,0,0,128,0,-1--1--1,,1|(14599,6379)|
 1,1147,1123,1128,0,0,0,0,0,128,0,-1--1--1,,1|(14599,6434)|
 1,1148,1123,1129,0,0,0,0,0,128,0,-1--1--1,,1|(14599,6484)|
-12,1149,0,15173,6370,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1149,4590214,15173,6370,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Energy_Production
-12,1150,0,15173,6973,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1150,3672482,15173,6973,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Change_in_Energy_Production
 12,1151,0,-2409,61,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Total
@@ -34164,11 +34271,11 @@ Primary Energy Use per Unit GDP
 1,1206,1205,1203,0,0,0,0,0,128,0,-1--1--1,,1|(13294,5369)|
 10,1207,BpTPEU BTU per Small Primary Energy Unit,13428,5496,88,22,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 1,1208,1207,1203,0,0,0,0,0,128,0,-1--1--1,,1|(13428,5438)|
-12,1209,0,13939,5318,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1209,4852404,13939,5318,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Primary_Energy_Use_per_Unit_GDP
-12,1210,0,-3242,2625,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1210,5245240,-3242,2625,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Energy_Related_CO2_per_Unit_GDP
-12,1211,0,-5661,5359,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1211,4655770,-5661,5359,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_CO2e_per_Unit_GDP
 12,1212,0,11097,1496,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Energy-Related Emissions by Industry
@@ -34184,9 +34291,9 @@ Energy-Related Emissions by Pollutant
 1,1221,1216,1219,0,0,0,0,0,128,0,-1--1--1,,1|(10777,1716)|
 1,1222,1215,1218,0,0,0,0,0,128,0,-1--1--1,,1|(10760,2008)|
 1,1223,1217,1218,0,0,0,0,0,128,0,-1--1--1,,1|(10778,2066)|
-12,1224,0,11471,1661,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1224,4589978,11471,1661,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Industry_Energy_Related_Emissions_by_Industry
-12,1225,0,11471,2026,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1225,10291112,11471,2026,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Industry_Energy_Related_Emissions_by_Pollutant
 10,1226,Industrial Sector Energy Related Emissions after CCS,-4046,417,100,23,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 1,1227,1226,238,0,0,0,0,0,128,0,-1--1--1,,1|(-3913,369)|
@@ -34207,7 +34314,7 @@ Change in Domestic Jobs
 10,1241,Change in Domestic Jobs after Productivity Effects by ISIC Code,883,231,88,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,1242,Output Change in Domestic Jobs,1172,154,56,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,1243,1241,1242,0,0,0,0,0,128,0,-1--1--1,,1|(1036,189)|
-12,1244,0,1614,214,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1244,4590210,1614,214,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Change_in_Domestic_Jobs
 12,1245,0,1268,977,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Change in GDP
@@ -34218,7 +34325,7 @@ Change in GDP
 10,1250,Change in Global Employee Compensation by ISIC Code,866,4398,89,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,1251,Output Change in GDP,1181,1184,56,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,1252,1246,1251,0,0,0,0,0,128,0,-1--1--1,,1|(1033,1241)|
-12,1253,0,1623,1137,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1253,11340064,1623,1137,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Change_in_GDP
 10,1254,Output Change in Fossil and Utility Domestic Jobs,1172,231,81,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,1255,1241,1254,0,0,0,0,0,128,0,-1--1--1,,1|(1024,231)|
@@ -34252,7 +34359,7 @@ Change in Domestic Employee Compensation
 1,1282,1247,1273,0,0,0,0,0,128,0,-1--1--1,,1|(1010,2440)|
 1,1283,1247,1274,0,0,0,0,0,128,0,-1--1--1,,1|(1009,2481)|
 1,1284,1247,1275,0,0,0,0,0,128,0,-1--1--1,,1|(1010,2527)|
-12,1285,0,1611,2346,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1285,4262388,1611,2346,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Change_in_Domestic_Employee_Compensation
 12,1286,0,1256,3094,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Change in Domestic + Foreign Jobs
@@ -34264,7 +34371,7 @@ Change in Domestic + Foreign Jobs
 1,1292,1248,1288,0,0,0,0,0,128,0,-1--1--1,,1|(1013,3263)|
 1,1293,1248,1290,0,0,0,0,0,128,0,-1--1--1,,1|(1014,3302)|
 1,1294,1248,1289,0,0,0,0,0,128,0,-1--1--1,,1|(1020,3353)|
-12,1295,0,1609,3260,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1295,4393612,1609,3260,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Change_in_Domestic_and_Foreign_Jobs
 12,1296,0,1256,3544,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Change in Domestic + Foreign GDP
@@ -34283,7 +34390,7 @@ Change in Domestic + Foreign GDP
 1,1309,1249,1300,0,0,0,0,0,128,0,-1--1--1,,1|(1004,3946)|
 12,1310,0,1256,4154,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Change in Domestic + Foreign Employee Compensation
-12,1311,0,1609,3713,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1311,4393604,1609,3713,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Change_in_Domestic_and_Foreign_GDP
 10,1312,Output Change in Total Employee Compensation,1169,4339,80,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,1313,Output Change in Fossil and Utility Total Employee Compensation,1169,4437,90,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
@@ -34298,7 +34405,7 @@ Output_Change_in_Domestic_and_Foreign_GDP
 1,1322,1250,1313,0,0,0,0,0,128,0,-1--1--1,,1|(1010,4416)|
 1,1323,1250,1314,0,0,0,0,0,128,0,-1--1--1,,1|(1010,4457)|
 1,1324,1250,1315,0,0,0,0,0,128,0,-1--1--1,,1|(1011,4503)|
-12,1325,0,1609,4329,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1325,4262324,1609,4329,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Change_in_Domestic_and_Foreign_Employee_Compensation
 12,1326,0,1256,2744,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Change in Average Compensation per Employee
@@ -34307,7 +34414,7 @@ Change in Average Compensation per Employee
 10,1329,Output Change in Compensation per Domestic Employee,1169,2962,64,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,1330,1328,1329,0,0,0,0,0,128,0,-1--1--1,,1|(1169,2893)|
 1,1331,1327,1329,0,0,0,0,0,128,0,-1--1--1,,1|(1021,2962)|
-12,1332,0,1611,2910,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1332,4262322,1611,2910,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Change_in_Compensation_per_Domestic_Employee
 12,1333,0,1259,516,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Change in Domestic Union and Non-Union Jobs
@@ -34318,7 +34425,7 @@ Change in Domestic Union and Non-Union Jobs
 1,1338,1335,1337,0,0,0,0,0,128,0,-1--1--1,,1|(1021,818)|
 1,1339,1334,1336,0,0,0,0,0,128,0,-1--1--1,,1|(1033,698)|
 10,1340,Output Change in Domestic Jobs,1172,600,61,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-12,1341,0,1614,686,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1341,4459128,1614,686,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Change_in_Domestic_Union_and_Nonunion_Jobs
 12,1342,0,1268,1592,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Percent Change in GDP
@@ -34331,7 +34438,7 @@ Percent Change in GDP
 1,1349,1343,1345,0,0,0,0,0,128,0,-1--1--1,,1|(1028,1794)|
 1,1350,1343,1346,0,0,0,0,0,128,0,-1--1--1,,1|(1023,1844)|
 1,1351,1343,1347,0,0,0,0,0,128,0,-1--1--1,,1|(1030,1897)|
-12,1352,0,1623,1757,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1352,4393364,1623,1757,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Percent_Change_in_GDP
 12,1353,0,1585,1886,136,22,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 The Y-axis unit here is percentage points, so 0.5 is 0.5%, not 50%.
@@ -34377,7 +34484,7 @@ Embedded CO2 in Exported Fuels
 1,1387,1377,1379,0,0,0,0,0,128,0,-1--1--1,,1|(14599,2657)|
 1,1388,1377,1380,0,0,0,0,0,128,0,-1--1--1,,1|(14599,2709)|
 1,1389,1377,1381,0,0,0,0,0,128,0,-1--1--1,,1|(14599,2745)|
-12,1390,0,15173,2650,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1390,4589884,15173,2650,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Embedded_CO2_in_Exported_Fuels
 12,1391,0,14815,3031,564,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Change in Embedded CO2 in Exported Fuels
@@ -34395,7 +34502,7 @@ Change in Embedded CO2 in Exported Fuels
 1,1403,1393,1395,0,0,0,0,0,128,0,-1--1--1,,1|(14599,3225)|
 1,1404,1393,1396,0,0,0,0,0,128,0,-1--1--1,,1|(14599,3271)|
 1,1405,1393,1397,0,0,0,0,0,128,0,-1--1--1,,1|(14599,3325)|
-12,1406,0,15173,3204,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1406,5769826,15173,3204,174,103,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Change_in_Embedded_CO2_in_Exported_Fuels
 10,1407,Change in Revenue by Entity,133,382,66,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 \\\---/// Sketch information - do not modify anything except names
