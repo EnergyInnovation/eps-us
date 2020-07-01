@@ -4,6 +4,8 @@ title:	"Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **2.1.1-us - federal analysis branch - July 1, 2020**
+
 ### **2.1.1-us-v2 - May 12, 2020**
 
 * Updated COVID-19 recession's GDP impact and elasticities of sectoral-energy-use-to-GDP using latest data from EIA Short-Term Energy Outlook (ctrl-settings/GDPGR, ctrl-settings/EoSEUwGDPiR, plcy-schd/FoPITY)
