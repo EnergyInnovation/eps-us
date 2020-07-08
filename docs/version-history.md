@@ -4,6 +4,40 @@ title:	"Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **3.0.0 - July 20, 2020**
+
+* New Input-Output Model
+  * An economic input/output (I/O) model has been added as a component of the Energy Policy Simulator.
+  * Respending of direct changes in cash flow for government, households, and industries is now accounted for, enabling calculation of indirect/induced effects of the policy package on economic activity.
+  * Feedback loops from the I/O model to the Transportation, Buildings, and Industry sectors capture the energy demand and emissions associated with indirect/induced economic activity.
+  * New output metrics include the change in gross domestic product (GDP), employment (jobs), total employee compensation, average compensation per employee, and number of union and non-union jobs.
+  * The apportionment of direct cash flows to foreign entities, to labor, and to government are now more comprehensive and accurate.
+  * We gratefully acknowledge the invaluable contributions of the [American Council for an Energy-Efficient Economy](https://www.aceee.org/) (ACEEE), [Jim Barrett](https://www.barretteconomics.com/), and [Skip Laitner](https://www.linkedin.com/in/skip-laitner-746b124/) for their guidance and advice in implementing this feature, and for allowing us to learn from the [DEEPER](https://www.aceee.org/files/pdf/fact-sheet/DEEPER_Methodology.pdf) I/O model, originally created by Skip Laitner.
+* Improved Public Health Calculations
+  * In addition to the policy package's effects on premature mortality (introduced in version 1.0.3), the EPS now calculates impacts on 10 additional health outcomes, including lost work days, hospital admissions, non-fatal heart attacks, asthama attacks, respiratory symptoms and bronchitis.
+* Data Updates
+  * First simulated year advanced from 2018 to 2019
+  * Data in input variables based on EIA Annual Energy Outlook updated to use AEO 2020 values
+* Minor improvements
+  * WebAppData now detects duplicate and missing policy ID numbers
+  * Model structure diagram updated to show new economic and public health outputs
+  * Industrial process emissions multipliers (used in indst/BPEiC and indst/PERAC) are now disaggregated by gas.  These multipliers now allow for replacement of BPEiC data with arbitary, user-specified data while keeping abatement potentials and costs in PERAC in sync with BPEiC.
+  * Allow customization of fraction of technology outside modeled region that affects endogenous learning (endo-learn/FoTOMRAEL)
+  * Permit users to override endogenous learning calculations by specifying time series capital costs in elec/CCaMC
+  * Allow customization of imported electricity price and BAU exported electricity price
+  * Include balance of system in grid battery costs, unaffected by endogenous learning
+  * Add revenue data for "water & waste" industry (water treatment, wastewater, solid waste collection, landfilling, recycling, etc.)
+  * Add output graphs of Embedded CO2 in Exported Fuels and Change in Embedded CO2 in Exported Fuels
+  * Implement cash flows for efficient building component rebate policy
+  * Avoid using GET DIRECT DATA to access data from outside of model run timeframe
+* Bug Fixes
+  * Fixed off-by-one-year error in cement process CO2 multipliers (indst/BPEiC) and two missing formulas for cement (indst/PERAC)
+  * Do not exclude heat as a fuel type that can power industry CCS
+  * Allow carbon tax rate to be set for District Heat and Hydrogen sector instead of inheriting Industry sector rate
+  * Add geoengineering sector to energy-related CO2 output graphs
+  * Limit effect of building component labeling policy to affected market share (bldgs/PPEIdtIL)
+  * Fix formula in "Potential RPS Qualifying Electricity Output" (and BAU equivalent)
+
 ### **2.1.1-us-v2 - May 12, 2020**
 
 * Updated COVID-19 recession's GDP impact and elasticities of sectoral-energy-use-to-GDP using latest data from EIA Short-Term Energy Outlook (ctrl-settings/GDPGR, ctrl-settings/EoSEUwGDPiR, plcy-schd/FoPITY)

@@ -44,6 +44,8 @@ The 8 elements of the "Industry Category" subscript are: cement and other carbon
 
 - Industries (as well as agriculture and waste management) cannot be remapped.
 
+- Industries are structurally associated with particular ISIC Code categories used in the input-output model.
+
 - Industries are structurally associated with particular process emissions types (e.g. in "Fraction of Process Emissions Reductions by Pollutant") and policy levers (e.g. in "This Year Change in Process Emissions by Policy and Industry").  These associations are also present in difficult-to-change input data (e.g. indst/BPEiC and indst/PERAC).  This rules out any remapping that would change the type of process emissions that an industry emits or which policies can be used to reduce those process emissions.
 
 - Two industries are energy suppliers and have corresponding elements in the cash flow entities subscript (natural gas and petroleum systems, and coal mining).  The revenues of these industries are affected by endogenously-calculated changes in demand for the associated fuels (i.e. in "Change in Revenue by Industry").  There are other, complex ways in which the revenues of these industries are handled differently from other industries.  Remapping one of these industries would invalidate the revenue calculations.
@@ -51,8 +53,6 @@ The 8 elements of the "Industry Category" subscript are: cement and other carbon
 - Agriculture and waste management are displayed individually in output graphs and are not displayed as part of the "Industry" sector in the web interface.
 
 - Agriculture has special handling with respect to the "shift from animal to nonanimal products" policy lever, though this lever could be disabled in the web interface.
-
-- The only possible exception is the "Iron and Steel" industry, which is not an energy supplier and does not have any process emissions policies that can affect it.  The iron and steel industry can be remapped to another industry that also (1) is not an energy supplier and (2) does not have any process emissions policies that can affect it.  For example, it could be remapped to the "Aluminum" industry.  But this is not recommended, because (1) it would be a lot of work to update the relevant input variables, particularly financial ones such as indst/FoISaGPbE, and (2) a future EPS release might add a policy lever that reduces iron and steel process emissions, and the remapping would need to be undone in order to upgrade to that or any subsequent EPS release.
 
 ## Industrial Process Emissions Policies<a name="industrial_process_emissions_policies"></a>
 
