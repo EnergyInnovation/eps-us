@@ -19,24 +19,30 @@ This page tracks updates that have been made with each version of the Energy Pol
   * First simulated year advanced from 2018 to 2019
   * Data in input variables based on EIA Annual Energy Outlook updated to use AEO 2020 values
 * Minor improvements
-  * WebAppData now detects duplicate and missing policy ID numbers
-  * Model structure diagram updated to show new economic and public health outputs
-  * Industrial process emissions multipliers (used in indst/BPEiC and indst/PERAC) are now disaggregated by gas.  These multipliers now allow for replacement of BPEiC data with arbitary, user-specified data while keeping abatement potentials and costs in PERAC in sync with BPEiC.
-  * Allow customization of fraction of technology outside modeled region that affects endogenous learning (endo-learn/FoTOMRAEL)
-  * Permit users to override endogenous learning calculations by specifying time series capital costs in elec/CCaMC
-  * Allow customization of imported electricity price and BAU exported electricity price
-  * Include balance of system in grid battery costs, unaffected by endogenous learning
-  * Add revenue data for "water & waste" industry (water treatment, wastewater, solid waste collection, landfilling, recycling, etc.)
-  * Add output graphs of Embedded CO2 in Exported Fuels and Change in Embedded CO2 in Exported Fuels
-  * Implement cash flows for efficient building component rebate policy
-  * Avoid using GET DIRECT DATA to access data from outside of model run timeframe
+  * Industry Sector
+    * Industrial process emissions multipliers (used in indst/BPEiC and indst/PERAC) are now disaggregated by gas.  These multipliers now allow for replacement of BPEiC data with arbitary, user-specified data while keeping abatement potentials and costs in PERAC in sync with BPEiC.
+    * Add revenue data for "water & waste" industry (water treatment, wastewater, solid waste collection, landfilling, recycling, etc.)
+  * Electricity Sector
+    * Users may now override endogenous learning for electricity generation capacity by specifying time series capital costs in elec/CCaMC
+    * Imported electricity price and BAU exported electricity price may now be customized
+    * Balance of system is now included in grid battery costs (and is unaffected by endogenous learning)
+  * Other
+    * WebAppData now detects duplicate and missing policy ID numbers
+    * The model no longer uses GET DIRECT DATA to access data from outside of the model run timeframe
+    * Model structure diagram updated to show new economic and public health outputs
+    * Fraction of technology outside modeled region that affects endogenous learning can now be customized (endo-learn/FoTOMRAEL)
+    * Added output graphs of Embedded CO2 in Exported Fuels and Change in Embedded CO2 in Exported Fuels
+    * Implemented cash flows for efficient building component rebate policy
+    * The carbon tax rate may now be explicitly set for District Heat and Hydrogen sector instead of inheriting the Industry sector rate
 * Bug Fixes
   * Fixed off-by-one-year error in cement process CO2 multipliers (indst/BPEiC) and two missing formulas for cement (indst/PERAC)
   * Do not exclude heat as a fuel type that can power industry CCS
-  * Allow carbon tax rate to be set for District Heat and Hydrogen sector instead of inheriting Industry sector rate
-  * Add geoengineering sector to energy-related CO2 output graphs
-  * Limit effect of building component labeling policy to affected market share (bldgs/PPEIdtIL)
-  * Fix formula in "Potential RPS Qualifying Electricity Output" (and BAU equivalent)
+  * Added geoengineering sector to energy-related CO2 output graphs
+  * Limited effect of building component labeling policy to affected market share (bldgs/PPEIdtIL)
+
+### **2.1.2 - July 9, 2020**
+
+* Fixed minor formula error in variable "Potential RPS Qualifying Electricity Output" and its BAU equivalent
 
 ### **2.1.1-us-v2 - May 12, 2020**
 
