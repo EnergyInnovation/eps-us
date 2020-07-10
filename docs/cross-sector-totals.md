@@ -93,4 +93,6 @@ We know how much of the output of each energy industry and non-energy industry w
 
 Our final step is to sum the changes in expenditures (energy and non-energy) and the changes in revenues for each cash flow entity to find the change in direct (first-order) cash flow for that entity.  In other words, this is the change in cash available to each entity directly caused by the policy package.  This is analogous to the sum of changes in expenditures and revenues by ISIC code calculated above, and it is one of our important inputs to the I/O model.
 
+![summing changes in cash flow by entity](cross-sector-totals-SumCngCashFlowByEntity.png)
+
 For the next steps in the calculation of financial policy impacts, see the documentation page on [the input-output model](io-model.html).
