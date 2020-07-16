@@ -24,8 +24,9 @@ Links to doc pages are followed by a number indicating the version of the EPS co
   * [How the EPS Avoids Double Counting Policy Effects](how-the-eps-avoids-double-counting.html) - 1.4.3
   * [Comparing Results to Reality or Other Models](comparing-results.html) - 1.4.2
   * [Notes on Carbon Tax Revenue Use](carbon-tax-revenue-use.html) - 1.4.2
-  * [Evaluating Policy Packages' Financial Effects](evaluating-package-financials.htm) - 2.1.0
+  * [Evaluating Policy Packages' Financial Effects](evaluating-package-financials.html) - 2.1.0
   * [Notes on Unit Conversion](unit-conversion.html) - 1.4.3
+  * [Remapping Subscript Elements](remapping.html) - 3.0.0
 * About the Web Interface
   * [Web Interface Tutorial](online-model-tutorial.html) - 1.4.3
   * [Output Graphs Available in the Web Interface](web-interface-graphs.html) - 1.4.1
@@ -50,7 +51,7 @@ Links to doc pages are followed by a number indicating the version of the EPS co
   * [Land Use, Land Use Change, and Forestry](lulucf.html) - 1.1.4
   * [Carbon Capture and Sequestration](ccs.html) - 1.1.4
   * [Fuels](fuels.html) - 1.1.4
-  * [Cumulators](cumulators.html) - 1.1.4
+  * [Cross-Sector Totals](cross-sector-totals.html) - 3.0.0
   * [Cost Outputs](cost-outputs.html) - 2.1.0
   * [Additional Outputs](additional-outputs.html) - 1.1.4
   * [Web Application Support Variables](web-app-support.html) - 1.1.4
@@ -69,5 +70,5 @@ Links to doc pages are followed by a number indicating the version of the EPS co
 * [Acknowledgement of Contributors and Reviewers](acknowledgement.html) - 1.4.3
 * [Contact Us](contact.html) - 1.1.1
 * [Software License Information](software-license.html) - 1.0.0
-* [Version History](version-history.html) - 2.0.0
+* [Version History](version-history.html) - 3.0.0
   * [Archived Model Releases](archived-releases.html) - 2.0.0

@@ -14,6 +14,8 @@
 # Rather than including input and output file names in the code below, we assign all the file
 # names to variables in this section.  This allows the names to be easily changed if desired.
 ModelFile = "EPS.mdl" # The name of the Vensim model file (typically with .mdl or .vpm extension)
+FirstYear = "2019" # The first year you wish to include in the output file (cannot be prior to first simulated year)
+FinalYear = "2050" # The last year you wish to include in the output file (cannot be later than last simulated year)
 OutputScript = "GeneratedContributionTestScript.cmd" # The desired filename of the Vensim command script to be generated
 RunResultsFile = "ContributionTestResults.tsv" # The desired filename for TSV file containing model run results
 OutputVarsFile = "OutputVarsToExport.lst" # The name of the file containing a list of variables to be included in the RunResultsFile
@@ -433,7 +435,7 @@ def PerformRunsWithEnabledGroups():
 
 	# First, we do a run with all of the groups disabled
 	f.write("MENU>RUN|O\n")
-	f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|||||:")
+	f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|||" + FirstYear + "|" + FinalYear + "|:")
 	f.write("\tEnabledPolicyGroup=None")
 	f.write("\tEnabledPolicies=None\n\n")
 
@@ -457,7 +459,7 @@ def PerformRunsWithEnabledGroups():
 		
 		# We perform our run and log the output
 		f.write("MENU>RUN|O\n")
-		f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|+!||||:")
+		f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|+!||" + FirstYear + "|" + FinalYear + "|:")
 		f.write("\tEnabledPolicyGroup=" + str(EnabledGroup))
 		f.write("\tEnabledPolicies=" + EnabledPolicies + "\n\n")
 	
@@ -467,7 +469,7 @@ def PerformRunsWithEnabledGroups():
 	f.write("SIMULATE>SETVAL|Policy Implementation Schedule Selector=" + str(PolicySchedule) + "\n")
 	
 	f.write("MENU>RUN|O\n")
-	f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|+!||||:")
+	f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|+!||" + FirstYear + "|" + FinalYear + "|:")
 	f.write("\tEnabledPolicyGroup=All")
 	f.write("\tEnabledPolicies=All")
 	f.write("\n")
@@ -488,7 +490,7 @@ def PerformRunsWithDisabledGroups():
 	f.write("SIMULATE>SETVAL|Policy Implementation Schedule Selector=" + str(PolicySchedule) + "\n")
 	
 	f.write("MENU>RUN|O\n")
-	f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|||||:")
+	f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|||" + FirstYear + "|" + FinalYear + "|:")
 	f.write("\tDisabledPolicyGroup=None")
 	f.write("\tDisabledPolicies=None\n\n")
 
@@ -513,13 +515,13 @@ def PerformRunsWithDisabledGroups():
 		
 		# We perform our run and log the output
 		f.write("MENU>RUN|O\n")
-		f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|+!||||:")
+		f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|+!||" + FirstYear + "|" + FinalYear + "|:")
 		f.write("\tDisabledPolicyGroup=" + str(DisabledGroup))
 		f.write("\tDisabledPolicies=" + DisabledPolicies + "\n\n")
 	
 	# Finally, we do a run with all of the groups disabled (a BAU case run)
 	f.write("MENU>RUN|O\n")
-	f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|+!||||:")
+	f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|+!||" + FirstYear + "|" + FinalYear + "|:")
 	f.write("\tDisabledPolicyGroup=All")
 	f.write("\tDisabledPolicies=All")
 	f.write("\n")
