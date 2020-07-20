@@ -2,8 +2,1268 @@
 Buildings Electricity Demand by Season[Building Type,Building Component,Season]=
 	Buildings Sector Net Electricity Demand[Building Type,Building Component]
 	* SoECbS Share of Electricity Consumption by Season by Building Component[Building Component\
-		,Season]
+		,Building Type,Season]
 	~	MW*hr
+	~		|
+
+Energy Production including Energy Carriers[All Fuels] :EXCEPT: [electricity],[heat],\
+		[hydrogen]=
+	QUANTUM(
+	  Fuel Production[All Fuels],
+	  QSfE Quantization Size for Energy
+	) ~~|
+Energy Production including Energy Carriers[electricity]=
+	SUM(Electricity Generation by Type[Electricity Source!,Power Plant Quality!])
+	/ MWh per BTU ~~|
+Energy Production including Energy Carriers[heat]=
+	QUANTUM(
+	  Total Heat Use,
+	  QSfE Quantization Size for Energy
+	) ~~|
+Energy Production including Energy Carriers[hydrogen]=
+	QUANTUM(
+	  SUM(Hydrogen Produced by Pathway[Hydrogen Production Pathway!]),
+	  QSfE Quantization Size for Energy
+	)
+	~	BTU
+	~		|
+
+BAU Construction Cost per Unit Capacity before Construction Subsidies[Electricity Source\
+		] :EXCEPT: [onshore wind es],[solar PV es],[offshore wind es]=
+	CCaMC BAU Construction Cost per Unit Capacity[Electricity Source] ~~|
+BAU Construction Cost per Unit Capacity before Construction Subsidies[onshore wind es\
+		]=
+	IF THEN ELSE(
+	  CCaMC BAU Construction Cost per Unit Capacity[onshore wind es] > 0,
+	
+	  CCaMC BAU Construction Cost per Unit Capacity[onshore wind es],
+	
+	  First Year Cost per Unit Capacity[onshore wind es]
+	  * BAU This Year Solar and Wind Capacity Costs as Fraction of First Year Capacity Costs\
+		[onshore wind es]
+	) ~~|
+BAU Construction Cost per Unit Capacity before Construction Subsidies[solar PV es]=
+	IF THEN ELSE(
+	  CCaMC BAU Construction Cost per Unit Capacity[solar PV es] > 0,
+	
+	  CCaMC BAU Construction Cost per Unit Capacity[solar PV es],
+	
+	  First Year Cost per Unit Capacity[solar PV es]
+	  * BAU This Year Solar and Wind Capacity Costs as Fraction of First Year Capacity Costs\
+		[solar PV es]
+	) ~~|
+BAU Construction Cost per Unit Capacity before Construction Subsidies[offshore wind es\
+		]=
+	IF THEN ELSE(
+	  CCaMC BAU Construction Cost per Unit Capacity[offshore wind es] > 0,
+	
+	  CCaMC BAU Construction Cost per Unit Capacity[offshore wind es],
+	
+	  First Year Cost per Unit Capacity[offshore wind es]
+	  * BAU This Year Solar and Wind Capacity Costs as Fraction of First Year Capacity Costs\
+		[offshore wind es]
+	)
+	~	$/MW
+	~	To use endogenous learning for onshore wind, offshore wind, and/or solar \
+		PV, leave zeroes in CCaMC for construction cost in all years after the \
+		first modeled year.  If the model sees a non-zero construction cost value \
+		in CCaMC for any given year, it will use that value in that year, \
+		overriding the endogenous learning calculations.
+	|
+
+Output Energy Related CO2 Emissions by Sector[Sectors] :EXCEPT:   [industry sector]=
+	Total Energy Related Emissions[Sectors,CO2]
+	/ Grams per Million Metric Tons Pollutant ~~|
+Output Energy Related CO2 Emissions by Sector[industry sector]=
+	(Total Energy Related Emissions[industry sector,CO2]
+	  - SUM(Industrial Sector Energy Related Emissions after CCS[Industrial Fuel!,agriculture\
+		,CO2])
+	  - SUM(Industrial Sector Energy Related Emissions after CCS[Industrial Fuel!,waste management\
+		,CO2])
+	)
+	/ Grams per Million Metric Tons Pollutant
+	~	million metric tons
+	~		~	:SUPPLEMENTARY 
+	|
+
+Change in Nonenergy Expenditures by Entity Without Production Effects[Cash Flow Entity\
+		] :EXCEPT:   [nonenergy industries],
+[coal suppliers],[natural gas and petroleum suppliers]=
+	0 ~~|
+Change in Nonenergy Expenditures by Entity Without Production Effects[nonenergy industries\
+		]=
+	SUM(Change in Nonenergy Expenditures by Industry Without Production Effects[nonenergy industries within industry category\
+		!]) ~~|
+Change in Nonenergy Expenditures by Entity Without Production Effects[coal suppliers]\
+		=
+	Change in Nonenergy Expenditures by Industry Without Production Effects[coal mining]\
+		 ~~|
+Change in Nonenergy Expenditures by Entity Without Production Effects[natural gas and petroleum suppliers\
+		]=
+	Change in Nonenergy Expenditures by Industry Without Production Effects[natural gas and petroleum systems\
+		]
+	~	$
+	~		|
+
+Electricity Sector Carbon Tax Rebate due to CCS[Electricity Source] :EXCEPT: [hard coal es\
+		]=
+	0 ~~|
+Electricity Sector Carbon Tax Rebate due to CCS[hard coal es]=
+	Amount of CO2 Sequestered by Electricity Sector
+	* Additional Carbon Tax Rate This Year[electricity sector]
+	~	$
+	~	We assign the rebate to the coal electricity source, since most CCS will \
+		likely affect coal.  It doesn't make any difference for the model, because \
+		the cash flow impacts of electricity producers are not disaggregated by \
+		electricity source (and the benefits of performing CCS accrue to the \
+		electricity producers who do the CCS, not to the coal mining industry).
+	|
+
+Changes in Nonenergy Expenditures by Entity due to Production Changes[Cash Flow Entity\
+		] :EXCEPT: [nonenergy industries],[coal suppliers],[natural gas and petroleum suppliers\
+		]=
+	SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[Industry Category\
+		!,Cash Flow Entity]) ~~|
+Changes in Nonenergy Expenditures by Entity due to Production Changes[nonenergy industries\
+		]=
+	SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[Industry Category\
+		!,nonenergy industries])
+	
+	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[nonenergy industries within industry category\
+		!,Cash Flow Entity!]) ~~|
+Changes in Nonenergy Expenditures by Entity due to Production Changes[coal suppliers]\
+		=
+	SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[Industry Category\
+		!,coal suppliers])
+	
+	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[coal mining\
+		,Cash Flow Entity!]) ~~|
+Changes in Nonenergy Expenditures by Entity due to Production Changes[natural gas and petroleum suppliers\
+		]=
+	SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[Industry Category\
+		!,natural gas and petroleum suppliers])
+	
+	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[natural gas and petroleum systems\
+		,Cash Flow Entity!])
+	~	$
+	~	Every cash flow entity reduces its expenditures by the amount that \
+		industry revenue is reduced from selling fewer outputs to that cash flow \
+		entity.  Additionally, each cash flow entity that is an industry reduces \
+		its expenditures by the amount that it reduces purchases of inputs from \
+		all cash flow entities.
+	|
+
+Process Emissions Abated due to Carbon Tax by Marginal Cost[Industry by Process Emissions Policy\
+		,Marginal Abatement Cost] :EXCEPT:  [cement industry measures,Marginal Abatement Cost\
+		]=
+	IF THEN ELSE(
+	
+	  Does Carbon Tax Exempt Process Emissions This Year
+	  = 0
+	
+	  :AND:
+	
+	  Does Carbon Tax Exempt Non CO2 Emissions This Year
+	  = 0
+	
+	  :AND:
+	
+	  PERAC Marginal Cost Definitions[Marginal Abatement Cost]
+	  > 0
+	
+	  :AND:
+	
+	  Additional Carbon Tax Rate This Year[industry sector]
+	  > PERAC Marginal Cost Definitions[Marginal Abatement Cost],
+	
+	  PERAC Mass CO2e Avoidable by Marginal Cost[Industry by Process Emissions Policy,Marginal Abatement Cost\
+		],
+	
+	  0
+	) ~~|
+Process Emissions Abated due to Carbon Tax by Marginal Cost[cement industry measures,\
+		Marginal Abatement Cost]=
+	IF THEN ELSE(
+	
+	  Does Carbon Tax Exempt Process Emissions This Year
+	  = 0
+	
+	  :AND:
+	
+	  PERAC Mass CO2e Avoidable by Marginal Cost[cement industry measures,Marginal Abatement Cost\
+		]
+	  > 0
+	
+	  :AND:
+	
+	  Additional Carbon Tax Rate This Year[industry sector]
+	  > PERAC Marginal Cost Definitions[Marginal Abatement Cost],
+	
+	
+	  PERAC Mass CO2e Avoidable by Marginal Cost[cement industry measures,Marginal Abatement Cost\
+		],
+	
+	  0
+	)
+	~	g CO2e
+	~		|
+
+New Vehicle Fuel Economy after Feebate[Vehicle Type,Cargo Type,Vehicle Technology] :EXCEPT:\
+		 [LDVs,passenger,Vehicle Technology]=
+	New Vehicle Fuel Economy after Fuel Price Effects[Vehicle Type,Cargo Type,Vehicle Technology\
+		] ~~|
+New Vehicle Fuel Economy after Feebate[LDVs,passenger,Vehicle Technology] :EXCEPT: [LDVs\
+		,passenger,battery electric vehicle]=
+	New Vehicle Fuel Economy after Fuel Price Effects[LDVs,passenger,Vehicle Technology]
+	* (1 + Perc Change in New LDV Fuel Economy due to Feebate) ~~|
+New Vehicle Fuel Economy after Feebate[LDVs,passenger,battery electric vehicle]=
+	New Vehicle Fuel Economy after Fuel Price Effects[LDVs,passenger,battery electric vehicle\
+		]
+	~	thing*miles/BTU
+	~		|
+
+Construction Cost per Unit Capacity before Construction Subsidies[Electricity Source]\
+		 :EXCEPT: [onshore wind es],[solar PV es],[offshore wind es]=
+	CCaMC BAU Construction Cost per Unit Capacity[Electricity Source]
+	* (1 - RnD Electricity Capital Cost Perc Reduction This Year[Electricity Source]) ~~|
+Construction Cost per Unit Capacity before Construction Subsidies[onshore wind es]=
+	IF THEN ELSE(
+	  CCaMC BAU Construction Cost per Unit Capacity[onshore wind es] > 0,
+	
+	  CCaMC BAU Construction Cost per Unit Capacity[onshore wind es]
+	  * (1 - RnD Electricity Capital Cost Perc Reduction This Year[onshore wind es]),
+	
+	  First Year Cost per Unit Capacity[onshore wind es]
+	  * This Year Solar and Wind Capacity Costs as Fraction of First Year Capacity Costs\
+		[onshore wind es]
+	  * (1 - RnD Electricity Capital Cost Perc Reduction This Year[onshore wind es])
+	) ~~|
+Construction Cost per Unit Capacity before Construction Subsidies[solar PV es]=
+	IF THEN ELSE(
+	  CCaMC BAU Construction Cost per Unit Capacity[solar PV es] > 0,
+	
+	  CCaMC BAU Construction Cost per Unit Capacity[solar PV es]
+	  * (1 - RnD Electricity Capital Cost Perc Reduction This Year[solar PV es]),
+	
+	  First Year Cost per Unit Capacity[solar PV es]
+	  * This Year Solar and Wind Capacity Costs as Fraction of First Year Capacity Costs\
+		[solar PV es]
+	  * (1 - RnD Electricity Capital Cost Perc Reduction This Year[solar PV es])
+	) ~~|
+Construction Cost per Unit Capacity before Construction Subsidies[offshore wind es]=
+	IF THEN ELSE(
+	  CCaMC BAU Construction Cost per Unit Capacity[offshore wind es] > 0,
+	
+	  CCaMC BAU Construction Cost per Unit Capacity[offshore wind es]
+	  * (1 - RnD Electricity Capital Cost Perc Reduction This Year[offshore wind es]),
+	
+	  First Year Cost per Unit Capacity[offshore wind es]
+	  * This Year Solar and Wind Capacity Costs as Fraction of First Year Capacity Costs\
+		[offshore wind es]
+	  * (1 - RnD Electricity Capital Cost Perc Reduction This Year[offshore wind es])
+	)
+	~	$/MW
+	~	To use endogenous learning for onshore wind, offshore wind, and/or solar \
+		PV, leave zeroes in CCaMC for construction cost in all years after the \
+		first modeled year.  If the model sees a non-zero construction cost value \
+		in CCaMC for any given year, it will use that value in that year, \
+		overriding the endogenous learning calculations.
+	|
+
+New Vehicle Price Including EV Shadow Cost[Vehicle Type,Cargo Type,Vehicle Technology\
+		] :EXCEPT:  [LDVs,passenger,battery electric vehicle]=
+	New Vehicle Price[Vehicle Type,Cargo Type,Vehicle Technology] ~~|
+New Vehicle Price Including EV Shadow Cost[LDVs,passenger,battery electric vehicle]=
+	New Vehicle Price[LDVs,passenger,battery electric vehicle]
+	+ Range Anxiety and Charging Time Shadow Cost
+	~	$/vehicle
+	~		|
+
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,Sectors,Pollutant] :EXCEPT:\
+		   [Health Outcome,Sectors,NOx],[Health Outcome,Sectors,PM25],[Health Outcome,Sectors\
+		,SOx]=
+	0 ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,transportation sector\
+		,NOx]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-transport-NOx.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,transportation sector\
+		,PM25]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-transport-PM25.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,transportation sector\
+		,SOx]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-transport-SO2.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,electricity sector,NOx\
+		]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-electricity-NOx.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,electricity sector,PM25\
+		]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-electricity-PM25.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,electricity sector,SOx\
+		]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-electricity-SO2.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,residential buildings sector\
+		,NOx]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-buildings-NOx.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,residential buildings sector\
+		,PM25]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-buildings-PM25.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,residential buildings sector\
+		,SOx]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-buildings-SO2.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,commercial buildings sector\
+		,NOx]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-buildings-NOx.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,commercial buildings sector\
+		,PM25]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-buildings-PM25.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,commercial buildings sector\
+		,SOx]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-buildings-SO2.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,industry sector,NOx]\
+		:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-industry-NOx.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,industry sector,PM25\
+		]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-industry-PM25.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,industry sector,SOx]\
+		:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-industry-SO2.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,district heat and hydrogen sector\
+		,NOx]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-electricity-NOx.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,district heat and hydrogen sector\
+		,PM25]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-electricity-PM25.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,district heat and hydrogen sector\
+		,SOx]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-electricity-SO2.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,LULUCF sector,NOx]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-LULUCF-NOx.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,LULUCF sector,PM25]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-LULUCF-PM25.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,LULUCF sector,SOx]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-LULUCF-SO2.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,geoengineering sector\
+		,NOx]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-industry-NOx.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,geoengineering sector\
+		,PM25]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-industry-PM25.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,geoengineering sector\
+		,SOx]:=
+	GET DIRECT DATA(
+	   'InputData/add-outputs/HOIpTP/HOIpTP-industry-SO2.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	incidents/metric ton pollutant
+	~		|
+
+Fraction of Flexibility Points Utilized Last Year[Electricity Source] :EXCEPT: [solar PV es\
+		]=
+	ZIDZ(
+	  (SUM(Last Year Electricity Generation Capacity[Electricity Source,Power Plant Quality\
+		!])
+	     + SUM(BDEQ BAU Distributed Electricity Source Capacity[Building Type!,Electricity Source\
+		])) 
+	  * FPCbS Flexibility Points Consumed by Source[Electricity Source],
+	
+	  Usable Flexibility Points
+	) ~~|
+Fraction of Flexibility Points Utilized Last Year[solar PV es]=
+	ZIDZ(
+	  (SUM(Last Year Electricity Generation Capacity[solar PV es,Power Plant Quality!])
+	     + SUM(BDEQ BAU Distributed Electricity Source Capacity[Building Type!,solar PV es\
+		])
+	     + SUM(Cumulative Total Distributed Solar Capacity Caused by Policies[Building Type\
+		!]))
+	  * FPCbS Flexibility Points Consumed by Source[solar PV es],
+	
+	  Usable Flexibility Points
+	)
+	~	Dmnl
+	~		|
+
+Change in Industry Sector Fuel Supplier Revenue by Entity[Cash Flow Entity] :EXCEPT:  \
+		[electricity suppliers],[coal suppliers],[natural gas and petroleum suppliers],[biomass and biofuel suppliers\
+		],[other energy suppliers]=
+	0 ~~|
+Change in Industry Sector Fuel Supplier Revenue by Entity[electricity suppliers]=
+	SUM(Cash Flow Change for Fuel Industry from Industry Fuel Use[Industry Category!,electricity if\
+		]) ~~|
+Change in Industry Sector Fuel Supplier Revenue by Entity[coal suppliers]=
+	SUM(Cash Flow Change for Fuel Industry from Industry Fuel Use[Industry Category!,hard coal if\
+		]) ~~|
+Change in Industry Sector Fuel Supplier Revenue by Entity[natural gas and petroleum suppliers\
+		]=
+	SUM(Cash Flow Change for Fuel Industry from Industry Fuel Use[Industry Category!,natural gas if\
+		])
+	+ SUM(Cash Flow Change for Fuel Industry from Industry Fuel Use[Industry Category!,petroleum diesel if\
+		])
+	+ SUM(Cash Flow Change for Fuel Industry from Industry Fuel Use[Industry Category!,crude oil if\
+		])
+	+ SUM(Cash Flow Change for Fuel Industry from Industry Fuel Use[Industry Category!,heavy or residual fuel oil if\
+		])
+	+ SUM(Cash Flow Change for Fuel Industry from Industry Fuel Use[Industry Category!,LPG propane or butane if\
+		]) ~~|
+Change in Industry Sector Fuel Supplier Revenue by Entity[biomass and biofuel suppliers\
+		]=
+	SUM(Cash Flow Change for Fuel Industry from Industry Fuel Use[Industry Category!,biomass if\
+		]) ~~|
+Change in Industry Sector Fuel Supplier Revenue by Entity[other energy suppliers]=
+	SUM(Cash Flow Change for Fuel Industry from Industry Fuel Use[Industry Category!,heat if\
+		])
+	+ SUM(Cash Flow Change for Fuel Industry from Industry Fuel Use[Industry Category!,hydrogen if\
+		])
+	~	$
+	~		|
+
+Fraction of Process Emissions Reductions by Pollutant[Industry Category,Pollutant] :EXCEPT:\
+		  [cement and other carbonates
+,CO2],[natural gas and petroleum systems,CH4],[iron and steel,CO2],[chemicals,F gases\
+		],[coal mining,CH4],[waste management
+,CH4],[agriculture,Pollutant],[other industries,Pollutant]=
+	0 ~~|
+Fraction of Process Emissions Reductions by Pollutant[cement and other carbonates,CO2\
+		]=
+	1 ~~|
+Fraction of Process Emissions Reductions by Pollutant[natural gas and petroleum systems\
+		,CH4]=
+	1 ~~|
+Fraction of Process Emissions Reductions by Pollutant[iron and steel,CO2]=
+	1 ~~|
+Fraction of Process Emissions Reductions by Pollutant[chemicals,F gases]=
+	1 ~~|
+Fraction of Process Emissions Reductions by Pollutant[coal mining,CH4]=
+	1 ~~|
+Fraction of Process Emissions Reductions by Pollutant[waste management,CH4]=
+	1 ~~|
+Fraction of Process Emissions Reductions by Pollutant[agriculture,Pollutant] :EXCEPT:\
+		   [agriculture,CO2]=
+	ZIDZ(
+	  BAU Process Emissions in CO2e after GDP Adjustment[agriculture,Pollutant],
+	
+	  (SUM(BAU Process Emissions in CO2e after GDP Adjustment[agriculture,Pollutant!])
+	    - BAU Process Emissions in CO2e after GDP Adjustment[agriculture,CO2]
+	  )
+	) ~~|
+Fraction of Process Emissions Reductions by Pollutant[agriculture,CO2]=
+	0 ~~|
+Fraction of Process Emissions Reductions by Pollutant[other industries,Pollutant]=
+	ZIDZ(
+	  BAU Process Emissions in CO2e after GDP Adjustment[other industries,Pollutant],
+	
+	  SUM(BAU Process Emissions in CO2e after GDP Adjustment[other industries,Pollutant!\
+		])
+	)
+	~	Dmnl
+	~	All reductions of non-CO2 process emissions come from the EPA source.  We \
+		have grouped technical measures from the EPA document (when building the \
+		MAC curve tables) so that each table only refers to abatement potential of \
+		a single pollutant, except for "agriculture."  Therefore, in this \
+		variable, we assign the reductions from the EPA MAC tables to the \
+		corresponding pollutants.  For agriculture, we assign the reductions \
+		proportinately to BAU process emissions shares by gas, excluding CO2 (in \
+		line with the EPA source).  We don't currently have a policy that reduces \
+		process emissions from "other industries," but in case we do in the \
+		future, we assign these reductions proportionate to BAU process emissions \
+		shares across all gases, including CO2.  For cement and iron and steel, \
+		all process emissions (and therefore all reduction potential) are CO2.
+	|
+
+CO2 Emissions Intensity by Fuel for All Fuels[All Fuels] :EXCEPT:     [hard coal],[natural gas\
+		],[biomass],[petroleum gasoline
+],[petroleum diesel],[biofuel gasoline],[biofuel diesel],[jet fuel or kerosene],[lignite\
+		],[crude oil],[heavy or residual fuel oil
+],[LPG propane or butane],[municipal solid waste]=
+	0 ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[hard coal]=
+	Electricity Fuel Pollutant Emissions Intensities This Year[CO2,hard coal es] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[natural gas]=
+	Electricity Fuel Pollutant Emissions Intensities This Year[CO2,natural gas nonpeaker es\
+		] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[biomass]=
+	Electricity Fuel Pollutant Emissions Intensities This Year[CO2,biomass es] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[petroleum gasoline]=
+	Transportation Fuel Pollutant Emissions Intensities This Year[LDVs,CO2,petroleum gasoline tf\
+		] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[petroleum diesel]=
+	Transportation Fuel Pollutant Emissions Intensities This Year[HDVs,CO2,petroleum diesel tf\
+		] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[biofuel gasoline]=
+	Transportation Fuel Pollutant Emissions Intensities This Year[LDVs,CO2,biofuel gasoline tf\
+		] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[biofuel diesel]=
+	Transportation Fuel Pollutant Emissions Intensities This Year[HDVs,CO2,biofuel diesel tf\
+		] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[jet fuel or kerosene]=
+	Transportation Fuel Pollutant Emissions Intensities This Year[aircraft,CO2,jet fuel tf\
+		] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[lignite]=
+	Electricity Fuel Pollutant Emissions Intensities This Year[CO2,lignite es] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[crude oil]=
+	Industrial Fuel Pollutant Emissions Intensities This Year[natural gas and petroleum systems\
+		,CO2,crude oil if] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[heavy or residual fuel oil]=
+	Industrial Fuel Pollutant Emissions Intensities This Year[chemicals,CO2,heavy or residual fuel oil if\
+		] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[LPG propane or butane]=
+	Industrial Fuel Pollutant Emissions Intensities This Year[chemicals,CO2,LPG propane or butane if\
+		] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[municipal solid waste]=
+	Electricity Fuel Pollutant Emissions Intensities This Year[CO2,municipal solid waste es\
+		]
+	~	g pollutant/BTU
+	~		|
+
+Industry Sector Change in Nonenergy Industry Expenditures by ISIC Code[ISIC Code] :EXCEPT:\
+		        [ISIC 01T03],[ISIC 20T21
+],[ISIC 23],[ISIC 24],[ISIC 35T39],[Other Industries Category ISIC Code]=
+	0 ~~|
+Industry Sector Change in Nonenergy Industry Expenditures by ISIC Code[ISIC 01T03 {Agriculture, forestry and fishing}\
+		]=
+	SUM(Change in Amount Spent on Industry Fuels[agriculture,Industrial Fuel!])
+	
+	+ Change in Nonenergy Expenditures by Industry Without Production Effects[agriculture\
+		]
+	
+	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[Industry Category\
+		!,nonenergy industries])
+	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 01T03]
+	
+	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[agriculture\
+		,Cash Flow Entity!]) ~~|
+Industry Sector Change in Nonenergy Industry Expenditures by ISIC Code[ISIC 20T21 {Chemicals and pharmaceutical products}\
+		]=
+	SUM(Change in Amount Spent on Industry Fuels[chemicals,Industrial Fuel!])
+	
+	+ Change in Nonenergy Expenditures by Industry Without Production Effects[chemicals]
+	
+	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[Industry Category\
+		!,nonenergy industries])
+	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 20T21]
+	
+	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[chemicals\
+		,Cash Flow Entity!]) ~~|
+Industry Sector Change in Nonenergy Industry Expenditures by ISIC Code[ISIC 23 {Other non-metallic mineral products}\
+		]=
+	SUM(Change in Amount Spent on Industry Fuels[cement and other carbonates,Industrial Fuel\
+		!])
+	
+	+ Change in Nonenergy Expenditures by Industry Without Production Effects[cement and other carbonates\
+		]
+	
+	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[Industry Category\
+		!,nonenergy industries])
+	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 23]
+	
+	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[cement and other carbonates\
+		,Cash Flow Entity
+	!]) ~~|
+Industry Sector Change in Nonenergy Industry Expenditures by ISIC Code[ISIC 24 {Manufacture of basic metals}\
+		]=
+	SUM(Change in Amount Spent on Industry Fuels[iron and steel,Industrial Fuel!])
+	
+	+ Change in Nonenergy Expenditures by Industry Without Production Effects[iron and steel\
+		]
+	
+	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[Industry Category\
+		!,nonenergy industries])
+	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 24]
+	
+	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[iron and steel\
+		,Cash Flow Entity!]) ~~|
+Industry Sector Change in Nonenergy Industry Expenditures by ISIC Code[ISIC 35T39 {Electricity, gas, water supply, sewerage, waste and remediation services}\
+		]=
+	SUM(Change in Amount Spent on Industry Fuels[waste management,Industrial Fuel!])
+	
+	+ Change in Nonenergy Expenditures by Industry Without Production Effects[waste management\
+		]
+	
+	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[Industry Category\
+		!,nonenergy industries])
+	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 35T39]
+	
+	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[waste management\
+		,Cash Flow Entity!]) ~~|
+Industry Sector Change in Nonenergy Industry Expenditures by ISIC Code[Other Industries Category ISIC Code\
+		]=
+	(SUM(Change in Amount Spent on Industry Fuels[other industries,Industrial Fuel!])
+	  + Change in Nonenergy Expenditures by Industry Without Production Effects[other industries\
+		]
+	  + SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[other industries\
+		,Cash Flow Entity!])
+	)
+	* ZIDZ(
+	    BObIC BAU Output by ISIC Code[Other Industries Category ISIC Code],
+	
+	    SUM(BObIC BAU Output by ISIC Code[Other Industries Category ISIC Code!])
+	)
+	
+	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[Industry Category\
+		!,nonenergy industries])
+	  * ZIDZ(
+	      BObIC BAU Output by ISIC Code[Other Industries Category ISIC Code],
+	
+	      SUM(BObIC BAU Output by ISIC Code[Nonenergy Industry ISIC Code!])
+	  )
+	~	$
+	~		|
+
+Output Fuel Costs per Unit Energy by Sector[transportation fuel within all fuels,transportation sector\
+		]=
+	Transportation Fuel Cost per Unit Energy[Transportation Fuel]
+	* BCF BTU per Small Fuel Output Unit[transportation fuel within all fuels]
+	/ OCCF Dollars per Small Output Currency Unit ~~|
+Output Fuel Costs per Unit Energy by Sector[electricity source within all fuels,electricity sector\
+		] :EXCEPT: [natural gas,electricity sector],[wind,electricity sector],[solar,electricity sector\
+		]=
+	Electricity Fuel Cost per Unit Energy[Electricity Source]
+	* BCF BTU per Small Fuel Output Unit[electricity source within all fuels]
+	/ OCCF Dollars per Small Output Currency Unit ~~|
+Output Fuel Costs per Unit Energy by Sector[natural gas,electricity sector]=
+	Electricity Fuel Cost per Unit Energy[natural gas nonpeaker es]
+	* BCF BTU per Small Fuel Output Unit[natural gas]
+	/ OCCF Dollars per Small Output Currency Unit ~~|
+Output Fuel Costs per Unit Energy by Sector[wind,electricity sector]=
+	0 ~~|
+Output Fuel Costs per Unit Energy by Sector[solar,electricity sector]=
+	0 ~~|
+Output Fuel Costs per Unit Energy by Sector[building fuel within all fuels,residential buildings sector\
+		]=
+	Buildings Fuel Cost per Unit Energy[Building Fuel,urban residential]
+	* BCF BTU per Small Fuel Output Unit[building fuel within all fuels]
+	/ OCCF Dollars per Small Output Currency Unit ~~|
+Output Fuel Costs per Unit Energy by Sector[building fuel within all fuels,commercial buildings sector\
+		]=
+	Buildings Fuel Cost per Unit Energy[Building Fuel,commercial]
+	* BCF BTU per Small Fuel Output Unit[building fuel within all fuels]
+	/ OCCF Dollars per Small Output Currency Unit ~~|
+Output Fuel Costs per Unit Energy by Sector[industrial fuel within all fuels,industry sector\
+		]=
+	Industrial Fuel Cost per Unit Energy[Industrial Fuel]
+	* BCF BTU per Small Fuel Output Unit[industrial fuel within all fuels]
+	/ OCCF Dollars per Small Output Currency Unit ~~|
+Output Fuel Costs per Unit Energy by Sector[industrial fuel within all fuels,district heat and hydrogen sector\
+		]=
+	District Heat and Hydrogen Fuel Cost per Unit Energy[Industrial Fuel]
+	* BCF BTU per Small Fuel Output Unit[industrial fuel within all fuels]
+	/ OCCF Dollars per Small Output Currency Unit ~~|
+Output Fuel Costs per Unit Energy by Sector[All Fuels,transportation sector] :EXCEPT:\
+		 [transportation fuel within all fuels,transportation sector]=
+	0 ~~|
+Output Fuel Costs per Unit Energy by Sector[All Fuels,electricity sector] :EXCEPT: [electricity source within all fuels\
+		,electricity sector]=
+	0 ~~|
+Output Fuel Costs per Unit Energy by Sector[All Fuels,residential buildings sector] :EXCEPT:\
+		 [building fuel within all fuels,residential buildings sector]=
+	0 ~~|
+Output Fuel Costs per Unit Energy by Sector[All Fuels,commercial buildings sector] :EXCEPT:\
+		 [building fuel within all fuels,commercial buildings sector]=
+	0 ~~|
+Output Fuel Costs per Unit Energy by Sector[All Fuels,industry sector] :EXCEPT: [industrial fuel within all fuels\
+		,industry sector]=
+	0 ~~|
+Output Fuel Costs per Unit Energy by Sector[All Fuels,district heat and hydrogen sector\
+		] :EXCEPT: [industrial fuel within all fuels,district heat and hydrogen sector]=
+	0 ~~|
+Output Fuel Costs per Unit Energy by Sector[All Fuels,LULUCF sector]=
+	0
+	~	output currency unit/small fuel output unit
+	~		~	:SUPPLEMENTARY 
+	|
+
+Industry Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC Code] :EXCEPT:\
+		 [ISIC 01T03],[ISIC 20T21],[ISIC 23],[ISIC 24],[ISIC 28],[ISIC 35T39],[Other Industries Category ISIC Code\
+		]=
+	0 ~~|
+Industry Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC 01T03 {Agriculture, forestry and fishing}\
+		]=
+	Industry Sector Carbon Tax Rebate due to CCS[agriculture]
+	
+	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[agriculture\
+		,Cash Flow Entity!])
+	
+	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[Industry Category\
+		!,nonenergy industries])
+	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 01T03] ~~|
+Industry Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC 20T21 {Chemicals and pharmaceutical products}\
+		]=
+	Industry Sector Carbon Tax Rebate due to CCS[chemicals]
+	
+	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[chemicals\
+		,Cash Flow Entity!])
+	
+	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[Industry Category\
+		!,nonenergy industries])
+	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 20T21] ~~|
+Industry Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC 23 {Other non-metallic mineral products}\
+		]=
+	Industry Sector Carbon Tax Rebate due to CCS[cement and other carbonates]
+	
+	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[cement and other carbonates\
+		,Cash Flow Entity!])
+	
+	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[Industry Category\
+		!,nonenergy industries])
+	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 23] ~~|
+Industry Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC 24 {Manufacture of basic metals}\
+		]=
+	Industry Sector Carbon Tax Rebate due to CCS[iron and steel]
+	
+	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[iron and steel\
+		,Cash Flow Entity!])
+	
+	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[Industry Category\
+		!,nonenergy industries])
+	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 24] ~~|
+Industry Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC 28 {Machinery and equipment n.e.c.}\
+		]=
+	Industry Sector Change in Capital and OM Spending[nonenergy industries]
+	
+	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[Industry Category\
+		!,nonenergy industries])
+	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 28]
+	
+	+ (Industry Sector Carbon Tax Rebate due to CCS[other industries]
+	    + SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[other industries\
+		,Cash Flow Entity!])
+	  )
+	  * ZIDZ(
+	      BObIC BAU Output by ISIC Code[ISIC 28],
+	
+	      SUM(BObIC BAU Output by ISIC Code[Other Industries Category ISIC Code!])
+	    ) ~~|
+Industry Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC 35T39 {Electricity, gas, water supply, sewerage, waste and remediation services}\
+		]=
+	Industry Sector Carbon Tax Rebate due to CCS[waste management]
+	
+	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[waste management\
+		,Cash Flow Entity!]) ~~|
+Industry Sector Change in Nonenergy Industry Revenue by ISIC Code[Other Industries Category ISIC Code\
+		] :EXCEPT: [ISIC 28]=
+	(Industry Sector Carbon Tax Rebate due to CCS[other industries]
+	  + SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[other industries\
+		,Cash Flow Entity!])
+	)
+	* ZIDZ(
+	    BObIC BAU Output by ISIC Code[Other Industries Category ISIC Code],
+	
+	    SUM(BObIC BAU Output by ISIC Code[Other Industries Category ISIC Code!])
+	  )
+	
+	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[Industry Category\
+		!,nonenergy industries])
+	  * Percent of Output by Nonenergy Industry ISIC Code[Other Industries Category ISIC Code\
+		]
+	~	$
+	~	Each Nonenergy Industry ISIC Code receives revenue from (#1) the carbon \
+		tax rebate to the matching industry, (#2) the matching industry's revenues \
+		from selling non-energy products to any/all cash flow entities, and (#3) a \
+		weighted share of the revenues from products sold by the "nonenergy \
+		industries" cash flow entity as inputs to any/all industries.  For #3, we \
+		use an output-weighted share because we don't know what types of goods \
+		were supplied by the "nonenergy industries" (e.g. steel, agricultural \
+		products, machinery, etc.), though we do know that the products being \
+		supplied are non-energy products (as the "nonenergy industries" actor only \
+		supplies nonenergy products).  For ISIC codes with no matching "Industry \
+		Category" (those in the "Other Industries Category ISIC Code" subscript), \
+		we just assign output-weighted shares of #1 and #3 above (as #2 is only \
+		applicable to ISIC codes that have a matching industry).  ISIC 28 \
+		(machinery) has no matching industry category, so it functions like the \
+		other industries in the "Other Industries Category ISIC Code" subscript \
+		with one exception: we assign all revenues associated with capital \
+		equipment sales that were directly induced by the policy package to this \
+		ISIC code.  For ISIC 35T39, the matching industry is "waste management" \
+		for purposes of #1 and #2, but this ISIC code is technically for an Energy \
+		Industry ISIC Code ("Electricity, gas, water supply, sewerage, waste and \
+		remediation services"), so it does not get a contribution from #3.
+	|
+
+New Vehicles after Charger Deployment[Vehicle Type,Cargo Type,Vehicle Technology] :EXCEPT:\
+		  [LDVs,passenger,Vehicle Technology]=
+	New Vehicles Allocated by Technology[Vehicle Type,Cargo Type,Vehicle Technology] ~~|
+New Vehicles after Charger Deployment[LDVs,passenger,Vehicle Technology] :EXCEPT:   [\
+		LDVs,passenger,battery electric vehicle]=
+	MAX(
+	  0,
+	
+	  New Vehicles Allocated by Technology[LDVs,passenger,Vehicle Technology]
+	  - SUM(New Vehicles Allocated by Technology[LDVs,passenger,Vehicle Technology!])
+	    * Change in EV Market Share due to Charger Deployment
+	    * ZIDZ(
+	        New Vehicles Allocated by Technology[LDVs,passenger,Vehicle Technology],
+	
+	        SUM(New Vehicles Allocated by Technology[LDVs,passenger,Vehicle Technology!]\
+		)
+	          - New Vehicles Allocated by Technology[LDVs,passenger,battery electric vehicle\
+		]
+	      )
+	) ~~|
+New Vehicles after Charger Deployment[LDVs,passenger,battery electric vehicle]=
+	MIN(
+	  SUM(New Vehicles Allocated by Technology[LDVs,passenger,Vehicle Technology!]),
+	
+	  New Vehicles Allocated by Technology[LDVs,passenger,battery electric vehicle]
+	  + SUM(New Vehicles Allocated by Technology[LDVs,passenger,Vehicle Technology!])
+	    * Change in EV Market Share due to Charger Deployment
+	)
+	~	vehicles
+	~		|
+
+Solar and Wind Capacities Outside Modeled Region Affecting Learning[Electricity Source\
+		] :EXCEPT: [onshore wind es],[solar PV es],[offshore wind es]=
+	0 ~~|
+Solar and Wind Capacities Outside Modeled Region Affecting Learning[onshore wind es]=
+	MAX(
+	  0,
+	
+	  (BGSaWC BAU Global Solar and Wind Capacities[onshore wind es]
+	    - BAU Last Year Electricity Generation Capacity by Type Including Distributed Generation\
+		[onshore wind es])
+	  * FoTOMRAEL Fraction of Technology Outside Modeled Region Affecting Endogenous Learning
+	) ~~|
+Solar and Wind Capacities Outside Modeled Region Affecting Learning[solar PV es]=
+	MAX(
+	  0,
+	
+	  (BGSaWC BAU Global Solar and Wind Capacities[solar PV es]
+	    - BAU Last Year Electricity Generation Capacity by Type Including Distributed Generation\
+		[solar PV es])
+	  * FoTOMRAEL Fraction of Technology Outside Modeled Region Affecting Endogenous Learning
+	) ~~|
+Solar and Wind Capacities Outside Modeled Region Affecting Learning[offshore wind es]\
+		=
+	MAX(
+	  0,
+	
+	  (BGSaWC BAU Global Solar and Wind Capacities[offshore wind es]
+	    - BAU Last Year Electricity Generation Capacity by Type Including Distributed Generation\
+		[offshore wind es])
+	  * FoTOMRAEL Fraction of Technology Outside Modeled Region Affecting Endogenous Learning
+	)
+	~	MW
+	~		|
+
+Other Changes in Industry Sector Tax and Tax Rebate Revenues[Cash Flow Entity] :EXCEPT:\
+		   [government],[nonenergy industries],[coal suppliers],[natural gas and petroleum suppliers\
+		]=
+	0 ~~|
+Other Changes in Industry Sector Tax and Tax Rebate Revenues[government]=
+	SUM(Additional Carbon Tax on Process Emissions by Industry[Industry Category!])
+	+ SUM(Change in Taxes Paid on Industry Fuels[Industry Category!,Industrial Fuel!]) ~~|
+Other Changes in Industry Sector Tax and Tax Rebate Revenues[nonenergy industries]=
+	SUM(Industry Sector Carbon Tax Rebate due to CCS[nonenergy industries within industry category\
+		!]) ~~|
+Other Changes in Industry Sector Tax and Tax Rebate Revenues[coal suppliers]=
+	Industry Sector Carbon Tax Rebate due to CCS[coal mining] ~~|
+Other Changes in Industry Sector Tax and Tax Rebate Revenues[natural gas and petroleum suppliers\
+		]=
+	Industry Sector Carbon Tax Rebate due to CCS[natural gas and petroleum systems]
+	~	$
+	~		|
+
+Last Year Change in Electricity Supplier Cost per Unit Electricity[All Fuels] :EXCEPT:\
+		    [electricity],[heat],[hydrogen]=
+	0 ~~|
+Last Year Change in Electricity Supplier Cost per Unit Electricity[electricity]= DELAY FIXED\
+		 (
+	Change in Electricity Supplier Expenditures After Subsidies per Unit Electricity Produced\
+		, 1, 0) ~~|
+Last Year Change in Electricity Supplier Cost per Unit Electricity[heat]= DELAY FIXED\
+		 (
+	Change in District Heat Supplier Expenditures per Unit Heat Produced, 1, 0) ~~|
+Last Year Change in Electricity Supplier Cost per Unit Electricity[hydrogen]= DELAY FIXED\
+		 (
+	Change in Hydrogen Supplier Expenditures per Unit Hydrogen Produced, 1, 0)
+	~	$/BTU
+	~		|
+
+Percent Change in Nonfuel Production due to Policies[Industry Category] :EXCEPT:    [\
+		energy industries within industry category
+],[agriculture]=
+	Percent Change in Production after Macroeconomic Feedbacks[Industry Category]
+	- (Percent Reduction in Nonenergy Nonagriculture Industry Product Demand This Year[Industry Category\
+		]
+	  * (1 + Percent Change in Production after Macroeconomic Feedbacks[Industry Category\
+		])
+	  ) ~~|
+Percent Change in Nonfuel Production due to Policies[energy industries within industry category\
+		]=
+	0 ~~|
+Percent Change in Nonfuel Production due to Policies[agriculture]=
+	Percent Change in Production after Macroeconomic Feedbacks[agriculture]
+	+ Percent Change in Agriculture Industry Production due to Nonanimal Product Shifting
+	~	Dmnl
+	~		|
+
+BAU Max Capacity Buildable from Lookups[Electricity Source] :EXCEPT:    [solar PV es]\
+		=
+	MCGLT Max Capacity Growth Lookup Table[Electricity Source]
+	(
+	  (
+	    SUM(BAU Last Year Electricity Generation Capacity[Electricity Source,Power Plant Quality\
+		!])
+	    + SUM(BDEQ BAU Distributed Electricity Source Capacity[Building Type!,Electricity Source\
+		])
+	  )
+	/ Capacity Lookup Unit Correction Factor
+	) ~~|
+BAU Max Capacity Buildable from Lookups[solar PV es]=
+	MCGLT Max Capacity Growth Lookup Table[solar PV es]
+	(
+	  (
+	    SUM(BAU Last Year Electricity Generation Capacity[solar PV es,Power Plant Quality\
+		!])
+	    + SUM(BDEQ BAU Distributed Electricity Source Capacity[Building Type!,solar PV es\
+		])
+	  )
+	/ Capacity Lookup Unit Correction Factor
+	)
+	~	MW
+	~		|
+
+BAU New Vehicle Price Including EV Shadow Cost[Vehicle Type,Cargo Type,Vehicle Technology\
+		] :EXCEPT: [LDVs,passenger,battery electric vehicle]=
+	BAU New Vehicle Price[Vehicle Type,Cargo Type,Vehicle Technology] ~~|
+BAU New Vehicle Price Including EV Shadow Cost[LDVs,passenger,battery electric vehicle\
+		]=
+	BAU New Vehicle Price[LDVs,passenger,battery electric vehicle]
+	+ BAU BRAaCTSC BAU Range Anxiety and Charging Time Shadow Cost
+	~	$/vehicle
+	~		|
+
+Change in Energy Production including Energy Carriers[All Fuels] :EXCEPT:  [electricity\
+		],[heat],[hydrogen]=
+	QUANTUM(
+	  Change in Fuel Production[All Fuels],
+	  QSfE Quantization Size for Energy
+	) ~~|
+Change in Energy Production including Energy Carriers[electricity]=
+	SUM(Change in Electricity Generation by Type[Electricity Source!,Power Plant Quality\
+		!])
+	/ MWh per BTU ~~|
+Change in Energy Production including Energy Carriers[heat]=
+	QUANTUM(
+	  Change in Total Heat Use,
+	  QSfE Quantization Size for Energy
+	) ~~|
+Change in Energy Production including Energy Carriers[hydrogen]=
+	QUANTUM(
+	  SUM(Change in Hydrogen Produced by Pathway[Hydrogen Production Pathway!]),
+	  QSfE Quantization Size for Energy
+	)
+	~	BTU
+	~		|
+
+Max Capacity Buildable from Lookups[Electricity Source] :EXCEPT:  [solar PV es]=
+	MCGLT Max Capacity Growth Lookup Table[Electricity Source]
+	(
+	  (
+	    SUM(Last Year Electricity Generation Capacity[Electricity Source,Power Plant Quality\
+		!])
+	    + SUM(BDEQ BAU Distributed Electricity Source Capacity[Building Type!,Electricity Source\
+		])
+	  )
+	/ Capacity Lookup Unit Correction Factor
+	) ~~|
+Max Capacity Buildable from Lookups[solar PV es]=
+	MCGLT Max Capacity Growth Lookup Table[solar PV es]
+	(
+	  (
+	    SUM(Last Year Electricity Generation Capacity[solar PV es,Power Plant Quality!])
+	    + SUM(BDEQ BAU Distributed Electricity Source Capacity[Building Type!,solar PV es\
+		])
+	    + SUM(Cumulative Total Distributed Solar Capacity Caused by Policies[Building Type\
+		!])
+	  )
+	/ Capacity Lookup Unit Correction Factor
+	)
+	~	MW
+	~		|
+
+BAU This Year Solar and Wind Hard Costs as Fraction of First Year Hard Costs[Electricity Source\
+		] :EXCEPT:  [onshore wind es],[solar PV es],[offshore wind es]=
+	0 ~~|
+BAU This Year Solar and Wind Hard Costs as Fraction of First Year Hard Costs[onshore wind es\
+		]=
+	(1 - PDiCCpDoC Perc Decline in Capacity Cost per Doubling of Capacity[onshore wind es\
+		])
+	^ ( LN(
+	        (BAU Last Year Electricity Generation Capacity by Type Including Distributed Generation\
+		[onshore wind es]
+	          + Solar and Wind Capacities Outside Modeled Region Affecting Learning[onshore wind es\
+		])
+	         / First Year Global Solar and Wind Capacities Affecting Learning[onshore wind es\
+		]
+	      )
+	    / LN(2)
+	  ) ~~|
+BAU This Year Solar and Wind Hard Costs as Fraction of First Year Hard Costs[solar PV es\
+		]=
+	(1 - PDiCCpDoC Perc Decline in Capacity Cost per Doubling of Capacity[solar PV es])
+	^ ( LN(
+	        (BAU Last Year Electricity Generation Capacity by Type Including Distributed Generation\
+		[solar PV es]
+	          + Solar and Wind Capacities Outside Modeled Region Affecting Learning[solar PV es\
+		])
+	         / First Year Global Solar and Wind Capacities Affecting Learning[solar PV es\
+		]
+	      )
+	    / LN(2)
+	  ) ~~|
+BAU This Year Solar and Wind Hard Costs as Fraction of First Year Hard Costs[offshore wind es\
+		]=
+	(1 - PDiCCpDoC Perc Decline in Capacity Cost per Doubling of Capacity[offshore wind es\
+		])
+	^ ( LN(
+	        (BAU Last Year Electricity Generation Capacity by Type Including Distributed Generation\
+		[offshore wind es]
+	          + Solar and Wind Capacities Outside Modeled Region Affecting Learning[offshore wind es\
+		])
+	         / First Year Global Solar and Wind Capacities Affecting Learning[offshore wind es\
+		]
+	      )
+	    / LN(2)
+	  )
+	~	Dmnl
+	~		|
+
+Perc Change in Fuel Production Assigned to Fuel Supplier Cash Flow Entities[Cash Flow Entity\
+		] :EXCEPT:   [electricity suppliers],[coal suppliers],[natural gas and petroleum suppliers\
+		],[biomass and biofuel suppliers],[other energy suppliers]=
+	0 ~~|
+Perc Change in Fuel Production Assigned to Fuel Supplier Cash Flow Entities[electricity suppliers\
+		]=
+	Percent Change in Domestic Fuel Production by Fuel[electricity] ~~|
+Perc Change in Fuel Production Assigned to Fuel Supplier Cash Flow Entities[coal suppliers\
+		]=
+	ZIDZ(
+	
+	  SUM(
+	    Percent Change in Domestic Fuel Production by Fuel[coal mining industry fuel within all fuels\
+		!]
+	    * Fuel Production[coal mining industry fuel within all fuels!]
+	  ),
+	
+	  SUM(Fuel Production[coal mining industry fuel within all fuels!])
+	) ~~|
+Perc Change in Fuel Production Assigned to Fuel Supplier Cash Flow Entities[natural gas and petroleum suppliers\
+		]=
+	ZIDZ(
+	
+	  SUM(
+	    Percent Change in Domestic Fuel Production by Fuel[NGPS industry fuel within all fuels\
+		!]
+	    * Fuel Production[NGPS industry fuel within all fuels!]
+	  ),
+	
+	  SUM(Fuel Production[NGPS industry fuel within all fuels!])
+	) ~~|
+Perc Change in Fuel Production Assigned to Fuel Supplier Cash Flow Entities[biomass and biofuel suppliers\
+		]=
+	ZIDZ(
+	
+	  SUM(
+	    Percent Change in Domestic Fuel Production by Fuel[biomass and biofuel within all fuels\
+		!]
+	    * Fuel Production[biomass and biofuel within all fuels!]
+	  ),
+	
+	  SUM(Fuel Production[biomass and biofuel within all fuels!])
+	) ~~|
+Perc Change in Fuel Production Assigned to Fuel Supplier Cash Flow Entities[other energy suppliers\
+		]=
+	ZIDZ(
+	
+	  SUM(
+	    Percent Change in Domestic Fuel Production by Fuel[other energy supplier fuel within all fuels\
+		!]
+	    * Fuel Production[other energy supplier fuel within all fuels!]
+	  ),
+	
+	  SUM(Fuel Production[other energy supplier fuel within all fuels!])
+	)
+	~	Dmnl
+	~		|
+
+Industry Sector Change in Energy Expenditures by Entity[Cash Flow Entity] :EXCEPT: [nonenergy industries\
+		],[natural gas and petroleum suppliers],[coal suppliers]=
+	0 ~~|
+Industry Sector Change in Energy Expenditures by Entity[nonenergy industries]=
+	SUM(Change in Amount Spent on Industry Fuels[nonenergy industries within industry category\
+		!,Industrial Fuel!]) ~~|
+Industry Sector Change in Energy Expenditures by Entity[natural gas and petroleum suppliers\
+		]=
+	SUM(Change in Amount Spent on Industry Fuels[natural gas and petroleum systems,Industrial Fuel\
+		!]) ~~|
+Industry Sector Change in Energy Expenditures by Entity[coal suppliers]=
+	SUM(Change in Amount Spent on Industry Fuels[coal mining,Industrial Fuel!])
+	~	$
+	~		|
+
+This Year Solar and Wind Hard Costs as Fraction of First Year Hard Costs[Electricity Source\
+		] :EXCEPT:   [onshore wind es
+],[solar PV es],[offshore wind es]=
+	0 ~~|
+This Year Solar and Wind Hard Costs as Fraction of First Year Hard Costs[onshore wind es\
+		]=
+	(1 - PDiCCpDoC Perc Decline in Capacity Cost per Doubling of Capacity[onshore wind es\
+		])
+	^ ( LN(
+	        (Last Year Electricity Generation Capacity by Type Including Distributed Generation\
+		[onshore wind es]
+	          + Solar and Wind Capacities Outside Modeled Region Affecting Learning[onshore wind es\
+		])
+	         / First Year Global Solar and Wind Capacities Affecting Learning[onshore wind es\
+		]
+	      )
+	    / LN(2)
+	  ) ~~|
+This Year Solar and Wind Hard Costs as Fraction of First Year Hard Costs[solar PV es]\
+		=
+	(1 - PDiCCpDoC Perc Decline in Capacity Cost per Doubling of Capacity[solar PV es])
+	^ ( LN(
+	        (Last Year Electricity Generation Capacity by Type Including Distributed Generation\
+		[solar PV es]
+	          + Solar and Wind Capacities Outside Modeled Region Affecting Learning[solar PV es\
+		])
+	         / First Year Global Solar and Wind Capacities Affecting Learning[solar PV es\
+		]
+	      )
+	    / LN(2)
+	  ) ~~|
+This Year Solar and Wind Hard Costs as Fraction of First Year Hard Costs[offshore wind es\
+		]=
+	(1 - PDiCCpDoC Perc Decline in Capacity Cost per Doubling of Capacity[offshore wind es\
+		])
+	^ ( LN(
+	        (Last Year Electricity Generation Capacity by Type Including Distributed Generation\
+		[offshore wind es]
+	          + Solar and Wind Capacities Outside Modeled Region Affecting Learning[offshore wind es\
+		])
+	         / First Year Global Solar and Wind Capacities Affecting Learning[offshore wind es\
+		]
+	      )
+	    / LN(2)
+	  )
+	~	Dmnl
 	~		|
 
 Buildings Average Hourly Electricity Demand by Season[Building Type,Building Component\
@@ -56,7 +1316,8 @@ Buildings Peak Hour Electricity Demand by Season[Building Type,Building Componen
 		]=
 	Buildings Average Hourly Electricity Demand by Season[Building Type,Building Component\
 		,Season]
-	* ELF Equipment Load Factors for Building Components[Building Component,Season]
+	* ELF Equipment Load Factors for Building Components[Building Component,Building Type\
+		,Season]
 	~	MW
 	~		|
 
@@ -94,9 +1355,16 @@ BAU Peak Hour Energy Demand[Season]=
 	~		|
 
 SoECbS Share of Electricity Consumption by Season by Building Component[Building Component\
-		,Season]=
+		,Building Type,winter]=
 	GET DIRECT CONSTANTS(
-	   'InputData/elec/SoECbS/SoECbS-bldgcmpnts.csv',
+	   'InputData/elec/SoECbS/SoECbS-bldg-winter.csv',
+	   ',',
+	   'B2'
+	) ~~|
+SoECbS Share of Electricity Consumption by Season by Building Component[Building Component\
+		,Building Type,summer]=
+	GET DIRECT CONSTANTS(
+	   'InputData/elec/SoECbS/SoECbS-bldg-summer.csv',
 	   ',',
 	   'B2'
 	)
@@ -202,9 +1470,17 @@ ELF Equipment Load Factors by Sector[Sectors,Season]=
 	~	Dmnl
 	~		|
 
-ELF Equipment Load Factors for Building Components[Building Component,Season]=
+ELF Equipment Load Factors for Building Components[Building Component,Building Type,winter\
+		]=
 	GET DIRECT CONSTANTS(
-	   'InputData/elec/ELF/ELF-bldgcmpnts.csv',
+	   'InputData/elec/ELF/ELF-bldg-winter.csv',
+	   ',',
+	   'B2'
+	) ~~|
+ELF Equipment Load Factors for Building Components[Building Component,Building Type,summer\
+		]=
+	GET DIRECT CONSTANTS(
+	   'InputData/elec/ELF/ELF-bldg-summer.csv',
 	   ',',
 	   'B2'
 	)
@@ -468,202 +1744,6 @@ Output Avoided Lost Workdays=
 	~	incidents
 	~		~	:SUPPLEMENTARY 
 	|
-
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,Sectors,Pollutant] :EXCEPT:\
-		   [Health Outcome,Sectors,NOx],[Health Outcome,Sectors,PM25],[Health Outcome,Sectors\
-		,SOx]=
-	0 ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,transportation sector\
-		,NOx]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-transport-NOx.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,transportation sector\
-		,PM25]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-transport-PM25.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,transportation sector\
-		,SOx]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-transport-SO2.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,electricity sector,NOx\
-		]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-electricity-NOx.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,electricity sector,PM25\
-		]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-electricity-PM25.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,electricity sector,SOx\
-		]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-electricity-SO2.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,residential buildings sector\
-		,NOx]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-buildings-NOx.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,residential buildings sector\
-		,PM25]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-buildings-PM25.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,residential buildings sector\
-		,SOx]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-buildings-SO2.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,commercial buildings sector\
-		,NOx]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-buildings-NOx.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,commercial buildings sector\
-		,PM25]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-buildings-PM25.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,commercial buildings sector\
-		,SOx]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-buildings-SO2.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,industry sector,NOx]\
-		:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-industry-NOx.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,industry sector,PM25\
-		]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-industry-PM25.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,industry sector,SOx]\
-		:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-industry-SO2.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,district heat and hydrogen sector\
-		,NOx]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-electricity-NOx.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,district heat and hydrogen sector\
-		,PM25]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-electricity-PM25.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,district heat and hydrogen sector\
-		,SOx]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-electricity-SO2.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,LULUCF sector,NOx]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-LULUCF-NOx.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,LULUCF sector,PM25]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-LULUCF-PM25.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,LULUCF sector,SOx]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-LULUCF-SO2.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,geoengineering sector\
-		,NOx]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-industry-NOx.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,geoengineering sector\
-		,PM25]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-industry-PM25.csv',
-	   ',',
-	   '1',
-	   'B2'
-	) ~~|
-HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,geoengineering sector\
-		,SOx]:=
-	GET DIRECT DATA(
-	   'InputData/add-outputs/HOIpTP/HOIpTP-industry-SO2.csv',
-	   ',',
-	   '1',
-	   'B2'
-	)
-	~	incidents/metric ton pollutant
-	~		|
 
 Output Avoided Premature Mortality=
 	Reduction in Negative Health Outcomes[Premature mortality]
@@ -2123,51 +3203,6 @@ Output Embedded CO2 in Exported Fuels[All Fuels]=
 	~		~	:SUPPLEMENTARY 
 	|
 
-CO2 Emissions Intensity by Fuel for All Fuels[All Fuels] :EXCEPT:     [hard coal],[natural gas\
-		],[biomass],[petroleum gasoline
-],[petroleum diesel],[biofuel gasoline],[biofuel diesel],[jet fuel or kerosene],[lignite\
-		],[crude oil],[heavy or residual fuel oil
-],[LPG propane or butane],[municipal solid waste]=
-	0 ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[hard coal]=
-	Electricity Fuel Pollutant Emissions Intensities This Year[CO2,hard coal es] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[natural gas]=
-	Electricity Fuel Pollutant Emissions Intensities This Year[CO2,natural gas nonpeaker es\
-		] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[biomass]=
-	Electricity Fuel Pollutant Emissions Intensities This Year[CO2,biomass es] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[petroleum gasoline]=
-	Transportation Fuel Pollutant Emissions Intensities This Year[LDVs,CO2,petroleum gasoline tf\
-		] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[petroleum diesel]=
-	Transportation Fuel Pollutant Emissions Intensities This Year[HDVs,CO2,petroleum diesel tf\
-		] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[biofuel gasoline]=
-	Transportation Fuel Pollutant Emissions Intensities This Year[LDVs,CO2,biofuel gasoline tf\
-		] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[biofuel diesel]=
-	Transportation Fuel Pollutant Emissions Intensities This Year[HDVs,CO2,biofuel diesel tf\
-		] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[jet fuel or kerosene]=
-	Transportation Fuel Pollutant Emissions Intensities This Year[aircraft,CO2,jet fuel tf\
-		] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[lignite]=
-	Electricity Fuel Pollutant Emissions Intensities This Year[CO2,lignite es] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[crude oil]=
-	Industrial Fuel Pollutant Emissions Intensities This Year[natural gas and petroleum systems\
-		,CO2,crude oil if] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[heavy or residual fuel oil]=
-	Industrial Fuel Pollutant Emissions Intensities This Year[chemicals,CO2,heavy or residual fuel oil if\
-		] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[LPG propane or butane]=
-	Industrial Fuel Pollutant Emissions Intensities This Year[chemicals,CO2,LPG propane or butane if\
-		] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[municipal solid waste]=
-	Electricity Fuel Pollutant Emissions Intensities This Year[CO2,municipal solid waste es\
-		]
-	~	g pollutant/BTU
-	~		|
-
 BCpUC Battery Balance of System Cost per Unit Capacity:INTERPOLATE::=
 	GET DIRECT DATA(
 	   'InputData/elec/BCpUC/BBoSCpUC.csv',
@@ -2517,24 +3552,6 @@ Weighted Shares of ISIC Codes Comprising Each Industry[Industry Category,ISIC Co
 	~	Dmnl
 	~		|
 
-Percent Change in Nonfuel Production due to Policies[Industry Category] :EXCEPT:    [\
-		energy industries within industry category
-],[agriculture]=
-	Percent Change in Production after Macroeconomic Feedbacks[Industry Category]
-	- (Percent Reduction in Nonenergy Nonagriculture Industry Product Demand This Year[Industry Category\
-		]
-	  * (1 + Percent Change in Production after Macroeconomic Feedbacks[Industry Category\
-		])
-	  ) ~~|
-Percent Change in Nonfuel Production due to Policies[energy industries within industry category\
-		]=
-	0 ~~|
-Percent Change in Nonfuel Production due to Policies[agriculture]=
-	Percent Change in Production after Macroeconomic Feedbacks[agriculture]
-	+ Percent Change in Agriculture Industry Production due to Nonanimal Product Shifting
-	~	Dmnl
-	~		|
-
 ItICM Industry to ISIC Code Map[Industry Category,ISIC Code]=
 	GET DIRECT CONSTANTS(
 	   'InputData/indst/ItICM/ItICM.csv',
@@ -2874,207 +3891,6 @@ Change in Domestic Union Represented Jobs=
 	~	jobs
 	~		|
 
-Industry Sector Change in Nonenergy Industry Expenditures by ISIC Code[ISIC Code] :EXCEPT:\
-		        [ISIC 01T03],[ISIC 20T21
-],[ISIC 23],[ISIC 24],[ISIC 35T39],[Other Industries Category ISIC Code]=
-	0 ~~|
-Industry Sector Change in Nonenergy Industry Expenditures by ISIC Code[ISIC 01T03 {Agriculture, forestry and fishing}\
-		]=
-	SUM(Change in Amount Spent on Industry Fuels[agriculture,Industrial Fuel!])
-	
-	+ Change in Nonenergy Expenditures by Industry Without Production Effects[agriculture\
-		]
-	
-	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[Industry Category\
-		!,nonenergy industries])
-	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 01T03]
-	
-	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[agriculture\
-		,Cash Flow Entity!]) ~~|
-Industry Sector Change in Nonenergy Industry Expenditures by ISIC Code[ISIC 20T21 {Chemicals and pharmaceutical products}\
-		]=
-	SUM(Change in Amount Spent on Industry Fuels[chemicals,Industrial Fuel!])
-	
-	+ Change in Nonenergy Expenditures by Industry Without Production Effects[chemicals]
-	
-	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[Industry Category\
-		!,nonenergy industries])
-	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 20T21]
-	
-	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[chemicals\
-		,Cash Flow Entity!]) ~~|
-Industry Sector Change in Nonenergy Industry Expenditures by ISIC Code[ISIC 23 {Other non-metallic mineral products}\
-		]=
-	SUM(Change in Amount Spent on Industry Fuels[cement and other carbonates,Industrial Fuel\
-		!])
-	
-	+ Change in Nonenergy Expenditures by Industry Without Production Effects[cement and other carbonates\
-		]
-	
-	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[Industry Category\
-		!,nonenergy industries])
-	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 23]
-	
-	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[cement and other carbonates\
-		,Cash Flow Entity
-	!]) ~~|
-Industry Sector Change in Nonenergy Industry Expenditures by ISIC Code[ISIC 24 {Manufacture of basic metals}\
-		]=
-	SUM(Change in Amount Spent on Industry Fuels[iron and steel,Industrial Fuel!])
-	
-	+ Change in Nonenergy Expenditures by Industry Without Production Effects[iron and steel\
-		]
-	
-	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[Industry Category\
-		!,nonenergy industries])
-	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 24]
-	
-	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[iron and steel\
-		,Cash Flow Entity!]) ~~|
-Industry Sector Change in Nonenergy Industry Expenditures by ISIC Code[ISIC 35T39 {Electricity, gas, water supply, sewerage, waste and remediation services}\
-		]=
-	SUM(Change in Amount Spent on Industry Fuels[waste management,Industrial Fuel!])
-	
-	+ Change in Nonenergy Expenditures by Industry Without Production Effects[waste management\
-		]
-	
-	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[Industry Category\
-		!,nonenergy industries])
-	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 35T39]
-	
-	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[waste management\
-		,Cash Flow Entity!]) ~~|
-Industry Sector Change in Nonenergy Industry Expenditures by ISIC Code[Other Industries Category ISIC Code\
-		]=
-	(SUM(Change in Amount Spent on Industry Fuels[other industries,Industrial Fuel!])
-	  + Change in Nonenergy Expenditures by Industry Without Production Effects[other industries\
-		]
-	  + SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[other industries\
-		,Cash Flow Entity!])
-	)
-	* ZIDZ(
-	    BObIC BAU Output by ISIC Code[Other Industries Category ISIC Code],
-	
-	    SUM(BObIC BAU Output by ISIC Code[Other Industries Category ISIC Code!])
-	)
-	
-	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[Industry Category\
-		!,nonenergy industries])
-	  * ZIDZ(
-	      BObIC BAU Output by ISIC Code[Other Industries Category ISIC Code],
-	
-	      SUM(BObIC BAU Output by ISIC Code[Nonenergy Industry ISIC Code!])
-	  )
-	~	$
-	~		|
-
-Industry Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC Code] :EXCEPT:\
-		 [ISIC 01T03],[ISIC 20T21],[ISIC 23],[ISIC 24],[ISIC 28],[ISIC 35T39],[Other Industries Category ISIC Code\
-		]=
-	0 ~~|
-Industry Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC 01T03 {Agriculture, forestry and fishing}\
-		]=
-	Industry Sector Carbon Tax Rebate due to CCS[agriculture]
-	
-	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[agriculture\
-		,Cash Flow Entity!])
-	
-	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[Industry Category\
-		!,nonenergy industries])
-	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 01T03] ~~|
-Industry Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC 20T21 {Chemicals and pharmaceutical products}\
-		]=
-	Industry Sector Carbon Tax Rebate due to CCS[chemicals]
-	
-	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[chemicals\
-		,Cash Flow Entity!])
-	
-	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[Industry Category\
-		!,nonenergy industries])
-	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 20T21] ~~|
-Industry Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC 23 {Other non-metallic mineral products}\
-		]=
-	Industry Sector Carbon Tax Rebate due to CCS[cement and other carbonates]
-	
-	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[cement and other carbonates\
-		,Cash Flow Entity!])
-	
-	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[Industry Category\
-		!,nonenergy industries])
-	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 23] ~~|
-Industry Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC 24 {Manufacture of basic metals}\
-		]=
-	Industry Sector Carbon Tax Rebate due to CCS[iron and steel]
-	
-	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[iron and steel\
-		,Cash Flow Entity!])
-	
-	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[Industry Category\
-		!,nonenergy industries])
-	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 24] ~~|
-Industry Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC 28 {Machinery and equipment n.e.c.}\
-		]=
-	Industry Sector Change in Capital and OM Spending[nonenergy industries]
-	
-	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[Industry Category\
-		!,nonenergy industries])
-	  * Percent of Output by Nonenergy Industry ISIC Code[ISIC 28]
-	
-	+ (Industry Sector Carbon Tax Rebate due to CCS[other industries]
-	    + SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[other industries\
-		,Cash Flow Entity!])
-	  )
-	  * ZIDZ(
-	      BObIC BAU Output by ISIC Code[ISIC 28],
-	
-	      SUM(BObIC BAU Output by ISIC Code[Other Industries Category ISIC Code!])
-	    ) ~~|
-Industry Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC 35T39 {Electricity, gas, water supply, sewerage, waste and remediation services}\
-		]=
-	Industry Sector Carbon Tax Rebate due to CCS[waste management]
-	
-	+ SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[waste management\
-		,Cash Flow Entity!]) ~~|
-Industry Sector Change in Nonenergy Industry Revenue by ISIC Code[Other Industries Category ISIC Code\
-		] :EXCEPT: [ISIC 28]=
-	(Industry Sector Carbon Tax Rebate due to CCS[other industries]
-	  + SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[other industries\
-		,Cash Flow Entity!])
-	)
-	* ZIDZ(
-	    BObIC BAU Output by ISIC Code[Other Industries Category ISIC Code],
-	
-	    SUM(BObIC BAU Output by ISIC Code[Other Industries Category ISIC Code!])
-	  )
-	
-	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[Industry Category\
-		!,nonenergy industries])
-	  * Percent of Output by Nonenergy Industry ISIC Code[Other Industries Category ISIC Code\
-		]
-	~	$
-	~	Each Nonenergy Industry ISIC Code receives revenue from (#1) the carbon \
-		tax rebate to the matching industry, (#2) the matching industry's revenues \
-		from selling non-energy products to any/all cash flow entities, and (#3) a \
-		weighted share of the revenues from products sold by the "nonenergy \
-		industries" cash flow entity as inputs to any/all industries.  For #3, we \
-		use an output-weighted share because we don't know what types of goods \
-		were supplied by the "nonenergy industries" (e.g. steel, agricultural \
-		products, machinery, etc.), though we do know that the products being \
-		supplied are non-energy products (as the "nonenergy industries" actor only \
-		supplies nonenergy products).  For ISIC codes with no matching "Industry \
-		Category" (those in the "Other Industries Category ISIC Code" subscript), \
-		we just assign output-weighted shares of #1 and #3 above (as #2 is only \
-		applicable to ISIC codes that have a matching industry).  ISIC 28 \
-		(machinery) has no matching industry category, so it functions like the \
-		other industries in the "Other Industries Category ISIC Code" subscript \
-		with one exception: we assign all revenues associated with capital \
-		equipment sales that were directly induced by the policy package to this \
-		ISIC code.  For ISIC 35T39, the matching industry is "waste management" \
-		for purposes of #1 and #2, but this ISIC code is technically for an Energy \
-		Industry ISIC Code ("Electricity, gas, water supply, sewerage, waste and \
-		remediation services"), so it does not get a contribution from #3.
-	|
-
 Check for Equality of District Heating Nonenergy Industry Revenue=
 	SUM(District Heating Change in Nonenergy Industry Revenue by ISIC Code[ISIC Code!])
 	- District Heating Change in Revenue by Entity[nonenergy industries]
@@ -3196,25 +4012,6 @@ Check for Equality of Industry Sector Nonenergy Industry Expenditures=
 	~	$
 	~		~	:SUPPLEMENTARY 
 	|
-
-Change in Nonenergy Expenditures by Entity Without Production Effects[Cash Flow Entity\
-		] :EXCEPT:   [nonenergy industries],
-[coal suppliers],[natural gas and petroleum suppliers]=
-	0 ~~|
-Change in Nonenergy Expenditures by Entity Without Production Effects[nonenergy industries\
-		]=
-	SUM(Change in Nonenergy Expenditures by Industry Without Production Effects[nonenergy industries within industry category\
-		!]) ~~|
-Change in Nonenergy Expenditures by Entity Without Production Effects[coal suppliers]\
-		=
-	Change in Nonenergy Expenditures by Industry Without Production Effects[coal mining]\
-		 ~~|
-Change in Nonenergy Expenditures by Entity Without Production Effects[natural gas and petroleum suppliers\
-		]=
-	Change in Nonenergy Expenditures by Industry Without Production Effects[natural gas and petroleum systems\
-		]
-	~	$
-	~		|
 
 Check for Equality of Industry Sector Nonenergy Industry Revenue=
 	SUM(Industry Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC Code!])
@@ -3653,40 +4450,6 @@ Percent of Household Expenditures by ISIC Code[ISIC Code]=
 	~	Dmnl
 	~		|
 
-Change in Industry Sector Fuel Supplier Revenue by Entity[Cash Flow Entity] :EXCEPT:  \
-		[electricity suppliers],[coal suppliers],[natural gas and petroleum suppliers],[biomass and biofuel suppliers\
-		],[other energy suppliers]=
-	0 ~~|
-Change in Industry Sector Fuel Supplier Revenue by Entity[electricity suppliers]=
-	SUM(Cash Flow Change for Fuel Industry from Industry Fuel Use[Industry Category!,electricity if\
-		]) ~~|
-Change in Industry Sector Fuel Supplier Revenue by Entity[coal suppliers]=
-	SUM(Cash Flow Change for Fuel Industry from Industry Fuel Use[Industry Category!,hard coal if\
-		]) ~~|
-Change in Industry Sector Fuel Supplier Revenue by Entity[natural gas and petroleum suppliers\
-		]=
-	SUM(Cash Flow Change for Fuel Industry from Industry Fuel Use[Industry Category!,natural gas if\
-		])
-	+ SUM(Cash Flow Change for Fuel Industry from Industry Fuel Use[Industry Category!,petroleum diesel if\
-		])
-	+ SUM(Cash Flow Change for Fuel Industry from Industry Fuel Use[Industry Category!,crude oil if\
-		])
-	+ SUM(Cash Flow Change for Fuel Industry from Industry Fuel Use[Industry Category!,heavy or residual fuel oil if\
-		])
-	+ SUM(Cash Flow Change for Fuel Industry from Industry Fuel Use[Industry Category!,LPG propane or butane if\
-		]) ~~|
-Change in Industry Sector Fuel Supplier Revenue by Entity[biomass and biofuel suppliers\
-		]=
-	SUM(Cash Flow Change for Fuel Industry from Industry Fuel Use[Industry Category!,biomass if\
-		]) ~~|
-Change in Industry Sector Fuel Supplier Revenue by Entity[other energy suppliers]=
-	SUM(Cash Flow Change for Fuel Industry from Industry Fuel Use[Industry Category!,heat if\
-		])
-	+ SUM(Cash Flow Change for Fuel Industry from Industry Fuel Use[Industry Category!,hydrogen if\
-		])
-	~	$
-	~		|
-
 Change in Global Employee Compensation by ISIC Code[Target ISIC Code]=
 	SUM(
 	  Change in Global Output by ISIC Code[Source ISIC Code!]
@@ -3717,31 +4480,6 @@ Change in Global Jobs by ISIC Code[Target ISIC Code]=
 Percent of Government Expenditures by ISIC Code[ISIC Code]=
 	GEbIC Government Expenditures by ISIC Code[ISIC Code]
 	/ SUM(GEbIC Government Expenditures by ISIC Code[ISIC Code!])
-	~	Dmnl
-	~		|
-
-Fraction of Flexibility Points Utilized Last Year[Electricity Source] :EXCEPT: [solar PV es\
-		]=
-	ZIDZ(
-	  (SUM(Last Year Electricity Generation Capacity[Electricity Source,Power Plant Quality\
-		!])
-	     + SUM(BDEQ BAU Distributed Electricity Source Capacity[Building Type!,Electricity Source\
-		])) 
-	  * FPCbS Flexibility Points Consumed by Source[Electricity Source],
-	
-	  Usable Flexibility Points
-	) ~~|
-Fraction of Flexibility Points Utilized Last Year[solar PV es]=
-	ZIDZ(
-	  (SUM(Last Year Electricity Generation Capacity[solar PV es,Power Plant Quality!])
-	     + SUM(BDEQ BAU Distributed Electricity Source Capacity[Building Type!,solar PV es\
-		])
-	     + SUM(Cumulative Total Distributed Solar Capacity Caused by Policies[Building Type\
-		!]))
-	  * FPCbS Flexibility Points Consumed by Source[solar PV es],
-	
-	  Usable Flexibility Points
-	)
 	~	Dmnl
 	~		|
 
@@ -3792,32 +4530,6 @@ Guaranteed Dispatch Quantity by Priority[Electricity Source,Power Plant Quality,
 		dispatch mechanism in excess of what the plant was entitled to dispatch \
 		simply for being a peaker (and which was dispatched at priority 1).
 	|
-
-Max Capacity Buildable from Lookups[Electricity Source] :EXCEPT:  [solar PV es]=
-	MCGLT Max Capacity Growth Lookup Table[Electricity Source]
-	(
-	  (
-	    SUM(Last Year Electricity Generation Capacity[Electricity Source,Power Plant Quality\
-		!])
-	    + SUM(BDEQ BAU Distributed Electricity Source Capacity[Building Type!,Electricity Source\
-		])
-	  )
-	/ Capacity Lookup Unit Correction Factor
-	) ~~|
-Max Capacity Buildable from Lookups[solar PV es]=
-	MCGLT Max Capacity Growth Lookup Table[solar PV es]
-	(
-	  (
-	    SUM(Last Year Electricity Generation Capacity[solar PV es,Power Plant Quality!])
-	    + SUM(BDEQ BAU Distributed Electricity Source Capacity[Building Type!,solar PV es\
-		])
-	    + SUM(Cumulative Total Distributed Solar Capacity Caused by Policies[Building Type\
-		!])
-	  )
-	/ Capacity Lookup Unit Correction Factor
-	)
-	~	MW
-	~		|
 
 District Heating Change in Nonenergy Expenditures by Entity[Cash Flow Entity] :EXCEPT:\
 		 [other energy suppliers]=
@@ -4030,54 +4742,6 @@ Percent Change in Domestic Fuel Production by Fuel[electricity]=
 	~	Dmnl
 	~		|
 
-Construction Cost per Unit Capacity before Construction Subsidies[Electricity Source]\
-		 :EXCEPT: [onshore wind es],[solar PV es],[offshore wind es]=
-	CCaMC BAU Construction Cost per Unit Capacity[Electricity Source]
-	* (1 - RnD Electricity Capital Cost Perc Reduction This Year[Electricity Source]) ~~|
-Construction Cost per Unit Capacity before Construction Subsidies[onshore wind es]=
-	IF THEN ELSE(
-	  CCaMC BAU Construction Cost per Unit Capacity[onshore wind es] > 0,
-	
-	  CCaMC BAU Construction Cost per Unit Capacity[onshore wind es]
-	  * (1 - RnD Electricity Capital Cost Perc Reduction This Year[onshore wind es]),
-	
-	  First Year Cost per Unit Capacity[onshore wind es]
-	  * This Year Solar and Wind Capacity Costs as Fraction of First Year Capacity Costs\
-		[onshore wind es]
-	  * (1 - RnD Electricity Capital Cost Perc Reduction This Year[onshore wind es])
-	) ~~|
-Construction Cost per Unit Capacity before Construction Subsidies[solar PV es]=
-	IF THEN ELSE(
-	  CCaMC BAU Construction Cost per Unit Capacity[solar PV es] > 0,
-	
-	  CCaMC BAU Construction Cost per Unit Capacity[solar PV es]
-	  * (1 - RnD Electricity Capital Cost Perc Reduction This Year[solar PV es]),
-	
-	  First Year Cost per Unit Capacity[solar PV es]
-	  * This Year Solar and Wind Capacity Costs as Fraction of First Year Capacity Costs\
-		[solar PV es]
-	  * (1 - RnD Electricity Capital Cost Perc Reduction This Year[solar PV es])
-	) ~~|
-Construction Cost per Unit Capacity before Construction Subsidies[offshore wind es]=
-	IF THEN ELSE(
-	  CCaMC BAU Construction Cost per Unit Capacity[offshore wind es] > 0,
-	
-	  CCaMC BAU Construction Cost per Unit Capacity[offshore wind es]
-	  * (1 - RnD Electricity Capital Cost Perc Reduction This Year[offshore wind es]),
-	
-	  First Year Cost per Unit Capacity[offshore wind es]
-	  * This Year Solar and Wind Capacity Costs as Fraction of First Year Capacity Costs\
-		[offshore wind es]
-	  * (1 - RnD Electricity Capital Cost Perc Reduction This Year[offshore wind es])
-	)
-	~	$/MW
-	~	To use endogenous learning for onshore wind, offshore wind, and/or solar \
-		PV, leave zeroes in CCaMC for construction cost in all years after the \
-		first modeled year.  If the model sees a non-zero construction cost value \
-		in CCaMC for any given year, it will use that value in that year, \
-		overriding the endogenous learning calculations.
-	|
-
 BAU Change in Fuel Use by Fuel and Technology due to LCFS with Elec Eff Adj[Vehicle Type\
 		,Cargo Type,Vehicle Technology,Transportation Fuel] :EXCEPT: [Vehicle Type,Cargo Type\
 		,gasoline vehicle,petroleum gasoline tf],[Vehicle Type,Cargo Type,diesel vehicle,petroleum diesel tf\
@@ -4109,24 +4773,6 @@ BAU Change in Fuel Use by Fuel and Technology due to LCFS with Elec Eff Adj[HDVs
 	~	BTU
 	~		|
 
-Other Changes in Industry Sector Tax and Tax Rebate Revenues[Cash Flow Entity] :EXCEPT:\
-		   [government],[nonenergy industries],[coal suppliers],[natural gas and petroleum suppliers\
-		]=
-	0 ~~|
-Other Changes in Industry Sector Tax and Tax Rebate Revenues[government]=
-	SUM(Additional Carbon Tax on Process Emissions by Industry[Industry Category!])
-	+ SUM(Change in Taxes Paid on Industry Fuels[Industry Category!,Industrial Fuel!]) ~~|
-Other Changes in Industry Sector Tax and Tax Rebate Revenues[nonenergy industries]=
-	SUM(Industry Sector Carbon Tax Rebate due to CCS[nonenergy industries within industry category\
-		!]) ~~|
-Other Changes in Industry Sector Tax and Tax Rebate Revenues[coal suppliers]=
-	Industry Sector Carbon Tax Rebate due to CCS[coal mining] ~~|
-Other Changes in Industry Sector Tax and Tax Rebate Revenues[natural gas and petroleum suppliers\
-		]=
-	Industry Sector Carbon Tax Rebate due to CCS[natural gas and petroleum systems]
-	~	$
-	~		|
-
 Domestic Employee Compensation Requirements by Industry per Unit Output by Industry[Source ISIC Code\
 		,Target ISIC Code]=
 	DLIM Domestic Leontief Inverse Matrix[Source ISIC Code,Target ISIC Code]
@@ -4141,49 +4787,6 @@ Domestic Job Requirements by Industry per Unit Output by Industry[Source ISIC Co
 	~	jobs/$
 	~		|
 
-BAU Construction Cost per Unit Capacity before Construction Subsidies[Electricity Source\
-		] :EXCEPT: [onshore wind es],[solar PV es],[offshore wind es]=
-	CCaMC BAU Construction Cost per Unit Capacity[Electricity Source] ~~|
-BAU Construction Cost per Unit Capacity before Construction Subsidies[onshore wind es\
-		]=
-	IF THEN ELSE(
-	  CCaMC BAU Construction Cost per Unit Capacity[onshore wind es] > 0,
-	
-	  CCaMC BAU Construction Cost per Unit Capacity[onshore wind es],
-	
-	  First Year Cost per Unit Capacity[onshore wind es]
-	  * BAU This Year Solar and Wind Capacity Costs as Fraction of First Year Capacity Costs\
-		[onshore wind es]
-	) ~~|
-BAU Construction Cost per Unit Capacity before Construction Subsidies[solar PV es]=
-	IF THEN ELSE(
-	  CCaMC BAU Construction Cost per Unit Capacity[solar PV es] > 0,
-	
-	  CCaMC BAU Construction Cost per Unit Capacity[solar PV es],
-	
-	  First Year Cost per Unit Capacity[solar PV es]
-	  * BAU This Year Solar and Wind Capacity Costs as Fraction of First Year Capacity Costs\
-		[solar PV es]
-	) ~~|
-BAU Construction Cost per Unit Capacity before Construction Subsidies[offshore wind es\
-		]=
-	IF THEN ELSE(
-	  CCaMC BAU Construction Cost per Unit Capacity[offshore wind es] > 0,
-	
-	  CCaMC BAU Construction Cost per Unit Capacity[offshore wind es],
-	
-	  First Year Cost per Unit Capacity[offshore wind es]
-	  * BAU This Year Solar and Wind Capacity Costs as Fraction of First Year Capacity Costs\
-		[offshore wind es]
-	)
-	~	$/MW
-	~	To use endogenous learning for onshore wind, offshore wind, and/or solar \
-		PV, leave zeroes in CCaMC for construction cost in all years after the \
-		first modeled year.  If the model sees a non-zero construction cost value \
-		in CCaMC for any given year, it will use that value in that year, \
-		overriding the endogenous learning calculations.
-	|
-
 BAU Correction for Difference in Input vs Calculated BAU Components Energy Use[Building Type\
 		,Building Fuel,Building Component] :EXCEPT:     [Building Type,Building Fuel,envelope\
 		]=
@@ -4194,35 +4797,6 @@ BAU Correction for Difference in Input vs Calculated BAU Components Energy Use[B
 		,Building Fuel,envelope]=
 	0
 	~	BTU
-	~		|
-
-New Vehicle Fuel Economy after Feebate[Vehicle Type,Cargo Type,Vehicle Technology] :EXCEPT:\
-		 [LDVs,passenger,Vehicle Technology]=
-	New Vehicle Fuel Economy after Fuel Price Effects[Vehicle Type,Cargo Type,Vehicle Technology\
-		] ~~|
-New Vehicle Fuel Economy after Feebate[LDVs,passenger,Vehicle Technology] :EXCEPT: [LDVs\
-		,passenger,battery electric vehicle]=
-	New Vehicle Fuel Economy after Fuel Price Effects[LDVs,passenger,Vehicle Technology]
-	* (1 + Perc Change in New LDV Fuel Economy due to Feebate) ~~|
-New Vehicle Fuel Economy after Feebate[LDVs,passenger,battery electric vehicle]=
-	New Vehicle Fuel Economy after Fuel Price Effects[LDVs,passenger,battery electric vehicle\
-		]
-	~	thing*miles/BTU
-	~		|
-
-Industry Sector Change in Energy Expenditures by Entity[Cash Flow Entity] :EXCEPT: [nonenergy industries\
-		],[natural gas and petroleum suppliers],[coal suppliers]=
-	0 ~~|
-Industry Sector Change in Energy Expenditures by Entity[nonenergy industries]=
-	SUM(Change in Amount Spent on Industry Fuels[nonenergy industries within industry category\
-		!,Industrial Fuel!]) ~~|
-Industry Sector Change in Energy Expenditures by Entity[natural gas and petroleum suppliers\
-		]=
-	SUM(Change in Amount Spent on Industry Fuels[natural gas and petroleum systems,Industrial Fuel\
-		!]) ~~|
-Industry Sector Change in Energy Expenditures by Entity[coal suppliers]=
-	SUM(Change in Amount Spent on Industry Fuels[coal mining,Industrial Fuel!])
-	~	$
 	~		|
 
 Cost to Industry from Process Emissions Policies[Industry Category,Industry Process Emissions Policy\
@@ -4367,32 +4941,6 @@ Cost to Industry from Process Emissions Policies[agriculture,indst livestock mea
 		compliance is to buy equipment, rather than pay workers.
 	|
 
-BAU Max Capacity Buildable from Lookups[Electricity Source] :EXCEPT:    [solar PV es]\
-		=
-	MCGLT Max Capacity Growth Lookup Table[Electricity Source]
-	(
-	  (
-	    SUM(BAU Last Year Electricity Generation Capacity[Electricity Source,Power Plant Quality\
-		!])
-	    + SUM(BDEQ BAU Distributed Electricity Source Capacity[Building Type!,Electricity Source\
-		])
-	  )
-	/ Capacity Lookup Unit Correction Factor
-	) ~~|
-BAU Max Capacity Buildable from Lookups[solar PV es]=
-	MCGLT Max Capacity Growth Lookup Table[solar PV es]
-	(
-	  (
-	    SUM(BAU Last Year Electricity Generation Capacity[solar PV es,Power Plant Quality\
-		!])
-	    + SUM(BDEQ BAU Distributed Electricity Source Capacity[Building Type!,solar PV es\
-		])
-	  )
-	/ Capacity Lookup Unit Correction Factor
-	)
-	~	MW
-	~		|
-
 TLIM Total Leontief Inverse Matrix[Source ISIC Code,Target ISIC Code]=
 	GET DIRECT CONSTANTS(
 	   'InputData/io-model/TLIM/TLIM.csv',
@@ -4520,29 +5068,6 @@ Change in Energy Imports Including Electricity[All Fuels] :EXCEPT: [electricity]
 Change in Energy Imports Including Electricity[electricity]=
 	SUM(Change in Electricity Imports[Electricity Source!])
 	/ MWh per BTU
-	~	BTU
-	~		|
-
-Change in Energy Production including Energy Carriers[All Fuels] :EXCEPT:  [electricity\
-		],[heat],[hydrogen]=
-	QUANTUM(
-	  Change in Fuel Production[All Fuels],
-	  QSfE Quantization Size for Energy
-	) ~~|
-Change in Energy Production including Energy Carriers[electricity]=
-	SUM(Change in Electricity Generation by Type[Electricity Source!,Power Plant Quality\
-		!])
-	/ MWh per BTU ~~|
-Change in Energy Production including Energy Carriers[heat]=
-	QUANTUM(
-	  Change in Total Heat Use,
-	  QSfE Quantization Size for Energy
-	) ~~|
-Change in Energy Production including Energy Carriers[hydrogen]=
-	QUANTUM(
-	  SUM(Change in Hydrogen Produced by Pathway[Hydrogen Production Pathway!]),
-	  QSfE Quantization Size for Energy
-	)
 	~	BTU
 	~		|
 
@@ -4811,64 +5336,6 @@ BAU Guaranteed Dispatch Quantity by Priority[Electricity Source,Power Plant Qual
 	~	MW*hour
 	~		|
 
-Perc Change in Fuel Production Assigned to Fuel Supplier Cash Flow Entities[Cash Flow Entity\
-		] :EXCEPT:   [electricity suppliers],[coal suppliers],[natural gas and petroleum suppliers\
-		],[biomass and biofuel suppliers],[other energy suppliers]=
-	0 ~~|
-Perc Change in Fuel Production Assigned to Fuel Supplier Cash Flow Entities[electricity suppliers\
-		]=
-	Percent Change in Domestic Fuel Production by Fuel[electricity] ~~|
-Perc Change in Fuel Production Assigned to Fuel Supplier Cash Flow Entities[coal suppliers\
-		]=
-	ZIDZ(
-	
-	  SUM(
-	    Percent Change in Domestic Fuel Production by Fuel[coal mining industry fuel within all fuels\
-		!]
-	    * Fuel Production[coal mining industry fuel within all fuels!]
-	  ),
-	
-	  SUM(Fuel Production[coal mining industry fuel within all fuels!])
-	) ~~|
-Perc Change in Fuel Production Assigned to Fuel Supplier Cash Flow Entities[natural gas and petroleum suppliers\
-		]=
-	ZIDZ(
-	
-	  SUM(
-	    Percent Change in Domestic Fuel Production by Fuel[NGPS industry fuel within all fuels\
-		!]
-	    * Fuel Production[NGPS industry fuel within all fuels!]
-	  ),
-	
-	  SUM(Fuel Production[NGPS industry fuel within all fuels!])
-	) ~~|
-Perc Change in Fuel Production Assigned to Fuel Supplier Cash Flow Entities[biomass and biofuel suppliers\
-		]=
-	ZIDZ(
-	
-	  SUM(
-	    Percent Change in Domestic Fuel Production by Fuel[biomass and biofuel within all fuels\
-		!]
-	    * Fuel Production[biomass and biofuel within all fuels!]
-	  ),
-	
-	  SUM(Fuel Production[biomass and biofuel within all fuels!])
-	) ~~|
-Perc Change in Fuel Production Assigned to Fuel Supplier Cash Flow Entities[other energy suppliers\
-		]=
-	ZIDZ(
-	
-	  SUM(
-	    Percent Change in Domestic Fuel Production by Fuel[other energy supplier fuel within all fuels\
-		!]
-	    * Fuel Production[other energy supplier fuel within all fuels!]
-	  ),
-	
-	  SUM(Fuel Production[other energy supplier fuel within all fuels!])
-	)
-	~	Dmnl
-	~		|
-
 New Components Potential Energy Use after Price Efficiency Feedbacks[Building Type,Building Fuel\
 		,Building Component] :EXCEPT:   [Building Type,
 Building Fuel,envelope]=
@@ -4929,89 +5396,12 @@ Within Industry Value Added per Unit Output[ISIC Code]=
 	~	Dmnl
 	~		|
 
-Process Emissions Abated due to Carbon Tax by Marginal Cost[Industry by Process Emissions Policy\
-		,Marginal Abatement Cost] :EXCEPT:  [cement industry measures,Marginal Abatement Cost\
-		]=
-	IF THEN ELSE(
-	
-	  Does Carbon Tax Exempt Process Emissions This Year
-	  = 0
-	
-	  :AND:
-	
-	  Does Carbon Tax Exempt Non CO2 Emissions This Year
-	  = 0
-	
-	  :AND:
-	
-	  PERAC Marginal Cost Definitions[Marginal Abatement Cost]
-	  > 0
-	
-	  :AND:
-	
-	  Additional Carbon Tax Rate This Year[industry sector]
-	  > PERAC Marginal Cost Definitions[Marginal Abatement Cost],
-	
-	  PERAC Mass CO2e Avoidable by Marginal Cost[Industry by Process Emissions Policy,Marginal Abatement Cost\
-		],
-	
-	  0
-	) ~~|
-Process Emissions Abated due to Carbon Tax by Marginal Cost[cement industry measures,\
-		Marginal Abatement Cost]=
-	IF THEN ELSE(
-	
-	  Does Carbon Tax Exempt Process Emissions This Year
-	  = 0
-	
-	  :AND:
-	
-	  PERAC Mass CO2e Avoidable by Marginal Cost[cement industry measures,Marginal Abatement Cost\
-		]
-	  > 0
-	
-	  :AND:
-	
-	  Additional Carbon Tax Rate This Year[industry sector]
-	  > PERAC Marginal Cost Definitions[Marginal Abatement Cost],
-	
-	
-	  PERAC Mass CO2e Avoidable by Marginal Cost[cement industry measures,Marginal Abatement Cost\
-		],
-	
-	  0
-	)
-	~	g CO2e
-	~		|
-
 District Heating Change in Energy Expenditures by Entity[Cash Flow Entity] :EXCEPT: [\
 		other energy suppliers]=
 	0 ~~|
 District Heating Change in Energy Expenditures by Entity[other energy suppliers]=
 	SUM(Change in Amount Spent on District Heating Fuels[Industrial Fuel!])
 	~	$
-	~		|
-
-Energy Production including Energy Carriers[All Fuels] :EXCEPT: [electricity],[heat],\
-		[hydrogen]=
-	QUANTUM(
-	  Fuel Production[All Fuels],
-	  QSfE Quantization Size for Energy
-	) ~~|
-Energy Production including Energy Carriers[electricity]=
-	SUM(Electricity Generation by Type[Electricity Source!,Power Plant Quality!])
-	/ MWh per BTU ~~|
-Energy Production including Energy Carriers[heat]=
-	QUANTUM(
-	  Total Heat Use,
-	  QSfE Quantization Size for Energy
-	) ~~|
-Energy Production including Energy Carriers[hydrogen]=
-	QUANTUM(
-	  SUM(Hydrogen Produced by Pathway[Hydrogen Production Pathway!]),
-	  QSfE Quantization Size for Energy
-	)
-	~	BTU
 	~		|
 
 Change in Fuel Use Remaining after Change in Exports[All Fuels] :EXCEPT:  [crude oil]\
@@ -5052,40 +5442,6 @@ Reduction in Carbon Intensity of This Fuel Relative to Reference Fuel[motorbikes
 	* (1 - Carbon Intensity Ratios by Transportation Fuel[Transportation Fuel])
 	~	g pollutant/BTU
 	~		|
-
-Changes in Nonenergy Expenditures by Entity due to Production Changes[Cash Flow Entity\
-		] :EXCEPT: [nonenergy industries],[coal suppliers],[natural gas and petroleum suppliers\
-		]=
-	SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[Industry Category\
-		!,Cash Flow Entity]) ~~|
-Changes in Nonenergy Expenditures by Entity due to Production Changes[nonenergy industries\
-		]=
-	SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[Industry Category\
-		!,nonenergy industries])
-	
-	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[nonenergy industries within industry category\
-		!,Cash Flow Entity!]) ~~|
-Changes in Nonenergy Expenditures by Entity due to Production Changes[coal suppliers]\
-		=
-	SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[Industry Category\
-		!,coal suppliers])
-	
-	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[coal mining\
-		,Cash Flow Entity!]) ~~|
-Changes in Nonenergy Expenditures by Entity due to Production Changes[natural gas and petroleum suppliers\
-		]=
-	SUM(Change in Industry Revenues from Nonenergy Outputs by Purchasing Entity[Industry Category\
-		!,natural gas and petroleum suppliers])
-	
-	+ SUM(Change in Industry Expenditures on Nonenergy Inputs by Supplying Entity[natural gas and petroleum systems\
-		,Cash Flow Entity!])
-	~	$
-	~	Every cash flow entity reduces its expenditures by the amount that \
-		industry revenue is reduced from selling fewer outputs to that cash flow \
-		entity.  Additionally, each cash flow entity that is an industry reduces \
-		its expenditures by the amount that it reduces purchases of inputs from \
-		all cash flow entities.
-	|
 
 Changes in Nonenergy Revenue by Entity due to Production Changes[Cash Flow Entity] :EXCEPT:\
 		  [nonenergy industries]=
@@ -5154,116 +5510,6 @@ Source ISIC Code:
 	~	
 	~		|
 
-Output Fuel Costs per Unit Energy by Sector[transportation fuel within all fuels,transportation sector\
-		]=
-	Transportation Fuel Cost per Unit Energy[Transportation Fuel]
-	* BCF BTU per Small Fuel Output Unit[transportation fuel within all fuels]
-	/ OCCF Dollars per Small Output Currency Unit ~~|
-Output Fuel Costs per Unit Energy by Sector[electricity source within all fuels,electricity sector\
-		] :EXCEPT: [natural gas,electricity sector],[wind,electricity sector],[solar,electricity sector\
-		]=
-	Electricity Fuel Cost per Unit Energy[Electricity Source]
-	* BCF BTU per Small Fuel Output Unit[electricity source within all fuels]
-	/ OCCF Dollars per Small Output Currency Unit ~~|
-Output Fuel Costs per Unit Energy by Sector[natural gas,electricity sector]=
-	Electricity Fuel Cost per Unit Energy[natural gas nonpeaker es]
-	* BCF BTU per Small Fuel Output Unit[natural gas]
-	/ OCCF Dollars per Small Output Currency Unit ~~|
-Output Fuel Costs per Unit Energy by Sector[wind,electricity sector]=
-	0 ~~|
-Output Fuel Costs per Unit Energy by Sector[solar,electricity sector]=
-	0 ~~|
-Output Fuel Costs per Unit Energy by Sector[building fuel within all fuels,residential buildings sector\
-		]=
-	Buildings Fuel Cost per Unit Energy[Building Fuel,urban residential]
-	* BCF BTU per Small Fuel Output Unit[building fuel within all fuels]
-	/ OCCF Dollars per Small Output Currency Unit ~~|
-Output Fuel Costs per Unit Energy by Sector[building fuel within all fuels,commercial buildings sector\
-		]=
-	Buildings Fuel Cost per Unit Energy[Building Fuel,commercial]
-	* BCF BTU per Small Fuel Output Unit[building fuel within all fuels]
-	/ OCCF Dollars per Small Output Currency Unit ~~|
-Output Fuel Costs per Unit Energy by Sector[industrial fuel within all fuels,industry sector\
-		]=
-	Industrial Fuel Cost per Unit Energy[Industrial Fuel]
-	* BCF BTU per Small Fuel Output Unit[industrial fuel within all fuels]
-	/ OCCF Dollars per Small Output Currency Unit ~~|
-Output Fuel Costs per Unit Energy by Sector[industrial fuel within all fuels,district heat and hydrogen sector\
-		]=
-	District Heat and Hydrogen Fuel Cost per Unit Energy[Industrial Fuel]
-	* BCF BTU per Small Fuel Output Unit[industrial fuel within all fuels]
-	/ OCCF Dollars per Small Output Currency Unit ~~|
-Output Fuel Costs per Unit Energy by Sector[All Fuels,transportation sector] :EXCEPT:\
-		 [transportation fuel within all fuels,transportation sector]=
-	0 ~~|
-Output Fuel Costs per Unit Energy by Sector[All Fuels,electricity sector] :EXCEPT: [electricity source within all fuels\
-		,electricity sector]=
-	0 ~~|
-Output Fuel Costs per Unit Energy by Sector[All Fuels,residential buildings sector] :EXCEPT:\
-		 [building fuel within all fuels,residential buildings sector]=
-	0 ~~|
-Output Fuel Costs per Unit Energy by Sector[All Fuels,commercial buildings sector] :EXCEPT:\
-		 [building fuel within all fuels,commercial buildings sector]=
-	0 ~~|
-Output Fuel Costs per Unit Energy by Sector[All Fuels,industry sector] :EXCEPT: [industrial fuel within all fuels\
-		,industry sector]=
-	0 ~~|
-Output Fuel Costs per Unit Energy by Sector[All Fuels,district heat and hydrogen sector\
-		] :EXCEPT: [industrial fuel within all fuels,district heat and hydrogen sector]=
-	0 ~~|
-Output Fuel Costs per Unit Energy by Sector[All Fuels,LULUCF sector]=
-	0
-	~	output currency unit/small fuel output unit
-	~		~	:SUPPLEMENTARY 
-	|
-
-BAU This Year Solar and Wind Hard Costs as Fraction of First Year Hard Costs[Electricity Source\
-		] :EXCEPT:  [onshore wind es],[solar PV es],[offshore wind es]=
-	0 ~~|
-BAU This Year Solar and Wind Hard Costs as Fraction of First Year Hard Costs[onshore wind es\
-		]=
-	(1 - PDiCCpDoC Perc Decline in Capacity Cost per Doubling of Capacity[onshore wind es\
-		])
-	^ ( LN(
-	        (BAU Last Year Electricity Generation Capacity by Type Including Distributed Generation\
-		[onshore wind es]
-	          + Solar and Wind Capacities Outside Modeled Region Affecting Learning[onshore wind es\
-		])
-	         / First Year Global Solar and Wind Capacities Affecting Learning[onshore wind es\
-		]
-	      )
-	    / LN(2)
-	  ) ~~|
-BAU This Year Solar and Wind Hard Costs as Fraction of First Year Hard Costs[solar PV es\
-		]=
-	(1 - PDiCCpDoC Perc Decline in Capacity Cost per Doubling of Capacity[solar PV es])
-	^ ( LN(
-	        (BAU Last Year Electricity Generation Capacity by Type Including Distributed Generation\
-		[solar PV es]
-	          + Solar and Wind Capacities Outside Modeled Region Affecting Learning[solar PV es\
-		])
-	         / First Year Global Solar and Wind Capacities Affecting Learning[solar PV es\
-		]
-	      )
-	    / LN(2)
-	  ) ~~|
-BAU This Year Solar and Wind Hard Costs as Fraction of First Year Hard Costs[offshore wind es\
-		]=
-	(1 - PDiCCpDoC Perc Decline in Capacity Cost per Doubling of Capacity[offshore wind es\
-		])
-	^ ( LN(
-	        (BAU Last Year Electricity Generation Capacity by Type Including Distributed Generation\
-		[offshore wind es]
-	          + Solar and Wind Capacities Outside Modeled Region Affecting Learning[offshore wind es\
-		])
-	         / First Year Global Solar and Wind Capacities Affecting Learning[offshore wind es\
-		]
-	      )
-	    / LN(2)
-	  )
-	~	Dmnl
-	~		|
-
 Perc Change in New Component Energy Use due to Price Efficiency Feedbacks[Building Type\
 		,Building Fuel,Building Component] :EXCEPT: [Building Type,Building Fuel,envelope]=
 	Perc Change in New Component Energy Cost per Unit Area[Building Type,Building Fuel,Building Component\
@@ -5290,93 +5536,6 @@ Global Value Added Requirements by Industry per Unit Output by Industry[Source I
 	~	Dmnl
 	~		|
 
-Fraction of Process Emissions Reductions by Pollutant[Industry Category,Pollutant] :EXCEPT:\
-		  [cement and other carbonates
-,CO2],[natural gas and petroleum systems,CH4],[iron and steel,CO2],[chemicals,F gases\
-		],[coal mining,CH4],[waste management
-,CH4],[agriculture,Pollutant],[other industries,Pollutant]=
-	0 ~~|
-Fraction of Process Emissions Reductions by Pollutant[cement and other carbonates,CO2\
-		]=
-	1 ~~|
-Fraction of Process Emissions Reductions by Pollutant[natural gas and petroleum systems\
-		,CH4]=
-	1 ~~|
-Fraction of Process Emissions Reductions by Pollutant[iron and steel,CO2]=
-	1 ~~|
-Fraction of Process Emissions Reductions by Pollutant[chemicals,F gases]=
-	1 ~~|
-Fraction of Process Emissions Reductions by Pollutant[coal mining,CH4]=
-	1 ~~|
-Fraction of Process Emissions Reductions by Pollutant[waste management,CH4]=
-	1 ~~|
-Fraction of Process Emissions Reductions by Pollutant[agriculture,Pollutant] :EXCEPT:\
-		   [agriculture,CO2]=
-	ZIDZ(
-	  BAU Process Emissions in CO2e after GDP Adjustment[agriculture,Pollutant],
-	
-	  (SUM(BAU Process Emissions in CO2e after GDP Adjustment[agriculture,Pollutant!])
-	    - BAU Process Emissions in CO2e after GDP Adjustment[agriculture,CO2]
-	  )
-	) ~~|
-Fraction of Process Emissions Reductions by Pollutant[agriculture,CO2]=
-	0 ~~|
-Fraction of Process Emissions Reductions by Pollutant[other industries,Pollutant]=
-	ZIDZ(
-	  BAU Process Emissions in CO2e after GDP Adjustment[other industries,Pollutant],
-	
-	  SUM(BAU Process Emissions in CO2e after GDP Adjustment[other industries,Pollutant!\
-		])
-	)
-	~	Dmnl
-	~	All reductions of non-CO2 process emissions come from the EPA source.  We \
-		have grouped technical measures from the EPA document (when building the \
-		MAC curve tables) so that each table only refers to abatement potential of \
-		a single pollutant, except for "agriculture."  Therefore, in this \
-		variable, we assign the reductions from the EPA MAC tables to the \
-		corresponding pollutants.  For agriculture, we assign the reductions \
-		proportinately to BAU process emissions shares by gas, excluding CO2 (in \
-		line with the EPA source).  We don't currently have a policy that reduces \
-		process emissions from "other industries," but in case we do in the \
-		future, we assign these reductions proportionate to BAU process emissions \
-		shares across all gases, including CO2.  For cement and iron and steel, \
-		all process emissions (and therefore all reduction potential) are CO2.
-	|
-
-Solar and Wind Capacities Outside Modeled Region Affecting Learning[Electricity Source\
-		] :EXCEPT: [onshore wind es],[solar PV es],[offshore wind es]=
-	0 ~~|
-Solar and Wind Capacities Outside Modeled Region Affecting Learning[onshore wind es]=
-	MAX(
-	  0,
-	
-	  (BGSaWC BAU Global Solar and Wind Capacities[onshore wind es]
-	    - BAU Last Year Electricity Generation Capacity by Type Including Distributed Generation\
-		[onshore wind es])
-	  * FoTOMRAEL Fraction of Technology Outside Modeled Region Affecting Endogenous Learning
-	) ~~|
-Solar and Wind Capacities Outside Modeled Region Affecting Learning[solar PV es]=
-	MAX(
-	  0,
-	
-	  (BGSaWC BAU Global Solar and Wind Capacities[solar PV es]
-	    - BAU Last Year Electricity Generation Capacity by Type Including Distributed Generation\
-		[solar PV es])
-	  * FoTOMRAEL Fraction of Technology Outside Modeled Region Affecting Endogenous Learning
-	) ~~|
-Solar and Wind Capacities Outside Modeled Region Affecting Learning[offshore wind es]\
-		=
-	MAX(
-	  0,
-	
-	  (BGSaWC BAU Global Solar and Wind Capacities[offshore wind es]
-	    - BAU Last Year Electricity Generation Capacity by Type Including Distributed Generation\
-		[offshore wind es])
-	  * FoTOMRAEL Fraction of Technology Outside Modeled Region Affecting Endogenous Learning
-	)
-	~	MW
-	~		|
-
 DLIM Domestic Leontief Inverse Matrix[Source ISIC Code, Target ISIC Code]=
 	GET DIRECT CONSTANTS(
 	   'InputData/io-model/DLIM/DLIM.csv',
@@ -5384,37 +5543,6 @@ DLIM Domestic Leontief Inverse Matrix[Source ISIC Code, Target ISIC Code]=
 	   'B2'
 	)
 	~	Dmnl
-	~		|
-
-New Vehicles after Charger Deployment[Vehicle Type,Cargo Type,Vehicle Technology] :EXCEPT:\
-		  [LDVs,passenger,Vehicle Technology]=
-	New Vehicles Allocated by Technology[Vehicle Type,Cargo Type,Vehicle Technology] ~~|
-New Vehicles after Charger Deployment[LDVs,passenger,Vehicle Technology] :EXCEPT:   [\
-		LDVs,passenger,battery electric vehicle]=
-	MAX(
-	  0,
-	
-	  New Vehicles Allocated by Technology[LDVs,passenger,Vehicle Technology]
-	  - SUM(New Vehicles Allocated by Technology[LDVs,passenger,Vehicle Technology!])
-	    * Change in EV Market Share due to Charger Deployment
-	    * ZIDZ(
-	        New Vehicles Allocated by Technology[LDVs,passenger,Vehicle Technology],
-	
-	        SUM(New Vehicles Allocated by Technology[LDVs,passenger,Vehicle Technology!]\
-		)
-	          - New Vehicles Allocated by Technology[LDVs,passenger,battery electric vehicle\
-		]
-	      )
-	) ~~|
-New Vehicles after Charger Deployment[LDVs,passenger,battery electric vehicle]=
-	MIN(
-	  SUM(New Vehicles Allocated by Technology[LDVs,passenger,Vehicle Technology!]),
-	
-	  New Vehicles Allocated by Technology[LDVs,passenger,battery electric vehicle]
-	  + SUM(New Vehicles Allocated by Technology[LDVs,passenger,Vehicle Technology!])
-	    * Change in EV Market Share due to Charger Deployment
-	)
-	~	vehicles
 	~		|
 
 Energy Export Revenue including Electricity[All Fuels] :EXCEPT: [electricity]=
@@ -5466,54 +5594,6 @@ BVAbIC BAU Value Added by ISIC Code[ISIC Code]=
 	~	$
 	~		|
 
-This Year Solar and Wind Hard Costs as Fraction of First Year Hard Costs[Electricity Source\
-		] :EXCEPT:   [onshore wind es
-],[solar PV es],[offshore wind es]=
-	0 ~~|
-This Year Solar and Wind Hard Costs as Fraction of First Year Hard Costs[onshore wind es\
-		]=
-	(1 - PDiCCpDoC Perc Decline in Capacity Cost per Doubling of Capacity[onshore wind es\
-		])
-	^ ( LN(
-	        (Last Year Electricity Generation Capacity by Type Including Distributed Generation\
-		[onshore wind es]
-	          + Solar and Wind Capacities Outside Modeled Region Affecting Learning[onshore wind es\
-		])
-	         / First Year Global Solar and Wind Capacities Affecting Learning[onshore wind es\
-		]
-	      )
-	    / LN(2)
-	  ) ~~|
-This Year Solar and Wind Hard Costs as Fraction of First Year Hard Costs[solar PV es]\
-		=
-	(1 - PDiCCpDoC Perc Decline in Capacity Cost per Doubling of Capacity[solar PV es])
-	^ ( LN(
-	        (Last Year Electricity Generation Capacity by Type Including Distributed Generation\
-		[solar PV es]
-	          + Solar and Wind Capacities Outside Modeled Region Affecting Learning[solar PV es\
-		])
-	         / First Year Global Solar and Wind Capacities Affecting Learning[solar PV es\
-		]
-	      )
-	    / LN(2)
-	  ) ~~|
-This Year Solar and Wind Hard Costs as Fraction of First Year Hard Costs[offshore wind es\
-		]=
-	(1 - PDiCCpDoC Perc Decline in Capacity Cost per Doubling of Capacity[offshore wind es\
-		])
-	^ ( LN(
-	        (Last Year Electricity Generation Capacity by Type Including Distributed Generation\
-		[offshore wind es]
-	          + Solar and Wind Capacities Outside Modeled Region Affecting Learning[offshore wind es\
-		])
-	         / First Year Global Solar and Wind Capacities Affecting Learning[offshore wind es\
-		]
-	      )
-	    / LN(2)
-	  )
-	~	Dmnl
-	~		|
-
 Energy Imports including Electricity[All Fuels] :EXCEPT:  [electricity]=
 	QUANTUM(
 	  Fuel Imports[All Fuels],
@@ -5523,22 +5603,6 @@ Energy Imports including Electricity[electricity]=
 	SUM(Imported Electricity[Electricity Source!])
 	/ MWh per BTU
 	~	BTU
-	~		|
-
-Last Year Change in Electricity Supplier Cost per Unit Electricity[All Fuels] :EXCEPT:\
-		    [electricity],[heat],[hydrogen]=
-	0 ~~|
-Last Year Change in Electricity Supplier Cost per Unit Electricity[electricity]= DELAY FIXED\
-		 (
-	Change in Electricity Supplier Expenditures After Subsidies per Unit Electricity Produced\
-		, 1, 0) ~~|
-Last Year Change in Electricity Supplier Cost per Unit Electricity[heat]= DELAY FIXED\
-		 (
-	Change in District Heat Supplier Expenditures per Unit Heat Produced, 1, 0) ~~|
-Last Year Change in Electricity Supplier Cost per Unit Electricity[hydrogen]= DELAY FIXED\
-		 (
-	Change in Hydrogen Supplier Expenditures per Unit Hydrogen Produced, 1, 0)
-	~	$/BTU
 	~		|
 
 BEbIC BAU Employment by ISIC Code[ISIC Code]=
@@ -6469,21 +6533,6 @@ Output Energy Related CO2 Emissions from Agriculture=
 Output Energy Related CO2 Emissions from Waste Management=
 	SUM(Industrial Sector Energy Related Emissions after CCS[Industrial Fuel!,waste management\
 		,CO2])
-	/ Grams per Million Metric Tons Pollutant
-	~	million metric tons
-	~		~	:SUPPLEMENTARY 
-	|
-
-Output Energy Related CO2 Emissions by Sector[Sectors] :EXCEPT:   [industry sector]=
-	Total Energy Related Emissions[Sectors,CO2]
-	/ Grams per Million Metric Tons Pollutant ~~|
-Output Energy Related CO2 Emissions by Sector[industry sector]=
-	(Total Energy Related Emissions[industry sector,CO2]
-	  - SUM(Industrial Sector Energy Related Emissions after CCS[Industrial Fuel!,agriculture\
-		,CO2])
-	  - SUM(Industrial Sector Energy Related Emissions after CCS[Industrial Fuel!,waste management\
-		,CO2])
-	)
 	/ Grams per Million Metric Tons Pollutant
 	~	million metric tons
 	~		~	:SUPPLEMENTARY 
@@ -8204,20 +8253,6 @@ Change in Fuel Use by Fuel and Technology due to LCFS[Vehicle Type,Cargo Type,Ve
 		,Cargo Type])
 	~	BTU
 	~		|
-
-Electricity Sector Carbon Tax Rebate due to CCS[Electricity Source] :EXCEPT: [hard coal es\
-		]=
-	0 ~~|
-Electricity Sector Carbon Tax Rebate due to CCS[hard coal es]=
-	Amount of CO2 Sequestered by Electricity Sector
-	* Additional Carbon Tax Rate This Year[electricity sector]
-	~	$
-	~	We assign the rebate to the coal electricity source, since most CCS will \
-		likely affect coal.  It doesn't make any difference for the model, because \
-		the cash flow impacts of electricity producers are not disaggregated by \
-		electricity source (and the benefits of performing CCS accrue to the \
-		electricity producers who do the CCS, not to the coal mining industry).
-	|
 
 Output Change in Energy Production including Electricity and Heat[All Fuels]=
 	Change in Energy Production including Energy Carriers[All Fuels]
@@ -11838,16 +11873,6 @@ Fraction of New Bldg Components Shifted to Other Fuels This Year[Building Compon
 	~	Dmnl
 	~		|
 
-BAU New Vehicle Price Including EV Shadow Cost[Vehicle Type,Cargo Type,Vehicle Technology\
-		] :EXCEPT: [LDVs,passenger,battery electric vehicle]=
-	BAU New Vehicle Price[Vehicle Type,Cargo Type,Vehicle Technology] ~~|
-BAU New Vehicle Price Including EV Shadow Cost[LDVs,passenger,battery electric vehicle\
-		]=
-	BAU New Vehicle Price[LDVs,passenger,battery electric vehicle]
-	+ BAU BRAaCTSC BAU Range Anxiety and Charging Time Shadow Cost
-	~	$/vehicle
-	~		|
-
 Percent Change in Components Energy Use[Building Type,Building Component]=
 	XIDZ(
 	  SUM(New Components Potential Energy Use after Fuel Shifting[Building Type,Building Fuel\
@@ -11868,15 +11893,6 @@ Percent Change in Components Energy Use[Building Type,Building Component]=
 		heating and cooling components, because envelope is a separate component \
 		with its own pricing that corresponds to its own efficiency improvements.
 	|
-
-New Vehicle Price Including EV Shadow Cost[Vehicle Type,Cargo Type,Vehicle Technology\
-		] :EXCEPT:  [LDVs,passenger,battery electric vehicle]=
-	New Vehicle Price[Vehicle Type,Cargo Type,Vehicle Technology] ~~|
-New Vehicle Price Including EV Shadow Cost[LDVs,passenger,battery electric vehicle]=
-	New Vehicle Price[LDVs,passenger,battery electric vehicle]
-	+ Range Anxiety and Charging Time Shadow Cost
-	~	$/vehicle
-	~		|
 
 Remaining Avoidable Process Emissions after Carbon Tax[Industry by Process Emissions Policy\
 		,Marginal Abatement Cost]=
@@ -28150,7 +28166,7 @@ Vensim updates the values of stock variables based on inflows/outflows at the en
 1,243,851,3,0,0,0,0,0,64,0,-1--1--1,,1|(-5320,1600)|
 1,244,246,63,4,0,0,22,0,0,0,-1--1--1,,1|(-539,1362)|
 1,245,246,71,100,0,0,22,0,0,0,-1--1--1,,1|(-665,1362)|
-11,246,49004,-603,1362,6,9,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+11,246,49680,-603,1362,6,9,34,3,0,0,1,0,0,0,0,0,0,0,0,0
 10,247,New Generation Capacity,-603,1393,65,22,40,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,248,New Generation Capacity,2282,282,59,22,8,3,0,4,-1,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
 10,249,New Generation Capacity,-4944,2484,65,22,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
@@ -28410,11 +28426,11 @@ We intentionally use distributed capacities from the current year and electricit
 1,494,492,48,0,0,0,0,0,128,0,-1--1--1,,1|(-7159,1599)|
 10,495,Elec Demand Including TnD Losses,42,-87,74,19,8,2,0,3,-1,0,0,0,128-128-128,255-0-0,|12||128-128-128,0,0,0,0,0,0
 10,496,SLF System Load Factor,-210,33,43,20,8,131,0,4,0,0,0,0,-1--1--1,255-0-0,|12||0-0-0,0,0,0,0,0,0
-10,497,Old Calculation of Peak Hour Energy Demand,37,33,77,19,8,3,0,4,0,0,0,0,-1--1--1,255-0-0,|0||0-0-0,0,0,0,0,0,0
+10,497,Old Calculation of Peak Hour Energy Demand,37,33,77,19,8,3,0,4,0,0,0,0,-1--1--1,255-0-0,|12||0-0-0,0,0,0,0,0,0
 1,498,495,497,0,0,0,0,0,128,0,-1--1--1,,1|(39,-33)|
 1,499,496,497,0,0,0,0,0,128,0,-1--1--1,,1|(-110,33)|
 10,500,PTCF Peak Time Capacity Factors,690,282,57,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,501,New Generation Capacity to Meet Energy Need,-1879,266,57,29,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|0||0-0-0,0,0,0,0,0,0
+10,501,New Generation Capacity to Meet Energy Need,-1879,266,57,29,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
 10,502,Peak Power Output before New Peaker Plants,986,282,89,21,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,503,500,502,0,0,0,0,0,128,0,-1--1--1,,1|(815,282)|
 10,504,Peak Power Demand to Be Met,1535,282,62,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
@@ -28443,7 +28459,7 @@ We intentionally use distributed capacities from the current year and electricit
 12,527,0,-3715,2650,156,30,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 A certain amount of dispatch, based on expected capacity factors, is guaranteed to peaking plant types (for grid regulation and control purposes).
 10,528,This Year Demand Response Capacity,-250,619,67,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,529,Peak Power Demand after Storage and DR,360,280,69,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|0||0-0-0,0,0,0,0,0,0
+10,529,Peak Power Demand after Storage and DR,360,280,69,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
 1,530,528,647,0,0,0,0,0,128,0,-1--1--1,,1|(-124,619)|
 10,531,Electricity Generation Capacity,-6619,525,70,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 1,532,531,155,0,0,0,0,0,128,0,-1--1--1,,1|(-6493,525)|
@@ -28817,7 +28833,7 @@ The BAU Subsidies variable is found in the "fuels" section of InputData, not the
 1,882,881,502,0,0,0,0,0,128,0,-1--1--1,,1|(986,193)|
 10,883,Peak Power Demand to Be Met by Season,1271,282,77,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,884,883,504,0,0,0,0,0,128,0,-1--1--1,,1|(1403,282)|
-10,885,New Generation Capacity to Meet Energy Need,690,121,80,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|0||128-128-128,0,0,0,0,0,0
+10,885,New Generation Capacity to Meet Energy Need,690,121,80,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
 1,886,885,881,0,0,0,0,0,128,0,-1--1--1,,1|(836,121)|
 12,887,0,-2157,-212,368,27,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 New Capacity Before Peakers
@@ -28829,8 +28845,8 @@ Finding Peak Power Need
 10,892,Hydrogen Sector Electricity Demand,-1527,89,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,893,Geoengineering Sector Electricity Demand,-1527,281,77,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,894,District Heat Electricity Demand,-1527,184,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,895,SoECbS Share of Electricity Consumption by Season by Sector,-1291,-104,91,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|0||0-0-0,0,0,0,0,0,0
-10,896,SoECbS Share of Electricity Consumption by Season by Building Component,-1291,606,91,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|0||0-0-0,0,0,0,0,0,0
+10,895,SoECbS Share of Electricity Consumption by Season by Sector,-1291,-104,91,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,896,SoECbS Share of Electricity Consumption by Season by Building Component,-1291,606,91,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
 10,897,Transportation Electricity Demand by Season,-1291,494,80,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,898,Buildings Electricity Demand by Season,-1291,720,62,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,899,Industry Electricity Demand by Season,-1291,-6,62,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
@@ -28849,9 +28865,9 @@ Finding Peak Power Need
 1,912,895,900,0,0,0,0,0,128,0,-1--1--1,,1|(-1291,-12)|
 1,913,895,901,0,0,0,0,0,128,0,-1--1--1,,1|(-1291,37)|
 1,914,895,902,0,0,0,0,0,128,0,-1--1--1,,1|(-1291,83)|
-10,915,ELF Equipment Load Factors for Vehicles,-722,395,69,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|0||0-0-0,0,0,0,0,0,0
-10,916,ELF Equipment Load Factors for Building Components,-722,606,69,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|0||0-0-0,0,0,0,0,0,0
-10,917,ELF Equipment Load Factors by Sector,-722,-104,69,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|0||0-0-0,0,0,0,0,0,0
+10,915,ELF Equipment Load Factors for Vehicles,-722,395,69,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,916,ELF Equipment Load Factors for Building Components,-722,606,69,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,917,ELF Equipment Load Factors by Sector,-722,-104,69,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
 10,918,Geoengineering Peak Hour Electricity Demand by Season,-722,281,101,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 10,919,Industry Peak Hour Electricity Demand by Season,-722,-6,98,22,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 10,920,Hydrogen Sector Peak Hour Electricity Demand by Season,-722,89,98,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
@@ -28877,19 +28893,19 @@ Finding Peak Power Need
 1,940,918,936,0,0,0,0,0,128,0,-1--1--1,,1|(-476,281)|
 1,941,922,936,0,0,0,0,0,128,0,-1--1--1,,1|(-488,388)|
 1,942,923,936,0,0,0,0,0,128,0,-1--1--1,,1|(-490,504)|
-10,943,RM Reserve Margin,47,174,41,19,8,3,0,4,-1,0,0,0,-1--1--1,192-128-192,|0||0-0-0,0,0,0,0,0,0
+10,943,RM Reserve Margin,47,174,41,19,8,3,0,4,-1,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
 10,944,Peak Hour Electricity Demand after Reserve Margin,47,280,95,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,945,936,944,0,0,0,0,0,128,0,-1--1--1,,1|(-121,280)|
 1,946,943,944,0,0,0,0,0,128,0,-1--1--1,,1|(47,218)|
-10,947,Peak Power Demand after Storage and DR,1271,126,73,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|0||128-128-128,0,0,0,0,0,0
+10,947,Peak Power Demand after Storage and DR,1271,126,73,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
 1,948,947,883,0,0,0,0,0,128,0,-1--1--1,,1|(1271,197)|
 1,949,944,529,0,0,0,0,0,128,0,-1--1--1,,1|(209,280)|
-10,950,New Generation Capacity to Meet Energy Need,2060,121,80,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|0||128-128-128,0,0,0,0,0,0
+10,950,New Generation Capacity to Meet Energy Need,2060,121,80,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
 1,951,950,864,0,0,0,0,0,128,0,-1--1--1,,1|(1903,121)|
 1,952,950,571,0,0,0,0,0,128,0,-1--1--1,,1|(2060,194)|
 12,953,0,2153,-212,232,27,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Summing New Capacity
-10,954,Hours per Year,-999,-104,59,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128,0,0,0,0,0,0
+10,954,Hours per Year,-999,-104,59,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,955,Industry Average Hourly Electricity Demand by Season,-999,-6,67,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 10,956,Hydrogen Sector Average Hourly Electricity Demand by Season,-999,89,89,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 10,957,District Heat Average Hourly Electricity Demand by Season,-999,184,72,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
@@ -28908,13 +28924,13 @@ Summing New Capacity
 1,970,954,958,0,0,0,0,0,128,0,-1--1--1,,1|(-999,71)|
 1,971,954,959,0,0,0,0,0,128,0,-1--1--1,,1|(-999,177)|
 1,972,954,960,0,0,0,0,0,128,0,-1--1--1,,1|(-999,291)|
-10,973,Old Calculation of Peak Power Demand after Storage and DR,354,31,93,28,8,3,0,4,0,0,0,0,-1--1--1,255-0-0,|0||0-0-0,0,0,0,0,0,0
+10,973,Old Calculation of Peak Power Demand after Storage and DR,354,31,93,28,8,3,0,4,0,0,0,0,-1--1--1,255-0-0,|12||0-0-0,0,0,0,0,0,0
 1,974,497,973,0,0,0,0,0,128,0,-1--1--1,,1|(180,32)|
-10,975,Hours per Year,349,-82,59,11,8,2,0,3,-1,0,0,0,128-128-128,255-0-0,|0||128-128-128,0,0,0,0,0,0
+10,975,Hours per Year,349,-82,59,11,8,2,0,3,-1,0,0,0,128-128-128,255-0-0,|12||128-128-128,0,0,0,0,0,0
 1,976,975,973,0,0,0,0,0,128,0,-1--1--1,,1|(350,-40)|
-10,977,Reduction in Peak Power Demand from Storage and DR,348,134,70,29,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128,0,0,0,0,0,0
+10,977,Reduction in Peak Power Demand from Storage and DR,348,134,70,29,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 1,978,977,973,0,0,0,0,0,128,0,-1--1--1,,1|(350,88)|
-10,979,Old Reserve Margin,-215,-101,41,19,8,3,0,4,0,0,0,0,-1--1--1,255-0-0,|0||0-0-0,0,0,0,0,0,0
+10,979,Old Reserve Margin,-215,-101,41,19,8,3,0,4,0,0,0,0,-1--1--1,255-0-0,|12||0-0-0,0,0,0,0,0,0
 1,980,979,497,0,0,0,0,0,128,0,-1--1--1,,1|(-95,-37)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
@@ -31291,8 +31307,6 @@ Allocating Changes in Revenue
 10,137,MWh per BTU,1821,559,60,11,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
 1,138,137,136,0,0,0,0,0,128,0,-1--1--1,,1|(1821,576)|
 1,139,14,136,0,0,0,0,0,128,0,-1--1--1,,1|(1698,615)|
-1,141,85,140,0,0,0,0,0,128,0,-1--1--1,,1|(692,151)|
-1,143,74,142,0,0,0,0,0,128,0,-1--1--1,,1|(997,203)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Hydrogen Supply
@@ -35693,9 +35707,11 @@ A policy allows for an alternate allocation (use) of some or all government reve
 1,200,194,195,0,0,0,0,0,128,0,-1--1--1,,1|(1680,653)|
 ///---\\\
 :L<%^E!@
+1:Electrification+EV.vdfx
+1:Electrification.vdfx
 1:MostRecentRun.vdfx
 8:GraphDefinitions.vgd
-9:MostRecentRun
+9:Electrification+EV
 22:$,Dollar,Dollars,$s
 22:acre,acres
 22:btu,btus
@@ -35727,7 +35743,7 @@ A policy allows for an alternate allocation (use) of some or all government reve
 27:0,
 34:0,
 4:Time
-5:SoECbS Share of Electricity Consumption by Season by Sector[Sectors,Season]
+5:Peak Power Demand to Be Met by Season[Season]
 35:Date
 36:YYYY-MM-DD
 37:2000
@@ -35773,7 +35789,6 @@ A policy allows for an alternate allocation (use) of some or all government reve
 6:agriculture crop and rice measures
 6:agriculture livestock measures
 6:aircraft
-6:appliances
 6:Asthma exacerbation
 6:battery electric vehicle
 6:BC
@@ -35816,7 +35831,6 @@ A policy allows for an alternate allocation (use) of some or all government reve
 6:coal suppliers
 6:commercial
 6:commercial buildings sector
-6:cooling and ventilation
 6:cross alternate government revenue allocation
 6:cross carbon tax
 6:cross CCS
@@ -35858,7 +35872,6 @@ A policy allows for an alternate allocation (use) of some or all government reve
 6:electricity suppliers
 6:electricity tf
 6:electrolysis
-6:envelope
 6:F gases
 6:foreign entities
 6:freight
@@ -35970,7 +35983,6 @@ A policy allows for an alternate allocation (use) of some or all government reve
 6:land forest set asides
 6:land peatland restoration
 6:LDVs
-6:lighting
 6:lignite
 6:lignite es
 6:lignite newly built
@@ -36028,7 +36040,6 @@ A policy allows for an alternate allocation (use) of some or all government reve
 6:onshore wind newly built
 6:onshore wind preexisting nonretiring
 6:onshore wind preexisting retiring
-6:other component
 6:other energy suppliers
 6:other industries
 6:passenger
