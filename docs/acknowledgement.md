@@ -24,6 +24,7 @@ We would like to acknowledge the following people who made the Energy Policy Sol
 * Michael Wang and Hao Cai, Argonne National Laboratory
 * Trieu Mai and Brian Bush, National Renewable Energy Laboratory
 * The China Energy Group, Lawrence Berkeley National Laboratory
+* Betony Jones, NextGen Policy
 * Ramez Naam
 * Lori Siegel, Climate Interactive
 * John Weyant, Stanford University

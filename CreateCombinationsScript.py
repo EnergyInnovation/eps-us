@@ -15,6 +15,8 @@
 # Rather than including input and output file names in the code below, we assign all the file
 # names to variables in this section.  This allows the names to be easily changed if desired.
 ModelFile = "EPS.mdl" # The name of the Vensim model file (typically with .mdl or .vpm extension)
+FirstYear = "2019" # The first year you wish to include in the output file (cannot be prior to first simulated year)
+FinalYear = "2050" # The last year you wish to include in the output file (cannot be later than last simulated year)
 OutputScript = "GeneratedCombinationsScript.cmd" # The desired filename of the Vensim command script to be generated
 RunResultsFile = "RunResults.tsv" # The desired filename for TSV file containing model run results
 OutputVarsFile = "OutputVarsToExport.lst" # The name of the file containing a list of variables to be included in the RunResultsFile
@@ -518,9 +520,9 @@ for PolicySettingCombination in PolicySettingCombinations:
 	# Then we add blank columns if we haven't added enough policy columns to satisfy the
 	# MinPolicyCols setting.
 	if FirstEntryDone:
-		f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|+!||||:")
+		f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|+!||" + FirstYear + "|" + FinalYear + "|:")
 	else:
-		f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|||||:")
+		f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|||" + FirstYear + "|" + FinalYear + "|:")
 		FirstEntryDone = True
 	f.write(RunName)
 	f.write("\tCurrentRunNumber=" + str(CurrentRunNumber))

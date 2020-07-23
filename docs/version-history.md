@@ -4,15 +4,16 @@ title:	"Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
-### **3.0.0 - July 20, 2020**
+### **3.0.0 - Aug 3, 2020**
 
 * New Input-Output Model
   * An economic input/output (I/O) model has been added as a component of the Energy Policy Simulator.
   * Respending of direct changes in cash flow for government, households, and industries is now accounted for, enabling calculation of indirect/induced effects of the policy package on economic activity.
-  * Feedback loops from the I/O model to the Transportation, Buildings, and Industry sectors capture the energy demand and emissions associated with indirect/induced economic activity.
+  * Feedback loops from the I/O model to the Transportation, Buildings, and Industry sectors capture the energy demand and emissions associated with indirect and induced economic activity.
   * New output metrics include the change in gross domestic product (GDP), employment (jobs), total employee compensation, average compensation per employee, and number of union and non-union jobs.
   * The apportionment of direct cash flows to foreign entities, to labor, and to government are now more comprehensive and accurate.
-  * We gratefully acknowledge the invaluable contributions of the [American Council for an Energy-Efficient Economy](https://www.aceee.org/) (ACEEE), [Jim Barrett](https://www.barretteconomics.com/), and [Skip Laitner](https://www.linkedin.com/in/skip-laitner-746b124/) for their guidance and advice in implementing this feature, and for allowing us to learn from the [DEEPER](https://www.aceee.org/files/pdf/fact-sheet/DEEPER_Methodology.pdf) I/O model, originally created by Skip Laitner.
+  * A new [documentation page](io-model.html) explains the I/O model in detail.
+  * We gratefully acknowledge the invaluable contributions of the [American Council for an Energy-Efficient Economy](https://www.aceee.org/) (ACEEE), [Jim Barrett](https://www.barretteconomics.com/), and [Skip Laitner](https://www.linkedin.com/in/skip-laitner-746b124/) for their guidance and advice in implementing this feature, and for allowing us to learn from the [DEEPER I/O model](https://www.aceee.org/files/pdf/fact-sheet/DEEPER_Methodology.pdf), originally created by Skip Laitner.
 * Improved Public Health Calculations
   * In addition to the policy package's effects on premature mortality (introduced in version 1.0.3), the EPS now calculates impacts on 10 additional health outcomes, including lost work days, hospital admissions, non-fatal heart attacks, asthama attacks, respiratory symptoms and bronchitis.
 * Data Updates
@@ -21,8 +22,10 @@ This page tracks updates that have been made with each version of the Energy Pol
 * Minor improvements
   * Industry Sector
     * Industrial process emissions multipliers (used in indst/BPEiC and indst/PERAC) are now disaggregated by gas.  These multipliers now allow for replacement of BPEiC data with arbitary, user-specified data while keeping abatement potentials and costs in PERAC in sync with BPEiC.
-    * Add revenue data for "water & waste" industry (water treatment, wastewater, solid waste collection, landfilling, recycling, etc.)
+    * Added revenue data for "water & waste" industry (water treatment, wastewater, solid waste collection, landfilling, recycling, etc.)
   * Electricity Sector
+    * Peak power demand calculations now calculate summer and winter peaks separately
+    * Peak power demand calculations use equipment load factors (elec/ELF) to more accurately determine peak demand, which is particularly important in scenarios with substantial electrification
     * Users may now override endogenous learning for electricity generation capacity by specifying time series capital costs in elec/CCaMC
     * Imported electricity price and BAU exported electricity price may now be customized
     * Balance of system is now included in grid battery costs (and is unaffected by endogenous learning)
@@ -34,6 +37,7 @@ This page tracks updates that have been made with each version of the Energy Pol
     * Added output graphs of Embedded CO2 in Exported Fuels and Change in Embedded CO2 in Exported Fuels
     * Implemented cash flows for efficient building component rebate policy
     * The carbon tax rate may now be explicitly set for District Heat and Hydrogen sector instead of inheriting the Industry sector rate
+    * All Python scripts now include the capability to limit the time range of data written to output files
 * Bug Fixes
   * Fixed off-by-one-year error in cement process CO2 multipliers (indst/BPEiC) and two missing formulas for cement (indst/PERAC)
   * Do not exclude heat as a fuel type that can power industry CCS
