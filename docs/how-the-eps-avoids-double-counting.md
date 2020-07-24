@@ -9,7 +9,7 @@ The EPS has been designed to avoid double-counting the effects of policies on mo
 
 This can pose a challenge for pricing policies (especially a carbon tax), which may incentivize a wide variety of actions to reduce emissions.  For example, a carbon tax applied to the Transportation sector may make driving fossil fuel-powered vehicles more expensive, reducing demand for travel.  It may also increase the attractiveness of electric vehicles (EVs) relative to fossil fuel-powered vehicles, leading to a change in the market shares of these types of vehicles.  In other words, it may lead both to a shift in demand for transportation services and to technology switching.
 
-In the Energy Policy Simulator, some actions that may be undertaken to lower emissions are either price-driven or are governed by a separate policy lever particular to that action, not both.  For example, changes in demand for industrial output from each industry (iron and steel, cement, chemicals, etc.) are price-driven; there is no policy lever that allows the user to explicitly set a reduction in demand for industrial output.  In contrast, industries converting their manufacturing processes that run on natural gas to run on electricity is governed by a separate policy lever (an industrial electrification policy), and this conversion will not be undertaken solely due to changes in the cost of natural gas or electricity.
+In the Energy Policy Simulator, some actions that may be undertaken to lower emissions are either price-driven or are governed by a separate policy lever particular to that action, not both.  For example, changes in demand for building services (such as how often occupants choose to use their lights, air conditioning, or cooking appliances) are price-driven; there is no policy lever that allows the user to explicitly set a reduction in demand for building services.  In contrast, industries converting their manufacturing processes that run on natural gas to run on electricity is governed by a separate policy lever (an industrial electrification policy), and this conversion will not be undertaken solely due to changes in the cost of natural gas or electricity.
 
 ## Combining Multiple Policies
 
@@ -61,15 +61,18 @@ The following table lists which approach is used to govern which types of action
 | Industry | Change in energy efficiency of production | no | yes | standards, waste heat recovery, system integration |
 | Industry | Early retirement of industrial facilities | no | yes | early retirement |
 | Industry | Process emissions abatement | yes | yes | additive: 8 levers (including agriculture) |
-| District Heat | Technology choice (fuel switching) | no | yes | fuel switching |
+| District Heat<sup>B</sup> | Technology choice (fuel switching) | no | yes | fuel switching |
 | District Heat | Efficiency | no | yes | CHP |
 | LULUCF | All actions | no | yes | each action has its own lever |
 | CCS | Amount of deployment | no | yes | CCS deployment |
+| Hydrogen Supply<sup>B</sup> | Technology choice (e.g. methane reforming, electrolysis, etc.) | no | yes | production pathway switching |
+| Geoengineering | Amount of deployment | no | yes | direct air capture |
 | R&D | Amount of progress achieved | no | yes | separate levers for each technology |
+| Fuel Trade | Quantities of fuels imported/exported | yes | yes | reduce exports |
 
 <sup>A</sup> The feebate is a pricing policy, but it is converted into a percentage increase in efficiency via a parameter from a study, then applied additively following pricing effects.
 
-<sup>B</sup> Note that change in demand for electricity is handled in each electricity-demanding sector, not in the Electricity Sector.
+<sup>B</sup> Note that change in demand for electricity, district heat, and hydrogen is handled in each energy-demanding sector, not in the Electricity, District Heat, or Hydrogen Supply sectors.
 
 <sup>C</sup> The subsidy for distributed solar PV is a pricing policy, but it is converted into a percentage increase in deployment via a parameter from a study.  There is no purely price-driven mechanism for distributed PV deployment that responds to, say, changes in the price of electricity from the grid.
 

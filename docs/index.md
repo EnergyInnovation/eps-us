@@ -15,13 +15,13 @@ The Energy Policy Simulator (EPS) is a free and open-source computer model creat
 
 Links to doc pages are followed by a number indicating the version of the EPS core software that was current at the time that doc page was most recently updated.
 
-* [Introduction](introduction.html) - 1.4.3
-* [EPS Video Series](video-series.html) - 1.4.2
+* [Introduction](introduction.html) - 3.0.0
+* [EPS Video Series](video-series.html) - 3.0.0
 * Model Overview
   * [Architectural Design](architectural-design.html) - 2.0.0
   * [The Included Input Data Set](input-data.html) - 1.1.4
   * [Assumptions and Limitations](assumptions.html) - 1.4.2
-  * [How the EPS Avoids Double Counting Policy Effects](how-the-eps-avoids-double-counting.html) - 1.4.3
+  * [How the EPS Avoids Double Counting Policy Effects](how-the-eps-avoids-double-counting.html) - 3.0.0
   * [Comparing Results to Reality or Other Models](comparing-results.html) - 1.4.2
   * [Notes on Carbon Tax Revenue Use](carbon-tax-revenue-use.html) - 1.4.2
   * [Evaluating Policy Packages' Financial Effects](evaluating-package-financials.html) - 2.1.0
