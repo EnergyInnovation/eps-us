@@ -29,6 +29,7 @@ This page tracks updates that have been made with each version of the Energy Pol
     * Users may now override endogenous learning for electricity generation capacity by specifying time series capital costs in elec/CCaMC
     * Imported electricity price and BAU exported electricity price may now be customized
     * Balance of system is now included in grid battery costs (and is unaffected by endogenous learning)
+    * Soft costs for onshore wind, offshore wind, and solar PV power plants (and distributed solar PV) now accept time-series BAU data
   * Other
     * WebAppData now detects duplicate and missing policy ID numbers
     * The model no longer uses GET DIRECT DATA to access data from outside of the model run timeframe
