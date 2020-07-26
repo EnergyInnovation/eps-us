@@ -15,7 +15,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * A new [documentation page](io-model.html) explains the I/O model in detail.
   * We gratefully acknowledge the invaluable contributions of the [American Council for an Energy-Efficient Economy](https://www.aceee.org/) (ACEEE), [Jim Barrett](https://www.barretteconomics.com/), and [Skip Laitner](https://www.linkedin.com/in/skip-laitner-746b124/) for their guidance and advice in implementing this feature, and for allowing us to learn from the [DEEPER I/O model](https://www.aceee.org/files/pdf/fact-sheet/DEEPER_Methodology.pdf), originally created by Skip Laitner.
 * Improved Public Health Calculations
-  * In addition to the policy package's effects on premature mortality (introduced in version 1.0.3), the EPS now calculates impacts on 10 additional health outcomes, including lost work days, hospital admissions, non-fatal heart attacks, asthama attacks, respiratory symptoms and bronchitis.
+  * In addition to the policy package's effects on premature mortality (introduced in version 1.0.3), the EPS now calculates impacts on 10 additional health outcomes, including lost workdays, hospital admissions, non-fatal heart attacks, asthma attacks, respiratory symptoms and bronchitis.
 * Data Updates
   * First simulated year advanced from 2018 to 2019
   * Data in input variables based on EIA Annual Energy Outlook updated to use AEO 2020 values
