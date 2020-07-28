@@ -5,7 +5,7 @@ title:  "Assumptions and Limitations"
 
 In order to create a computer model that is less complex than the real world, it is necessary to make a number of assumptions and simplifications.  Similarly, model capabilities and results may be affected by limitations in the available data.  This page documents some of the more important assumptions and limitations in the Energy Policy Simulator (EPS), to provide context when working with the model or interpreting its results.
 
-If you are seeking an explanation for a difference between EPS results and either historical data or the outputs of a different model, see the [Comparing Results to Reality or Other Models](comparing-results.md) page.
+If you are seeking an explanation for a difference between EPS results and either historical data or the outputs of a different model, see the [Comparing Results to Reality or Other Models](comparing-results.html) page.
 
 ## Uncertainty is Greater with More or Stronger Policies
 

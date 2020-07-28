@@ -63,7 +63,7 @@ Finally, we calculate total process emissions using the following structure:
 
 First, we use global warming potential (GWP) factors to convert BAU Process Emissions in CO<sub>2</sub>e to BAU process emissions in units of each specific pollutant.  We do the same with the policy-driven change in process emissions.  (Here, we use the 100-year GWP timeframe, rather than the user-selected GWP timeframe, because the EPA source used 100-year GWP values when converting to CO<sub>2</sub>e, and we are simply undoing their conversion.)
 
-Finally, we apply the fuel-weighted percent change in production due to policies (the calculation of which is explained below) to adjust both the process emissions and the change in process emissions to reflect increases or decreases in industry production levels.  The "Process Emissions" variable is used later on this sheet as a component of total Industry sector emissions, while the "Change in Process Emissions" variable is used on the [Industry - Cash Flow sheet](temp.htm).
+Finally, we apply the fuel-weighted percent change in production due to policies (the calculation of which is explained below) to adjust both the process emissions and the change in process emissions to reflect increases or decreases in industry production levels.  The "Process Emissions" variable is used later on this sheet as a component of total Industry sector emissions, while the "Change in Process Emissions" variable is used on the [Industry - Cash Flow sheet](industry-ag-cash.html).
 
 ## Policies Affecting Fuel Use<a name="cogen"></a><a name="early-ret"></a><a name="eff-stds"></a><a name="system-integ"></a><a name="fuel-switching"></a>
 
