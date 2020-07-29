@@ -123,7 +123,7 @@ From the total industrial fuel use for energy, we separate out the electricity d
 
 ### Total Emissions from Industry (not including leakage)
 
-Next, we convert fuel use to emissions using the emissions intensities from the [Fuels sheet](temp.htm).  We then add process emissions and subtract the quantity of CO<sub>2</sub> that is sequestered via CCS to give us total emissions from industry in the modeled nation, as shown in the following structure:
+Next, we convert fuel use to emissions using the emissions intensities from the [Fuels sheet](fuels.html).  We then add process emissions and subtract the quantity of CO<sub>2</sub> that is sequestered via CCS to give us total emissions from industry in the modeled nation, as shown in the following structure:
 
 ![total industry sector emissions](industry-ag-main-EmisTotal.png)
 
