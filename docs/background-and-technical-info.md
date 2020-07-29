@@ -30,4 +30,4 @@ The following diagram shows the high-level, technical architecture of the web ap
 
 ## Developer
 
-The online interface and the technologies necessary to communicate with a copy of Vensim running on a webserver were developed by [Todd Fincannon](http://www.toddfincannon.com).
+The online interface and the technologies necessary to communicate with a copy of Vensim running on a webserver were developed by Todd Fincannon.
