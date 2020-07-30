@@ -44,6 +44,9 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Do not exclude heat as a fuel type that can power industry CCS
   * Added geoengineering sector to energy-related CO2 output graphs
   * Limited effect of building component labeling policy to affected market share (bldgs/PPEIdtIL)
+  * Fixed formula error in "Change in Amount Spent on Vehicle Maintenance"
+  * Fixed double-counting of certain cash flow changes due to changes in industrial production
+  * Very high carbon tax rates applied to industrial process (non-energy) emissions can no longer cause oscillating production changes
 
 ### **2.1.2 - July 9, 2020**
 
