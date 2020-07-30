@@ -51,6 +51,7 @@ Links to doc pages are followed by a number indicating the version of the EPS co
   * [Hydrogen Supply](hydrogen-supply.html) - 3.0.0
   * [Land Use, Land Use Change, and Forestry](lulucf.html) - 1.1.4
   * [Carbon Capture and Sequestration](ccs.html) - 1.1.4
+  * [Geoengineering](geoengineering.html) - 3.0.0
   * [Fuels](fuels.html) - 1.1.4
   * [Cross-Sector Totals](cross-sector-totals.html) - 3.0.0
   * [Input-Output Model](io-model.html) - 3.0.0
