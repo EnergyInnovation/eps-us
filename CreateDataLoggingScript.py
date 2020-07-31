@@ -30,7 +30,7 @@ f.write("SIMULATE>SAVELIST|" + OutputVarsFile + "\n")
 
 for SettingsFile in SettingsFiles:
 
-	# The RunName is the name of the SettingsFile without the .cin extension.  It is used as the filename for the VDF file
+	# The RunName is the name of the SettingsFile without the .cin extension.  It is used as the filename for the .vdfx file
 	# that Vensim creates (or "NoSettings"), and it is included in a column in the RunResultsFile.
 	SettingsFileNameLen = len(SettingsFile)
 	if SettingsFileNameLen < 5:
@@ -42,18 +42,13 @@ for SettingsFile in SettingsFiles:
 	f.write("SIMULATE>RUNNAME|" + RunName + "\n")
 	f.write("SIMULATE>READCIN|" + SettingsFile + "\n")
 	f.write("MENU>RUN|O\n")
-	f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|||" + FirstYear + "|" + FinalYear + "|:")
+	f.write("MENU>VDF2TAB|" + RunName + ".vdfx|" + RunResultsFile + "|" + OutputVarsFile + "|||" + FirstYear + "|" + FinalYear + "|:")
 	f.write(RunName)
 	f.write("\n")
 
-	# We instruct Vensim to delete the .vdf file, to prevent it from getting picked up by
+	# We instruct Vensim to delete the .vdfx file, to prevent it from getting picked up by
 	# sync software, such as DropBox or Google Drive.  If sync software locks the file,
 	# Vensim won't be able to overwrite it on the next model run, ruining the batch.
-	# Due to file format changes in Vensim 8, the command needs a different file extenstion
-	# depending on whether this script is run in Vensim 7 or Vensim 8.
-	# Vensim 7:
-	# f.write("FILE>DELETE|" + RunName + ".vdf")
-	# Vensim 8:
 	f.write("FILE>DELETE|" + RunName + ".vdfx")
 	f.write("\n\n")
 
