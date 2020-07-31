@@ -90,16 +90,6 @@ Finally, we sum the government, household, and industry contributions to change 
 
 ![summing changes to domestic output by ISIC code](io-model-SumDomesticOutputChange.png)
 
-## Calculating Change in Domestic + Foreign Output by ISIC Code
-
-In order to sum up the effects of the policy package on total global (domestic + foreign) output, we follow a similar procedure to the one described above for totalling domestic output, with two changes.
-
-First, we do not remove the foreign content share from the respending by government and households.  For this calculation, the region of relevance is the globe, so there is no "foreign" content.
-
-Second, we need to add in the cash flow change directly assigned to "foreign entities" that was calculated in the various sectors of the model.  Since foreign entities are not subdivided in the EPS ("foreign" here means "outside of the modeled region"), but the I/O model requires cash flows to be apportioned by ISIC code, we apportion foreign entities' changes in cash flow in the same ratios as changes in cash flow for ISIC codes caused by domestic industry (as the industry sector, not government or households, is likely the most important buyer of foreign products).  This assumption may not be very good in some cases (as different countries specialize in different types of products), but by definition, the EPS is not attempting to accurately model what is happening outside the modeled region.  Accordingly, results for "domestic + foreign" jobs, GDP, and employee compensation should be conisdered more rough than the corresponding results that are "domestic" (e.g. limited to the modeled region).  For this reason, the "foreign + domestic" versions of these outputs are only available in Vensim (they are excluded from the web interface by default), whereas the domestic versions are included in the web interface.
-
-![summing changes to domestic + foreign output by ISIC code](io-model-SumGlobalOutputChange.png)
-
 ## Calculating Change in Jobs, GDP, and Employee Compensation
 
 This section is the heart of the I/O model.
@@ -147,10 +137,6 @@ The EPS works in inflation-adjusted currency units.  That's fine for value added
 ![discounting job gains by labor productivity growth rate](io-model-LaborProductivityGrowth.png)
 
 We now have our final predicted changes in jobs, value added, and employee compensation.  (A change in value added is the same as a change in GDP, since the sum of value added across all entities in society equals GDP.)  However, to calculate absolute values of these metrics in the policy case, we have to account for growth of jobs, GDP, and employee compensation in the BAU case, which is discussed below.
-
-### Domestic + Foreign Version of Change in Jobs, GDP, and Employee Compensation
-
-In addition to the change in domestic jobs, value added, and employee compensation, we calculate a global (domestic + foreign) version of these metrics.  The calculation approach is the same as above, except we used a "Total Leontief Inverse Matrix" (TLIM) instead of DLIM to obtain our trio of "requirements" variables, and we multiply the requirements variables by the total change in output (not just the change in domestic output) caused by the policy package.  We don't carry the domestic + foreign versions of the calculations any farther than this step, since the EPS's focus is on domestic policy effects (e.g. effects within the modeled region).
 
 ## Obtaining Time-Series Values for Jobs, GDP, and Employee Compensation
 
