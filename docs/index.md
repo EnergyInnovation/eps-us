@@ -38,7 +38,7 @@ Links to doc pages are followed by a number indicating the version of the EPS co
   * [Creating and Managing Scenarios](creating-and-managing-scenarios.html) - 1.1.2
   * [Adjusting Policy Implementation Schedules](adjusting-plcy-impl-schd.html) - 1.1.2
   * [Troubleshooting Vensim Model Reader Issues](troubleshooting-vensim.html) - 1.1.2
-* [Model Component Descriptions](model-component-descriptions.html) - 1.0.1
+* [Model Component Descriptions](model-component-descriptions.html) - 3.0.0
   * [Transportation Sector (main)](transportation-sector-main.html) - 1.3.1
   * [Transportation Sector (cash flow)](transportation-sector-cash.html) - 1.1.4
   * [Electricity Sector (main)](electricity-sector-main.html) - 1.1.4
@@ -53,6 +53,7 @@ Links to doc pages are followed by a number indicating the version of the EPS co
   * [Carbon Capture and Sequestration](ccs.html) - 1.1.4
   * [Geoengineering](geoengineering.html) - 3.0.0
   * [Fuels](fuels.html) - 1.1.4
+  * [Endogenous Learning](endogenous-learning.html) - 3.0.0
   * [Cross-Sector Totals](cross-sector-totals.html) - 3.0.0
   * [Input-Output Model](io-model.html) - 3.0.0
   * [Cost Outputs](cost-outputs.html) - 2.1.0

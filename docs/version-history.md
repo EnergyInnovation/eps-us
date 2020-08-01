@@ -47,6 +47,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Fixed formula error in "Change in Amount Spent on Vehicle Maintenance"
   * Fixed double-counting of certain cash flow changes due to changes in industrial production
   * Very high carbon tax rates applied to industrial process (non-energy) emissions can no longer cause oscillating production changes
+  * Fixed bug in "Subsidy Paid on Distributed Solar Capacity" formula
 
 ### **2.1.2 - July 9, 2020**
 
