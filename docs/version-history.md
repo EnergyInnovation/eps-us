@@ -39,6 +39,7 @@ This page tracks updates that have been made with each version of the Energy Pol
     * Implemented cash flows for efficient building component rebate policy
     * The carbon tax rate may now be explicitly set for District Heat and Hydrogen sector instead of inheriting the Industry sector rate
     * All Python scripts now include the capability to limit the time range of data written to output files
+    * Reduced domestic demand for domestically-produced fuels is now partially compensated for by increased exports (fuels/PoFDCtAE)
 * Bug Fixes
   * Fixed off-by-one-year error in cement process CO2 multipliers (indst/BPEiC) and two missing formulas for cement (indst/PERAC)
   * Do not exclude heat as a fuel type that can power industry CCS
