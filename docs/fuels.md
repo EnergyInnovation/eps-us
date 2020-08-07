@@ -4,7 +4,9 @@ title:  "Fuels"
 ---
 ## Overview
 
-The fuels sheet in the model is where certain properties of fuels are set, such as the costs and pollutant emissions intensities of different fuels in different sectors.  Additionally, changes in imports and exports of fuels to/from the modeled region, and associated cash flows, are calculated here (except for imported and exported electricity, which is handled in the [Electricity sector](electricity-sector-main.html)).  Cross-sector policies, such as the carbon tax, fuel taxes, reductions of BAU subsidies, fuel price deregulation, and policy-driven reductions in fuel exports are included on this sheet.
+The fuels sheet in the model is where certain properties of fuels are set, such as the costs and pollutant emissions intensities of different fuels in different sectors.  Additionally, changes in imports and exports of fuels to/from the modeled region and associated cash flows, as well as fuel production, are calculated here (except for electricity, which is handled in the [Electricity sector](electricity-sector-main.html)).  Cross-sector policies, such as the carbon tax, fuel taxes, reductions of BAU subsidies, fuel price deregulation, and policy-driven reductions in fuel exports are included on this sheet.
+
+# Fuel Emissions Intensities, Costs, and Taxes
 
 ## Setting Pollutant Emissions Intensities
 
@@ -131,3 +133,85 @@ To calculate the same quantity in the policy case, we first sum the additional t
 Finally, we sum the added quantity of taxes per unit energy in the policy case with the quantity of taxes per unit energy in the BAU case to find the total quantity of taxes per unit energy in the policy case:
 
 ![amount of tax per unit energy in the policy case](fuels-TaxQuantity.png)
+
+# Fuel Imports, Exports, and Production
+
+The EPS calculates the quantities of each fuel that are imported into, exported from, and produced within the modeled region.  (Electricity imports, exports, and generation are handled in the [Electricity sector](electricity-sector-main.html), but are added to the totals on this sheet as one of the last steps in the calculation, as described below.)
+
+## Import, Export, and Production Caps
+
+The first step is to establish some caps on the amount by which fuel imports, exports, and production may increase (set separately for each fuel).  These caps constrain economically-driven behavior, and may reflect things such as a lack of export pipeline or tanker capacity for petroleum and natural gas, a lack of recoverable domestic resources constraining production of one or more fuel types, or an inability to increase imports more than a certain amount, again due to a lack of pipeline or shipping capacity, or other such factors.
+
+First, the BAU fuel use quantities are adjusted, based on the control setting for "Exogenous GDP Adjustment."  This control setting is used to help model recessions or other exogenous reductions in energy demand and economic activity that are not reflected in the other input data variables, and has been used to represent the recession and stay-at-home orders associated with the 2020 COVID-19 pandemic.  While most of the effect of this control setting occurs in the various domestic sectors (Transportation, Industry, and Buildings especially), it also can affect fuel production, imports, and exports.
+
+![exogenous GDP adjustment of fuel imports, exports, and production](fuels-ExogenousGDPAdj.png)
+
+We use three time-series input data variables that specify the maximum allowable percentage increase in each of exports, imports, and production, subscripted by fuel type.  This gives us the maximum possible increase in absolute terms.  For imports and production, we also calculate the total cap, which is simply the BAU quantity plus the maximum possible increase, so we can use these variables later in the calculations on this sheet.
+
+![fuel import, export, and production caps](fuels-ImpExpProdCaps.png)
+
+## Change in Fuel Exports
+
+When the policy package changes domestic demand for a fuel (most commonly, reduces demand for fossil fuels), this can be accounted for by some combination of changes in exports, imports, and production.  In the case of a reduction in domestic fuel demand, producers may be able to increase their exports and thereby avoid cutting production by the full amount of lost, domestic demand.  Whether this is possible depends on the extent to which the modeled country has robust fuel export infrastructure, trading relationships, local laws (for instance, the U.S. banned petroleum exports from 1975 until 2015), etc.
+
+To start this calculation, we find the change in total domestic fuel use caused by the policy package, by taking the difference between total fuel use in the BAU and Policy cases.  (Total fuel use is summed on the [Cross-Sector Totals](cross-sector-totals.html) sheet.)  The change in total fuel use already includes the change in crude oil use from changes in production of secondary petroleum products, due to the linkage between change in NGPS fuel production (calculated on this sheet) and change in production by the NGPS industry in the [Industry sector](industry-ag-main.html).  Quantization is used to dampen rounding error.
+
+![change in total fuel use](fuels-CngTotFuelUse.png)
+
+We take in input data specifying the degree to which changes in domestic fuel use are compensated for by changes in exports (e.g. domestic fuel reductions cause increased exports, and vice versa).  For a major petroleum-exporting country with a desire to sell as much fuel abroad as possible, the value for crude oil could be 1 (or close to it).  For a country that is a large, net importer of a fuel, that fuel should have a value of zero, or close to it.
+
+The variable `PoFDCtAE Percentage of Fuel Demand Change that Alters Exports` is a two-dimensional matrix, subscripted by `Source Fuel` and `Target Fuel`.  This is important because secondary petroleum products (petroleum gasoline, petroleum diesel, jet fuel/kerosene, heavy or residual fuel oil, and LPG/propane/butane) are made from crude oil, and a change in domestic demand for one of these fuels may lead to a reduction in domestic refining activity and an increase in exports of crude oil, rather than an increase in exports of the refined fuel.  `PoFDCtAE` can apportion the reduction in demand for the `Source Fuel` among multiple `Target Fuel`s, to account for this.  All of the target fuels for any source fuel need not add to 1 (a 100% share), since less than all of the change in demand for that fuel may lead to a change in exports, but the sum of the target fuels for any source fuel should not exceed 1.  The variable `Change in Fuel Exports before Cap` sums across all `Source Fuel` types when evaluating the final change in exports of a `Target Fuel`, to capture the contributions from any/all source fuels.  (The Industry sector utilizes the change in production of refined fuels and correctly reduces refining activity to the extent that crude oil is exported in lieu of refined fuels.)
+
+We also check to ensure that if exports are being reduced, they cannot be reduced below zero.  (We track imports separately, not in the form of negative exports.  This is crucial, since some countries both import and export the same fuel in the same year.)
+
+![change in fuel exports before cap](fuels-CngFuelExportsBeforeCap.png)
+
+We ensure that the change in exports, if an increase, is not larger than the maximum allowed increase in fuel exports for each fuel.
+
+![checking against export cap](fuels-CheckExportCap.png)
+
+Next, we find the change in fuel exports caused by the Fuel Export Reduction policy lever, if it is enabled.  The base quantity from which the lever calculates is the BAU export quantity, plus any policy-driven change (i.e. the export reduction lever targets not only BAU exports but also exports induced by the other policies in the policy package).
+
+![fuel export reduction policy](fuels-ExportReductionPolicy.png)
+
+Finally, we sum the change in exports due to changes in domestic demand and the change in exports due to the export reduction policy to find the total change in fuel exports.  We ensure exports cannot go below zero by checking against the BAU level of exports.
+
+![change in fuel exports](fuels-CngFuelExports.png)
+
+We need a helper variable to assist us in calculations in the next section (changes in production and imports).  We need to know the `Change in Crude Exports due to Changes in Secondary Petroleum Product Use`.  This change in crude oil exports is **already included** in the overall `Change in Fuel Exports` calculated above, so this helper variable is not additive (does not represent _additional_ crude oil exports).  It is calculated in a manner similar to `Change in Fuel Exports before Cap`, but only summing the effects of secondary petroleum products on crude oil.  Its use will be explaned in the next section, below.
+
+![changes in crude oil exports due to changes in demand for secondary petroleum products](fuels-CngCrudeOilExportsDueToSecPetProd.png)
+
+## Components of Changes in Fuel Production and Imports
+
+Our next task is to calculate the change in fuel production and fuel imports.  We begin by calculating a number of components, which we will add up to find the final changes in fuel production and imports.  Much of the complexity of the logic here pertains to the import and production caps, and what to do if one or both of these caps is exceeded (e.g. domestic demand for a fuel grows so much that the import and production caps cannot both be obeyed).
+
+We begin by finding the change in domestic fuel use that must be accounted for by changes in production and imports.  Generally, this is simply the change in demand that hasn't already been accounted for via change in fuel exports, discussed above.  Howerver, there are two important notes:
+
+- Any reduced exports specifically caused by the export reduction come out of domestic production, not imports.  This is because most of a fuel that is exported is produced domestically, not imported and then simply exported again, so reducing exports will tend to overwhelmingly target domestic production, not imports.  (Changing crude oil to a refined fuel counts as domestic production of the refined fuel type.)
+
+- Changes in crude exports due to changes in secondary production are not apportioned into changes in crude production or crude imports, because the crude that was formerly being used to make secondary products is now being exported instead.  Therefore, we subtract out any change in crude exports due to changes in secondary production.  (This is the reason why we needed to calculate the helper variable `Change in Crude Exports due to Changes in Secondary Petroleum Product Use`, discussed above.)
+
+![change in fuel use remaining after accounting for change in exports](fuels-CngFuelUseRemainingAfterExports.png)
+
+We apportion change in fuel use into change in production and change in imports by the relative importance of these two modes for each fuel.  For example, if a fuel is 100% imported in the BAU case, then 100% of the remaining change in demand for that fuel will come out of imports.  If a fuel is 50% imported and 50% produced domestically, then half of the remaining change in demand for that fuel will come out of imports and half out of domestic production.
+
+For this apportionment, we must use BAU production and imports, not policy case versions of these variables, to avoid oscillation that occurs when apportioning reductions in production/imports.  Reductions in one mode (such as imports) decrease the importance of that mode, causing the other mode (i.e. production) to receive a larger share of the reduction the following year, which causes the first mode to get the larger share in the year after that, and so on.
+
+![change in fuel imports and fuel production before caps](fuels-CngImprtProdBeforeCaps.png)
+
+The remaining change in fuel use must be accounted for through changes in imports or production - fuel cannot appear out of nowhere to meet domestic demand, nor can imported or produced fuel vanish into nowhere.  Therefore, we must include model structure to handle the case where one or both caps has been set so low that the calculated change in imports or production would exceed the cap.
+
+First, we handle the case where only one cap is exceeded.  If production would exceed production cap and there is room under the import cap, shift as much production to imports as we need in order to fully account for the excess production, or until the import cap is reached, whichever happens first.  Vice versa if imports would exceed the import cap and there is room under the production cap.
+
+![shift between fuel imports and production if only one cap is exceeded](fuels-ShiftBetweenImpProdCaps.png)
+
+If the change in fuel demand is large enough to exceed both the production and import caps, then there will be non-zero values in one or both of the variables `Production Exceeding Both Caps` and `Imports Exceeding Both Caps`.  We sum them to get the total excess change in fuel demand that cannot be accomodated under either cap.
+
+![exceeding both production and import caps](fuels-ExceedingBothCaps.png)
+
+If both the production and import caps are exceeded, we allocate the excess change in fuel use to production and imports, exceeding both caps proportionately to the cap sizes.
+
+![allocating excess change in fuel use above production and import caps](fuels-AllocateExcessAboveBothCaps.png)
+
+We now have all of the components we need to calculate the change in fuel imports and change in fuel production.

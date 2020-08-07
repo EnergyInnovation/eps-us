@@ -52,7 +52,7 @@ Links to doc pages are followed by a number indicating the [version](version-his
   * [Land Use, Land Use Change, and Forestry](lulucf.html) - 1.1.4
   * [Carbon Capture and Sequestration](ccs.html) - 1.1.4
   * [Geoengineering](geoengineering.html) - 3.0.0
-  * [Fuels](fuels.html) - 1.1.4
+  * [Fuels](fuels.html) - 3.0.0
   * [Endogenous Learning](endogenous-learning.html) - 3.0.0
   * [Cross-Sector Totals](cross-sector-totals.html) - 3.0.0
   * [Input-Output Model](io-model.html) - 3.0.0
