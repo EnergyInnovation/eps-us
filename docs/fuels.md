@@ -215,3 +215,72 @@ If both the production and import caps are exceeded, we allocate the excess chan
 ![allocating excess change in fuel use above production and import caps](fuels-AllocateExcessAboveBothCaps.png)
 
 We now have all of the components we need to calculate the change in fuel imports and change in fuel production.
+
+## Fuel Production and Fuel Imports
+
+To find the change in fuel production, we add up the previously-calculated quantities:
+
+- The change in fuel exports due to the export reduction policy
+- The lower of:
+  - The change in production caused by domestic demand
+  - The production cap
+- Imports shifted to production due to exceeding the imports cap
+- Changes in fuel use that exceed both caps assigned to production
+
+We also check against BAU production (after GDP adjustment) to ensure the value cannot become negative.  We then add the change in production to BAU production to find the policy case fuel production.
+
+![change in fuel production](fuels-ChangeInProduction.png)
+
+The change in imports is calculated analogously, except the export reduction policy plays no role, as all reduced imports come out of domestic production (for reasons explained above).
+
+![change in fuel imports](fuels-ChangeInImports.png)
+
+## Fuel Exports and Import/Export Cash Flows
+
+We calculate the policy case fuel exports, which is simply the BAU fuel exports (after GDP adjustment), plus the previously-calculated change in fuel exports.
+
+![fuel exports](fuels-FuelExports.png)
+
+We multiply fuel exports by a time-series input variable, `IMFPbFT International Market Fuel Price by Fuel Type`, that specifies the price that is commanded by each fuel when sold abroad (e.g. on the international market).  It is important to use a different set of prices here than those used for domestic consumers (specified in `BFCpUEbS BAU Fuel Cost per Unit Energy by Sector`), since fuel-exporting countries may charge more to foreign buyers than to their own households and businesses.  This gives us total fuel export revenues, which we use to populate an output graph.  We also multiply the change in exports by the international market price, to get the change in fuel export revenues caused by the policy package.
+
+![fuel export revenues](fuels-ExportRevenues.png)
+
+Finally, we handle export taxes on fuels.  Export duties [were common in the 1700s, but are seldom used today](https://www.britannica.com/topic/tariff#ref592273) (as their costs typically are borne by the domestic producer, who receives the international market price minus the export tax, making their goods less competitive relative to foreign competitors).  However, a few resource-rich countries use export duties to raise government revenue, and the EPS supports this calculation.  Export revenues are allocated between government and domestic fuel suppliers.
+
+![fuel export tax](fuels-ExportTax.png)
+
+We also calculate the amount spent on fuel imports, with fuel purchased at the international market price.  If fuel industries are selling more fuel, they get added revenue for those sales in the fuel-using model sectors (e.g. Transportation, Buildings, Industry, etc.).  This calculation is the cost to the fuel suppliers to acquire the fuel, if they purchase it from abroad.
+
+Sales or excise taxes on fuel are assumed to apply both to domestically-produced and imported fuels, and are handled in the demand sectors.  (The EPS does not currently support import duties that are on top of and additional to sales/excise taxes applied to both domestically-produced and imported fuels.)
+
+![fuel import expenditures](fuels-ImportExpenditures.png)
+
+## Embedded CO<sub>2</sub> in Exported Fuels
+
+We calculate the CO<sub>2</sub> content embedded in exported fuels, to provide data for an output graph.  The CO<sub>2</sub>-intensity of each fuel (calculated earlier on this sheet, and described above) is multiplied by the quantity of exported fuel to find the total embedded CO<sub>2</sub>.  We similarly calculate the change in embedded CO<sub>2</sub> due to the policy package.  These metrics help identify the extent to which a policy package may be moving fuel emissions overseas rather than eliminating those emissions, particularly in fuel-producing countries.
+
+![embedded CO2 in exported fuels](fuels-EmbeddedCO2.png)
+
+## Adding Electricity Imports and Exports
+
+We wish to produce variables using the `All Fuels` subscript that contain import, export, and production data for all fuels, including energy carriers (electricity, district heat, and hydrogen), to facilitate creating output graphs.  Therefore, we have a structure whose entire purpose is to add electricity imports and exports, and the changes in these quantities, into the "electricity" subscript element in the variables totaling energy exports, change in energy exports, energy export revenue, and change in energy export revenue.  We add electricity, district heat, and hydrogen to the similar variables, energy production and change in energy production.  (The EPS assumes there is no international market for district heat or hydrogen, given the difficulties in storing and transporting these energy sources for long periods of time and over long distances.)  We also use quantization at this stage to dampen rounding error.
+
+The structure in this secton is relatively straightforward, so screenshots are omitted.
+
+## Change in Fuel Subsidy Payments
+
+The fuels sheet is also where we total the change in government fuel subsidies.  We multiply fuel production, calculated above, by the subsidy amount per unit energy produced (after modification, if any, by the BAU subsidy reduction policy lever) to find the total subsidy payment for each fuel type.  We take the difference between the BAU and policy case versions of this total to find the change caused by the policy package.
+
+![change in fuel subsidies paid](fuels-ChangeInSubsidiesPaid.png)
+
+## Allocating Changes in Expenditures and Revenues
+
+As we have changes in cash flows calculated on the Fuels sheet (largely pertaining to fuel imports and exports), we need a structure to assign these changes to specific cash flow entities, in a way similar to these assignments on the "Cash Flow" sheets of the various sectors in the EPS (Transportation, Industry, etc.)  These changes then feed into totals on the [Cross-Sector Totals](cross-sector-totals.html) sheet and into the [Input-Ouput model](io-model.html).
+
+Changes in fuel subsidies paid are allocated to the government, while changes in expenditures to import fuels are assigned to the corresponding fuel suppliers by fuel type.  (Domestic fuel suppliers include both producers and importers of a fuel - that is, a domestic company that supplies a fuel is a fuel supplier, whether it purchased that fuel from abroad or produced it themselves.)
+
+![allocating fuels sheet expenditures](fuels-AllocatingExpenditures.png)
+
+Changes in export tax revenues are assigned to government.  Proceeds from exporting fuel (selling fuel abroad) are assigned to the corresponding fuel suppliers by fuel type.
+
+![allocating fuels sheet revenues](fuels-AllocatingRevenues.png)
