@@ -39,10 +39,25 @@ for SettingsFile in SettingsFiles:
 		RunName = SettingsFile[:SettingsFileNameLen - 4]
 	RunResultsFile = RunName + ".tsv" # The desired filename for the file containing model run results
 	
+	# Generate an empty output file with a time row, to work around bug where Vensim includes multiple Time rows if you
+	# don't suppress all time rows.  We overwrite any output file that may exist at this filename.
+	tsv = open(RunResultsFile, 'w')
+	tsv.write("Time\t" + RunName + "\t")
+	YearToWrite = FirstYear
+	while(YearToWrite <= FinalYear):
+		tsv.write(YearToWrite)
+		if(YearToWrite != FinalYear):
+			tsv.write("\t")
+		else:
+			tsv.write("\n")
+		YearToWrite = str(int(YearToWrite)+1)
+	tsv.close()
+
+	# Write directions to set the run name, read the settings, run the simulation, and append the results to the RunResultsFile.
 	f.write("SIMULATE>RUNNAME|" + RunName + "\n")
 	f.write("SIMULATE>READCIN|" + SettingsFile + "\n")
 	f.write("MENU>RUN|O\n")
-	f.write("MENU>VDF2TAB|" + RunName + ".vdfx|" + RunResultsFile + "|" + OutputVarsFile + "|||" + FirstYear + "|" + FinalYear + "|:")
+	f.write("MENU>VDF2TAB|" + RunName + ".vdfx|" + RunResultsFile + "|" + OutputVarsFile + "|+!||" + FirstYear + "|" + FinalYear + "|:")
 	f.write(RunName)
 	f.write("\n")
 
