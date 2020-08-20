@@ -29,6 +29,30 @@ Finally, we convert fuel use to total primary energy.  Since we're already worki
 
 ![total primary energy use](cross-sector-totals-TotPrimaryEnergy.png)
 
+## Change in Carbon and Fuel Tax Revenues
+
+### Change in Carbon Tax Revenue
+
+We calculate the change in carbon tax revenue due to the policy package, which is one of the inputs used in the [input-output model](io-model.html), where the way in which government acquires or uses this change in revenue can be set.
+
+We obtain the carbon tax revenue from each sector by multiplying the fuel use in that sector by the carbon tax amount per unit energy for that fuel and sector.  (Different sectors may have different carbon tax rates, and different fuels have different carbon intensities.  The carbon tax amounts per unit energy are calculated on the [Fuels sheet](fuels.html).)  For the industry sector, we also have to add in any carbon tax levied on industrial process emissions (which will be zero unless the carbon tax is configured to apply to process emissions).
+
+![carbon tax revenue by sector](cross-sector-totals-CarbonTaxRev.png)
+
+We then take the difference between this amount and its equivalent in the BAU case.
+
+![change in carbon tax revenue](cross-sector-totals-CngCarbonTaxRev.png)
+
+### Change in Fuel Tax Revenue
+
+The change in revenue from fuel taxes is calculated in a similar way to the change in carbon tax revenue (except industrial process emissions play no role here).  We multiply the fuel used in each sector by the fuel tax amount per unit energy applying to that fuel (as calculated on the [Fuels sheet](fuels.html)) and add across sectors.
+
+![fuel tax revenue by sector](cross-sector-totals-FuelTaxRev.png)
+
+We then take the difference between the BAU and policy cases to find the change due to the policy package.
+
+![change in fuel tax revenue](cross-sector-totals-CngFuelTaxRev.png)
+
 ## Changes in Cash Flows
 
 The model tracks changes in cash flow for nine main actors (sometimes called "cash flow entities"): government, non-energy industries, labor and consumers, foreign entities, and five types of energy suppliers (electricity, coal, natural gas and petroleum, biomass and biofuel, and other).  Additionally, the model tracks cash flow impacts by ISIC code, which breaks apart the non-energy industries cash flow entity into 18 ISIC codes and also tracks an additional 18 ISIC codes, for a total of 36 ISIC codes.  The break-out of five types of energy supplier within the EPS is more detailed than the available data by ISIC code (which, for example, groups all fossil fuel extraction businesses together, not distingusihing coal from oil and gas), so we retain the five energy suppliers within the "cash flow entities" subscript, instead of simply relying entirely on ISIC codes to track cash flows for all industries.  The detailed break-outs by ISIC code and by cash flow entity allows the EPS to produce outputs that show how policy packages affect specific segments of the economy and society.
