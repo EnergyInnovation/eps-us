@@ -4,14 +4,14 @@ title:	"Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
-### **3.0.0 - Aug 3, 2020**
+### **3.0.0 - TBD, 2020**
 
 * New Input-Output Model
   * An economic input/output (I/O) model has been added as a component of the Energy Policy Simulator.
   * Respending of direct changes in cash flow for government, households, and industries is now accounted for, enabling calculation of indirect/induced effects of the policy package on economic activity.
+  * New settings allow the user to specify how government raises or spends cash flow changes caused by the policy package.  Options include changes in regular spending, deficit spending, household taxes, payroll taxes, and corporate income taxes.
+  * New output metrics include the change in gross domestic product (GDP), employment (jobs), total employee compensation, average compensation per employee, number of union and non-union jobs, government spending, budget deficit/surplus, household tax revenue, payroll tax revenue, corporate income tax revenue, size of the national debt, and interest paid on the national debt.  Changes in GDP, jobs, and compensation can also be visualized disaggregated by their direct, indirect, and induced components.
   * Feedback loops from the I/O model to the Transportation, Buildings, and Industry sectors capture the energy demand and emissions associated with indirect and induced economic activity.
-  * New output metrics include the change in gross domestic product (GDP), employment (jobs), total employee compensation, average compensation per employee, and number of union and non-union jobs.
-  * The apportionment of direct cash flows to foreign entities, to labor, and to government are now more comprehensive and accurate.
   * A new [documentation page](io-model.html) explains the I/O model in detail.
   * We gratefully acknowledge the invaluable contributions of the [American Council for an Energy-Efficient Economy](https://www.aceee.org/) (ACEEE), [Jim Barrett](https://www.barretteconomics.com/), and [Skip Laitner](https://www.linkedin.com/in/skip-laitner-746b124/) for their guidance and advice in implementing this feature, and for allowing us to learn from the [DEEPER I/O model](https://www.aceee.org/files/pdf/fact-sheet/DEEPER_Methodology.pdf), originally created by Skip Laitner.
 * Improved Public Health Calculations
@@ -19,7 +19,7 @@ This page tracks updates that have been made with each version of the Energy Pol
 * Data Updates
   * First simulated year advanced from 2018 to 2019
   * Data in input variables based on EIA Annual Energy Outlook updated to use AEO 2020 values
-* Minor improvements
+* Other Improvements
   * Industry Sector
     * Industrial process emissions multipliers (used in indst/BPEiC and indst/PERAC) are now disaggregated by gas.  These multipliers now allow for replacement of BPEiC data with arbitary, user-specified data while keeping abatement potentials and costs in PERAC in sync with BPEiC.
     * Added revenue data for "water & waste" industry (water treatment, wastewater, solid waste collection, landfilling, recycling, etc.)
@@ -30,16 +30,21 @@ This page tracks updates that have been made with each version of the Energy Pol
     * Imported electricity price and BAU exported electricity price may now be customized
     * Balance of system is now included in grid battery costs (and is unaffected by endogenous learning)
     * Soft costs for onshore wind, offshore wind, and solar PV power plants (and distributed solar PV) now accept time-series BAU data
+    * Power plant fuel type shifting (such as coal-to-gas retrofits) will now only occur if the target power plant type is economic (not subject to economically-driven early retirement) or if the target fuel is a drop-in replacement (i.e. no retrofitting required).
+  * Fuels
+	  * Added output graphs of Embedded CO2 in Exported Fuels and Change in Embedded CO2 in Exported Fuels
+    * The carbon tax rate may now be explicitly set for District Heat and Hydrogen sector instead of inheriting the Industry sector rate
+    * Fuels cost input data and Vensim sheet reorganized for clarity and ease of adaptation to other regions
+    * Change in carbon tax revenue and change in fuel tax revenue are now calculated explicitly, to support new government revenue handling options
+    * Reduced domestic demand for domestically-produced fuels is now partially compensated for by increased exports (fuels/PoFDCtAE)
   * Other
     * WebAppData now detects duplicate and missing policy ID numbers
     * The model no longer uses GET DIRECT DATA to access data from outside of the model run timeframe
     * Model structure diagram updated to show new economic and public health outputs
     * Fraction of technology outside modeled region that affects endogenous learning can now be customized (endo-learn/FoTOMRAEL)
-    * Added output graphs of Embedded CO2 in Exported Fuels and Change in Embedded CO2 in Exported Fuels
     * Implemented cash flows for efficient building component rebate policy
-    * The carbon tax rate may now be explicitly set for District Heat and Hydrogen sector instead of inheriting the Industry sector rate
     * All Python scripts now include the capability to limit the time range of data written to output files
-    * Reduced domestic demand for domestically-produced fuels is now partially compensated for by increased exports (fuels/PoFDCtAE)
+    * Policy package CapEx + OpEx and Cost Curve output graphs now respond to user's government revenue handling selections to determine revenue neutrality
 * Bug Fixes
   * Fixed off-by-one-year error in cement process CO2 multipliers (indst/BPEiC) and two missing formulas for cement (indst/PERAC)
   * Do not exclude heat as a fuel type that can power industry CCS
