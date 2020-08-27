@@ -65,7 +65,7 @@ The first step is to total the change in non-energy industry expenditures by ISI
 
 ![summing non-energy expenditures by ISIC code](cross-sector-totals-NonEnerExpendByISIC.png)
 
-Tracking the change in revenues by ISIC code and by cash flow entity is more complicated.  Revenue assignments to specific ISIC codes were already made in various sectors (transportation, buildings, etc.), but labor and tax shares of the assignments to non-energy industries were not separated out within the sectors.  We must do that here, in a process called "partitioning."  First, we total the changes in revenue by ISIC code prior to partitioning.
+Tracking the change in revenues by ISIC code and by cash flow entity is more complicated.  Revenue assignments to specific ISIC codes were already made in various sectors (transportation, buildings, etc.), but labor and tax shares of the assignments to non-energy industries were not separated out within the sectors.  We must do that here, in a process called "partitioning."  First, we total the changes in revenue by ISIC code prior to partitioning.  (We also allocate any change in interest paid on the national debt to nonenergy industries at this stage - for more on this, see the documentation page on the [input-output model](io-model.html).)
 
 ![summing non-energy revenues by ISIC code before partitioning](cross-sector-totals-NonEnerRevByISICBfrPttn.png)
 
@@ -110,6 +110,10 @@ The next step is to sum policy-driven changes in expenditures and revenues for e
 Similarly, we sum changes in revenues for each cash flow entity across all sectors.  This includes the effect of the partitioning we completed in the steps above (in the gray box in the following screenshot).  The sum of all cash flow changes within the gray box (i.e. across the nine cash flow entities) is zero, because partitioning doesn't alter the total change in revenue - it simply reallocates some to labor, to government, and to foreign entities.
 
 ![summing changes in revenues](cross-sector-totals-SumCngRevenues.png)
+
+We also assign changes in national debt interest payments, with expenses paid by government and revenues for those entities that own government debt.  (The interest received by the "non-energy industries" cash flow entity was allocated to ISIC codes earlier on this sheet.)
+
+![assigning changes in interest on national debt](cross-sector-totals-NatnlDebtIntByEntity.png)
 
 We know how much of the output of each energy industry and non-energy industry was purchased by "foreign entities," so we are able to subdivide the change in revenue by entity into change in export revenue and change in domestic revenue.  We break this out here to enable us to show this revenue breakdown in output graphs.
 
