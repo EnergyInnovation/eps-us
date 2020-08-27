@@ -6,6 +6,18 @@ title:  "Fuels"
 
 The fuels sheet in the model is where certain properties of fuels are set, such as the costs and pollutant emissions intensities of different fuels in different sectors.  Additionally, changes in imports and exports of fuels to/from the modeled region and associated cash flows, as well as fuel production, are calculated here (except for electricity, which is handled in the [Electricity sector](electricity-sector-main.html)).  Cross-sector policies, such as the carbon tax, fuel taxes, reductions of BAU subsidies, fuel price deregulation, and policy-driven reductions in fuel exports are included on this sheet.
 
+## BAU Fuel Price Input data
+
+We take in BAU fuel costs as input data (in `BFPaT BAU Pretax Fuel Price by Sector`).  These are pre-tax prices, as BAU carbon taxes and other BAU taxes on fuel (e.g. sales taxes, value added taxes, excise taxes, etc.) are entered using other input variables.  On the other hand, these pre-tax fuel prices do include any BAU subsidies, insofar as they affect the price seen by fuel purchasers.  Most subsidies affecting fuel prices are applied upstream of the energy purchaser, such as subsidies for natural gas drilling or for utilities' wind electricity generation.
+
+BAU fuel costs vary by sector in many cases- for example, electricity is charged at a different rate for transportation, residential buildings, commercial buildings, and for industry.  (Residential buildings and commercial buildings are treated as separate sectors in this calculation, so they may be assigned different fuel prices.)  Therefore, the input data may specify different prices for the same fuel in different sectors.  The relevant sectors are transportation, electricity, residential buildings, commercial buildings, industry, and district heating and hydrogen.
+
+### Fuel Subscript Mapping
+
+Even though BAU fuel prices and taxes are subscripted by fuel and by sector, they use the `All Fuels` subscript.  At times in the calculations below, we must map these values onto variables for the different sectors because each sector uses its own fuel type subscript (e.g., `Transportation Fuel`, `Buildings Fuel`, etc.), and we must tell Vensim which fuels (which are members of the `All Fuels` subscript) correspond to those in each of the sector-specific fuel subscripts.
+
+This is the problem that subranges in Vensim exist to solve, and at one time, we did implement all sector-specific fuel sets as subranges of the `All Fuels` subscript.  Unfortunately, we learned that Vensim's `ALLOCATE AVAILABLE` function, which is used a number of times in the EPS to make price-based decisions, is not compatible with allocating things across subranges; it can only allocate across elements of a single, complete subscript.  This limitation of the important `ALLOCATE AVAILABLE` function forces us to implement sector-specific fuel subscripts and map values across subscripts.
+
 # Fuel Emissions Intensities, Costs, and Taxes
 
 ## Setting Pollutant Emissions Intensities
@@ -40,23 +52,57 @@ We also load the CO<sub>2</sub> emissions intensities from each fuel into the `A
 
 ![fuel CO2 emissions intensities in All Fuels subscript](fuels-EmisIntensitiesAllFuels.png)
 
-## BAU Fuel Costs
+## Carbon Tax Amount per Unit Energy<a name="carbon-tax"></a>
 
-We take in BAU fuel costs as input data.  These are the final costs seen by the purchaser of the fuels (or electricity) in the business-as-usual (BAU) case, and thus must incorporate all BAU fuel taxes and subsidies, insofar as they influence consumer fuel prices.  Many of these subsidies may be upstream of the energy purchaser.  For example, subsidies for natural gas drilling or for utilities' wind electricity generation may influence the ultimate price of natural gas or electricity seen by purchasers.  BAU fuel costs vary by sector in many cases- for example, electricity is charged at a different rate for transportation, residential buildings, commercial buildings, and for industry.  (Residential buildings and commercial buildings are treated as separate sectors in this calculation, so they may be assigned different fuel prices.)
+The carbon tax is based on the CO<sub>2</sub> or CO<sub>2</sub>e intensity of different fuels (depending on whether the carbon tax is configured to apply to non-CO<sub>2</sub> greenhouse gases), so we must begin by considering fuels' pollutant emissions intensities.
 
-These costs are then transferred into a set of five variables, one for each fuel-using sector of the model: transportation, electricity, buildings, industry, and district heating and hydrogen.  We manually map these values onto variables for the different sectors because each sector uses its own fuel type subscript (e.g., `Transportation Fuel`, `Buildings Fuel`, etc.), and we must tell Vensim which fuels (which are members of the `All Fuels` subscript) correspond to those in each of the sector-specific fuel subscripts.
+First, we establish the GWP timeframe used for the model.  We allow the user to select either 20-year or 100-year GWP values.  We default to 100-year GWP values, which are more commonly used in the literature.  We assume that if the user chooses to switch to 20-year GWP values, he/she will set other policy levers accordingly.  For example, the carbon tax operates per metric ton of CO<sub>2</sub>e, so if the user switches the GWP timeframe, he/she should keep this new timeframe in mind when choosing his/her preferred carbon tax rate.  (The choice of GWP timeframe does not affect the carbon tax if the carbon tax is configured to exclude non-CO<sub>2</sub> GHGs.)
 
-This is the problem that subranges in Vensim exist to solve, and at one time, we did implement all sector-specific fuel sets as subranges of the `All Fuels` subscript.  Unfortunately, we learned that Vensim's `ALLOCATE AVAILABLE` function, which is used a number of times in the EPS to make price-based decisions, is not compatible with allocating things across subranges; it can only allocate across elements of a single, complete subscript.  This limitation of the important `ALLOCATE AVAILABLE` function forces us to implement sector-specific fuel subscripts and manually map values, as shown in the structure below:
+The GWP timeframe switch affects all model outputs and most internal calculations.  In some cases in the [Industry sector](industry-ag-main.html), we are converting CO<sub>2</sub>e values from a source document that uses 100-year GWP values; in those cases, we use the 100-year GWP values to do the conversion, irrespective of the user's setting.  Then, when doing final reporting, we convert back to CO<sub>2</sub>e using the user's GWP timeframe.
 
-![BAU fuel costs and mapping to sector-specific lists](fuels-BAUCostMapping.png)
+Unfortunately, the GWP value for the "F-gases" pollutant cannot be switched from 100-year to 20-year values.  This is because F gases are a large collection of different chemical species, and we only have data on their emissions in CO<sub>2</sub>e terms.  Without knowledge of the mixture's composition of different gases (by percentage) and their respective 20-year and 100-year GWP values, it is not possible to change the GWP timeframe for F gases.  Therefore, even when the user selects 20-year GWP values, F gases will still use their 100-year values, slightly underestimating total CO<sub>2</sub>e output.  (Many F-gases are very long-lived, which implies their 20-year and 100-year GWP values would not be too different, so the inability to use their 20-year GWP values ought not to introduce much error.)
 
-## Sensitivity Analysis Multiplier
+![GWP values by pollutant](fuels-GWPbyPollutant.png)
 
-When performing Monte Carlo sensitivity analysis runs, one of the most common input variables that users may want to vary is fuel price (for each fuel).  We begin with BAU fuel price data and multiply by a "Fuel Price Multiplier for Sensitivity Analysis Runs" (whose value is "1," and thus has no effect, outside of a sensitivity analysis run in which the user chooses to vary this multiplier).  The multiplier only applies to the "policy" case, not the "BAU" case, because many aspects of the EPS operate on the basis of change in price between the BAU and policy cases (such as elasticities of demand for various energy services), and the model would fail to capture the correct behavioral response to changes in fuel prices if the sensitivity variance were applied to both cases' prices.  The structure is shown below:
+We have a small, helper variable that sets whether the carbon tax is configured to apply to non-CO<sub>2</sub> gases.  The default setting is based on a data-driven control setting, and this behavior can be reversed by the user in a policy scenario using the corresponding policy toggle lever.
 
-![sensitivity multiplier for fuel prices](fuels-SensitivityMultiplier.png)
+![does carbon tax apply to non-CO2 gases](fuels-CarbonTaxNonCO2.png)
+
+We use the pollutant intensities we calculated above, excluding non-CO<sub>2</sub> pollutants if the carbon tax policy is so configured, or else applying the user-selected GWP factor, to find the "taxable" CO<sub>2</sub>e emissions intensity of each fuel.  For each fuel burned in each sector (and sometimes by different types of technology or equipment within a sector, such as different vehicle types within the transportation sector), we have separate emissions indices.  Therefore, we multiply by our GWP values and obtain different sector-specific and sometimes technology-specific emissions indices by fuel by sector.
+
+![CO2e intensities of fuels by sector](fuels-CO2eIntensitiesBySector.png)
+
+We calculate the total carbon tax rate by adding the BAU carbon tax rate (for regions with a BAU carbon tax) to any additional rate set by the user.
+
+![total carbon tax rate](fuels-CarbonTaxRate.png)
+
+Next, we convert from grams of CO<sub>2</sub>e to metric tons of CO<sub>2</sub>e and apply the user-specified carbon tax rate to determine the amount of carbon tax per unit energy by fuel by sector (and sometimes by technology within a sector).  At this stage, we also separate out the rates for fuels burned in the industry sector, versus fuels burned in the distric heat and hydrogen supply sectors.  District heat and hydrogen supply can utilize the same fuels as industry, but users may wish to levy a different carbon tax rate on these sectors, hence the need to split them up here.
+
+![amount of carbon tax per unit fuel by sector](fuels-CarbTaxAmtBySector.png)
+
+### Fuel Tax Amount per Unit Energy<a name="fuel-taxes"></a>
+
+In addition to carbon taxes, there are often exist fuel taxes, such as sales taxes, value added taxes, or excise taxes on fuels.  We need to calculate the amounts of these taxes per unit energy for each fuel.  First, we multiply any additional tax rate (set as a percentage of the BAU pretax fuel price) set by the user by the BAU pretax fuel price to find the incremental additional fuel tax amount per unit energy.  We add this to the BAU fuel tax amount per unit energy to find the policy case fuel tax amount per unit energy.
+
+![additional fuel tax amount per unit energy](fuels-AddtlFuelTax.png)
+
+These costs are then transferred into a set of five variables, one for each fuel-using sector of the model, using those sectors' fuel subscripts.
+
+![fuel tax by sector](fuels-FuelTaxBySector.png)
+
+### Summing Carbon and Fuel Tax Amounts per Unit Energy
+
+We have already calculated the carbon and fuel tax amounts per unit energy, by fuel, for each sector.  We now total these tax rates, so we can cleanly separate out the total amount of tax for each unit of fuel purchased, for use in the various fuel-using sectors of the EPS.  We do this in many 
+
+![total tax amounts per unit energy](fuels-TotalTaxAmounts.png)
 
 ## Adjusting Fuel Cost due to Policies
+
+### Sensitivity Analysis Multiplier
+
+When performing Monte Carlo sensitivity analysis runs, one of the most common input variables that users may want to vary is fuel price (for each fuel).  We begin with BAU fuel price data and multiply by a "Fuel Price Multiplier for Sensitivity Analysis Runs" (whose value is "1," and thus has no effect, outside of a sensitivity analysis run in which the user chooses to vary this multiplier).  Although these fuel price changes are technically not a "policy" effect, the multiplier only applies to the "policy" case, not the "BAU" case, because many aspects of the EPS operate on the basis of change in price between the BAU and policy cases (such as elasticities of demand for various energy services), and the model would fail to capture the correct behavioral response to changes in fuel prices if the sensitivity variance were applied to both cases' prices.  The structure is shown below:
+
+![sensitivity multiplier for fuel prices](fuels-SensitivityMultiplier.png)
 
 ### Energy Price Adjustment based on Energy Supplier Costs<a name="prevent-pol-effects"></a>
 
@@ -82,57 +128,11 @@ In some countries or regions, the prices that fuel producers may charge on the d
 
 ![fuel price deregulation](fuels-PriceDeregulation.png)
 
-### Additional Fuel Taxes<a name="fuel-taxes"></a>
+## After-Tax Fuel Prices
 
-Next, we apply the additional fuel tax, if enabled by the user.  The user specifies this rate as a fraction of the BAU price, so we multiply by the BAU price to obtain the added amount of fuel tax per unit energy.  The added tax then is used to adjust the fuel price in the policy case.
-
-![additional fuel tax rate](fuels-AddtlFuelTax.png)
-
-### Carbon Tax<a name="carbon-tax"></a>
-
-The carbon tax is based on the CO<sub>2</sub> or CO<sub>2</sub>e intensity of different fuels (depending on whether the carbon tax is configured to apply to non-CO<sub>2</sub> greenhouse gases), so we must begin by considering fuels' pollutant emissions intensities (on the right side of the Fuels sheet).
-
-First, we establish the GWP timeframe used for the model.  We allow the user to select either 20-year or 100-year GWP values.  We default to 100-year GWP values, which are more commonly used in the literature.  We assume that if the user chooses to switch to 20-year GWP values, he/she will set other policy levers accordingly.  For example, the carbon tax operates per metric ton of CO<sub>2</sub>e, so if the user switches the GWP timeframe, he/she should keep this new timeframe in mind when choosing his/her preferred carbon tax rate.  (The choice of GWP timeframe does not affect the carbon tax if the carbon tax is configured to exclude non-CO<sub>2</sub> GHGs.)
-
-The GWP timeframe switch affects all model outputs and most internal calculations.  In some cases in the [Industry sector](industry-ag-main.html), we are converting CO<sub>2</sub>e values from a source document that uses 100-year GWP values; in those cases, we use the 100-year GWP values to do the conversion, irrespective of the user's setting.  Then, when doing final reporting, we convert back to CO<sub>2</sub>e using the user's GWP timeframe.
-
-Unfortunately, the GWP value for the "F-gases" pollutant cannot be switched from 100-year to 20-year values.  This is because F gases are a large collection of different chemical species, and we only have data on their emissions in CO<sub>2</sub>e terms.  Without knowledge of the mixture's composition of different gases (by percentage) and their respective 20-year and 100-year GWP values, it is not possible to change the GWP timeframe for F gases.  Therefore, even when the user selects 20-year GWP values, F gases will still use their 100-year values, slightly underestimating total CO<sub>2</sub>e output.  (Many F-gases are very long-lived, which implies their 20-year and 100-year GWP values would not be too different, so the inability to use their 20-year GWP values ought not to introduce much error.)
-
-The relevant structure is shown below:
-
-![GWP values by pollutant](fuels-GWPbyPollutant.png)
-
-We have a small, helper variable that sets whether the carbon tax is configured to apply to non-CO<sub>2</sub> gases.  The default setting is based on a data-driven control setting, and this behavior can be reversed by the user in a policy scenario using the corresponding policy toggle lever.
-
-![does carbon tax apply to non-CO2 gases](fuels-CarbonTaxNonCO2.png)
-
-We use the pollutant intensities we calculated above, excluding non-CO<sub>2</sub> pollutants if the carbon tax policy is so configured, or else applying the user-selected GWP factor, to find the "taxable" CO<sub>2</sub>e emissions intensity of each fuel.  For each fuel burned in each sector (and sometimes by different types of technology or equipment within a sector, such as different vehicle types within the transportation sector), we have separate emissions indices.  Therefore, we multiply by our GWP values and obtain different sector-specific and sometimes technology-specific emissions indices by fuel by sector.
-
-![CO2e intensities of fuels by sector](fuels-CO2eIntensitiesBySector.png)
-
-Next, we convert from grams of CO<sub>2</sub>e to metric tons of CO<sub>2</sub>e and apply the user-specified carbon tax rate to determine the amount of carbon tax per unit energy by fuel by sector (and sometimes by technology within a sector).  At this stage, we also separate out the rates for fuels burned in the industry sector, versus fuels burned in the distric heat and hydrogen supply sectors.  District heat and hydrogen supply can utilize the same fuels as industry, but users may wish to levy a different carbon tax rate on these sectors, hence the need to split them up here.
-
-![amount of carbon tax per unit fuel by sector](fuels-CarbTaxAmtBySector.png)
-
-Fuel costs are already broken out by sector, but as noted above (under "BAU Fuel Costs"), they need to be mapped from the `All Fuels` subscript to sector-specific subscripts.  We perform this mapping in the same manner as we did for BAU fuel costs, and then we add in the quantity of carbon tax per unit energy to find the the total fuel cost per unit energy in the policy case.  The relevant structure is shown below:
+We sum the total fuel tax amount (which is already broken by fuel and by sector) with the policy-modified, pre-tax fuel price (in `Pretax Fuel Cost per Unit Energy by Sector after Fuel Price Deregulation`) to obtain the total cost per unit fuel for each sector.
 
 ![fuel costs per unit energy](fuels-FuelCosts.png)
-
-## Calculating Fuel Tax Amounts per Unit Energy
-
-We have already calculated the price of fuels (including taxes) in the BAU and policy cases.  However, for purposes of assigning cash flows to particular actors (government vs. fuel suppliers), it is important to know the portion of these prices that consists of taxes.
-
-Our input data for the BAU case provides the share of the prices seen by consumers that consists of tax.  (The prices of fuels are reported in our input data as after-tax values.)  As discussed above, we map these shares to sector-specific fuel subscripts.  Then we multiply by the BAU cost of fuel in each sector to obtain the BAU amount of tax per unit energy.  (This quantity is a portion of the BAU price, not a quantity to be added to the BAU price.)
-
-![BAU amount of tax per unit energy](fuels-BAUTaxAmounts.png)
-
-To calculate the same quantity in the policy case, we first sum the additional taxes as specified by the user: fuel taxes and carbon taxes.  We find a sector-specific (and sometimes technology-specific) quantity of added carbon and fuel taxes per unit energy.
-
-![quantity of added taxes per unit energy in policy case](fuels-AddedTaxQuantity.png)
-
-Finally, we sum the added quantity of taxes per unit energy in the policy case with the quantity of taxes per unit energy in the BAU case to find the total quantity of taxes per unit energy in the policy case:
-
-![amount of tax per unit energy in the policy case](fuels-TaxQuantity.png)
 
 # Fuel Imports, Exports, and Production
 
