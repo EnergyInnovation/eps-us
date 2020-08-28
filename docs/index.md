@@ -58,7 +58,7 @@ Links to doc pages are followed by a number indicating the [version](version-his
   * [Input-Output Model](io-model.html) - 3.0.0
   * [Cost Outputs](cost-outputs.html) - 3.0.0
   * [Public Health and Additional Outputs](additional-outputs.html) - 3.0.0
-  * [Web Application Support Variables](web-app-support.html) - 1.1.4
+  * [Web Application Support Variables](web-app-support.html) - 3.0.0
   * [Debugging Assistance](debugging-assistance.html) - 1.1.4
 * [Automated Analysis with Python Scripts](automated-analysis.html) - 2.0.0
   * [Selecting Ouput Variables for Any Python Script](selecting-output-variables.html) - 1.1.4
