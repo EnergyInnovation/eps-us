@@ -11,16 +11,26 @@ In the 3.0.0 release, a macroeconomic input-output (I/O) model was added as a fu
 - GDP (total, and value added disaggregated by industry)
 - Jobs (total, and disaggregated by industry)
 - Employee Compensation (total, average compensation per employee, disaggregated by industry, and disaggregated by union vs. non-union jobs)
+- All of the outputs above can also be disaggregated by direct, indirect, and induced impacts.  These terms are explained below.
 
 The EPS now captures how money is re-spent (by government, by households, and by each industry), capturing indirect and induced economic activity caused by the policy package.  New feedback loops from the I/O model into the main energy-demanding sectors (Transportation, Buildings, and Industry) now allow the EPS to calculate the energy use and emissions associated with indirect and induced economic activity.  Prior to 3.0.0, only direct changes in economic activity caused by the policy package were captured.
 
-A new policy lever allows the user to adjust the way in which government re-spends changes in its revenue.  This allows for simulation of policies such as revenue-neutral carbon pricing, enabling model users to specify how revenues are rebated (e.g. reductions in payroll taxes, in corporate income taxes, in individual income taxes, direct "climate dividend" payments to households, etc.), or enables government to spend the money on products from specific ISIC codes (e.g. to represent things such as infrastructure construction).  In policy packages that reduce government cash flow, the new policy allows the user to specify how government will make up the shortfall.
+A new set of Government Revenue Accounting (GRA) levers allows the user to adjust the way in which government accounts for changes in its revenue (i.e. how it spends additional revenue, or how it makes up for drops in revenue).  There are five mechanisms government may use:
+- changes in regular spending
+- changes in deficit spending
+- changes in household taxes (including climate dividend payments)
+- changes in payroll taxes
+- changes in corporate income taxes
+
+The extent to which government employs each of these strategies can be customized, allowing for any combination of these modes.  Additionally, these levers can be set to different values for every tax and subsidy policy in the EPS, as well as how government accounts for changes in interest on the national debt, and how government accounts for other changes in its cash flows (e.g. not driven by tax or subsidy policies, such as government buying electricity instead of gas to heat government buildings if those buildings are electrified).
+
+This powerful set of tools allows for simulation of complicated policy packages, such as a revenue-neutral carbon tax that is 50% rebated to households as a climate dividend and 50% used to offset payroll taxes, enacted alongside a subsidy for electric vehicles that is 75% funded through increased deficit spending and 25% funded through a reduction in spending on other government programs.
 
 ## Economic Categories and Data
 
 The I/O model breaks the economy down into [International Standard Industrial Classification (ISIC) codes (Rev. 4)](https://unstats.un.org/unsd/publication/seriesM/seriesm_4rev4e.pdf), a classification system for economic activity developed and maintained by the United Nations Statistics Division.  Input-output tables specify which ISIC codes (e.g. industries) supply the inputs for each other industry, and which entities buy the outputs of each industry.  Other tables, also divided up by ISIC code, specify the total jobs, value added, employee compensation, and economic output of each ISIC code.  By default, the EPS draws these data from the OECD Statistical Database, where the OECD has freely released their [input-output data](https://stats.oecd.org/Index.aspx?DataSetCode=IOTSI4_2018) and [associated employment-related data](https://stats.oecd.org/Index.aspx?DataSetCode=TIM_2019_MAIN) for over 60 countries and regions.  For citations to specific tables within the OECD database, [download the EPS](download.html) and look at the first tab of the Excel file for the variable in which you are interested.  EPS adaptations for regions not in the OECD database will use other sources of I/O data, reformatted to fit the ISIC code categories used by the OECD.
 
-The OECD's data uses 36 ISIC code categories, which is generally sufficient for the EPS.  However, the OECD lacks sufficient granularity for energy-supplying industries.  Therefore, the EPS maintains its pre-3.0 break-out of energy suppliers (electricity suppliers, coal suppliers, natural gas and petroleum suppliers, biomass and biofuel suppliers, and other energy suppliers), and calculates impacts for these energy-supplying industries.  Similarly, the EPS uses its more sophisticated [fuel import and fuel export calculations](fuels.html) to determine the cash flows associated with fuel imports and exports, instead of using the OECD data.  The more sophisticated handling of energy products and energy industries is the main reason that non-energy industries and energy industries are treated differently on the "Cash Flow" sheet for each sector of the model, as well as on the [Cross-Sector Totals](cross-sector-totals.html) sheet.
+The OECD's data uses 36 ISIC code categories, which is generally sufficient for the EPS.  However, the OECD lacks sufficient granularity for energy-supplying industries.  Therefore, the EPS maintains its pre-3.0 break-out of energy suppliers (electricity suppliers, coal suppliers, natural gas and petroleum suppliers, biomass and biofuel suppliers, and other energy suppliers), and calculates impacts for these energy-supplying industries.  Similarly, the EPS uses its more sophisticated [fuel import and fuel export calculations](fuels.html) to determine the cash flows associated with fuel imports and exports, instead of using the OECD data.  The more sophisticated handling of energy products and energy industries is the main reason that non-energy industries and energy industries are treated differently on each EPS sector's "Cash Flow" sheet in Vensim, as well as on the [Cross-Sector Totals](cross-sector-totals.html) sheet.
 
 ## Direct, Indirect, and Induced Economic Impacts
 
@@ -50,49 +60,86 @@ We gratefully acknowledge the invaluable contributions of the [American Council 
 
 A detailed, illustrated walkthrough of the calculation approach appears below.  Note that inputs to the I/O model pertaining to the direct impacts of the user's chosen policies come from the [Cross-Sector Totals sheet](cross-sector-totals.html), so if you have interest in how these inputs are obtained, you may wish to review that documentation page before proceeding. 
 
-## Government Revenue Reallocation Policy
+## Government Revenue Allocation Settings
 
-One of the key inputs to the I/O model is the change in cash flow for each ISIC code and each tracked cash flow entity.  (There are nine cash flow entities: government, non-energy industries, labor and consumers, foreign entities, and the five energy suppliers listed above.)  These totals are calculated on the [Cross-Sector Totals sheet](cross-sector-totals.html), but they may be modified by the policy lever that reallocates policy-driven changes in government revenue.
+One of the key inputs to the I/O model is the change in cash flow for each ISIC code and each tracked cash flow entity.  (There are nine cash flow entities: government, non-energy industries, labor and consumers, foreign entities, and the five energy suppliers listed above.)  These totals are calculated on the [Cross-Sector Totals sheet](cross-sector-totals.html), but they do not yet reflect the choices of how government will respend increases in revenues or make up for decreases in revenues.  This section of the model is where the user sets that behavior.
 
-By default, government revenue is spent (sent to various ISIC codes) in accordinace with the existing (BAU) government budget allocations.  This might represent the government using additional revenue to do more of whatever it already does (or doing less of those things, in response to a drop in government revenue).  However, this policy enables the user to specify any set of recipients of additional government revenue (or payers who make up a shortfall in government revenue), from any of the tracked entities or ISIC codes in the EPS.  For example, this policy can be used to represent revenue-neutral carbon pricing, and allow the user to decide precisely _how_ the pricing is to be revenue-neutral: e.g. by reducing taxes on businesses, reducing taxes on households or providing a climate dividend, etc.  It also can represent government spending more on the products of specific ISIC codes, such as building materials for infrastructure projects.  It cannot allocate revenue more finely than the available 9 cash flow entities and 36 ISIC codes, so it cannot be used to (for example) specify the government uses revenue exclusively to buy solar panels.  (However, when a subsidy policy is available in the EPS, you can use that subsidy policy lever, which will reduce government cash flow by the amount of subsidy paid, which has the same effect as directing the government to spend more of its revenue on the subsidized activity.  Subsidy policies are available for a few things, including specific electricity generation technologies and electric vehicles.)
+First, we obtain the change in government revenue due to each tax or subsidy policy in the EPS, as well as the change in interest paid on the national debt (which we calculate later in the IO model, explained below, and use with a one-timestep delay to avoid circularity errors).  We load these changes in cash flows into a single variable subscripted by `Govt Cash Flow Type`.  As of the EPS 3.0.0 release, the following government cash flow types are broken out:
+- carbon tax revenue
+- fuel tax revenue
+- EV subsidy
+- elec gen subsidy
+- elec cap construction subsidy
+- distributed solar subsidy
+- fuel subsidy
+- national debt interest
+- remainder (all other changes in government cash flow, summed)
 
-![government revenue reallocation policy](io-model-GovtRevReallocPolicy.png)
+![government cash flow types](io-model-GovtCashFlowTypes.png)
 
-The three variables "Government Revenue Reallocated to Cash Flow Entities," "Government Revenue Reallocated to ISIC Codes," and "Change in Government Revenue due to Reallocation" sum to zero (if the government revenue reallocated to the "non-energy industries" cash flow entity is disregarded, since this entity is itself represented by the broken-out ISIC codes).
+Government revenue allocation (GRA) settings are set as integer weights, from zero to 10, for each government cash flow type, for each of the five GRA mechanisms (listed in the "I/O Model Capabilities" section above).  They are set this way, rather than as percentages, so that if a user adjusts a single GRA lever, we are always able to calculate shares that add to 100% without adjusting the values of the other GRA levers for that cash flow type.
+
+For each government cash flow type, we take the proportionate weights given to each of the five mechanisms, load them into a subscripted variable, and convert them to a percentage of each cash flow that is being handled by each mechanism.
+
+![converting GRA weights to percentages](io-model-GRAWeights.png)
+
+Next, we multiply each government cash flow type by the percentage assignments to different GRA mechanisms to divide up how government is accounting for that change in revenue.  We sum across policies, so we get the total change in revenue that needs to be handled under each of the five mechanisms.
+
+![allocating government revenue changes by mechanism](io-model-GovtRevByMechanism.png)
+
+## Deficit Spending and National Debt Interest
+
+Changes in deficit spending affect the government's budget deficit.  (If the government budget has a surplus, then these spending changes reduce or increase that surplus, but the terminology used in the EPS refers to a budget deficit.)  Changes to the budget deficit are cumulated across each year of the model run to find the cumulative change in the national debt (or surplus) as of each modeled year.  (As with other stock variables in the EPS, Vensim doesn't add inflows to the stock total until the following year, so we must separately add the current year's change in budget deficit to the stock variable to get the current year's cumulative change in the national debt.)
+
+![cumulative change in the national debt](io-model-CumCngNatDebt.png)
+
+We use an interest rate taken from input data to calculate the change in the amount of interest the government pays on the national debt in each year.  (If the modeled region has a surplus, this is the inverse of the change in interest earned on the surplus.)
+
+![change in interest paid on national debt](io-model-NatDebtInterest.png)
+
+We allocate the change in interest paid on the national debt to cash flow entities based on what share of government debt they hold.  The only cash flow entities that can be holders of national debt are "non-energy industries," "labor and consumers," and "foreign entities."  These cash flow assignmnets are delayed by one year to avoid circularity, then added to the total changes in cash flows for each entity on the [Cross-Sector Totals](cross-sector-totals.html) sheet.  Assignment of the non-energy industries' share to ISIC codes is also handled on that sheet.
+
+![change in interest paid on national debt allocated to cash flow entities](io-model-AllocatedNatDebtInterest.png)
 
 ## Calculating Change in Domestic Output by ISIC Code
 
-For the next step, we calculate the policy-driven change in output for each cash flow entity and each ISIC code tracked in the EPS.  For government, by default, we assume increases in revenue are spent in proportion to how the existing government budget is spent, as defined in variable GEbIC Government Expenditures by ISIC code.  This is modified by the government revenue reallocation policy, if it is enabled.  For example, in a policy package that increases government revenue, the reallocation policy may reduce the amount of government revenue allocated to ISIC codes (by redirecting some to households), and/or it may change the proportions of cash received by ISIC codes (for instance, by reducing payroll taxes paid by all industries).
+As the next step, we calculate the policy-driven change in output for each cash flow entity and each ISIC code tracked in the EPS.  The variable `Government Revenue Change Allocated by Mechanism` contains the change in government revenue broken down into the five GRA mechanisms, and these pieces are assigned to different entities accordingly.
+
+First, we calculate the impact of changes in regular government spending, which is used to account for the change in government revenue that was assigned to regular spending via the GRA levers.  We assume these changes in revenue increase or decrease spending on ISIC codes in proportion to how the existing government budget is spent, as defined in variable `GEbIC Government Expenditures by ISIC Code`.
 
 ![allocation of change in Government expenditures to ISIC codes](io-model-GovtOutputAllocated.png)
 
-Change in households' cash flow are allocated to ISIC codes in the same proportions as existing household expenditures.  The change in households' cash flow includes any cash received from the government revenue reallocation policy.
+Change in households' cash flow are allocated to ISIC codes in the same proportions as existing household expenditures.  The change in households' cash flow includes any cash received from the GRA "household taxes" mechanism, which includes increases and decreases in individual income taxes, as well as climate dividend payments (if any).
 
 ![allocation of change in Household expenditures to ISIC codes](io-model-HouseholdsOutputAllocated.png)
 
+To start calculating the industry contribution to change in output, we sum the changes in government revenue that were transferred to industry via the GRA levers.  Changes in payroll taxes are allocated to ISIC codes in proportion to each ISIC code's total employee compensation, while changes in corporate income taxes are allocated to ISIC codes in proportion to each ISIC code's total value added.
+
+![government revenue change allocated to industry](io-model-GovtRevToIndustry.png)
+
 Policy-driven changes in industries' revenues and expenditures have already been assigned to ISIC codes in the various sectors elsewhere in the EPS and summed on the [Cross-Sector Totals](cross-sector-totals.html) sheet.  Here, we do these things:
-- We add in any change in government revenue that was reallocated to ISIC codes using the government revenue reallocation policy.
+- We add in any change in government revenue that was reallocated to ISIC codes using the GRA settings.
 - We assign changes in cash flow for the five energy suppliers to the (more aggregated) ISIC codes for energy.  This is because we are about to use these data in the I/O model, which contains data for all ISIC codes but not for the energy supplying industries that we track separately.  (Direct cash flow impacts on the waste management industry are grouped with certain energy industries in one ISIC code category.)  We use weighted average output of different energy ISIC codes to help us assign cash flow impacts on broken-out energy suppliers to more aggregated energy ISIC codes.
 
 ![clean up of change in industry output to ISIC codes](io-model-IndustryOutputAllocated.png)
 
-We also separately calculate the share of non-energy industries' output by ISIC code, which helps us make certain assignments of cash flows to ISIC codes in the various EPS sectors.
+Foreign entities' share of changes in cash flow are simply passed through without adjustment to a `Change in Foreign Entities Cash Flow` variable.  We do this simply to have a clear name to use on the [Debugging Assistance](debugging-assistance.html) sheet, and to make it more clear to people examining the IO model that this cash flow exists and is parallel to the others being calculated in this segment of the model.
 
-![calculating percent of non-energy industry output by ISIC code](io-model-NonEnShrByIsicCode.png)
+![change in foreign entities cash flow](io-model-CngForeignEntitiesCash.png)
 
-Next, we remove the "foreign content share" (the fraction of the spending on each ISIC code that is supplied by foreign entities - i.e. imports) from the total.  This is only done for the domestic version of these outputs.  The EPS also calculates a rough, global (domestic + foreign) version, as described below, where the foreign content share is not excluded.
+Next, we remove the "foreign content share" (the fraction of the spending on each ISIC code that is supplied by foreign entities - i.e. imports) from the total.  This restricts the changes in output to those affecting domestic suppliers in each ISIC code, which helps us calculate the effects of the policies on domestic (rather than domestic + foreign) jobs, GDP, and employee compensation.
 
-In this place in the model, we only need to limit the foreign content share from government respending and household respending.  The foreign content share of industries' output has already been separated out (for energy industries, in the fuel import/export code on the [Fuels](fuels.html) sheet, and for other industries, on the [Cross-Sector Totals](cross-sector-totals.html) sheet).  Any government revenue that was reallocated to specific ISIC codes (rather than being spent by government on products and services) is assumed to have been reallocated only to domestic businesses within those ISIC codes, so no foreign share is removed from these reallocations.
+In this place in the model, we only need to limit the foreign content share from government respending and household respending.  The foreign content share of industries' output has already been separated out (for energy industries, in the fuel import/export code on the [Fuels](fuels.html) sheet, and for other industries, on the [Cross-Sector Totals](cross-sector-totals.html) sheet).
 
 ![limiting changes via domestic content share](io-model-DomesticContentShare.png)
 
-Finally, we sum the government, household, and industry contributions to change in output by ISIC code.  Changes in the cash flow assigned to "foreign entities" due to the policy package are assumed not to influence the extent to which foreign entities buy goods or services from the modeled region, as (1) these changes in cash flow are divided up among many foreign countries/regions and are likely to be very small next to the total size of the economies of these regions, and (2) foreign economies are likely to spend the vast majority of their cash on their own domestically-produced goods and services, and on imports from countries other than the modeled country.
+Finally, we sum the government and household contributions to change in output by ISIC code, because respending of these dollars will cause induced impacts on jobs, GDP, and employee compensation.  Changes in industry contributions to change in output by ISIC code are kept separate from this total, because those changes in output produce direct and indirect effcts, not induced effects, and we wish to keep the effects separate so they may be reported individually in output graphs.
 
-![summing changes to domestic output by ISIC code](io-model-SumDomesticOutputChange.png)
+Changes in the cash flow assigned to "foreign entities" due to the policy package are assumed not to influence the extent to which foreign entities buy goods or services from the modeled region, as (1) these changes in cash flow are divided up among many foreign countries/regions and are likely to be very small next to the total size of the economies of these regions, and (2) foreign economies are likely to spend the vast majority of their cash on their own domestically-produced goods and services, and on imports from countries other than the modeled country.
 
-## Calculating Change in Jobs, GDP, and Employee Compensation
+![summing changes to domestic output by ISIC code](io-model-SumGovtHouseholdOutputChange.png)
 
-This section is the heart of the I/O model.
+## Calculating Jobs, Value Added and Compensation Requirements per Unit Output
 
 We begin by taking in data on total output, jobs (employment), value added, and employee compensation for each ISIC code.  These data are freely available for over 60 countries and regions from OECD databases, described in the "Economic Categories and Data" section above.
 
@@ -104,11 +151,11 @@ Some details about these three metrics:
 
 - Employee compensation includes not just salary, but also bonuses, employer-paid benefits, employer contributions to retirement plans, etc.
 
-We divide each of the three key metrics (jobs, value added, and employee compensation) by output to obtain "within industry" jobs, value added, or employee compensation per unit of output that ISIC code generates.  This provides a measure of direct (first-order) job intensity, value added intensity, and employee compensation intensity of each ISIC code.
+We divide each of the three key metrics (jobs, value added, and employee compensation) by output to obtain "within industry" jobs, value added, or employee compensation per unit of output that ISIC code generates.  This provides a measure of direct (first-order) job intensity, value added intensity, and employee compensation intensity of each ISIC code.  These intensity or "Direct Requirements" variables will be used later to help us calculate the direct impacts of the policy package.
 
 ![within-industry job, value added, and employee compensation intensities](io-model-WithinIndustryIntensities.png)
 
-The next step converts these direct intensities into final intensities that include direct, indirect, and induced effects.  Each "within industry" intensity is multiplied by the Domestic Leontief Inverse Matrix (DLIM) for the modeled region.  DLIM is obtained from the same OECD database as other I/O data, described above, and can be caluclated from a standard input-output table (using the procedure described on the "About" tab of the io-model/DLIM Excel file).  However, we do not need to calculate our own DLIM table, since it was available pre-calculated by the OECD.
+Just below on the IO Model sheet, we calculate "Direct Plus Indirect Requirements" variables.  These requirements variables are used to assist in the calculation of induced impacts (because induced impacts are not typically reported broken into direct and indirect components - that is, how much of the induced activity was induced by direct spending and how much was induced by indirect spending).  To do this, we must conver these direct ("within-industry") intensities into final intensities that include direct and indirect requirements.  Each "within industry" intensity is multiplied by the Domestic Leontief Inverse Matrix (DLIM) for the modeled region.  DLIM is obtained from the same OECD database as other I/O data, described above, and can be caluclated from a standard input-output table (using the procedure described on the "About" tab of the io-model/DLIM Excel file).  However, we do not need to calculate our own DLIM table, since it was available pre-calculated by the OECD.
 
 In order to understand this step, it is crucial to understand what a Leontief Reverse Matrix is.  A screenshot of the upper left portion of the OECD's DLIM file for the United States (showing the first six ISIC code categories) appears below.  Please refer to it while reading the following explanation.
 
@@ -126,15 +173,39 @@ If you multiply a one-dimentional "demand matrix" (a vector) of values by the Le
 
 That would be the classical way to use DLIM for output analysis.  However, we don't want to multiply the DLIM by quantities of output change directly.  This is because we aren't interested in the final change in _output_ of each industry.  We want to know the final change in _jobs_, _value added_, and _employee compensation_ for each industry.  (The difference between output and value added was explained above.)  Therefore, we must convert the multipliers obtained from the DLIM for output to produce results for jobs, value added and industry.  Therefore, we multiply by the within-industry jobs, value added, and employee compensation intensities to obtain a trio of DLIM-like variables that convert changes in output to changes in jobs, value added, and employee compensation, rather than remaining in units of output.  This trio is called the "Requirements" variables, as they specify the number of jobs, value added, or employee compensation that was "required" (i.e. created) to bring about a known change in output.
 
-![domestic jobs, value added, and employee compensation requirements](io-model-DomesticRequirements.png)
+![domestic jobs, value added, and employee compensation requirements](io-model-DirectPlusIndirectRequirements.png)
 
-Now that we have constructed out trio of DLIM-like "requirements" variables, we can multiply the policy-driven change in output by ISIC code (a vector calculated earlier) by each requirements variable, to obtain the number of jobs, amount of value added, and amount of employee compensation that the policy package brought about in the course of creating the known change in output for each ISIC code.
+To calculate "indirect" effects on jobs, GDP, and employee compensation, we need versions of the requirements variables that exclude direct impacts.  To obtain this, we calculate an alternate version of the Domestic Leontief Inverse Matrix (DLIM).  We subtract the identity matrix (a matrix containing 1s along the diagonal, for matching ISIC codes, and 0s elsewhere) from DLIM to remove the initial output unit (job or currency unit) assigned to an ISIC code.  This leaves only the multipliers across all ISIC codes that reflect the indirect activity from adding a unit of output to a given ISIC code.
 
-![calculating change in jobs, value added, and employee compensation](io-model-CalcJobsValAddEEComp.png)
+![modified Domestic Inverse Leontief Matrix excluding direct effects](io-model-ModifiedDLIM.png)
 
-The EPS works in inflation-adjusted currency units.  That's fine for value added and employee compensation, as these are amounts of money.  However, jobs have been converted from money using the "within industry" job intensities per unit output, which are based on a single historical year from our I/O input data.  In reality, labor productivity tends to increase over time, so more currency units of value can be generated by fewer workers.  Therefore, predictions of future jobs that are derived from output (in currency units) need to be discounted by the anticipated productivity gains through that year.  We take in an input variable containing anticipated annual productivity gains by ISIC code for future years and discount job creation (or losses) by these values.  (We also apply a quantization factor at this stage, to ensure our outputs are an even multiple of 1 job.)
+We then multiply the within-industry intensities by our modified DLIM to obtain requirements variables that include only indirect effects.
+
+![indirect requirements variables](io-model-IndirectRequirements.png)
+
+## Calculating Change in GDP, Jobs, and Employee Compensation
+
+Now that we have constructed our trios of DLIM-like "requirements" variables, we can multiply the policy-driven changes in output by ISIC code (vector variables calculated earlier) by each requirements variable, to obtain the number of jobs, amount of value added, and amount of employee compensation that the policy package brought about in the course of creating the known change in output for each ISIC code.
+
+We do this separately for direct, indirect, and induced impacts, so we may report them in these categories in our final output.  Direct impacts utilize only industry contribution to change in output (e.g. direct effects of policies on industry from the various sectors, plus any changes in taxes paid by industry due to GRA levers).  These changes in output are multiplied by the direct (e.g. within-industry) requirements varaibles.
+
+![direct policy impacts](io-model-DirectImpacts.png)
+
+Indirect impacts also utilize industry contribution to change in output, as we are looking for the effects on the industries that supply the directly-impacted industries.  But indirect impacts use the special versions of the requirements variables calulated earlier (with a modified DLIM) that exclude direct effects.
+
+![indirect policy impacts](io-model-IndirectImpacts.png)
+
+Induced impact utilize the contribution to output caused by changes in household spending and regular government spending (i.e. on ordinary government budget, not specifically targeted at any industry as part of a policy).  These are multiplied by the version of the requirements variables that include both direct and indirect effects, since induced impacts are traditionally not broken out into direct and indirect components.
+
+![induced policy impacts](io-model-InducedImpacts.png)
+
+The EPS works in inflation-adjusted currency units.  That's fine for calculating value added and employee compensation, as these are amounts of money.  However, jobs have been converted from money using the "within industry" job intensities per unit output, which are based on a single historical year from our I/O input data.  In reality, labor productivity tends to increase over time, so more currency units of value can be generated by fewer workers.  Therefore, predictions of future jobs that are derived from output (in currency units) need to be discounted by the anticipated productivity gains through that year.  We take in an input variable containing anticipated annual productivity gains by ISIC code for future years and discount job creation (or losses) by these values.  (We also apply a quantization factor at this stage, to ensure our outputs are an even multiple of 1 job.)  We make this adjustment for direct, indirect, and induced job impacts, but the model structure is essentially identical, so only the version for direct imapcts is pictured here:
 
 ![discounting job gains by labor productivity growth rate](io-model-LaborProductivityGrowth.png)
+
+Finally, we sum the direct, indirect, and induced impacts to find the total impacts of the policy package on jobs, value added, and GDP.
+
+![summing impact types](io-model-SumImpactTypes.png)
 
 We now have our final predicted changes in jobs, value added, and employee compensation.  (A change in value added is the same as a change in GDP, since the sum of value added across all entities in society equals GDP.)  However, to calculate absolute values of these metrics in the policy case, we have to account for growth of jobs, GDP, and employee compensation in the BAU case, which is discussed below.
 
@@ -222,25 +293,7 @@ In addition to producing outputs on policy package impacts on jobs, GDP, and emp
 
 To avoid double-counting the direct impacts of the policy package (which are already included in the other sectors of the EPS), we must filter them out, and produce multipliers that reflect only the indirect and induced effects.  (The difference between direct, indirect, and induced effects is described above, near the beginning of this document.)  Accordingly, we need to calculate some alternate versions of variables calculated above, including only indirect and induced impacts.
 
-First, we calculate an alternate version of the Domestic Leontief Inverse Matrix (DLIM).  We subtract the identity matrix (a matrix containing 1s along the diagonal, for matching ISIC codes, and 0s elsewhere) from DLIM to remove the initial output unit (job or currency unit) assigned to an ISIC code.  This leaves only the multipliers across all ISIC codes that reflect the indirect and induced activity from adding a unit of output to a given ISIC code.  (Refer to the discussion of the Leontief Inverse Matrix above for a more thorough explanation of how this matrix works, which will clarify why subtracting the identity matrix removes direct effects.)
-
-![modified Domestic Inverse Leontief Matrix excluding direct effects](io-model-ModifiedDLIM.png)
-
-We use the modified DLIM to obtain a special version of the value added "requirements" variable that excludes direct impacts.  (We do not need special versions of the jobs or employee compensation "requirements" variables, because the feedback loops that affect energy service demand are based on changes in output.)
-
-![modified value added requirements excluding direct impacts](io-model-ModifiedValAddReqs.png)
-
-We multiply this modified value added "requirements" variable by the industry contribution to the change in output by ISIC code to obtain part of the change in output by ISIC code - the part from industry contribution.  The industry contribution includes all of the direct effects of the policy package, since by definition, _government and household respending produce induced effects, not direct effects_.
-
-![industry contribution to change in value added excluding direct effects](io-model-IndustryValAddExclDirect.png)
-
-Since government and household respending already contain no contribution from direct effects, we must use the ordinary version of the domestic value added "requirements" variable (discussed above), not the modified version we just made that removes direct impacts.
-
-![government and household contribution to value added](io-model-GovHhldContribValAdded.png)
-
-The government and household contributions to value added are then added to the industry contribution to find the total change in value added, excluding direct effects.
-
-![summing contributions to value added excluding direct effects](io-model-SumValAddExclDirectImpacts.png)
+![summing indirect and induced impacts](io-model-SumIndirectInduced.png)
 
 Next, we add the policy contributions to value added, excluding direct impacts, to the BAU time-series GDP, to get a special version of the "policy case" GDP, disaggregated by ISIC code, that includes only the additions to GDP from the indirect and induced impacts of the policy package.  We follow the same methodology as described above for caluclating the policy case GDP disaggregated by ISIC code.
 
