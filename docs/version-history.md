@@ -38,12 +38,14 @@ This page tracks updates that have been made with each version of the Energy Pol
     * Fuels cost input data and Vensim sheet reorganized for clarity and ease of adaptation to other regions
     * Change in carbon tax revenue and change in fuel tax revenue are now calculated explicitly, to support new government revenue handling options
     * Reduced domestic demand for domestically-produced fuels is now partially compensated for by increased exports (fuels/PoFDCtAE)
+  * Buildings Sector
+    * Implemented cash flows for efficient building component rebate policy
+    * Building fuel shifting policy now accounts for incremental capital costs of electrified (i.e. heat pump) building heating systems and water heaters
   * Other
     * WebAppData now detects duplicate and missing policy ID numbers
     * The model no longer uses GET DIRECT DATA to access data from outside of the model run timeframe
     * Model structure diagram updated to show new economic and public health outputs
     * Fraction of technology outside modeled region that affects endogenous learning can now be customized (endo-learn/FoTOMRAEL)
-    * Implemented cash flows for efficient building component rebate policy
     * All Python scripts now include the capability to limit the time range of data written to output files
     * Policy package CapEx + OpEx and Cost Curve output graphs now respond to user's government revenue handling selections to determine revenue neutrality
 * Bug Fixes
