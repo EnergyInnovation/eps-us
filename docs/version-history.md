@@ -125,7 +125,7 @@ Note that starting with this release, Vensim 8 or later (64-bit) is required to 
 	* Fuels' pollutant emissions intensities may now improve (or worsen) over the model run in the BAU case by specifying values in new input variable fuels/PEIIR
 	* Policy-driven changes in imports and exports of fuels are now calculated
 	* Corrected omission of biomass and diesel burned in district heat plants, and diesel burned in power plants, from fuel use totals
-	* Total fuel use disaggregated by fuel and by sector is now provided on the "Cumulators" sheet in Vensim
+	* Total fuel use disaggregated by fuel and by sector is now provided on the "Cross-Sector Totals" sheet in Vensim
 	* Thermal fuel production subsidies now account for fuel imports and exports, improving accuracy
 	* Retail prices of district heat and hydrogen are now by default influenced by changes in costs for district heat producers and hydrogen producers, with control lever plcy-ctrl-ctr/BAEPAbCiPC governing default behavior.  A subscripted policy lever toggles this behavior in the policy case.
 * Transportation Sector

@@ -64,7 +64,7 @@ Efficiency policies in the Industry sector affect the quantity of fuel used, and
 
 ![change in spending on Industry sector fuels](industry-ag-cash-ChangeInFuelSpend.png)
 
-Next, we multiply the amount of fuel consumed in each scenario by amount of fuel tax per unit energy (by fuel) in that scenario to obtain the total taxes paid.  We take the difference in taxes paid between the two scenarios to find the change in taxes paid, and we subtract the change in taxes paid from the change in total fuel spending to find the change in the amount of money going to the fuel industry.  Changes in cash flow for the "fuel industry" are disaggregated by fuel, which allows us to reassign these cash flows to more meaningful industry categories on the [Cumulators sheet](cumulators.html).  The following screenshot shows the relevant model structure:
+Next, we multiply the amount of fuel consumed in each scenario by amount of fuel tax per unit energy (by fuel) in that scenario to obtain the total taxes paid.  We take the difference in taxes paid between the two scenarios to find the change in taxes paid, and we subtract the change in taxes paid from the change in total fuel spending to find the change in the amount of money going to the fuel industry.  Changes in cash flow for the "fuel industry" are disaggregated by fuel, which allows us to reassign these cash flows to more meaningful industry categories on the [Cross-Sector Totals sheet](cross-sector-totals.html).  The following screenshot shows the relevant model structure:
 
 ![change in Industry sector fuel taxes and fuel industry cash flow](industry-ag-cash-ChangeInFuelTaxes.png)
 
