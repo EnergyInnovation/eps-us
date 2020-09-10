@@ -32,6 +32,7 @@ This page tracks updates that have been made with each version of the Energy Pol
     * Balance of system is now included in grid battery costs (and is unaffected by endogenous learning)
     * Soft costs for onshore wind, offshore wind, and solar PV power plants (and distributed solar PV) now accept time-series BAU data
     * Power plant fuel type shifting (such as coal-to-gas retrofits) will now only occur if the target power plant type is economic (not subject to economically-driven early retirement) or if the target fuel is a drop-in replacement (i.e. no retrofitting required).
+    * Grid battery policy is now set as a fraction of potential capacity achieved rather than as a percentage growth rate, allowing for finer control over timing and quantity of grid battery deployment
   * Fuels
 	  * Added output graphs of Embedded CO2 in Exported Fuels and Change in Embedded CO2 in Exported Fuels
     * The carbon tax rate may now be explicitly set for District Heat and Hydrogen sector instead of inheriting the Industry sector rate
