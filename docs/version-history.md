@@ -24,6 +24,7 @@ This page tracks updates that have been made with each version of the Energy Pol
     * Industrial process emissions multipliers (used in indst/BPEiC and indst/PERAC) are now disaggregated by gas.  These multipliers now allow for replacement of BPEiC data with arbitary, user-specified data while keeping abatement potentials and costs in PERAC in sync with BPEiC.
     * Added revenue data for "water & waste" industry (water treatment, wastewater, solid waste collection, landfilling, recycling, etc.)
     * Use of the material efficiency policy on the chemicals industry and on the other industries category is now disallowed because these industry categories are aggregates in our new I/O data (chemicals includes pharmaceuticals), and the material efficiency cannot target only the relevant parts of these aggregates to obtain accurate financial outcomes
+    * Industry now can pass on a share of its policy-driven changes in expenditures to buyers of its products (specified in indst/SoCiIEPTtB).  Removed embedded carbon and associated cost calculations for vehicles, power plants, and building components, to avoid double-counting.  (The new approach covers all products in the economy and all sources of expenditure changes, not just a carbon tax.)
   * Electricity Sector
     * Peak power demand calculations now calculate summer and winter peaks separately
     * Peak power demand calculations use equipment load factors (elec/ELF) to more accurately determine peak demand, which is particularly important in scenarios with substantial electrification
