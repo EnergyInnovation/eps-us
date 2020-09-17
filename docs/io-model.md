@@ -139,6 +139,10 @@ Policy-driven changes in industries' revenues have already been assigned to ISIC
 
 ![clean up of change in industry output to ISIC codes](io-model-IndustryOutputAllocated.png)
 
+Expenses passed through to buyers (such as raising the price of a good by the amount of a tax levied on that good) don't increase output for employment (or employee compensation) purposes.  An industry doesn't need more workers because it is not making more products.  Therefore, we remove industry's revenue from passthrough costs from industry's contribution to output.  (For calculation of value added, we will add the passthrough costs back in later, because taxes and employee compensation paid are a part of value added and contribute to GDP.)  For more on how passthrough costs are calculated, see the [industry - cash flow](industry-ag-cash.html) documentation page.
+
+![removal of passthrough costs from industry output](io-model-IndustryPassthruRemoval.png)
+
 Next, we remove the "foreign content share" (the fraction of the spending on each ISIC code that is supplied by foreign entities - i.e. imports) from the total.  This restricts the changes in output to those affecting domestic suppliers in each ISIC code, which helps us calculate the effects of the policies on domestic (rather than domestic + foreign) jobs, GDP, and employee compensation.
 
 (The import/export code on the [Fuels](fuels.html) sheet is not a replacement for doing this for the fuel industries.  The fuel trade code adds revenue for fuel exports and adds expenditures for fuel imports, but we use revenues here (not cash flows), so the revenues used here still include any changes in payments to foreign fuel suppliers.  Therefore, no exception is made for fuel industries here.)
@@ -166,8 +170,6 @@ Some details about these three metrics:
 - Employee compensation includes not just salary, but also bonuses, employer-paid benefits, employer contributions to retirement plans, etc.
 
 We divide each of the three key metrics (jobs, value added, and employee compensation) by output to obtain "within industry" jobs, value added, or employee compensation per unit of output that ISIC code generates.  This provides a measure of direct (first-order) job intensity, value added intensity, and employee compensation intensity of each ISIC code.  These intensity or "Direct Requirements" variables will be used later to help us calculate the direct impacts of the policy package.
-
-We adjust the within-industry jobs and within-industry intensity variables to account for "passthrough costs" incurred by industry.  Expenses passed through to buyers (such as raising the price of a good by the amount of a tax levied on that good) doesn't increase output for employment purposes.  An industry doesn't need more workers because it is not making more products.  Therefore, we adjust the within-industry jobs and EE compensation to account for passthrough costs.  We do not adjust within-industry value added because taxes paid (and employee compensation paid) are a part of value added and contribute to economic output and GDP.  For more on how passthrough costs are calculated, see the [industry - cash flow](industry-ag-cash.html) documentation page.
 
 ![within-industry job, value added, and employee compensation intensities](io-model-WithinIndustryIntensities.png)
 
@@ -204,6 +206,8 @@ We then multiply the within-industry intensities by our modified DLIM to obtain 
 Now that we have constructed our trios of DLIM-like "requirements" variables, we can multiply the policy-driven changes in output by ISIC code (vector variables calculated earlier) by each requirements variable, to obtain the number of jobs, amount of value added, and amount of employee compensation that the policy package brought about in the course of creating the known change in output for each ISIC code.
 
 We do this separately for direct, indirect, and induced impacts, so we may report them in these categories in our final output.  Direct impacts utilize only industry contribution to change in output (e.g. direct effects of policies on industry from the various sectors, plus any changes in taxes paid by industry due to GRA levers).  These changes in output are multiplied by the direct (e.g. within-industry) requirements varaibles.
+
+When calculating value added, we add industry's added revenue from passthrough expenses back into the industry contribution (which was removed earlier), because this revenue does contribute to value added (but not to employment or employee compensation), as discussed above.
 
 ![direct policy impacts](io-model-DirectImpacts.png)
 
