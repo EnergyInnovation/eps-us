@@ -60,6 +60,14 @@ We gratefully acknowledge the invaluable contributions of the [American Council 
 
 A detailed, illustrated walkthrough of the calculation approach appears below.  Note that inputs to the I/O model pertaining to the direct impacts of the user's chosen policies come from the [Cross-Sector Totals sheet](cross-sector-totals.html), so if you have interest in how these inputs are obtained, you may wish to review that documentation page before proceeding. 
 
+## Incorporating Macroeconomic Feedbacks
+
+Government and households can respend any increase in cash they get due to the policy package (and, conversely, can reduce their spending if the policy package decreases their available cash).  Households will always change their spending, while government's response to changes in its cash flow is specified using Government Revenue Allocation (GRA) settings, discussed below.
+
+The inputs to the I/O model already include direct changes in cash flow for government and households, such as when households spend less money on fuel and more money on vehicles due to fuel economy standards.  However, there are also indirect effects on household and on government cash flow caused by the policy package's effects on industry.  For example, if industrial output increases, industries may hire and pay more workers, which increases household cash flow.  Some of industries' increased output may go to corporate income taxes and payroll taxes, and some of the increased employee compensation will go to individual income taxes, so increases in industrial output also lead to increases in government cash flow.  To capture these indirect effects, we use a macroeconomic feedback loop.  Here, we incorporate the results of the macroeconomic feedback loop on government and on household (i.e. "labor and consumers") cash flow, combining these effects with the direct policy-driven changes in cash flow for government and households.  There is also a control setting that can be used to disable this feedback, which is primarily for model debugging purposes and should generally not be used by model users.
+
+![incorporating macroeconomic feedbacks](io-model-MacroFeedbacks.png)
+
 ## Government Revenue Allocation Settings
 
 One of the key inputs to the I/O model is the change in cash flow for each ISIC code and each tracked cash flow entity.  (There are nine cash flow entities: government, non-energy industries, labor and consumers, foreign entities, and the five energy suppliers listed above.)  These totals are calculated on the [Cross-Sector Totals sheet](cross-sector-totals.html), but they do not yet reflect the choices of how government will respend increases in revenues or make up for decreases in revenues.  This section of the model is where the user sets that behavior.
@@ -103,9 +111,13 @@ We allocate the change in interest paid on the national debt to cash flow entiti
 
 ## Calculating Change in Domestic Output by ISIC Code
 
-As the next step, we calculate the policy-driven change in output for each cash flow entity and each ISIC code tracked in the EPS.  The variable `Government Revenue Change Allocated by Mechanism` contains the change in government revenue broken down into the five GRA mechanisms, and these pieces are assigned to different entities accordingly.
+### Government and Household Spending Contribution to Change in Industrial Output
 
-First, we calculate the impact of changes in regular government spending, which is used to account for the change in government revenue that was assigned to regular spending via the GRA levers.  We assume these changes in revenue increase or decrease spending on ISIC codes in proportion to how the existing government budget is spent, as defined in variable `GEbIC Government Expenditures by ISIC Code`.
+As the next step, we calculate the policy-driven change in output for each cash flow entity and each ISIC code tracked in the EPS.  The variable `Government Revenue Change Allocated by Mechanism` contains the change in government cash flow broken down into the five GRA mechanisms, and these pieces are assigned to different entities accordingly.
+
+Note that government and household contribution to the change in industrial output is based on the change in money available for government and households to spend - i.e. change in cash flow, not change in revenue.  (Some of the change in revenue has already been spent on products and is already included in the change in industry revenue, so we need to use the change in cash flow for government and households to avoid double-counting.)  In contrast, industry contribution will be handled using change in revenue, not change in cash flow (discussed below).
+
+First, we calculate the impact of changes in regular government spending, which is used to account for the change in government cash flow that was assigned to regular spending via the GRA levers.  We assume these changes in cash flow increase or decrease spending on ISIC codes in proportion to how the existing government budget is spent, as defined in variable `GEbIC Government Expenditures by ISIC Code`.
 
 ![allocation of change in Government expenditures to ISIC codes](io-model-GovtOutputAllocated.png)
 
@@ -113,27 +125,29 @@ Change in households' cash flow are allocated to ISIC codes in the same proporti
 
 ![allocation of change in Household expenditures to ISIC codes](io-model-HouseholdsOutputAllocated.png)
 
+### Industry Contribution to Change in Industrial Output
+
+The contribution of changes in government and household spending to industrial output was calculated based on the change in cash flow (e.g. change in revenues minus change in expenditures) for government and for households, as discussed above.  This is the money they have available to respend.  The industry contribution is calculated based on policies' impacts on industry revenue, not industry cash flow.  This is because industry's output is generally the same as its revenue, and even if it does not change its net income (because the change in expenditures on things such as input materials, wages, and taxes equals the change in revenues), industrial output has nonetheless increased, as industry is producing more/fewer goods, paying more/fewer workers and taxes, etc.  (An adjustment to job requirements and employee compensation requirements per unit output, to account for changes in pass-through costs such as sales taxes, is discussed below.)
+
 To start calculating the industry contribution to change in output, we sum the changes in government revenue that were transferred to industry via the GRA levers.  Changes in payroll taxes are allocated to ISIC codes in proportion to each ISIC code's total employee compensation, while changes in corporate income taxes are allocated to ISIC codes in proportion to each ISIC code's total value added.
 
 ![government revenue change allocated to industry](io-model-GovtRevToIndustry.png)
 
-Policy-driven changes in industries' revenues and expenditures have already been assigned to ISIC codes in the various sectors elsewhere in the EPS and summed on the [Cross-Sector Totals](cross-sector-totals.html) sheet.  Here, we do these things:
-- We add in any change in government revenue that was reallocated to ISIC codes using the GRA settings.
+Policy-driven changes in industries' revenues have already been assigned to ISIC codes in the various sectors elsewhere in the EPS and summed on the [Cross-Sector Totals](cross-sector-totals.html) sheet.  Here, we do these things:
+- We add in any change in government cash flow that was reallocated to ISIC codes using the GRA settings.
 - We assign changes in cash flow for the five energy suppliers to the (more aggregated) ISIC codes for energy.  This is because we are about to use these data in the I/O model, which contains data for all ISIC codes but not for the energy supplying industries that we track separately.  (Direct cash flow impacts on the waste management industry are grouped with certain energy industries in one ISIC code category.)  We use weighted average output of different energy ISIC codes to help us assign cash flow impacts on broken-out energy suppliers to more aggregated energy ISIC codes.
 
 ![clean up of change in industry output to ISIC codes](io-model-IndustryOutputAllocated.png)
 
-Foreign entities' share of changes in cash flow are simply passed through without adjustment to a `Change in Foreign Entities Cash Flow` variable.  We do this simply to have a clear name to use on the [Debugging Assistance](debugging-assistance.html) sheet, and to make it more clear to people examining the IO model that this cash flow exists and is parallel to the others being calculated in this segment of the model.
-
-![change in foreign entities cash flow](io-model-CngForeignEntitiesCash.png)
-
 Next, we remove the "foreign content share" (the fraction of the spending on each ISIC code that is supplied by foreign entities - i.e. imports) from the total.  This restricts the changes in output to those affecting domestic suppliers in each ISIC code, which helps us calculate the effects of the policies on domestic (rather than domestic + foreign) jobs, GDP, and employee compensation.
 
-In this place in the model, we only need to limit the foreign content share from government respending and household respending.  The foreign content share of industries' output has already been separated out (for energy industries, in the fuel import/export code on the [Fuels](fuels.html) sheet, and for other industries, on the [Cross-Sector Totals](cross-sector-totals.html) sheet).
+(The import/export code on the [Fuels](fuels.html) sheet is not a replacement for doing this for the fuel industries.  The fuel trade code adds revenue for fuel exports and adds expenditures for fuel imports, but we use revenues here (not cash flows), so the revenues used here still include any changes in payments to foreign fuel suppliers.  Therefore, no exception is made for fuel industries here.)
 
-![limiting changes via domestic content share](io-model-DomesticContentShare.png)
+![limiting government and household changes via domestic content share](io-model-DomesticContentShareGovHhld.png)
 
-Finally, we sum the government and household contributions to change in output by ISIC code, because respending of these dollars will cause induced impacts on jobs, GDP, and employee compensation.  Changes in industry contributions to change in output by ISIC code are kept separate from this total, because those changes in output produce direct and indirect effcts, not induced effects, and we wish to keep the effects separate so they may be reported individually in output graphs.
+![limiting industry changes via domestic content share](io-model-DomesticContentShareIndst.png)
+
+Finally, we sum the government and household contributions to change in output by ISIC code, because respending of these dollars will cause induced impacts on jobs, GDP, and employee compensation.  Changes in industry contributions to change in output by ISIC code are kept separate from this total, because those changes in output produce direct and indirect effcts, not induced effects, and we wish to keep the effects separate because they are handled differently in macroeconomic feedback loops and so that they may be reported individually in output graphs.
 
 Changes in the cash flow assigned to "foreign entities" due to the policy package are assumed not to influence the extent to which foreign entities buy goods or services from the modeled region, as (1) these changes in cash flow are divided up among many foreign countries/regions and are likely to be very small next to the total size of the economies of these regions, and (2) foreign economies are likely to spend the vast majority of their cash on their own domestically-produced goods and services, and on imports from countries other than the modeled country.
 
@@ -152,6 +166,8 @@ Some details about these three metrics:
 - Employee compensation includes not just salary, but also bonuses, employer-paid benefits, employer contributions to retirement plans, etc.
 
 We divide each of the three key metrics (jobs, value added, and employee compensation) by output to obtain "within industry" jobs, value added, or employee compensation per unit of output that ISIC code generates.  This provides a measure of direct (first-order) job intensity, value added intensity, and employee compensation intensity of each ISIC code.  These intensity or "Direct Requirements" variables will be used later to help us calculate the direct impacts of the policy package.
+
+We adjust the within-industry jobs and within-industry intensity variables to account for "passthrough costs" incurred by industry.  Expenses passed through to buyers (such as raising the price of a good by the amount of a tax levied on that good) doesn't increase output for employment purposes.  An industry doesn't need more workers because it is not making more products.  Therefore, we adjust the within-industry jobs and EE compensation to account for passthrough costs.  We do not adjust within-industry value added because taxes paid (and employee compensation paid) are a part of value added and contribute to economic output and GDP.  For more on how passthrough costs are calculated, see the [industry - cash flow](industry-ag-cash.html) documentation page.
 
 ![within-industry job, value added, and employee compensation intensities](io-model-WithinIndustryIntensities.png)
 
@@ -211,7 +227,9 @@ We now have our final predicted changes in jobs, value added, and employee compe
 
 ## Obtaining Time-Series Values for Jobs, GDP, and Employee Compensation
 
-The approach above allows us to calculate time-series data for the effects of the policy package on jobs, GDP, and employee compensation.  However, our BAU data for total quantity of jobs, GDP, and employee compensation is based on a static, historical year from the I/O input data.  (No public, projected future time-series data for jobs, value added, employee compensation, and output, all disaggregated by ISIC code, are available, as far as we are aware.)  We generally don't need time-series BAU quantities if we are only interested in showing policy impacts (in absolute numbers of currency units or jobs) in output graphs.  However, we do need BAU quantities to obtain certain derived output metrics, specifically:
+The approach above allows us to calculate time-series data for the effects of the policy package on jobs, GDP, and employee compensation.  However, our BAU data for total quantity of jobs, GDP, and employee compensation is based on a static, historical year from the I/O input data.  (No public, projected future time-series data for jobs, value added, employee compensation, and output, all disaggregated by ISIC code, are available, as far as we are aware.)  We generally don't need time-series BAU quantities if we are only interested in showing policy impacts (in absolute numbers of currency units or jobs) in output graphs, without macroeconomic demand feedbacks.  However, we do need BAU quantities to obtain certain values, specifically:
+
+- Percentage change in contribution to GDP by ISIC code, used in [macroeconomic energy service demand feedbacks](macro-feedbacks.html)
 
 - Percentage change in GDP (as opposed to change in absolute dollars)
 
@@ -221,23 +239,15 @@ The approach above allows us to calculate time-series data for the effects of th
 
 Therefore, we must calculate our own time-series BAU values of all three key metrics.
 
-The calculation structure we use is identical for each of the three metrics (jobs, GDP, and employee compensation), so we will only walk through one of them here.  The other two are obtained the same way.  We will use GDP as our example.
+The calculation structure we use is identical for each of the three metrics (jobs, GDP, and employee compensation), so we will only walk through one of them here.  The other two are obtained the same way (except there is no need to calculate a non-disaggregated version of policy case total jobs or EE compensation).  We will use GDP as our example.
 
 First, we take in a future projected BAU GDP time series that is not divided up by ISIC code (e.g. we don't know each ISIC code's contribution to GDP in the BAU case).  We add the policy-driven change in GDP (summed across ISIC codes) to find the policy case GDP.
 
-![calculationg policy case GDP](io-model-PolicyCaseGDP.png)
+We also apportion the time-series BAU GDP using the (static) BAU value added by ISIC code data, to obtain an estimate of future GDP apportioned by ISIC code.  This is the main variable that would be improved if time-series value added data disaggregated by ISIC code were available.
 
-Next, we apportion all of the value added by ISIC code, using the (static) BAU data, and adding in the policy-driven changes.  This gives us a rough sense of how value added is distributed by ISIC code in the policy case, assuming the BAU distribution remains relatively constant over the model run.  (This assumption may be the best we can do unless/until future projected value added data disaggregated by ISIC code become available.)
+Finally, we add the policy-driven changes to value added by ISIC code to the BAU value added by ISIC code to find GDP, apportioned by ISIC code, in the policy case.
 
-![value added by ISIC code without BAU time-series projection](io-model-ValAddedByISIC.png)
-
-Finally, we apportion our policy case GDP (which includes time-series BAU GDP growth) by the ratios of value added by ISIC code.
-
-![policy case GDP apportioned by ISIC code](io-model-PolicyCaseGDPByISIC.png)
-
-We perform the same approach for apportionment of time-series GDP to ISIC codes in the BAU case, which does not include any policy effects on value added:
-
-![BAU case GDP apportioned by ISIC code](io-model-BAUGDPbyISIC.png)
+![calculating policy case GDP](io-model-PolicyCaseGDP.png)
 
 ## Percent Changes in GDP
 
@@ -287,24 +297,6 @@ To calculate the change in union-represented jobs and non-union-represented jobs
 
 ![change in union-represented and non-union jobs](io-model-CngUnionNonUnionJobs.png)
 
-## Calculations to Support Feedback Loops
+## Macroeconomic Feedbacks
 
-In addition to producing outputs on policy package impacts on jobs, GDP, and employee compensation, the I/O model also calculates the indirect and induced output produced by different ISIC codes.  Just like output directly caused by the policy package, indirect and induced output is also associated with energy use and emissions.  In order to capture the energy use and emissions effects, we need to feed the indirect and induced activity back into the main demand sectors of the EPS (Transportation, Buildings, and Industry), to affect the demand for energy-using services and industrial products.  Therefore, in the I/O model sheet, we must calculate multipliers to be used within those sectors.  As the I/O model operates in terms of ISIC codes, the multipliers must be for each ISIC code, and we map these onto specific energy-using services or industries in the other sectors of the EPS.
-
-To avoid double-counting the direct impacts of the policy package (which are already included in the other sectors of the EPS), we must filter them out, and produce multipliers that reflect only the indirect and induced effects.  (The difference between direct, indirect, and induced effects is described above, near the beginning of this document.)  Accordingly, we need to calculate some alternate versions of variables calculated above, including only indirect and induced impacts.
-
-![summing indirect and induced impacts](io-model-SumIndirectInduced.png)
-
-Next, we add the policy contributions to value added, excluding direct impacts, to the BAU time-series GDP, to get a special version of the "policy case" GDP, disaggregated by ISIC code, that includes only the additions to GDP from the indirect and induced impacts of the policy package.  We follow the same methodology as described above for caluclating the policy case GDP disaggregated by ISIC code.
-
-![policy case GDP excluding direct impacts](io-model-PolicyCaseGDPExclDirect.png)
-
-Finally, we take the percent change in contribution to GDP separately for each ISIC code, comparing our special policy case GDP to the BAU GDP calculated earlier.  This is the key result for how much the induced and indirect effects of the policy package change output by industry, which we need for our feedback loops.
-
-![percent change in GDP by ISIC code excluding direct effects](io-model-PercCngGDPbyISICExclDirect.png)
-
-Lastly, we must introduce a one-timestep delay to avoid circularity in the calculations (as indirect and induced effects on industries will affect their cash flows, which in turn feed into the I/O model).
-
-![one-timestep delay in feedback loop inputs](io-model-DelayInFeedbackInput.png)
-
-This variable is used in the Transportation, Buildings, and Industry sectors to adjust the energy services or industrial products demand to account for the indirect and induced economic effects of the policy package.
+The results of the IO model are also used in macroeconomic feedback loops, discussed on the [Macroeconomic Feedbacks](macro-feedbacks.html) documentation page.
