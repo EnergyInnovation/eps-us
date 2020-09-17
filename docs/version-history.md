@@ -59,6 +59,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Fixed double-counting of certain cash flow changes due to changes in industrial production
   * Very high carbon tax rates applied to industrial process (non-energy) emissions can no longer cause oscillating production changes
   * Fixed bug in "Subsidy Paid on Distributed Solar Capacity" formula
+  * Capital costs for new CCS equipment are now allocated amongst power plant types and amongst industries proportionally to year-over-year increase in CCS usage instead of total current-year CCS usage by each plant type and industry
 
 ### **2.1.2 - July 9, 2020**
 

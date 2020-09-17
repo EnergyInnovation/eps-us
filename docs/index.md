@@ -50,7 +50,7 @@ Links to doc pages are followed by a number indicating the [version](version-his
   * [District Heating](district-heating.html) - 3.0.0
   * [Hydrogen Supply](hydrogen-supply.html) - 3.0.0
   * [Land Use, Land Use Change, and Forestry](lulucf.html) - 3.0.0
-  * [Carbon Capture and Sequestration](ccs.html) - 1.1.4
+  * [Carbon Capture and Sequestration](ccs.html) - 3.0.0
   * [Geoengineering](geoengineering.html) - 3.0.0
   * [Fuels](fuels.html) - 3.0.0
   * [Endogenous Learning](endogenous-learning.html) - 3.0.0
