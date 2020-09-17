@@ -29,9 +29,23 @@ We introduce a one-timestep delay in the sequestration quantities, which will be
 
 ![one-timestep delay in sequestration quantities](ccs-Delay.png)
 
-## Capital and O&M Costs of CCS Equipment
+## Capital Costs of CCS Equipment
 
-Next, we calculate the capital and O&M costs of CCS.  We represent the amount of CCS equipment in terms of its sequestration capacity: that is, the amount of equipment necessary to sequester a particular mass of CO<sub>2</sub> per year.
+The cost of new CCS capital equipment s based on an endogenous learning curve, so that it is cheaper the more CCS equipment has been deployed.  We use a percentage decline per doubling of capacity to determine the cost of CCS equipment in the current model year relative to the first year.  That is multiplied by the cost of CCS equipment in the first year to find the current year cost.  The user-specified R&D policy that reduces CCS equipment cost is also applied at this stage.
+
+![decline in CCS capital cost relative to first year](ccs-CapCostDecline.png)
+
+Unlike O&M costs, capital equipment costs are only paid on newly-purchased CCS equipment, not on equipment that was installed in a prior model year.  Therefore, we use the year-over-year increase in quantity of CO<sub>2</sub> captured.
+
+This increase is calculated separately for each power plant type and each industry, to allow for the possibility that use of CCS is growing for certain plant types or industries, even as CCS usage remains flat or even decreases for other plant types or industries.
+
+The main way by which CCS usage can decline is if all of the power plants of a given type are being retired due to the policy package.  For example, completely eliminating all coal plants will retire any CCS capacity associated with those coal plants.  It is also possible for a user to specify an increase followed by a reduction in CCS use in his/her policy settings.  However, in most situations, there will not be CCS equipment retirements during a model run, because the lifetime of CCS equipment is long (25-40 years) and any preexisting CCS equipment is relatively new, so retirements during the course of the model run are not significant.
+
+![new CCS equipment capital cost](ccs-NewEqptCapCost.png)
+
+## O&M Costs of CCS Equipment
+
+Next, we calculate the O&M costs of CCS.  We represent the amount of CCS equipment in terms of its sequestration capacity: that is, the amount of equipment necessary to sequester a particular mass of CO<sub>2</sub> per year.
 
 O&M must be paid on all operating CCS equipment.  Therefore, we take the total amount of sequestration occurring in the modeled year and multiply by the O&M cost per ton of CO<sub>2</sub>  sequestered to obtain the total amount of O&M costs incurred in the modeled year.
 
@@ -40,24 +54,6 @@ O&M must be paid on all operating CCS equipment.  Therefore, we take the total a
 CCS O&M costs are then divided up between different power plant types and different industries depending on the quantity of CO<sub>2</sub> sequestered by each of these power plant types and industries.
 
 ![CCS O&M cost allocation](ccs-OMCostAllocation.png)
-
-Unlike O&M costs, capital equipment costs are only paid on newly-purchased CCS equipment, not on equipment that was installed in a prior model year.  Therefore, we need to calculate the year-over-year change in quantity of CO<sub>2</sub> captured.
-
-We do not have CCS equipment retirements, because the lifetime of CCS equipment is long (25-40 years) and any preexisting CCS equipment is relatively new, so retirements during the course of the model run are not significant.  (There is an exception: completely eliminating a power plant type, such as eliminating all coal plants, will retire any CCS capacity associated with those coal plants.)
-
-![incremental amount of CO2 captured](ccs-ThisYearChangeSeq.png)
-
-The cost of that new equipment is based on an endogenous learning curve, so that it is cheaper the more CCS equipment has been deployed.  We use a percentage decline per doubling of capacity to determine the cost of CCS equipment in the current model year relative to the first year.  That is multiplied by the cost of CCS equipment in the first year to find the current year cost.  The user-specified R&D policy that reduces CCS equipment cost is also applied at this stage.
-
-![decline in CCS capital cost relative to first year](ccs-CapCostDecline.png)
-
-The cost per unit equipment capacity (in CO2 sequestration per year) is multiplied by the incremental change in sequestration to find the new capacity.  This value is disallowed from being negative, even in the very rare case where CCS retirements (under the exception noted above) outweigh new capacity deployment.
-
-![new CCS equipment capital cost](ccs-NewEqptCapCost.png)
-
-Finally, we allocate CCS capital costs among the power plant types and industries purchasing the new CCS equipment, based on the year-over-year increase in CO2 sequestration by each of those plant types and industries.
-
-![allocating CCS equipment capital costs](ccs-CapCostAllocation.png)
 
 ## Fuel Used to Power the Sequestration Process
 
