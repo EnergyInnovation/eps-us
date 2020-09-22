@@ -16,13 +16,30 @@ Output units are chosen to be familiar to users in the modeled region, and to ha
 
 Most EPS deployments inherit the working units from the U.S. EPS.  This is because these models often inherit one or more input data files from the U.S. deployment (for example, they may scale U.S. values to fill in a data gap), and it is therefore often most convenient to simply retain U.S. working units.  This requires that each regional deployment convert its input data into these working units.  For example, Chinese energy input data in tons of coal equivalent, or TCOE (in the China EPS) and Canadian input data in Joules (in the Canada EPS) may both be convered to BTU in the input data files.
 
+The main working units of the EPS are:
+
+|Unit Type|Working Unit|
+|-|-|
+|Currency|2012 U.S. dollars|
+|Energy (except electricity)|BTU|
+|Electricity generation|MWh|
+|Electricity capacity|MW|
+|Pollutant emissions|grams|
+|Distance|miles|
+|Land Area|acres|
+|Water Volume|liters|
+|Grid Flexibility|flexibility points|
+|Public Health Outcomes|incidents|
+|Number of vehicles|vehicles|
+|Number of jobs|jobs|
+
 Working units are converted to output units in several variables located in the InputData\web-app folder.  This conversion is normally straightforward.  However, two cases deserve further explanation: converting electricity and energy units, and converting currency types/years.
 
 ## Electricity - Energy Unit Conversions
 
 While thermal (and nuclear) energy sources use BTU as their working unit, the working unit for electricity is MWh.  This helps keep electricity energy units parallel to capacity units (where the working unit is MW) and avoids the confusion that can arise when electricity is expressed in BTU by users expecting a heat rate rather than a unit conversion.  A heat rate is an efficiency with which BTUs of a fuel can be converted to electricity in a power plant.  A perfecly efficient power plant would have a heat rate equal to the pure unit conversion factor between BTU and MWh.
 
-In electricity-specific output graphs, typically no unit conversion is necessary, beyond converting MWh into GWh or TWh, a simple change of order of magnitude.  However, some output graphs show multiple types of energy together, often as stacked areas.  In order to represent electricity on these graphs, it is necessary to convert it to a non-electricity energy output unit, such as quadrillion BTU (quads).  An example is Transportation Sector fuel use by fuel type.  The EPS must use the pure unit conversion, not a heat rate, to convert electricity use for inclusion on these graphs.
+In electricity-specific output graphs, typically no unit conversion is necessary beyond converting MWh into GWh or TWh, a simple change of order of magnitude.  However, some output graphs show multiple types of energy together, often as stacked areas.  In order to represent electricity on these graphs, it is necessary to convert it to a non-electricity energy output unit, such as quadrillion BTU (quads).  An example is Transportation Sector fuel use by fuel type.  The EPS must use the pure unit conversion, not a heat rate, to convert electricity use for inclusion on these graphs.
 
 For the most part, the EPS only uses heat rates only when representing an actual conversion of thermal or nuclear fuel into electricity.  These conversions occur within the electricity sector and are not relevant for output unit conversion.
 

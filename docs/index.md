@@ -24,7 +24,7 @@ Links to doc pages are followed by a number indicating the [version](version-his
   * [How the EPS Avoids Double Counting Policy Effects](how-the-eps-avoids-double-counting.html) - 3.0.0
   * [Comparing Results to Reality or Other Models](comparing-results.html) - 3.0.0
   * [Evaluating Policy Packages' Financial Effects](evaluating-package-financials.html) - 2.1.0
-  * [Notes on Unit Conversion](unit-conversion.html) - 1.4.3
+  * [Notes on Unit Conversion](unit-conversion.html) - 3.0.0
   * [Remapping Subscript Elements](remapping.html) - 3.0.0
 * About the Web Interface
   * [Web Interface Tutorial](online-model-tutorial.html) - 1.4.3
