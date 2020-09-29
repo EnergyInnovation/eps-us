@@ -28,7 +28,7 @@ Links to doc pages are followed by a number indicating the [version](version-his
   * [Remapping Subscript Elements](remapping.html) - 3.0.0
 * About the Web Interface
   * [Web Interface Tutorial](online-model-tutorial.html) - 1.4.3
-  * [Output Graphs Available in the Web Interface](web-interface-graphs.html) - 1.4.1
+  * [Output Graphs Available in the Web Interface](web-interface-graphs.html) - 3.0.0
   * [Background and Technical Info about the Web Interface](background-and-technical-info.html) - 1.3.2
 * [Download and Installation Instructions](download.html) - 2.0.0
 * [How to Conduct Analysis in Vensim Model Reader](how-to-conduct-analysis.html) - 1.4.2
