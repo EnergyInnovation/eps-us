@@ -20,7 +20,7 @@ Links to doc pages are followed by a number indicating the [version](version-his
 * Model Overview
   * [Architectural Design](architectural-design.html) - 3.0.0
   * [The Included Input Data Set](input-data.html) - 3.0.0
-  * [Assumptions and Limitations](assumptions.html) - 1.4.2
+  * [Assumptions and Limitations](assumptions.html) - 3.0.0
   * [How the EPS Avoids Double Counting Policy Effects](how-the-eps-avoids-double-counting.html) - 3.0.0
   * [Comparing Results to Reality or Other Models](comparing-results.html) - 3.0.0
   * [Evaluating Policy Packages' Financial Effects](evaluating-package-financials.html) - 2.1.0
