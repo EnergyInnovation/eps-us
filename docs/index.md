@@ -23,7 +23,7 @@ Links to doc pages are followed by a number indicating the [version](version-his
   * [Assumptions and Limitations](assumptions.html) - 3.0.0
   * [How the EPS Avoids Double Counting Policy Effects](how-the-eps-avoids-double-counting.html) - 3.0.0
   * [Comparing Results to Reality or Other Models](comparing-results.html) - 3.0.0
-  * [Evaluating Policy Packages' Financial Effects](evaluating-package-financials.html) - 2.1.0
+  * [Evaluating Policy Packages' Financial Effects](evaluating-package-financials.html) - 3.0.0
   * [Notes on Unit Conversion](unit-conversion.html) - 3.0.0
   * [Remapping Subscript Elements](remapping.html) - 3.0.0
 * About the Web Interface
