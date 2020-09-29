@@ -13,7 +13,7 @@ The Energy Policy Simulator (EPS) is a free and open-source computer model creat
 
 ## Full Documentation
 
-Links to doc pages are followed by a number indicating the [version](version-history.html) of the EPS core software that was current at the time that doc page was most recently updated.  Pages that were checked and verified as up-to-date without requiring changes are also noted.
+Links to doc pages are followed by a number indicating the [version](version-history.html) of the EPS core software that was current at the time that doc page was most recently brought up-to-date (or checked and verified as up-to-date without requiring changes).
 
 * [Introduction](introduction.html) - 3.0.0
 * [EPS Video Series](video-series.html) - 3.0.0
@@ -72,10 +72,10 @@ Links to doc pages are followed by a number indicating the [version](version-his
 ## Other Information
 
 * [Acknowledgement of Contributors and Reviewers](acknowledgement.html) - 3.0.0
-* [Contact Us](contact.html) - 1.1.1 (verified 3.0.0)
+* [Contact Us](contact.html) - 3.0.0
 * [Software License and Image Credits](software-license.html) - 3.0.0
 * [Version History](version-history.html) - 3.0.0
-  * [Archived Model Releases](archived-releases.html) - 2.0.0 (verified 3.0.0)
+  * [Archived Model Releases](archived-releases.html) - 3.0.0
 
 ## Depreciated Documentation
 
