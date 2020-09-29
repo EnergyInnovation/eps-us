@@ -61,6 +61,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Fixed bug in "Subsidy Paid on Distributed Solar Capacity" formula
   * Capital costs for new CCS equipment are now allocated amongst power plant types and amongst industries proportionally to year-over-year increase in CCS usage instead of total current-year CCS usage by each plant type and industry
   * Power plant decommissioning costs are no longer charged if a power plant type has retired to zero and there is no capacity left to retire
+	* The industrial fuel shifting policy's capital equipment costs now account for increases in usage of all industrial fuel types
 
 ### **2.1.2 - July 9, 2020**
 
