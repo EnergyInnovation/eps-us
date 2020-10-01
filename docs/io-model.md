@@ -91,7 +91,7 @@ For each government cash flow type, we take the proportionate weights given to e
 
 ![converting GRA weights to percentages](io-model-GRAWeights.png)
 
-Next, we multiply each government cash flow type by the percentage assignments to different GRA mechanisms to divide up how government is accounting for that change in revenue.  We sum across policies, so we get the total change in revenue that needs to be handled under each of the five mechanisms.
+Next, we multiply each government cash flow type by the percentage assignments to different GRA mechanisms to divide up how government is accounting for that change in revenue.  We sum across policies, so we get the total change in revenue that needs to be handled under each of the five mechanisms.  (We apply a quantization factor at this stage to dampen rounding error, which is otherwise visible when no policies are enabled.)
 
 ![allocating government revenue changes by mechanism](io-model-GovtRevByMechanism.png)
 
