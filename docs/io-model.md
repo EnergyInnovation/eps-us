@@ -109,6 +109,38 @@ We allocate the change in interest paid on the national debt to cash flow entiti
 
 ![change in interest paid on national debt allocated to cash flow entities](io-model-AllocatedNatDebtInterest.png)
 
+## Change in Household Savings and Spending
+
+Households do not respend all of an increase in cash flow that they receive in response to a policy package.  Households save some of the money, investing it in real assets (e.g. paying for a home), bank accounts, equities, etc.  Similarly, a reduction in household cash won't immediately reduce spending by the same amount - a household may tap into its savings to help maintain its prior level of consumption.  This is represented by the personal savings rate, the share of disposable household income that is saved or invested.  In the United States, over the 20-year period from 2000-2019, the [average personal savings rate was 6%](https://fred.stlouisfed.org/series/PSAVERT).
+
+Changes in savings do not affect industrial output in the same way as consumption.  Consumption directly leads to economic output.  Savings can make more money available to businesses, which they can invest in expanding their operations.  However, this does not necessarily lead directly to increased economic output.  It depends on prevailing economic conditions.
+
+* In poor economic times (such as during a recession), interest rates are extremely low, and there is plenty of cheap capital available to any business that wants to invest.  Meanwhile, businesses are often looking for ways to lower their expenditures, such as by laying off workers or delaying capital equipment purchases, to survive the lean times.  A lack of capital for investment isn’t the problem.  The problem is that there isn’t enough demand for products.  So households saving money (whether buying equities, or putting money in the bank) is unlikely to simulate additional industrial production.
+
+* In excellent economic times (during a boom), interest rates are high (at least traditionally, since one role of a central bank is to set interest rates to rein in inflation and prevent an overheated economy).  There is ample consumer demand, and businesses are investing to expand their operations.  At these times, household savings might lead to more industrial production, because it might give them access to more (or more affordable) capital with which to expand their businesses to meet existing demand.
+
+However, there are sources of capital for businesses aside from domestic household savings.  For example, in the U.S., a large amount of investment comes from overseas, as well as from savings by U.S. businesses.  Household savings is a minor contributor to overall investment, responsible for just [6.7% of gross domestic investment from 2000-2004](https://www.stlouisfed.org/publications/regional-economist/july-2005/do-we-have-a-saving-crisis).  If sufficient capital is available from other sources, an incremental increase in domestic household investment might not boost economic output by much.
+
+Computer models cannot predict when recessions or economic booms will happen in the coming decades.
+
+In the EPS, we assume that policy-driven changes in household savings remain with households and do not contribute to changes in economic output.  We believe this is the most reasonable approach given the limitations on the circumstances under which incremental changes in household savings meaningfully allow industry to expand its output.
+
+First, we total the change in household cash flow before savings, adding the value calculated on the [Cross-Sector Totals](cross-sector-totals.html) sheet and any cash government redirects to households via personal/household income tax rebates or climate dividends.
+
+![change in household cash flow before savings](io-model-CngHouseholdCashBeforeSavings.png)
+
+We use the houseold savings rate to determine the change in household spending - i.e. all of the change in household cash flow that did not go into or come out of savings.
+
+![change in household spending](io-model-CngHouseholdSpending.png)
+
+We calculate the change in savings in the current year, subtracting the change in spending from the change in cash flow.
+
+![change in household savings](io-model-CngHouseholdSavings.png)
+
+We also track the cumulative change in household savings across the model run.  This cumulative figure is not used in the I/O model calculations but is available as an output of interest.
+
+![cumulative change in household savings](io-model-CumCngHouseholdSavings.png)
+
 ## Calculating Change in Domestic Output by ISIC Code
 
 ### Government and Household Spending Contribution to Change in Industrial Output
@@ -121,7 +153,7 @@ First, we calculate the impact of changes in regular government spending, which 
 
 ![allocation of change in Government expenditures to ISIC codes](io-model-GovtOutputAllocated.png)
 
-Change in households' cash flow are allocated to ISIC codes in the same proportions as existing household expenditures.  The change in households' cash flow includes any cash received from the GRA "household taxes" mechanism, which includes increases and decreases in individual income taxes, as well as climate dividend payments (if any).
+Change in households' spending are allocated to ISIC codes in the same proportions as existing household expenditures.  The change in households' cash flow includes any cash received from the GRA "household taxes" mechanism, which includes increases and decreases in individual income taxes, as well as climate dividend payments (if any).  They do not include any change in household savings, as noted above.
 
 ![allocation of change in Household expenditures to ISIC codes](io-model-HouseholdsOutputAllocated.png)
 
