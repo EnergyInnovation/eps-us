@@ -27,7 +27,7 @@ Links to doc pages are followed by a number indicating the [version](version-his
   * [Notes on Unit Conversion](unit-conversion.html) - 3.0.0
   * [Remapping Subscript Elements](remapping.html) - 3.0.0
 * About the Web Interface
-  * [Web Interface Tutorial](online-model-tutorial.html) - 1.4.3
+  * [Web Interface Tutorial](online-model-tutorial.html) - 3.0.0
   * [Output Graphs Available in the Web Interface](web-interface-graphs.html) - 3.0.0
   * [Background and Technical Info about the Web Interface](background-and-technical-info.html) - 3.0.0
 * [Download and Installation Instructions](download.html) - 3.0.0
