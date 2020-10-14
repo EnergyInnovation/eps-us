@@ -9,6 +9,7 @@ The Energy Policy Simulator (EPS) is a free and open-source computer model creat
 
 * [EPS Video Series](video-series.html)
 * [Download and Installation Instructions](download.html)
+* [Web Interface Tutorial](online-model-tutorial.html)
 * [Version History](version-history.html)
 
 ## Full Documentation
