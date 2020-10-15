@@ -4,7 +4,7 @@ title:	"Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
-### **3.0.0 - TBD, 2020**
+### **3.0.0 - Oct 19, 2020**
 
 * New Input-Output Model
   * An economic input/output (I/O) model has been added as a component of the Energy Policy Simulator.
