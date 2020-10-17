@@ -64,7 +64,7 @@ Links to doc pages are followed by a number indicating the [version](version-his
 * [Automated Analysis with Python Scripts](automated-analysis.html) - 3.0.0
   * [Selecting Ouput Variables for a Python Script](selecting-output-variables.html) - 3.0.0
   * [Logging Output for Multiple Scenarios](logging-output.html)- 3.0.0
-  * [Testing Policy Permutations](testing-policy-permutations.html) - 1.0.1
+  * [Testing Policy Combinations](testing-policy-combinations.html) - 3.0.0
   * [Testing Policy Contributions and Generating Cost Curves](testing-policy-contributions.html) - 1.0.1
   * [Simulating a Cap-and-Trade Policy](simulating-cap-and-trade.html) - 2.0.0
 
