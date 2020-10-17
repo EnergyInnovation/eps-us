@@ -43,6 +43,7 @@ Each policy has a list of properties:
 - the policy's variable name in Vensim (with subscript settings if applicable)
 - the policy's name as used in the Python script itself, which is derived from the display name for this policy in WebAppData and the display names of any subscripts it may have
 - a list of policy settings in square brackets
+- a policy group name, which is not used in this script, and exists solely so the policy list has the same format as the one in `CreateContributionTestScript.py` (for ease of updating these lists when the available policies in the EPS change with new EPS releases)
 
 _The only values you should edit are the enabled setting (changing "False" to "True") and the policy setting values (changing or adding additional numbers to the set in square brackets)._  Although each policy by default only has two setting values in the script (zero and a non-zero value), there is no limit to the number of non-zero values you may include in the list.  For example, to test five different settings for the "TDM" (transportation demand management) policy for passengers, change "False" to "True" and add the extra settings to the settings list for that policy, so line 149 in the Python script might change from:
 
