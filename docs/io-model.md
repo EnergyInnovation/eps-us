@@ -149,7 +149,7 @@ As the next step, we calculate the policy-driven change in output for each cash 
 
 Note that government and household contribution to the change in industrial output is based on the change in money available for government and households to spend - i.e. change in cash flow, not change in revenue.  (Some of the change in revenue has already been spent on products and is already included in the change in industry revenue, so we need to use the change in cash flow for government and households to avoid double-counting.)  In contrast, industry contribution will be handled using change in revenue, not change in cash flow (discussed below).
 
-First, we calculate the impact of changes in regular government spending, which is used to account for the change in government cash flow that was assigned to regular spending via the GRA levers.  We assume these changes in cash flow increase or decrease spending on ISIC codes in proportion to how the existing government budget is spent, as defined in variable `GEbIC Government Expenditures by ISIC Code`.
+First, we calculate the impact of changes in regular government spending, which is used to account for the change in government cash flow that was assigned to regular spending via the GRA levers.  We assume these changes in cash flow increase or decrease spending on ISIC codes in proportion to how the existing government budget is spent, as defined in variable `GaHEbIC Government Expenditures by ISIC Code`.
 
 ![allocation of change in Government expenditures to ISIC codes](io-model-GovtOutputAllocated.png)
 
