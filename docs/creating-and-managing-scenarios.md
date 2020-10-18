@@ -40,7 +40,7 @@ It is necessary to have multiple scenarios, ideally with significantly different
 7. Change the "Carbon Tax" slider to 0 and, in the Electricity Supply section, set the "Additional Renewable Portfolio Std Percentage" slider to 0.25
 8. Click the "Stop Setup" button
 
-Now all three runs are loaded in Vensim, and only the most recent one (the run titled "RenewablePortfolioStandard") is shown on the built-in graphs, such as the ones located below the sliders on the "Policy Control Center" sheet.  To see multiple runs together, you will need to generate graphs in Vensim.  (For more details, see the [Visualizing Output](visualizing-output.html) page of this documentation.)  For example, switch to the "Cumulators" tab, navigate to the upper left, select the "Total CO2e Emissions" variable, and click the "Graph" button.  A graph should appear that looks similar to the following screenshot:
+Now all three runs are loaded in Vensim, and only the most recent one (the run titled "RenewablePortfolioStandard") is shown on the built-in graphs, such as the ones located below the sliders on the "Policy Control Center" sheet.  To see multiple runs together, you will need to generate graphs in Vensim.  (For more details, see the [Visualizing Output](visualizing-output.html) page of this documentation.)  For example, switch to the "Cross-Sector Totals" tab, navigate to the upper left, select the "Total CO2e Emissions" variable, and click the "Graph" button.  A graph should appear that looks similar to the following screenshot:
 
 ![three-variable CO2e graph](creating-and-managing-scenarios-ThreeVarGraph.png)
 

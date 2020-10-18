@@ -14,6 +14,8 @@
 # Rather than including input and output file names in the code below, we assign all the file
 # names to variables in this section.  This allows the names to be easily changed if desired.
 ModelFile = "EPS.mdl" # The name of the Vensim model file (typically with .mdl or .vpm extension)
+FirstYear = "2019" # The first year you wish to include in the output file (cannot be prior to first simulated year)
+FinalYear = "2050" # The last year you wish to include in the output file (cannot be later than last simulated year)
 OutputScript = "GeneratedContributionTestScript.cmd" # The desired filename of the Vensim command script to be generated
 RunResultsFile = "ContributionTestResults.tsv" # The desired filename for TSV file containing model run results
 OutputVarsFile = "OutputVarsToExport.lst" # The name of the file containing a list of variables to be included in the RunResultsFile
@@ -21,7 +23,7 @@ OutputVarsFile = "OutputVarsToExport.lst" # The name of the file containing a li
 
 # Other Settings
 # --------------
-RunName = "MostRecentRun" # The desired name for all runs performed.  Used as the filename for the VDF files that Vensim creates
+RunName = "MostRecentRun" # The desired name for all runs performed.  Used as the filename for the .vdfx files that Vensim creates
 EnableOrDisableGroups = "Disable" # Should each group be enabled or disabled in turn?
 								 # Essentially, this is testing either the contribution of a group in the proximity of the
 								 # BAU case ("Enable") or in the proximity of a scenario defined in the non-zero values of
@@ -203,7 +205,6 @@ PotentialPolicies = (
 	(False,"Annual Additional Capacity Retired due to Early Retirement Policy[nuclear es]","Early Retirement of Power Plants - Nuclear",[0,10000],"Early Retirement of Power Plants"),
 	(False,"Additional Battery Storage Annual Growth Percentage","Grid-Scale Electricity Storage",[0,0.16],"Grid-Scale Electricity Storage"),
 	(False,"Percentage Increase in Transmission Capacity vs BAU","Increase Transmission",[0,1.13],"Increase Transmission"),
-	(False,"Nuclear Capacity Lifetime Extension","Nuclear Plant Lifetime Extension",[0,20],"Nuclear Lifetime Extension"),
 	(False,"Percentage Reduction in Plant Downtime[natural gas nonpeaker es,preexisting retiring]","Reduce Plant Downtime - Preexisting Natural Gas Nonpeaker",[0,0.6],"Reduce Plant Downtime"),
 	(False,"Percentage Reduction in Plant Downtime[onshore wind es,newly built]","Reduce Plant Downtime - New Onshore Wind",[0,0.25],"Reduce Plant Downtime"),
 	(False,"Percentage Reduction in Plant Downtime[solar PV es,newly built]","Reduce Plant Downtime - New Solar PV",[0,0.3],"Reduce Plant Downtime"),
@@ -212,6 +213,12 @@ PotentialPolicies = (
 	(False,"Percent Reduction in Soft Costs of Capacity Construction[solar PV es]","Reduce Soft Costs - Solar PV",[0,0.9],"Reduce Soft Costs"),
 	(False,"Percent Reduction in Soft Costs of Capacity Construction[offshore wind es]","Reduce Soft Costs - Offshore Wind",[0,0.9],"Reduce Soft Costs"),
 	(False,"Percentage TnD Losses Avoided","Reduce Transmission n Distribution Losses",[0,0.4],"Reduce TnD Losses"),
+	(False,"Perc Subsidy for Elec Capacity Construction[nuclear es]","Subsidy for Capacity Construction - Nuclear",[0,1],"Subsidy for Capacity Construction"),
+	(False,"Perc Subsidy for Elec Capacity Construction[onshore wind es]","Subsidy for Capacity Construction - Onshore Wind",[0,1],"Subsidy for Capacity Construction"),
+	(False,"Perc Subsidy for Elec Capacity Construction[solar PV es]","Subsidy for Capacity Construction - Solar PV",[0,1],"Subsidy for Capacity Construction"),
+	(False,"Perc Subsidy for Elec Capacity Construction[solar thermal es]","Subsidy for Capacity Construction - Solar Thermal",[0,1],"Subsidy for Capacity Construction"),
+	(False,"Perc Subsidy for Elec Capacity Construction[biomass es]","Subsidy for Capacity Construction - Biomass",[0,1],"Subsidy for Capacity Construction"),
+	(False,"Perc Subsidy for Elec Capacity Construction[offshore wind es]","Subsidy for Capacity Construction - Offshore Wind",[0,1],"Subsidy for Capacity Construction"),
 	(False,"Subsidy for Elec Production by Fuel[nuclear es]","Subsidy for Electricity Production - Nuclear",[0,60],"Subsidy for Electricity Production"),
 	(False,"Subsidy for Elec Production by Fuel[onshore wind es]","Subsidy for Electricity Production - Onshore Wind",[0,60],"Subsidy for Electricity Production"),
 	(False,"Subsidy for Elec Production by Fuel[solar PV es]","Subsidy for Electricity Production - Solar PV",[0,60],"Subsidy for Electricity Production"),
@@ -220,27 +227,27 @@ PotentialPolicies = (
 	(False,"Subsidy for Elec Production by Fuel[offshore wind es]","Subsidy for Electricity Production - Offshore Wind",[0,60],"Subsidy for Electricity Production"),
 
 	# Industry Sector Policies
-	(False,"Fraction of Cement Clinker Substitution Made","Cement Clinker Substitution",[0,1],"Cement Clinker Substitution"),
+	(False,"Fraction of Cement Measures Achieved","Cement Clinker Substitution",[0,1],"Cement Clinker Substitution"),
 	(False,"Fraction of Potential Cogeneration and Waste Heat Recovery Adopted","Cogeneration and Waste Heat Recovery",[0,1],"Cogeneration and Waste Heat Recovery"),
 	(False,"Fraction of Energy Savings from Early Facility Retirement Achieved","Early Retirement of Industrial Facilities",[0,1],"Early Retirement of Industrial Facilities"),
 	(False,"Percentage Improvement in Eqpt Efficiency Standards above BAU[cement and other carbonates]","Industry Energy Efficiency Standards - Cement Industry",[0,0.33],"Industry Energy Efficiency Standards"),
 	(False,"Percentage Improvement in Eqpt Efficiency Standards above BAU[natural gas and petroleum systems]","Industry Energy Efficiency Standards - Natural Gas and Petroleum Industry",[0,0.33],"Industry Energy Efficiency Standards"),
 	(False,"Percentage Improvement in Eqpt Efficiency Standards above BAU[iron and steel]","Industry Energy Efficiency Standards - Iron and Steel Industry",[0,0.33],"Industry Energy Efficiency Standards"),
 	(False,"Percentage Improvement in Eqpt Efficiency Standards above BAU[chemicals]","Industry Energy Efficiency Standards - Chemicals Industry",[0,0.33],"Industry Energy Efficiency Standards"),
-	(False,"Percentage Improvement in Eqpt Efficiency Standards above BAU[coal mining]","Industry Energy Efficiency Standards - Mining Industry",[0,0.33],"Industry Energy Efficiency Standards"),
+	(False,"Percentage Improvement in Eqpt Efficiency Standards above BAU[coal mining]","Industry Energy Efficiency Standards - Coal Mining Industry",[0,0.33],"Industry Energy Efficiency Standards"),
 	(False,"Percentage Improvement in Eqpt Efficiency Standards above BAU[waste management]","Industry Energy Efficiency Standards - Water n Waste",[0,0.33],"Industry Energy Efficiency Standards"),
 	(False,"Percentage Improvement in Eqpt Efficiency Standards above BAU[agriculture]","Industry Energy Efficiency Standards - Agriculture",[0,0.33],"Industry Energy Efficiency Standards"),
 	(False,"Percentage Improvement in Eqpt Efficiency Standards above BAU[other industries]","Industry Energy Efficiency Standards - Other Industries",[0,0.33],"Industry Energy Efficiency Standards"),
 	(False,"Fraction of Installation and System Integration Issues Remedied","Improved System Design",[0,1],"Improved System Design"),
 	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[cement and other carbonates,hard coal if]","Electrification + Hydrogen - Cement Industry Coal Use",[0,1],"Electrification + Hydrogen"),
 	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[cement and other carbonates,natural gas if]","Electrification + Hydrogen - Cement Industry Natural Gas Use",[0,1],"Electrification + Hydrogen"),
+	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[cement and other carbonates,biomass if]","Electrification + Hydrogen - Cement Industry Biomass Use",[0,1],"Electrification + Hydrogen"),
 	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[cement and other carbonates,petroleum diesel if]","Electrification + Hydrogen - Cement Industry Petroleum Use",[0,1],"Electrification + Hydrogen"),
 	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[cement and other carbonates,heavy or residual fuel oil if]","Electrification + Hydrogen - Cement Industry Heavy or Residual Fuel Oil Use",[0,1],"Electrification + Hydrogen"),
 	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[cement and other carbonates,LPG propane or butane if]","Electrification + Hydrogen - Cement Industry LPG Propane or Butane Use",[0,1],"Electrification + Hydrogen"),
 	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[natural gas and petroleum systems,hard coal if]","Electrification + Hydrogen - Natural Gas and Petroleum Industry Coal Use",[0,1],"Electrification + Hydrogen"),
 	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[natural gas and petroleum systems,natural gas if]","Electrification + Hydrogen - Natural Gas and Petroleum Industry Natural Gas Use",[0,1],"Electrification + Hydrogen"),
 	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[natural gas and petroleum systems,biomass if]","Electrification + Hydrogen - Natural Gas and Petroleum Industry Biomass Use",[0,1],"Electrification + Hydrogen"),
-	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[natural gas and petroleum systems,petroleum diesel if]","Electrification + Hydrogen - Natural Gas and Petroleum Industry Petroleum Use",[0,1],"Electrification + Hydrogen"),
 	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[natural gas and petroleum systems,crude oil if]","Electrification + Hydrogen - Natural Gas and Petroleum Industry Crude Oil Use",[0,1],"Electrification + Hydrogen"),
 	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[iron and steel,hard coal if]","Electrification + Hydrogen - Iron and Steel Industry Coal Use",[0,1],"Electrification + Hydrogen"),
 	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[iron and steel,natural gas if]","Electrification + Hydrogen - Iron and Steel Industry Natural Gas Use",[0,1],"Electrification + Hydrogen"),
@@ -252,10 +259,10 @@ PotentialPolicies = (
 	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[chemicals,petroleum diesel if]","Electrification + Hydrogen - Chemicals Industry Petroleum Use",[0,1],"Electrification + Hydrogen"),
 	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[chemicals,heavy or residual fuel oil if]","Electrification + Hydrogen - Chemicals Industry Heavy or Residual Fuel Oil Use",[0,1],"Electrification + Hydrogen"),
 	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[chemicals,LPG propane or butane if]","Electrification + Hydrogen - Chemicals Industry LPG Propane or Butane Use",[0,1],"Electrification + Hydrogen"),
-	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[coal mining,hard coal if]","Electrification + Hydrogen - Mining Industry Coal Use",[0,1],"Electrification + Hydrogen"),
-	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[coal mining,natural gas if]","Electrification + Hydrogen - Mining Industry Natural Gas Use",[0,1],"Electrification + Hydrogen"),
-	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[coal mining,petroleum diesel if]","Electrification + Hydrogen - Mining Industry Petroleum Use",[0,1],"Electrification + Hydrogen"),
-	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[coal mining,heavy or residual fuel oil if]","Electrification + Hydrogen - Mining Industry Heavy or Residual Fuel Oil Use",[0,1],"Electrification + Hydrogen"),
+	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[coal mining,hard coal if]","Electrification + Hydrogen - Coal Mining Industry Coal Use",[0,1],"Electrification + Hydrogen"),
+	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[coal mining,natural gas if]","Electrification + Hydrogen - Coal Mining Industry Natural Gas Use",[0,1],"Electrification + Hydrogen"),
+	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[coal mining,petroleum diesel if]","Electrification + Hydrogen - Coal Mining Industry Petroleum Use",[0,1],"Electrification + Hydrogen"),
+	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[coal mining,heavy or residual fuel oil if]","Electrification + Hydrogen - Coal Mining Industry Heavy or Residual Fuel Oil Use",[0,1],"Electrification + Hydrogen"),
 	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[agriculture,natural gas if]","Electrification + Hydrogen - Agriculture Natural Gas Use",[0,1],"Electrification + Hydrogen"),
 	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[agriculture,petroleum diesel if]","Electrification + Hydrogen - Agriculture Petroleum Use",[0,1],"Electrification + Hydrogen"),
 	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[agriculture,heavy or residual fuel oil if]","Electrification + Hydrogen - Agriculture Heavy or Residual Fuel Oil Use",[0,1],"Electrification + Hydrogen"),
@@ -265,14 +272,21 @@ PotentialPolicies = (
 	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[other industries,petroleum diesel if]","Electrification + Hydrogen - Other Industries Petroleum Use",[0,1],"Electrification + Hydrogen"),
 	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[other industries,heavy or residual fuel oil if]","Electrification + Hydrogen - Other Industries Heavy or Residual Fuel Oil Use",[0,1],"Electrification + Hydrogen"),
 	(False,"Fraction of Industrial Fuel Use Shifted to Other Fuels[other industries,LPG propane or butane if]","Electrification + Hydrogen - Other Industries LPG Propane or Butane Use",[0,1],"Electrification + Hydrogen"),
+	(False,"Fraction of F Gas Substitution Achieved","F-Gas Substitution",[0,1],"F-gas Measures"),
+	(False,"Fraction of F Gas Destruction Achieved","F-Gas Destruction",[0,1],"F-gas Measures"),
+	(False,"Fraction of F Gas Recovery Achieved","F-Gas Recovery",[0,1],"F-gas Measures"),
+	(False,"Fraction of F Gas Inspct Maint Retrofit Achieved","F-Gas Eqpt. Maintenance n Retrofits",[0,1],"F-gas Measures"),
 	(False,"Percent Reduction in Nonenergy Nonagriculture Industry Product Demand[cement and other carbonates]","Material Efficiency, Longevity, n Re-Use - Cement Industry",[0,1],"Material Efficiency, Longevity, n Re-Use"),
 	(False,"Percent Reduction in Nonenergy Nonagriculture Industry Product Demand[iron and steel]","Material Efficiency, Longevity, n Re-Use - Iron and Steel Industry",[0,1],"Material Efficiency, Longevity, n Re-Use"),
 	(False,"Percent Reduction in Nonenergy Nonagriculture Industry Product Demand[chemicals]","Material Efficiency, Longevity, n Re-Use - Chemicals Industry",[0,1],"Material Efficiency, Longevity, n Re-Use"),
 	(False,"Percent Reduction in Nonenergy Nonagriculture Industry Product Demand[waste management]","Material Efficiency, Longevity, n Re-Use - Water n Waste",[0,1],"Material Efficiency, Longevity, n Re-Use"),
 	(False,"Percent Reduction in Nonenergy Nonagriculture Industry Product Demand[other industries]","Material Efficiency, Longevity, n Re-Use - Other Industries",[0,1],"Material Efficiency, Longevity, n Re-Use"),
-	(False,"Fraction of Methane Capture Opportunities Achieved","Methane Capture",[0,1],"Methane Capture and Destruction"),
-	(False,"Fraction of Methane Destruction Opportunities Achieved","Methane Destruction",[0,1],"Methane Capture and Destruction"),
-	(False,"Fraction of F Gases Avoided","Reduce F-gases",[0,1],"Reduce F-gases"),
+	(False,"Fraction of Methane Capture Opportunities Achieved[natural gas and petroleum systems]","Methane Capture - Natural Gas and Petroleum Industry",[0,1],"Methane Capture and Destruction"),
+	(False,"Fraction of Methane Capture Opportunities Achieved[coal mining]","Methane Capture - Coal Mining Industry",[0,1],"Methane Capture and Destruction"),
+	(False,"Fraction of Methane Capture Opportunities Achieved[waste management]","Methane Capture - Water n Waste",[0,1],"Methane Capture and Destruction"),
+	(False,"Fraction of Methane Destruction Opportunities Achieved[natural gas and petroleum systems]","Methane Destruction - Natural Gas and Petroleum Industry",[0,1],"Methane Capture and Destruction"),
+	(False,"Fraction of Methane Destruction Opportunities Achieved[coal mining]","Methane Destruction - Coal Mining Industry",[0,1],"Methane Capture and Destruction"),
+	(False,"Fraction of Methane Destruction Opportunities Achieved[waste management]","Methane Destruction - Water n Waste",[0,1],"Methane Capture and Destruction"),
 	(False,"Percent Reduction in Fossil Fuel Exports[hard coal]","Reduce Fossil Fuel Exports - Hard Coal",[0,1],"Percent Reduction in Fossil Fuel Exports"),
 	(False,"Percent Reduction in Fossil Fuel Exports[natural gas]","Reduce Fossil Fuel Exports - Natural Gas",[0,1],"Percent Reduction in Fossil Fuel Exports"),
 	(False,"Percent Reduction in Fossil Fuel Exports[petroleum gasoline]","Reduce Fossil Fuel Exports - Petroleum Gasoline",[0,1],"Percent Reduction in Fossil Fuel Exports"),
@@ -281,15 +295,13 @@ PotentialPolicies = (
 	(False,"Percent Reduction in Fossil Fuel Exports[crude oil]","Reduce Fossil Fuel Exports - Crude Oil",[0,1],"Percent Reduction in Fossil Fuel Exports"),
 	(False,"Percent Reduction in Fossil Fuel Exports[heavy or residual fuel oil]","Reduce Fossil Fuel Exports - Heavy/Residual Fuel Oil",[0,1],"Percent Reduction in Fossil Fuel Exports"),
 	(False,"Percent Reduction in Fossil Fuel Exports[LPG propane or butane]","Reduce Fossil Fuel Exports - LPG/Propane/Butane",[0,1],"Percent Reduction in Fossil Fuel Exports"),
-	(False,"Fraction of Addressable Process Emissions Avoided via Worker Training","Worker Training",[0,1],"Worker Training"),
 
 	# Agriculture, Land Use, and Forestry Policies
 	(False,"Fraction of Afforestation and Reforestation Achieved","Afforestation and Reforestation",[0,1],"Afforestation and Reforestation"),
 	(False,"Fraction of Forest Set Asides Achieved","Forest Set-Asides",[0,1],"Forest Set-Asides"),
-	(False,"Fraction of Abatement from Cropland Management Achieved","Cropland Management",[0,1],"Cropland Management"),
+	(False,"Fraction of Cropland and Rice Measures Achieved","Cropland and Rice Measures",[0,1],"Cropland and Rice Measures"),
 	(False,"Fraction of Improved Forest Management Achieved","Improved Forest Management",[0,1],"Improved Forest Management"),
-	(False,"Fraction of Abatement from Livestock Measures Achieved","Livestock Measures",[0,1],"Livestock Measures"),
-	(False,"Fraction of Abatement from Rice Cultivation Measures Achieved","Rice Cultivation Measures",[0,1],"Rice Cultivation Measures"),
+	(False,"Fraction of Livestock Measures Achieved","Livestock Measures",[0,1],"Livestock Measures"),
 	(False,"Percent Animal Products Shifted to Nonanimal Products","Shift to Non-Animal Products",[0,1],"Shift to Non-Animal Products"),
 
 	# District Heat and Hydrogen Sector Policies
@@ -298,13 +310,14 @@ PotentialPolicies = (
 	(False,"Fraction of Hydrogen Production Pathways Shifted","Shift Hydrogen Production to Electrolysis",[0,1],"Hydrogen Electrolysis"),
 
 	# Cross-Sector Policies
-	(False,"Fraction of Potential Additional CCS Achieved[electricity sector]","Carbon Capture and Sequestration - Electricity Sector",[0,1],"Carbon Capture and Sequestration"),
-	(False,"Fraction of Potential Additional CCS Achieved[industry sector]","Carbon Capture and Sequestration - Industry Sector",[0,1],"Carbon Capture and Sequestration"),
+	(False,"Fraction of Potential Additional CCS Achieved[electricity sector]","Carbon Capture and Sequestration - Electricity Sector",[0,0.3],"Carbon Capture and Sequestration"),
+	(False,"Fraction of Potential Additional CCS Achieved[industry sector]","Carbon Capture and Sequestration - Industry Sector",[0,0.3],"Carbon Capture and Sequestration"),
 	(False,"Additional Carbon Tax Rate[transportation sector]","Carbon Tax - Transportation Sector",[0,300],"Carbon Tax"),
 	(False,"Additional Carbon Tax Rate[electricity sector]","Carbon Tax - Electricity Sector",[0,300],"Carbon Tax"),
 	(False,"Additional Carbon Tax Rate[residential buildings sector]","Carbon Tax - Residential Bldg Sector",[0,300],"Carbon Tax"),
 	(False,"Additional Carbon Tax Rate[commercial buildings sector]","Carbon Tax - Commercial Bldg Sector",[0,300],"Carbon Tax"),
 	(False,"Additional Carbon Tax Rate[industry sector]","Carbon Tax - Industry Sector",[0,300],"Carbon Tax"),
+	(False,"Additional Carbon Tax Rate[district heat and hydrogen sector]","Carbon Tax - District Heat n Hydrogen Sector",[0,300],"Carbon Tax"),
 	(False,"Toggle Whether Carbon Tax Affects Process Emissions","Carbon Tax Applies to Process Emissions",[0,1],"Carbon Tax on Process Emissions"),
 	(False,"Percent Reduction in BAU Subsidies[hard coal]","End Existing Subsidies - Hard Coal",[0,1],"End Existing Subsidies"),
 	(False,"Percent Reduction in BAU Subsidies[natural gas]","End Existing Subsidies - Natural Gas",[0,1],"End Existing Subsidies"),
@@ -350,7 +363,9 @@ PotentialPolicies = (
 	(False,"RnD Transportation Capital Cost Perc Reduction[gasoline vehicle]","Capital Cost Reduction - Vehicles: Gasoline Engine",[0,0.4],"RnD Capital Cost Reductions"),
 	(False,"RnD Transportation Capital Cost Perc Reduction[diesel vehicle]","Capital Cost Reduction - Vehicles: Diesel Engine",[0,0.4],"RnD Capital Cost Reductions"),
 	(False,"RnD Transportation Capital Cost Perc Reduction[plugin hybrid vehicle]","Capital Cost Reduction - Vehicles: Plug-in Hybrid",[0,0.4],"RnD Capital Cost Reductions"),
-	(False,"RnD Transportation Capital Cost Perc Reduction[nonroad vehicle]","Capital Cost Reduction - Vehicles: Non-road",[0,0.4],"RnD Capital Cost Reductions"),
+	(False,"RnD Transportation Capital Cost Perc Reduction[LPG vehicle]","Capital Cost Reduction - Vehicles: LPG",[0,0.4],"RnD Capital Cost Reductions"),
+	(False,"RnD Transportation Capital Cost Perc Reduction[hydrogen vehicle]","Capital Cost Reduction - Vehicles: Hydrogen",[0,0.4],"RnD Capital Cost Reductions"),
+	(False,"Fraction of Direct Air Capture Potential Achieved","Direct Air Capture",[0,1],"Direct Air Capture"),
 	(False,"RnD Building Fuel Use Perc Reduction[heating]","Fuel Use Reduction - Buildings: Heating",[0,0.4],"RnD Fuel Use Reductions"),
 	(False,"RnD Building Fuel Use Perc Reduction[cooling and ventilation]","Fuel Use Reduction - Buildings: Cooling and Ventilation",[0,0.4],"RnD Fuel Use Reductions"),
 	(False,"RnD Building Fuel Use Perc Reduction[lighting]","Fuel Use Reduction - Buildings: Lighting",[0,0.4],"RnD Fuel Use Reductions"),
@@ -376,7 +391,57 @@ PotentialPolicies = (
 	(False,"RnD Transportation Fuel Use Perc Reduction[gasoline vehicle]","Fuel Use Reduction - Vehicles: Gasoline Engine",[0,0.4],"RnD Fuel Use Reductions"),
 	(False,"RnD Transportation Fuel Use Perc Reduction[diesel vehicle]","Fuel Use Reduction - Vehicles: Diesel Engine",[0,0.4],"RnD Fuel Use Reductions"),
 	(False,"RnD Transportation Fuel Use Perc Reduction[plugin hybrid vehicle]","Fuel Use Reduction - Vehicles: Plug-in Hybrid",[0,0.4],"RnD Fuel Use Reductions"),
-	(False,"RnD Transportation Fuel Use Perc Reduction[nonroad vehicle]","Fuel Use Reduction - Vehicles: Non-road",[0,0.4],"RnD Fuel Use Reductions")
+	(False,"RnD Transportation Fuel Use Perc Reduction[LPG vehicle]","Fuel Use Reduction - Vehicles: LPG",[0,0.4],"RnD Fuel Use Reductions"),
+	(False,"RnD Transportation Fuel Use Perc Reduction[hydrogen vehicle]","Fuel Use Reduction - Vehicles: Hydrogen",[0,0.4],"RnD Fuel Use Reductions"),
+
+	# Control Settings
+	(False,"GDPGR Alternative Base Case GDP Growth Rate","COVID-19 Recession",[-0.1,0.02],""),
+	(False,"GRA for Carbon Tax Revenue[regular spending]","Carbon Tax Revenue - Regular Spending",[0,10],""),
+	(False,"GRA for Carbon Tax Revenue[deficit spending]","Carbon Tax Revenue - Deficit Spending",[0,10],""),
+	(False,"GRA for Carbon Tax Revenue[household taxes]","Carbon Tax Revenue - Household Taxes",[0,10],""),
+	(False,"GRA for Carbon Tax Revenue[payroll taxes]","Carbon Tax Revenue - Payroll Taxes",[0,10],""),
+	(False,"GRA for Carbon Tax Revenue[corporate taxes]","Carbon Tax Revenue - Corporate Income Taxes",[0,10],""),
+	(False,"GRA for Fuel Tax Revenue[regular spending]","Fuel Tax Revenue - Regular Spending",[0,10],""),
+	(False,"GRA for Fuel Tax Revenue[deficit spending]","Fuel Tax Revenue - Deficit Spending",[0,10],""),
+	(False,"GRA for Fuel Tax Revenue[household taxes]","Fuel Tax Revenue - Household Taxes",[0,10],""),
+	(False,"GRA for Fuel Tax Revenue[payroll taxes]","Fuel Tax Revenue - Payroll Taxes",[0,10],""),
+	(False,"GRA for Fuel Tax Revenue[corporate taxes]","Fuel Tax Revenue - Corporate Income Taxes",[0,10],""),
+	(False,"GRA for EV Subsidy[regular spending]","EV Subsidy - Regular Spending",[0,10],""),
+	(False,"GRA for EV Subsidy[deficit spending]","EV Subsidy - Deficit Spending",[0,10],""),
+	(False,"GRA for EV Subsidy[household taxes]","EV Subsidy - Household Taxes",[0,10],""),
+	(False,"GRA for EV Subsidy[payroll taxes]","EV Subsidy - Payroll Taxes",[0,10],""),
+	(False,"GRA for EV Subsidy[corporate taxes]","EV Subsidy - Corporate Income Taxes",[0,10],""),
+	(False,"GRA for Electricity Generation Subsidies[regular spending]","Electricity Generation Subsidy - Regular Spending",[0,10],""),
+	(False,"GRA for Electricity Generation Subsidies[deficit spending]","Electricity Generation Subsidy - Deficit Spending",[0,10],""),
+	(False,"GRA for Electricity Generation Subsidies[household taxes]","Electricity Generation Subsidy - Household Taxes",[0,10],""),
+	(False,"GRA for Electricity Generation Subsidies[payroll taxes]","Electricity Generation Subsidy - Payroll Taxes",[0,10],""),
+	(False,"GRA for Electricity Generation Subsidies[corporate taxes]","Electricity Generation Subsidy - Corporate Income Taxes",[0,10],""),
+	(False,"GRA for Electricity Capacity Construction Subsidies[regular spending]","Electricity Capacity Construction Subsidy - Regular Spending",[0,10],""),
+	(False,"GRA for Electricity Capacity Construction Subsidies[deficit spending]","Electricity Capacity Construction Subsidy - Deficit Spending",[0,10],""),
+	(False,"GRA for Electricity Capacity Construction Subsidies[household taxes]","Electricity Capacity Construction Subsidy - Household Taxes",[0,10],""),
+	(False,"GRA for Electricity Capacity Construction Subsidies[payroll taxes]","Electricity Capacity Construction Subsidy - Payroll Taxes",[0,10],""),
+	(False,"GRA for Electricity Capacity Construction Subsidies[corporate taxes]","Electricity Capacity Construction Subsidy - Corporate Income Taxes",[0,10],""),
+	(False,"GRA for Distributed Solar Subsidy[regular spending]","Distributed Solar Subsidy - Regular Spending",[0,10],""),
+	(False,"GRA for Distributed Solar Subsidy[deficit spending]","Distributed Solar Subsidy - Deficit Spending",[0,10],""),
+	(False,"GRA for Distributed Solar Subsidy[household taxes]","Distributed Solar Subsidy - Household Taxes",[0,10],""),
+	(False,"GRA for Distributed Solar Subsidy[payroll taxes]","Distributed Solar Subsidy - Payroll Taxes",[0,10],""),
+	(False,"GRA for Distributed Solar Subsidy[corporate taxes]","Distributed Solar Subsidy - Corporate Income Taxes",[0,10],""),
+	(False,"GRA for Fuel Subsidies[regular spending]","Fuel Subsidy - Regular Spending",[0,10],""),
+	(False,"GRA for Fuel Subsidies[deficit spending]","Fuel Subsidy - Deficit Spending",[0,10],""),
+	(False,"GRA for Fuel Subsidies[household taxes]","Fuel Subsidy - Household Taxes",[0,10],""),
+	(False,"GRA for Fuel Subsidies[payroll taxes]","Fuel Subsidy - Payroll Taxes",[0,10],""),
+	(False,"GRA for Fuel Subsidies[corporate taxes]","Fuel Subsidy - Corporate Income Taxes",[0,10],""),
+	(False,"GRA for National Debt Interest[regular spending]","National Debt Interest - Regular Spending",[0,10],""),
+	(False,"GRA for National Debt Interest[deficit spending]","National Debt Interest - Deficit Spending",[0,10],""),
+	(False,"GRA for National Debt Interest[household taxes]","National Debt Interest - Household Taxes",[0,10],""),
+	(False,"GRA for National Debt Interest[payroll taxes]","National Debt Interest - Payroll Taxes",[0,10],""),
+	(False,"GRA for National Debt Interest[corporate taxes]","National Debt Interest - Corporate Income Taxes",[0,10],""),
+	(False,"GRA for Remaining Government Cash Flow Changes[regular spending]","Remaining Government Cash Flows - Regular Spending",[0,10],""),
+	(False,"GRA for Remaining Government Cash Flow Changes[deficit spending]","Remaining Government Cash Flows - Deficit Spending",[0,10],""),
+	(False,"GRA for Remaining Government Cash Flow Changes[household taxes]","Remaining Government Cash Flows - Household Taxes",[0,10],""),
+	(False,"GRA for Remaining Government Cash Flow Changes[payroll taxes]","Remaining Government Cash Flows - Payroll Taxes",[0,10],""),
+	(False,"GRA for Remaining Government Cash Flow Changes[corporate taxes]","Remaining Government Cash Flows - Corporate Income Taxes",[0,10],"")
+	
 )
 
 # Building the Policy List
@@ -433,7 +498,7 @@ def PerformRunsWithEnabledGroups():
 
 	# First, we do a run with all of the groups disabled
 	f.write("MENU>RUN|O\n")
-	f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|||||:")
+	f.write("MENU>VDF2TAB|" + RunName + ".vdfx|" + RunResultsFile + "|" + OutputVarsFile + "|||" + FirstYear + "|" + FinalYear + "|:")
 	f.write("\tEnabledPolicyGroup=None")
 	f.write("\tEnabledPolicies=None\n\n")
 
@@ -457,7 +522,7 @@ def PerformRunsWithEnabledGroups():
 		
 		# We perform our run and log the output
 		f.write("MENU>RUN|O\n")
-		f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|+!||||:")
+		f.write("MENU>VDF2TAB|" + RunName + ".vdfx|" + RunResultsFile + "|" + OutputVarsFile + "|+!||" + FirstYear + "|" + FinalYear + "|:")
 		f.write("\tEnabledPolicyGroup=" + str(EnabledGroup))
 		f.write("\tEnabledPolicies=" + EnabledPolicies + "\n\n")
 	
@@ -467,15 +532,15 @@ def PerformRunsWithEnabledGroups():
 	f.write("SIMULATE>SETVAL|Policy Implementation Schedule Selector=" + str(PolicySchedule) + "\n")
 	
 	f.write("MENU>RUN|O\n")
-	f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|+!||||:")
+	f.write("MENU>VDF2TAB|" + RunName + ".vdfx|" + RunResultsFile + "|" + OutputVarsFile + "|+!||" + FirstYear + "|" + FinalYear + "|:")
 	f.write("\tEnabledPolicyGroup=All")
 	f.write("\tEnabledPolicies=All")
 	f.write("\n")
 
-	# We instruct Vensim to delete the .vdf file, to prevent it from getting picked up by
+	# We instruct Vensim to delete the .vdfx file, to prevent it from getting picked up by
 	# sync software, such as DropBox or Google Drive.  If sync software locks the file,
 	# Vensim won't be able to overwrite it on the next model run, ruining the batch.
-	f.write("FILE>DELETE|" + RunName + ".vdf")
+	f.write("FILE>DELETE|" + RunName + ".vdfx")
 	f.write("\n\n")
 	
 def PerformRunsWithDisabledGroups():
@@ -488,7 +553,7 @@ def PerformRunsWithDisabledGroups():
 	f.write("SIMULATE>SETVAL|Policy Implementation Schedule Selector=" + str(PolicySchedule) + "\n")
 	
 	f.write("MENU>RUN|O\n")
-	f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|||||:")
+	f.write("MENU>VDF2TAB|" + RunName + ".vdfx|" + RunResultsFile + "|" + OutputVarsFile + "|||" + FirstYear + "|" + FinalYear + "|:")
 	f.write("\tDisabledPolicyGroup=None")
 	f.write("\tDisabledPolicies=None\n\n")
 
@@ -513,25 +578,20 @@ def PerformRunsWithDisabledGroups():
 		
 		# We perform our run and log the output
 		f.write("MENU>RUN|O\n")
-		f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|+!||||:")
+		f.write("MENU>VDF2TAB|" + RunName + ".vdfx|" + RunResultsFile + "|" + OutputVarsFile + "|+!||" + FirstYear + "|" + FinalYear + "|:")
 		f.write("\tDisabledPolicyGroup=" + str(DisabledGroup))
 		f.write("\tDisabledPolicies=" + DisabledPolicies + "\n\n")
 	
 	# Finally, we do a run with all of the groups disabled (a BAU case run)
 	f.write("MENU>RUN|O\n")
-	f.write("MENU>VDF2TAB|" + RunName + ".vdf|" + RunResultsFile + "|" + OutputVarsFile + "|+!||||:")
+	f.write("MENU>VDF2TAB|" + RunName + ".vdfx|" + RunResultsFile + "|" + OutputVarsFile + "|+!||" + FirstYear + "|" + FinalYear + "|:")
 	f.write("\tDisabledPolicyGroup=All")
 	f.write("\tDisabledPolicies=All")
 	f.write("\n")
 
-	# We instruct Vensim to delete the .vdf file, to prevent it from getting picked up by
+	# We instruct Vensim to delete the .vdfx file, to prevent it from getting picked up by
 	# sync software, such as DropBox or Google Drive.  If sync software locks the file,
 	# Vensim won't be able to overwrite it on the next model run, ruining the batch.
-	# Due to file format changes in Vensim 8, the command needs a different file extenstion
-	# depending on whether this script is run in Vensim 7 or Vensim 8.
-	# Vensim 7:
-	# f.write("FILE>DELETE|" + RunName + ".vdf")
-	# Vensim 8:
 	f.write("FILE>DELETE|" + RunName + ".vdfx")
 	f.write("\n\n")
 	

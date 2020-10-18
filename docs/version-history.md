@@ -4,6 +4,68 @@ title:	"Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **3.0.0 - Oct 19, 2020**
+
+* New Input-Output Model
+  * An economic input/output (I/O) model has been added as a component of the Energy Policy Simulator.
+  * New output metrics include the change in gross domestic product (GDP), employment (jobs), total employee compensation, average compensation per employee, number of union and non-union jobs, government spending, budget deficit/surplus, household tax revenue, payroll tax revenue, corporate income tax revenue, size of the national debt, and interest paid on the national debt.
+  * Changes in GDP, jobs, and compensation can also be visualized disaggregated by economic sector or by their direct, indirect, and induced components.
+  * Respending of changes in cash flow for government, households, and industries is now accounted for, providing a holistic look at policy impacts on economic activity.
+  * New Government Revenue Accounting (GRA) settings allows the user to specify how government raises or spends changes in revenue caused by the policy package.  Options include changes in regular spending, deficit spending, household taxes, payroll taxes, and corporate income taxes.
+  * Feedback loops from the I/O model to the Transportation, Buildings, and Industry sectors capture the energy demand and emissions associated with indirect and induced economic activity.
+  * A new [documentation page](io-model.html) explains the I/O model in detail.
+  * We gratefully acknowledge the invaluable contributions of the [American Council for an Energy-Efficient Economy](https://www.aceee.org/) (ACEEE), [Jim Barrett](https://www.barretteconomics.com/), and [Skip Laitner](https://www.linkedin.com/in/skip-laitner-746b124/) for their guidance and advice in implementing this feature, and for allowing us to learn from the [DEEPER I/O model](https://www.aceee.org/files/pdf/fact-sheet/DEEPER_Methodology.pdf), originally created by Skip Laitner.
+* Improved Public Health Calculations
+  * In addition to the policy package's effects on premature mortality (introduced in version 1.0.3), the EPS now calculates impacts on 10 additional health outcomes, including lost workdays, hospital admissions, non-fatal heart attacks, asthma attacks, respiratory symptoms and bronchitis.
+* Data Updates
+  * First simulated year advanced from 2018 to 2019
+  * Data in input variables based on EIA Annual Energy Outlook updated to use AEO 2020 values
+  * Various other input data updates 
+* Other Improvements
+  * Industry Sector
+    * Industrial process emissions multipliers (used in indst/BPEiC and indst/PERAC) are now disaggregated by gas.  These multipliers now allow for replacement of BPEiC data with arbitary, user-specified data while keeping abatement potentials and costs in PERAC in sync with BPEiC.
+    * Added revenue data for "water & waste" industry (water treatment, wastewater, solid waste collection, landfilling, recycling, etc.)
+    * Use of the material efficiency policy on the chemicals industry and on the other industries category is now disallowed because these industry categories are aggregates in our new I/O data (chemicals includes pharmaceuticals), and the material efficiency cannot target only the relevant parts of these aggregates to obtain accurate financial outcomes
+    * Industry now can pass on a share of its policy-driven changes in expenditures to buyers of its products (specified in indst/SoCiIEPTtB).  Removed embedded carbon and associated cost calculations for vehicles, power plants, and building components, to avoid double-counting.  (The new approach covers all products in the economy and all sources of expenditure changes, not just a carbon tax.)
+    * The model now accounts for more different types of costs that are passed through to buyers when calculating the policy-driven change in industrial production, such as the costs of capital equipment purchased in response to energy efficiency standards and the costs of implementing process emissions abatement policies.
+  * Electricity Sector
+    * Peak power demand calculations now calculate summer and winter peaks separately
+    * Peak power demand calculations use equipment load factors (elec/ELF) to more accurately determine peak demand, which is particularly important in scenarios with substantial electrification
+    * Users may now override endogenous learning for electricity generation capacity by specifying time series capital costs in elec/CCaMC
+    * Imported electricity price and BAU exported electricity price may now be customized
+    * Balance of system is now included in grid battery costs (and is unaffected by endogenous learning)
+    * Soft costs for onshore wind, offshore wind, and solar PV power plants (and distributed solar PV) now accept time-series BAU data
+    * Power plant fuel type shifting (such as coal-to-gas retrofits) will now only occur if the target power plant type is economic (not subject to economically-driven early retirement) or if the target fuel is a drop-in replacement (i.e. no retrofitting required).
+    * Grid battery policy is now set as a fraction of potential capacity achieved rather than as a percentage growth rate, allowing for finer control over timing and quantity of grid battery deployment
+  * Fuels
+	  * Added output graphs of Embedded CO2 in Exported Fuels and Change in Embedded CO2 in Exported Fuels
+    * The carbon tax rate may now be explicitly set for District Heat and Hydrogen sector instead of inheriting the Industry sector rate
+    * Fuels cost input data and Vensim sheet reorganized for clarity and ease of adaptation to other regions
+    * Change in carbon tax revenue and change in fuel tax revenue are now calculated explicitly, to support new government revenue handling options
+    * Reduced domestic demand for domestically-produced fuels is now partially compensated for by increased exports (fuels/PoFDCtAE)
+  * Buildings Sector
+    * Implemented cash flows for efficient building component rebate policy
+    * Building fuel shifting policy now accounts for incremental capital costs of electrified (i.e. heat pump) building heating systems and water heaters
+  * Other
+    * WebAppData now detects duplicate and missing policy ID numbers
+    * The model no longer uses GET DIRECT DATA to access data from outside of the model run timeframe
+    * Model structure diagram updated to show new economic and public health outputs
+    * Fraction of technology outside modeled region that affects endogenous learning can now be customized (endo-learn/FoTOMRAEL)
+    * All Python scripts now include the capability to limit the time range of data written to output files
+    * Policy package CapEx + OpEx and Cost Curve output graphs now respond to user's government revenue handling selections to determine revenue neutrality
+* Bug Fixes
+  * Fixed off-by-one-year error in cement process CO2 multipliers (indst/BPEiC) and two missing formulas for cement (indst/PERAC)
+  * Do not exclude heat as a fuel type that can power industry CCS
+  * Added geoengineering sector to energy-related CO2 output graphs
+  * Limited effect of building component labeling policy to affected market share (bldgs/PPEIdtIL)
+  * Fixed formula error in "Change in Amount Spent on Vehicle Maintenance"
+  * Fixed double-counting of certain cash flow changes due to changes in industrial production
+  * Very high carbon tax rates applied to industrial process (non-energy) emissions can no longer cause oscillating production changes
+  * Fixed bug in "Subsidy Paid on Distributed Solar Capacity" formula
+  * Capital costs for new CCS equipment are now allocated amongst power plant types and amongst industries proportionally to year-over-year increase in CCS usage instead of total current-year CCS usage by each plant type and industry
+  * Power plant decommissioning costs are no longer charged if a power plant type has retired to zero and there is no capacity left to retire
+	* The industrial fuel shifting policy's capital equipment costs now account for increases in usage of all industrial fuel types
+
 ### **2.1.2 - July 9, 2020**
 
 * Fixed minor formula error in variable "Potential RPS Qualifying Electricity Output" and its BAU equivalent
@@ -71,7 +133,7 @@ Note that starting with this release, Vensim 8 or later (64-bit) is required to 
 	* Fuels' pollutant emissions intensities may now improve (or worsen) over the model run in the BAU case by specifying values in new input variable fuels/PEIIR
 	* Policy-driven changes in imports and exports of fuels are now calculated
 	* Corrected omission of biomass and diesel burned in district heat plants, and diesel burned in power plants, from fuel use totals
-	* Total fuel use disaggregated by fuel and by sector is now provided on the "Cumulators" sheet in Vensim
+	* Total fuel use disaggregated by fuel and by sector is now provided on the "Cross-Sector Totals" sheet in Vensim
 	* Thermal fuel production subsidies now account for fuel imports and exports, improving accuracy
 	* Retail prices of district heat and hydrogen are now by default influenced by changes in costs for district heat producers and hydrogen producers, with control lever plcy-ctrl-ctr/BAEPAbCiPC governing default behavior.  A subscripted policy lever toggles this behavior in the policy case.
 * Transportation Sector
