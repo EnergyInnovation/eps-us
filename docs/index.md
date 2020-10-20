@@ -78,7 +78,7 @@ Links to doc pages are followed by a number indicating the [version](version-his
 * [Version History](version-history.html) - 3.0.0
   * [Archived Model Releases](archived-releases.html) - 3.0.0
 
-## Depreciated Documentation
+## Deprecated Documentation
 
 The documentation pages listed below do not apply to the most recent version of the Energy Policy Simulator.  However, they contain information that may be relevant if using an older software version (which may be the latest available version for some geographic regions, if a region has not updated to the latest software).
 
