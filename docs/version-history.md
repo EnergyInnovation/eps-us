@@ -11,7 +11,8 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Edits to indst/BPEiC and indst/PERAC streamline IEA data integration and internationalization
   * Industry energy efficiency standards are now subscripted by fuel type (and continue to be subscripted by industry)
   * Updated Net Zero reference scenario
-  * New input variable bldgs/SoBRCBbG allows a user to specify a share of building retrofitting costs incurred due to the retrofitting policy that will be funded by the government 
+  * New input variable bldgs/SoBRCBbG allows a user to specify a share of building retrofitting costs incurred due to the retrofitting policy that will be funded by the government
+  * The EPS can be configured to vary the prices of more types of fuels based on changes in fuel supplier expenditures than were previously supported
 * Bug Fixes
   * Fixed rounding error in hydrogen capital equipment costs
   * The construction industry's ISIC code is no longer part of the "other industries" category ISIC codes, correcting some minor issues where too many cash flows were assigned to the construction industry
