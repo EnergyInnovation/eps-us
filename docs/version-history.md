@@ -4,16 +4,22 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
-### **3.1.0 - TBD, 2020**
+### **3.1.0 - Dec. 7, 2020**
 
 * New Features
   * Policy implementation schedules may now be set separately for every subscripted element of every policy lever.  For example, this allows different start dates for energy efficiency standards applied to the steel industry vs. the cement industry.  (Each industry is an element of the "industrial energy efficiency standards" policy lever.)
+  * Improved procedure for allocating responsibility for emissions abatement amongst policies within a policy package, used in calculating wedge thicknesses in the wedge diagram and box widths in the cost curve.  A description of the improved procedure [can be found here](https://github.com/Energy-Innovation/eps-us/issues/119).
   * Edits to indst/BPEiC and indst/PERAC streamline IEA data integration and internationalization
   * Industry energy efficiency standards are now subscripted by fuel type (and continue to be subscripted by industry)
   * Updated Net Zero reference scenario
   * New input variable bldgs/SoBRCBbG allows a user to specify a share of building retrofitting costs incurred due to the retrofitting policy that will be funded by the government
   * The EPS can be configured to vary the prices of more types of fuels based on changes in fuel supplier expenditures than were previously supported
   * The Transportation Demand Management (TDM) lever has been overhauled and renamed Mode Shifting.  It now uses a new data approach that is easier to internationalize and is subscripted by vehicle type as well as cargo type, allowing finer control in policy scenarios.
+  * Added output graph of sources of change in government cash flow
+  * New control lever allows exclusion of emissions from generating exported electricity
+  * In EPS regional models that use hard-coded renewable energy capacity construction costs (i.e., those that disabled endogenous learning), soft costs now reduce the effect of the capital cost R&D lever and can be reduced using the soft cost reduction policy lever
+  * Time-series power plant fixed and variable O&M input data may now be used (elec/CCaMC)
+* Various input data updates, including updated power plant properties and COVID-19 recession impacts
 * Bug Fixes
   * Fixed rounding error in hydrogen capital equipment costs
   * The construction industry's ISIC code is no longer part of the "other industries" category ISIC codes, correcting some minor issues where too many cash flows were assigned to the construction industry
