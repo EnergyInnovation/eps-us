@@ -4,11 +4,12 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
-### **3.1.0 - Dec. 7, 2020**
+### **3.1.0 - Dec. 9, 2020**
 
 * New Features
   * Policy implementation schedules may now be set separately for every subscripted element of every policy lever.  For example, this allows different start dates for energy efficiency standards applied to the steel industry vs. the cement industry.  (Each industry is an element of the "industrial energy efficiency standards" policy lever.)
   * Improved procedure for allocating responsibility for emissions abatement amongst policies within a policy package, used in calculating wedge thicknesses in the wedge diagram and box widths in the cost curve.  A description of the improved procedure [can be found here](https://github.com/Energy-Innovation/eps-us/issues/119).
+  * Replaced "Net Zero" scenario with "1.5°C Pathway" scenario
   * Edits to indst/BPEiC and indst/PERAC streamline IEA data integration and internationalization
   * Industry energy efficiency standards are now subscripted by fuel type (and continue to be subscripted by industry)
   * Updated Net Zero reference scenario
@@ -24,6 +25,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Fixed rounding error in hydrogen capital equipment costs
   * The construction industry's ISIC code is no longer part of the "other industries" category ISIC codes, correcting some minor issues where too many cash flows were assigned to the construction industry
   * Certain cash flows to ISIC codes within the "other industries" category are now allocated based on utility or energy spending rather than output
+  * Increased precision with which transmission line construction costs are assigned to ISIC codes
   * Greatly increased precision with which cash flow changes for fuel-supplying entities are assigned to ISIC codes
   * The effect of passthrough costs on industrial production will no longer cause minor oscillation in certain EPS deployments
 
