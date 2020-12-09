@@ -4,6 +4,10 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **3.1.0.1 - Dec. 9, 2020**
+
+* Edited 1.5 °C Scenario
+
 ### **3.1.0 - Dec. 9, 2020**
 
 * New Features
