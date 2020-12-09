@@ -22,7 +22,7 @@ Links to doc pages are followed by a number indicating the [version](version-his
   * [Architectural Design](architectural-design.html) - 3.0.0
   * [The Included Input Data Set](input-data.html) - 3.0.0
   * [Assumptions and Limitations](assumptions.html) - 3.0.0
-  * [How the EPS Avoids Double Counting Policy Effects](how-the-eps-avoids-double-counting.html) - 3.0.0
+  * [How the EPS Avoids Double Counting Policy Effects](how-the-eps-avoids-double-counting.html) - 3.1.0
   * [Comparing Results to Reality or Other Models](comparing-results.html) - 3.0.0
   * [Evaluating Policy Packages' Financial Effects](evaluating-package-financials.html) - 3.0.0
   * [Notes on Unit Conversion](unit-conversion.html) - 3.0.0
@@ -75,10 +75,10 @@ Links to doc pages are followed by a number indicating the [version](version-his
 * [Acknowledgement of Contributors and Reviewers](acknowledgement.html) - 3.0.0
 * [Contact Us](contact.html) - 3.0.0
 * [Software License and Image Credits](software-license.html) - 3.0.0
-* [Version History](version-history.html) - 3.0.0
+* [Version History](version-history.html) - 3.1.0
   * [Archived Model Releases](archived-releases.html) - 3.0.0
 
-## Depreciated Documentation
+## Deprecated Documentation
 
 The documentation pages listed below do not apply to the most recent version of the Energy Policy Simulator.  However, they contain information that may be relevant if using an older software version (which may be the latest available version for some geographic regions, if a region has not updated to the latest software).
 

@@ -27,6 +27,8 @@ It is possible to get around this problem by performing an analysis of policy co
 
 Both methods provide valuable insight and researchers studying these topics should consider evaluating policies from both perspectives.  The [ContributionTest Python script](testing-policy-contributions.html) included with the Energy Policy Simulator can be configured to use either policy-disabling (the default) or policy-enabling calculation modes.  The wedge diagrams and cost curves available through the web interface use only policy-disabling analysis, as as this approach minimizes inaccuracy for most use cases.
 
+* **Update:** As of EPS 3.1.0, the web interface uses a new, more advanced procedure for allocating policies' contributions to GHG abatement within a policy package (i.e., for wedge thicknesses or cost curve box widths).  This is a refinement of the "policy-disabling" procedure described above that breaks the output metric (GHG abatement) into sectors, tests the effects of each policy on each sector, and assembles the final impact of each policy by summing across sectors.  There are certain other refinements in the new procedure as well.  This avoids many of the problems formerly associated with overlapping policy effects.  A detailed description of the new procedure is [available here](https://github.com/Energy-Innovation/eps-us/issues/119).
+
 ## Selecting the Best Approach for Each Modeled Action
 
 As model developers, we must carefully balance upsides and downsides of handling each potential mitigation action in a solely price-driven way, solely driven by a separate policy lever, or as a combination of the two (with the separate lever either specifying an additive amount or serving as a floor):
