@@ -4,6 +4,13 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **3.1.1 - Dec. 18, 2020**
+
+* Carbon capture and sequestration (CCS) policy is now split into two policy levers: Electricity sector CCS and Industry sector CCS.  Electricity sector CCS is subscripted by plant type, while Industry sector CCS is subscripted by industry and by emissions type (energy-related or process emissions).
+* New policy: Toggle to non-BAU capacity retirement schedule (in electricity sector)
+* Updated 1.5 °C Scenario to take advantage of the new capabilities of the CCS policy levers
+* Updated BAU global battery storage capacity input data to latest version
+
 ### **3.1.0.1 - Dec. 9, 2020**
 
 * Edited 1.5 °C Scenario
