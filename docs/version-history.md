@@ -4,6 +4,15 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **3.1.2 - Feb. XX, 2021**
+
+* Data Updates
+  * Updated HFC data with values supplied by the U.S. Climate Alliance
+  * BAU electricity subsidies updated for recent PTC and ITC extensions
+  * Updated electric vehicle prices
+  * Updated CCS costs
+  * Other minor data input updates
+
 ### **3.1.1 - Dec. 18, 2020**
 
 * Carbon capture and sequestration (CCS) policy is now split into two policy levers: Electricity sector CCS and Industry sector CCS.  Electricity sector CCS is subscripted by plant type, while Industry sector CCS is subscripted by industry and by emissions type (energy-related or process emissions).
