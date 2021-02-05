@@ -29,63 +29,65 @@ Finally, we convert fuel use to total primary energy.  Since we're already worki
 
 ![total primary energy use](cross-sector-totals-TotPrimaryEnergy.png)
 
+## Change in Carbon and Fuel Tax Revenues
+
+### Change in Carbon Tax Revenue
+
+We calculate the change in carbon tax revenue due to the policy package, which is one of the inputs used in the [input-output model](io-model.html), where the way in which government acquires or uses this change in revenue can be set.
+
+We obtain the carbon tax revenue from each sector by multiplying the fuel use in that sector by the carbon tax amount per unit energy for that fuel and sector.  (Different sectors may have different carbon tax rates, and different fuels have different carbon intensities.  The carbon tax amounts per unit energy are calculated on the [Fuels sheet](fuels.html).)  For the industry sector, we also have to add in any carbon tax levied on industrial process emissions (which will be zero unless the carbon tax is configured to apply to process emissions).
+
+![carbon tax revenue by sector](cross-sector-totals-CarbonTaxRev.png)
+
+We then take the difference between this amount and its equivalent in the BAU case.
+
+![change in carbon tax revenue](cross-sector-totals-CngCarbonTaxRev.png)
+
+### Change in Fuel Tax Revenue
+
+The change in revenue from fuel taxes is calculated in a similar way to the change in carbon tax revenue (except industrial process emissions play no role here).  We multiply the fuel used in each sector by the fuel tax amount per unit energy applying to that fuel (as calculated on the [Fuels sheet](fuels.html)) and add across sectors.
+
+![fuel tax revenue by sector](cross-sector-totals-FuelTaxRev.png)
+
+We then take the difference between the BAU and policy cases to find the change due to the policy package.
+
+![change in fuel tax revenue](cross-sector-totals-CngFuelTaxRev.png)
+
 ## Changes in Cash Flows
 
 The model tracks changes in cash flow for nine main actors (sometimes called "cash flow entities"): government, non-energy industries, labor and consumers, foreign entities, and five types of energy suppliers (electricity, coal, natural gas and petroleum, biomass and biofuel, and other).  Additionally, the model tracks cash flow impacts by ISIC code, which breaks apart the non-energy industries cash flow entity into 18 ISIC codes and also tracks an additional 18 ISIC codes, for a total of 36 ISIC codes.  The break-out of five types of energy supplier within the EPS is more detailed than the available data by ISIC code (which, for example, groups all fossil fuel extraction businesses together, not distingusihing coal from oil and gas), so we retain the five energy suppliers within the "cash flow entities" subscript, instead of simply relying entirely on ISIC codes to track cash flows for all industries.  The detailed break-outs by ISIC code and by cash flow entity allows the EPS to produce outputs that show how policy packages affect specific segments of the economy and society.
 
-### Changes in Non-Energy Industry Cash Flows by ISIC Code
+## Changes in Non-Energy Industry Cash Flows by ISIC Code
 
 As the cash flow entities subscript is already sufficient to track the direct financial impacts of policies for all entities except for the detailed break-out of non-energy industries, at this stage, we primarily use ISIC codes to subdivide the cash flows assigned to the "non-energy industries" cash flow entity.  (Later, in the [input-output model](io-model.html), we will use some of the properties of the energy industry ISIC codes to estimate indirect impacts of changes in energy industry output.)
 
-The first step is to total the change in non-energy industry expenditures by ISIC code.  This was calculated in varous sectors, and it is relatively straightforward, because (unlike changes in revenues), we don't need to separate out a share going to labor or tax payments - we only care about the total amount spent and the ISIC code doing the spending.  
+The first step is to total the change in non-energy industry expenditures by ISIC code.  Non-energy industry expenditures were already assigned to ISIC codes within each sector, so it is straightforward to total them here.
 
 ![summing non-energy expenditures by ISIC code](cross-sector-totals-NonEnerExpendByISIC.png)
 
-Tracking the change in revenues by ISIC code and by cash flow entity is more complicated.  Revenue assignments to specific ISIC codes were already made in various sectors (transportation, buildings, etc.), but labor and tax shares of the assignments to non-energy industries were not separated out within the sectors.  We must do that here, in a process called "partitioning."  First, we total the changes in revenue by ISIC code prior to partitioning.
+We also track the change in revenues by ISIC code and by cash flow entity.  Revenue assignments to specific ISIC codes were already made in various sectors (transportation, buildings, etc.), but labor and tax shares of the assignments to non-energy industries were not separated out within the sectors.  We will account for the effects of changes in output by ISIC code on government and household spending the [input-output model](io-model.html) sheet, using variables that are part of a feedback loop from the IO model outputs.  Therefore, we do not need to separate out labor and tax shares of industry revenue upstream of the IO model.  (The IO model expects the total change in output, which is based on revenue, including revenue that ultimately is paid to workers or paid as taxes.  Worker salaries and taxes paid still contribute to that industry's value added and hence to its economic output.)  The share of each ISIC code supplied by foreign entities is also separated out inside the IO model.
 
-![summing non-energy revenues by ISIC code before partitioning](cross-sector-totals-NonEnerRevByISICBfrPttn.png)
+We also allocate any change in interest paid on the national debt to nonenergy industries at this stage - for more on this, see the documentation page on the [input-output model](io-model.html).
 
-Next, we separate out the shares of the non-energy ISIC codes' revenue that goes to government, to labor, and to foreign entities.  The changes in revenues coming out of the various sectors assigned to non-energy ISIC codes reflect what is paid for each sort of thing is being bought (such as machinery, steel, etc.), not where the product comes from (within or outside the model boundaries - e.g. domestic or foreign) or how much of the money goes toward taxes and toward labor.
+![summing non-energy revenues by ISIC code before partitioning](cross-sector-totals-NonEnerRevByISIC.png)
 
-To calculate the share going to foreign entities, we use the domestic content share of consumption by ISIC code, which is taken in as input data and reflects the share of each good (or the parts of each good, for goods composed of a mixture of domestic and imported parts) produced domestically.  We make no distinction between payments to foreign companies, foreign labor, and foreign taxes - they all are lumped into the "foreign entities" bucket.
-
-![foreign share of non-energy industry revenue](cross-sector-totals-NonEnerRevForeignShare.png)
-
-To calculate the share going to labor, we use input data that specifies the share of the value added by each industry that goes to worker compensation.  Value added reflects the increase in output and revenue of one industry relative to the cost of the inputs it purchases, such as a company that buys steel and manufactures machinery.  We need to take the labor share of value added, not the labor share of total output, because the labor share of producing the input materials, such as steel, is already accounted for when calculating the revenue impacts on the steel industry.  Thus, each industry makes a non-overlapping (non-double-counted) contribution to the change in revenue going to labor.  We subtract out personal/household income taxes on the change in payments going to labor at the marginal worker tax rate, because personal income taxes are not included in the I/O input data on taxes by ISIC code.
-
-To calculate the share going to government, we use input data on the tax on production as a share of value added by ISIC code.  These tax rates don't include changes in tax revenues from personal income taxes of the workers in each industry, so we add these separately, taken out of the labor share, as noted above.
-
-![labor and government shares of non-energy industry revenue](cross-sector-totals-NonEnerRevLborGovShare.png)
-
-We subtract out the foreign, labor, and government shares of the change in non-energy industry revenue to find the total change in non-energy industry revenue that actually applies to each domestic industry.
-
-![industry share of non-energy industry revenue](cross-sector-totals-NonEnerRevIndstShare.png)
-
-Finally, we add the direct (first-order) changes in revenue and changes in expenses to obtain the direct changes in cash flow for each non-energy industry, broken out by ISIC code.  In other words, this is the direct impact of the user's selected policies on the cash available to each industry segment.  This is one of our important inputs to the I/O model.
+We add the direct (first-order) changes in revenue and changes in expenses to obtain the direct changes in cash flow for each non-energy industry, broken out by ISIC code.  In other words, this is the direct impact of the user's selected policies on the cash available to each industry segment.  We do not actually use this variable within the IO model (because the IO model requires the change in output, not the change in cash flow or net income, for each industry), but we calculate it here for completeness and for use in the [debugging assistance](debugging-assistance.html) sheet.
 
 ![totalling change in non-energy industries' cash flow by ISIC code](cross-sector-totals-NonEnerCashFlowTot.png)
 
-### Changes in Energy Industry Cash Flows
+## Summing Changes in Expenditures and Revenues
 
-We must also partition and sum changes in energy industry cash flows, but the process is somewhat simpler.  This is because we handle taxes on energy in each sector demanding that energy, and we separate out the foreign entities' share using calculations in the fuel imports and fuel exports section of the [Fuels sheet](fuels.html), a more complicated and accurate methodology than simply partitioning a foreign share by ISIC code.  The only partitioning we need to do for the energy industries on the Cross-Sector Totals sheet is to separate out the payments going to labor, and the income taxes on those labor payments, which go to government.
-
-![labor share and income tax share of energy industry revenue](cross-sector-totals-EnerRevenuePartition.png)
-
-### Summing partitioning effects
-
-In order to produce totals cleanly later in this sheet, we prepare by consolidating all the changes in revenue due to partitioning (as described in the sections above) into a single variable, subscripted by cash flow entity.  The effects on the non-energy industries cash flow entity are obtained by summing across ISIC codes, since our calculations above were broken out by ISIC code, and we must keep the "non-energy industries" cash flow entity in sync.  Other partitioning effects are already assigned to one of the nine cash flow entities, so summing them is straightforward.
-
-![summing partitioning effects](cross-sector-totals-SumPartitionEffects.png)
-
-### Summing Changes in Expenses and Revenues
-
-The next step is to sum policy-driven changes in expenditures and revenues for each cash flow entity across all sectors and other model components that cause direct changes in expenditures and revenues.  Expenditures are divided into energy expenditures and non-energy expenditures in each model sector, so we total them separately here, so we can represent changes in these types of expenditures as separate lines on output graphs.  We apply a Quantization Size for Cash Flows to dampen rounding error.
+The next step is to sum direct, policy-driven changes in expenditures and revenues for each cash flow entity across all sectors and other model components that cause direct changes in expenditures and revenues.  Expenditures are divided into energy expenditures and non-energy expenditures in each model sector, so we total them separately here, so we can represent changes in these types of expenditures as separate lines on output graphs.  We apply a Quantization Size for Cash Flows to dampen rounding error.
 
 ![summing changes in energy and non-energy expenditures](cross-sector-totals-SumCngExpenditures.png)
 
-Similarly, we sum changes in revenues for each cash flow entity across all sectors.  This includes the effect of the partitioning we completed in the steps above (in the gray box in the following screenshot).  The sum of all cash flow changes within the gray box (i.e. across the nine cash flow entities) is zero, because partitioning doesn't alter the total change in revenue - it simply reallocates some to labor, to government, and to foreign entities.
+Similarly, we sum changes in revenues for each cash flow entity across all sectors.
 
 ![summing changes in revenues](cross-sector-totals-SumCngRevenues.png)
+
+We also assign changes in national debt interest payments, with expenses paid by government and revenues for those entities that own government debt.  (The interest received by the "non-energy industries" cash flow entity was allocated to ISIC codes earlier on this sheet.)
+
+![assigning changes in interest on national debt](cross-sector-totals-NatnlDebtIntByEntity.png)
 
 We know how much of the output of each energy industry and non-energy industry was purchased by "foreign entities," so we are able to subdivide the change in revenue by entity into change in export revenue and change in domestic revenue.  We break this out here to enable us to show this revenue breakdown in output graphs.
 

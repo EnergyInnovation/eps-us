@@ -10,10 +10,10 @@ We would like to acknowledge the following people who made the Energy Policy Sol
 * Jeffrey Rissman, Energy Innovation LLC - technical lead, model developer, documentation and video author, policy guide author, input data collection
 * Robbie Orvis, Energy Innovation LLC - data analysis and visualization, QA testing, policy guide author, input data collection
 * Megan Mahajan, Energy Innovation LLC - data analysis and visualization, QA testing, input data collection
-* Todd Fincannon - web application developer
+* Todd Fincannon, Energy Innovation LLC - full stack developer
 * Olivia Ashmoore, Energy Innovation LLC - input data collection
 * Sonia Aggarwal, Energy Innovation LLC - high-level guidance, policy guide author
-* Silvio Marcacci - communications
+* Silvio Marcacci, Energy Innovation LLC - communications
 * Hallie Kennan, Energy Innovation LLC - communications
 * Hal Harvey, Energy Innovation LLC - high-level guidance
 

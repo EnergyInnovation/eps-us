@@ -23,7 +23,7 @@ No special technique or controls are involved in analyzing the data on the built
 
 After the model has been run, you may click on any variable to make it the active variable.  That variable's name will appear in the title bar for the Vensim Model Reader window after the model's filename.  (The title bar will read approximately "Vensim:EPS.mdl Var:[active variable]".)
 
-Navigate to the "Cumulators" sheet and scroll to the top left.  Click once on the "Total CO<sub>2</sub>e Emissions" variable to make it the active variable.  Then, click the "Graph" button on the left side of the screen.
+Navigate to the "Cross-Sector Totals" sheet and scroll to the top left.  Click once on the "Total CO<sub>2</sub>e Emissions" variable to make it the active variable.  Then, click the "Graph" button on the left side of the screen.
 
 ![Graph button](visualizing-output-GraphButton.png)
 
@@ -51,7 +51,7 @@ Click on the "CO<sub>2</sub>" and "F gases" rows to de-select them.  The name of
 
 You may also include more than one variable on the same graph.  Open the Subscripts window, ensure the "Pollutants" tab is selected, and click the "None" button to deselect all the pollutants.  Then click on "CO<sub>2</sub>" to select only that pollutant.  Close the subscripts window.
 
-Now, in the upper left corner of the "Cumulators" sheet, click on "Transportation Sector Pollutant Emissions."  Hold shift, then click on "Electricity Sector Pollutant Emissions," which appears immediately below.  Then click on the "Graph" button.  A graph titled "Selected Variables" appears that shows the CO<sub>2</sub> emissions for these two sectors, as in the following screenshot:
+Now, in the upper left corner of the "Cross-Sector Totals" sheet, click on "Transportation Sector Pollutant Emissions."  Hold shift, then click on "Electricity Sector Pollutant Emissions," which appears immediately below.  Then click on the "Graph" button.  A graph titled "Selected Variables" appears that shows the CO<sub>2</sub> emissions for these two sectors, as in the following screenshot:
 
 ![graph of CO2 from two sectors](visualizing-output-TwoSectorCO2.png)
 
@@ -73,7 +73,7 @@ A table appears that includes all of the selected variables.  (Often, variables 
 
 ![Table window](visualizing-output-TableWindow.png)
 
-You can include variables on more than one Vensim sheet in the same table, even though variables on non-active sheets will not be included in a table if you select a variable on a new sheet before clicking the "Table" button.  Instead, add the variables to the table sequentially, without closing the table in between variables.  For example, select one or more variables on the Cumulators tab, click the "Table" button, and then left-click in the main Vensim window.  The table vanishes, but it has not been closed- it is simply behind the main Vensim window.  Now, switch to another sheet.  Select one or more variables and click the "Table" button.  The existing table will be brought to the front and the selected variables will be added to the bottom of the table.
+You can include variables on more than one Vensim sheet in the same table, even though variables on non-active sheets will not be included in a table if you select a variable on a new sheet before clicking the "Table" button.  Instead, add the variables to the table sequentially, without closing the table in between variables.  For example, select one or more variables on the Cross-Sector Totals tab, click the "Table" button, and then left-click in the main Vensim window.  The table vanishes, but it has not been closed- it is simply behind the main Vensim window.  Now, switch to another sheet.  Select one or more variables and click the "Table" button.  The existing table will be brought to the front and the selected variables will be added to the bottom of the table.
 
 Once you have the variables you want in the table, click the fourth small button in the upper left corner of the Table window, which copies the table data to the clipboard (as tab-separated values).  Now, open the program you wish to use for analysis or graphing, such as a spreadsheet program, and paste the data in from the clipboard.  If your analysis or graphing program will not accept pasted data directly, you can instead use the fifth button in the Table window to save the data as a text file (again, as tab-separated values), then open that text file in your program.  The following screenshot points out the location of these two buttons.
 

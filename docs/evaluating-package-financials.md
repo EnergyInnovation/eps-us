@@ -27,40 +27,72 @@ A wise policymaker thinks not only about whether a policy increases or decreases
 
 ## Cost Metrics in the Energy Policy Simulator
 
-The Energy Policy Simulator includes two main cost metrics:
+The Energy Policy Simulator includes a number of cost metrics:
 
--	The first important cost metric is "Change in Capital and Operational Expenditures (with revenue neutral carbon tax)."  This is a useful total which expresses how much the policy package saves money or increases spending, while rebating the effects of a carbon tax, which can be the strongest tax revenue-generating policy.  It roughly expresses both the cost to domestic firms and the amount of economic stimulus the policy will provide.  The simulator subdivides the metric into components (fuel and O&M, capital equipment, taxes and subsidies) to help users see what cost changes went into the metric.  This is critical for evaluating if the type of spending driven by the policies is "good" or "bad" spending (or savings), with spending on fuel often considered bad and spending on capital equipment often considered good, or at least neutral.
+1. The first important cost metric is "Change in Capital and Operational Expenditures."  This is a useful total that expresses how much the policy package saves money or increases spending.  It respects the user's settings for how government raises or spends revenue (discussed on the documentation page for the EPS's [input-output model](io-model.html)), so it correctly reflects user choices such as making carbon taxes revenue-neutral.  It roughly expresses both the cost to domestic firms and the amount of economic stimulus the policy will provide.  The simulator subdivides the metric into components (fuel and O&M, capital equipment, taxes and subsidies) to help users see what cost changes went into the metric.  This is critical for evaluating if the type of spending driven by the policies is "good" or "bad" spending (or savings), with spending on fuel often considered bad and spending on capital equipment often considered good, or at least neutral.
 
--	The second important cost metric is a breakout of "cash flow change by entity."  This shows how much money each of the following nine entities spend or save due to the policy package:
+2. Another important set of metrics concerns the impact of the policy package on the government's financial situation.  Details are  provided by the "Government Cash Flow Accounting" graph and the two national debt-related graphs in the web interface, which show the following effects of the policy package:
 
-    1.	Government
-    2.	Labor and consumers
-    3.	Non-energy industries
-    4.	Foreign entities
-    5.	Electricity suppliers
-    6.	Coal suppliers
-    7.	Natural gas and petroleum suppliers
-    8.	Biomass and biofuel suppliers
-    9.	Other energy suppliers (e.g. hydrogen, uranium, etc.)
+    * Change in government spending
+    * Change in budget deficit
+    * Change in household taxes
+    * Change in payroll taxes
+    * Change in corporate income taxes
+    * Cumulative change in the national debt
+    * Change in interest paid on the national debt
+
+    Reviewing these metrics helps the model user understand some of the financial implications of the policy package for government.  For example, a policy package that increases the budget deficit may provide short-term stimulus to the economy, but it will also increase interest payments on the national debt.
+
+3. The third key metric are the macroeconomic results of the EPS's [input-output model](io-model.html).  These results include the policy package's effects on:
+
+    * Number of jobs
+    * GDP / value added
+    * Employee compensation
+
+    These quantities can each be viewed via several different breakouts:
+
+    * By industry (e.g. which industries are gaining/losing jobs, value added, etc.)
+    * By effect type: direct, indirect, or induced.  For definitions of these terms, see the doc page on the [input-output model](io-model.html).
+
+    And a few additional details are available:
+
+    * Jobs by union representation status
+    * Average compensation per employee
+
+    These metrics are often of particular interest to policymakers, who may want to understand (for example) which policies will boost employment and in which industries.
+
+4. The last important cost metric is a breakout of "Direct Cash Flow Changes."  This shows how much money each of the following nine entities directly spend or save due to the policy package:
+
+    1. Government
+    2. Labor and consumers
+    3. Non-energy industries
+    4. Foreign entities
+    5. Electricity suppliers
+    6. Coal suppliers
+    7. Natural gas and petroleum suppliers
+    8. Biomass and biofuel suppliers
+    9. Other energy suppliers (e.g. hydrogen, uranium, etc.)
 
     The simulator breaks out the cash flow changes for each of the nine entities above into four components:
 
-    -	Change in domestic revenues
-    -	Change in export revenues
-    -	Change in energy expenditures
-    -	Change in non-energy expenditures
+    * Change in domestic revenues
+    * Change in export revenues
+    * Change in energy expenditures
+    * Change in non-energy expenditures
 
-    As with the first cost metric, seeing the component parts of the cash flow changes can help the user to understand whether a change is a "good" or "bad" thing, from that user's perspective, and can give the user an idea of which policies to change in order to achieve a desired financial effect.
+    Seeing the component parts of the cash flow changes can help the user to understand whether a change is a "good" or "bad" thing, from that user's perspective, and can give the user an idea of which policies to change in order to achieve a desired financial effect.
 
 ## First-Order Cash Flows and Higher-Order Economic Effects
 
-The Energy Policy Simulator only calculates the "first-order" financial effects of a policy package: Who gives how much more (or less) money to whom?  It does not consider what the recipient does with increased money, or what the spender does with savings from reduced expenses.  But how the money is used can have a large impact on the policy's outcome.  A carbon price that raises government revenue will go farther if the government wisely spends the money (for example, on support for research and development, which can accelerate technological progress, or improving public transit systems, as public transit generates economic value several times greater than its costs).  If the revenue is spent unwisely, the policy will not do nearly so much good.
+The Energy Policy Simulator first calculates direct (or "first-order") financial effects of a policy package within each sector: Who gives how much more (or less) money to whom?  Then, using its built-in [input-output model](io-model.html), the EPS calculates higher-order (indirect and induced) effects.  These come from the industries that supply industries affected by the policy package, and from the respending of money received by households or by government (or if less money is received due to the policy package, then how households or government make up for the reduction).
 
-Our tool is an "Energy Policy Simulator," not an "Everything in the Economy Simulator."  We consider decisions about how government spends additional revenue to be outside the scope of the simulator.  (The same is true for other tracked cash flow entities, like "labor and consumers" or "non-energy industries.")
+How money is used by households and government can have a large impact on the policy's outcome.  A carbon price that raises government revenue will go farther if the government wisely spends the money (for example, on support for research and development, which can accelerate technological progress, or improving public transit systems, as public transit [generates economic value](https://www.ebp-us.com/sites/default/files/project/uploads/timeismoney.pdf) far greater than its costs).  If the revenue is spent unwisely, the policy will not do nearly so much good.  In the EPS, how government uses or raises revenue for/from specific policies can be set using Government Revenue Accounting levers, discussed on the [input-output model](io-model.html) documentation page.
 
-Therefore, the graphs that show "Financial: Cash Flow Changes" should not be interpreted as which entities "win" and which entities "lose" due to a policy package.  First-order cash flows aren't where the money ultimately lands.
+Therefore, the graphs that show "Financial: Direct Cash Flow Changes" should not be interpreted as which entities "win" and which entities "lose" due to a policy package.  First-order cash flows aren't where the money ultimately lands.
 
-The proper simulation of policy effects on GDP (or jobs) is very difficult, because you must account for higher-order effects.  Many models that attempt this do so poorly, because they have short time horizons (e.g. a few years or less) that don't account for the re-integration of displaced workers into the economy and the long-term effects of efficiency gains on the economy.  This is easiest to visualize in the context of an intervention (such as automation) that displaces workers and reduces spending while increasing productivity.  In the short term, this sort of intervention looks bad, as it reduces jobs and GDP.  But in the longer term, displaced workers find new places in the economy where they can work, and the entire economy produces more goods with fewer people.  Many of the best policies to mitigate climate change, such as policies that improve products' energy efficiency, improve material efficiency in industry, and promote renewable electricity generation, have disruptive short-term effects because they save money (reduce GDP).  In the longer term, the economy will be better off for these reductions, just as the economy is better off today because of all the labor-saving and energy-saving devices and techniques invented since the Middle Ages.
+The proper simulation of policy effects on GDP (or jobs) requires accounting for higher-order effects.  For example, a model must account for the re-integration of displaced workers into the economy and the long-term effects of efficiency gains on the economy.  This is easiest to visualize in the context of an intervention (such as automation) that displaces workers and reduces spending while increasing productivity.  In the short term, this sort of intervention looks bad, as it reduces jobs and GDP.  But in the longer term, displaced workers find new places in the economy where they can work, and the entire economy produces more goods with fewer people.  Many of the best policies to mitigate climate change, such as policies that improve products' energy efficiency, improve material efficiency in industry, and promote renewable electricity generation, have disruptive short-term effects because they save money (reduce GDP).  In the longer term, the economy will be better off for these reductions, just as the economy is better off today because of all the labor-saving and energy-saving devices and techniques invented since the Middle Ages.
+
+The Energy Policy Simulator uses induced jobs, induced value added (GDP contribution), and induced employee compensation to capture how savings (for example, from reduced energy expenditures) can create jobs in other parts of the economy (when the money is spent on other things).
 
 ## Non-Financial Metrics
 
@@ -72,12 +104,10 @@ Similarly, avoiding greenhouse gas (GHG) emissions is an unqualified good, as it
 
 If the guidelines above regarding financial metrics make them seem too multifaceted to be used for policy guidance, a few rules of thumb might help:
 
--	Energy and material efficiency will have long-term positive financial effects, even if the near-term effects show negative GDP impacts.
+* Energy and material efficiency will have long-term positive financial effects, even if the near-term, direct effects show negative GDP impacts.  In the EPS, the positive induced effects will generally outweigh the negative direct effects for efficiency policies.
 
--	Carbon pricing can result in considerable economic growth, if the revenues are spent well.  If not, carbon pricing is an economic headwind.  (However, it could be used to offset other taxes that are worse economic headwinds, like sales or payroll taxes.)
+* Carbon pricing can result in considerable economic growth, if the revenues are spent well.  If not, carbon pricing is an economic headwind.  (However, it could be used to offset other taxes that are worse economic headwinds, like sales or payroll taxes.)
 
--	Utilize a mix of supply-side interventions (new energy technologies, etc.) and demand-side interventions (material or energy efficiency, etc.).  In the short term, supply-side interventions may increase capital spending and (hence) employment, while reducing demand for industrial products and materials may reduce spending.  Balancing the two types of policy may help to maintain a stable and growing job market, avoiding a boom-and-bust cycle.
+* Utilize a mix of supply-side interventions (new energy technologies, etc.) and demand-side interventions (material or energy efficiency, etc.).  In the short term, supply-side interventions may increase capital spending and (hence) employment, while reducing demand for industrial products and materials may reduce spending.  Balancing the two types of policy may help to maintain a stable and growing job market, avoiding a boom-and-bust cycle.
 
--	Very large, negative first-order cash flow changes threaten an industry.  If coal suppliers' revenue is going to zero, the higher-order financial effects (which we don't simulate) aren't going to save them.
-
--	Focus on objective goods.  Nobody can argue with saving human lives.  Don't let the debate about the effects of a policy package exclusively center on financial outcomes.
+* Focus on objective goods.  Nobody can argue with saving human lives.  Don't let the debate about the effects of a policy package exclusively center on financial outcomes.
