@@ -4,6 +4,23 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **3.1.2 - Feb. 18, 2021**
+
+* New Features
+  * Split ISIC 05T06 into coal mining (ISIC 05) and oil and gas extraction (ISIC 06)
+* Data Updates
+  * Updated emissions intensities for non-GHGs to align with EPA's National Emissions Inventory
+  * Updated HFC data with values supplied by the U.S. Climate Alliance
+  * BAU electricity subsidies updated for recent PTC and ITC extensions
+  * Updated potential for industrial electrification, based on temperature ranges of industrial heat demand
+  * Updated electric vehicle prices
+  * Updated CCS costs
+  * Other minor data input updates
+ * Bug Fixes
+  * Fixed minor formula error in peak demand calculations
+  * Fixed error that affected the recipient fuel fractions for the Industrial Electrification and Hydrogen policy lever
+  * Use fuel supplier revenue totals by fuel directly in the input-ouput model instead of calculating multipliers to divide up revenue for certain fuel-supplying cash flow entities 
+
 ### **3.1.1 - Dec. 18, 2020**
 
 * Carbon capture and sequestration (CCS) policy is now split into two policy levers: Electricity sector CCS and Industry sector CCS.  Electricity sector CCS is subscripted by plant type, while Industry sector CCS is subscripted by industry and by emissions type (energy-related or process emissions).
