@@ -16,7 +16,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Updated electric vehicle prices
   * Updated CCS costs
   * Other minor data input updates
- * Bug Fixes
+* Bug Fixes
   * Fixed minor formula error in peak demand calculations
   * Fixed error that affected the recipient fuel fractions for the Industrial Electrification and Hydrogen policy lever
   * Use fuel supplier revenue totals by fuel directly in the input-ouput model instead of calculating multipliers to divide up revenue for certain fuel-supplying cash flow entities 
