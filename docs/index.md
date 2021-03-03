@@ -75,8 +75,8 @@ Links to doc pages are followed by a number indicating the [version](version-his
 * [Acknowledgement of Contributors and Reviewers](acknowledgement.html) - 3.0.0
 * [Contact Us](contact.html) - 3.0.0
 * [Software License and Image Credits](software-license.html) - 3.0.0
-* [Version History](version-history.html) - 3.1.2
-  * [Archived Model Releases](archived-releases.html) - 3.0.0
+* [Version History](version-history.html) - 3.1.3
+  * [Archived Model Releases](archived-releases.html) - 3.1.2
 
 ## Deprecated Documentation
 
