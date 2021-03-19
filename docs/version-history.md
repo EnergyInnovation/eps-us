@@ -4,6 +4,10 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **3.1.3.1 - Mar. 19, 2021**
+
+* Bug fix to clean up overlapping text on EPS.vpmx file
+
 ### **3.1.3 - Mar. 3, 2021**
 
 * Bug fix to correctly map changes in biomass and biofuel suppliers to ISIC codes
