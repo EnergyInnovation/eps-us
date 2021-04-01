@@ -31,6 +31,7 @@ Links to doc pages are followed by a number indicating the [version](version-his
   * [Web Interface Tutorial](online-model-tutorial.html) - 3.0.0
   * [Output Graphs Available in the Web Interface](web-interface-graphs.html) - 3.0.0
   * [Background and Technical Info about the Web Interface](background-and-technical-info.html) - 3.0.0
+  * [Web App Hosting and Integration into a Partner's Website](integrating-the-web-app.html) - 3.2.0
 * [Download and Installation Instructions](download.html) - 3.0.0
 * [How to Conduct Analysis in Vensim Model Reader](how-to-conduct-analysis.html) - 1.4.2
   * [Running the Model and Setting Policy Levers](running-the-model.html) - 1.1.2
