@@ -4,6 +4,41 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **3.2.0 - Apr. XX, 2021**
+
+* New Features
+  * Added more detail to the Industry Category subscript, increasing the number of separately broken out industries from 8 to 25
+  * Added new policy lever to enable mandated power plant retirement schedule 
+  * Improved methodology for calculating the maximum amounts of power plant capacity and vehicles that can be deployed in a given year by implementing logit functions
+  * Simplified input data requirements by removing energy suppliers from input variables and using internal calculations instead
+  * Enabled new web app graph for carbon emissions by power plant type
+  * Included new documentation, including guidance on all output graphs
+* Data Updates
+  * UPDATE WITH NEW SCENARIO DETAILS
+  * Switched to using the AEO High Oil and Gas Supply scenario, which has historically tracked natural gas prices more closely
+  * Data in input variables based on EIA Annual Energy Outlook updated to use AEO 2021 values, which includes estimated impacts from COVID-19
+  * Updated the first simulated year to 2020
+  * Recategorized the freight vehicle categories to group light-duty and medium-duty vehicles together and separately report heavy-duty vehicles
+  * Updated BAU LULUCF emissions and N2O process emissions to match the latest EPA Greenhouse Gas Inventory 
+  * Removed BAU Low Carbon Fuel Standard values 
+  * Updated vehicle prices based on more current sources 
+  * Updated international fuel prices
+  * Other minor input data updates
+* Bug fixes
+  * Fix equation for calculating aircraft fuel switching under the Low Carbon Fuel Standard policy
+  * Fix small bug in cash flow calculations for electricity sector variable and fixed O&M costs
+  
+  
+  
+
+### **3.1.3.1 - Mar. 19, 2021**
+
+* Bug fix to clean up overlapping text on EPS.vpmx file
+
+### **3.1.3 - Mar. 3, 2021**
+
+* Bug fix to correctly map changes in biomass and biofuel suppliers to ISIC codes
+
 ### **3.1.2 - Feb. 18, 2021**
 
 * New Features
@@ -16,7 +51,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Updated electric vehicle prices
   * Updated CCS costs
   * Other minor data input updates
-* Bug Fixes
+ * Bug Fixes
   * Fixed minor formula error in peak demand calculations
   * Fixed error that affected the recipient fuel fractions for the Industrial Electrification and Hydrogen policy lever
   * Use fuel supplier revenue totals by fuel directly in the input-ouput model instead of calculating multipliers to divide up revenue for certain fuel-supplying cash flow entities 
