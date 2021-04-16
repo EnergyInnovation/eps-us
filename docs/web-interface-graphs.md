@@ -7,573 +7,587 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
 
 ## List of Output Graphs
 
-Here is a list of the graphs that are available for the EPS web interface as of version 3.2.0:
-
-* Emissions: CO<sub>2</sub>e
-  * Total (includes land use)
+* ### Emissions: CO<sub>2</sub>e
+  * **Total (includes land use)**
   
-  Economy-wide CO<sub>2</sub>e emissions, including Land Use, Land Use Change, and Forestry (LULUCF)
+    _Economy-wide CO<sub>2</sub>e emissions, including Land Use, Land Use Change, and Forestry (LULUCF)_
   
-  * Total (excludes land use)
+  * **Total (excludes land use)**
   
-  Economy-wide CO<sub>2</sub>e emissions, excluding Land Use, Land Use Change, and Forestry (LULUCF)
+    _Economy-wide CO<sub>2</sub>e emissions, excluding Land Use, Land Use Change, and Forestry (LULUCF)_
   
-  * By Sector
+  * **By Sector**
   
-  Economy-wide CO<sub>2</sub>e emissions broken out by sector (District Heat & Hydrogen, Water & Waste, Agriculture, Buildings, Transportation, Electricity, Industry, Geoengineering, Land Use)
+    _Economy-wide CO<sub>2</sub>e emissions or sequestration broken out by sector (District Heat & Hydrogen, Water & Waste, Agriculture, Buildings, Transportation, Electricity, Industry, Geoengineering, Land Use)_
   
-  * By Source Type
+  * **By Source Type**
  
- Economy-wide CO<sub>2</sub>e emissions broken out by source type (Process Emissions, Energy, Geoengineering, Land Use)
+    _Economy-wide CO<sub>2</sub>e emissions or sequestration broken out by source type (Process Emissions, Energy, Geoengineering, Land Use)_
  
- * By Pollutant
+  * **By Pollutant**
   
-  Economy-wide CO<sub>2</sub>e emissions broken out by pollutant (N<sub>2</sub>O, F-gases in CO<sub>2</sub>e, CH<sub>4</sub>, CO<sub>2</sub>)
+    _Economy-wide CO<sub>2</sub>e emissions broken out by pollutant (N<sub>2</sub>O, F-gases in CO<sub>2</sub>e, CH<sub>4</sub>, CO<sub>2</sub>)_
   
-  * Per Unit GDP
+  * **Per Unit GDP**
   
-  CO<sub>2</sub>e emissions per unit Gross Domestic Product
+    _CO<sub>2</sub>e emissions per unit Gross Domestic Product_
   
-  * Agriculture
+  * **Agriculture**
   
-  Agriculture sector CO<sub>2</sub>e emissions
+    _Agriculture sector CO<sub>2</sub>e emissions_
   
-  * Buildings
+  * **Buildings**
   
-  Buildings sector CO<sub>2</sub>e emissions
+    _Buildings sector CO<sub>2</sub>e emissions_
   
-  * District Heat & Hydrogen
+  * **District Heat & Hydrogen**
   
-  District Heat & Hydrogen sector CO<sub>2</sub>e emissions
+    _District Heat & Hydrogen sector CO<sub>2</sub>e emissions_
   
-  * Electricity
+  * **Electricity**
   
-  Electricity sector CO<sub>2</sub>e emissions
+    _Electricity sector CO<sub>2</sub>e emissions_
   
-  * Industry
+  * **Industry**
   
-  Industry sector CO<sub>2</sub>e emissions
+    _Industry sector CO<sub>2</sub>e emissions_
   
-  * Land Use
+  * **Land Use**
   
-  Land Use, Land Use Change, and Forestry sector CO<sub>2</sub>e emissions
+    _Land Use, Land Use Change, and Forestry sector CO<sub>2</sub>e emissions_
   
-  * Transportation
+  * **Transportation**
   
-  Transportation sector CO<sub>2</sub>e emissions
+    _Transportation sector CO<sub>2</sub>e emissions_
   
-  * Water & Waste
+  * **Water & Waste**
   
-  Water & Waste sector CO<sub>2</sub>e emissions
+    _Water & Waste sector CO<sub>2</sub>e emissions_
 
-* Emissions (by Pollutant)
+* ### Emissions (by Pollutant)
 
-Economy-wide emissions (in metric tons) broken out by the following 12 pollutants
+  _Economy-wide emissions (in metric tons) of each of the following 12 pollutants:_
   
-  * CO<sub>2</sub>
-  * CH<sub>4</sub>
-  * N<sub>2</sub>O
-  * F-gases (in CO<sub>2</sub>e)
-  * PM<sub>2.5</sub>
-  * PM<sub>10</sub>
-  * BC
-  * OC
-  * NO<sub>x</sub>
-  * VOC
-  * SO<sub>x</sub>
-  * CO
+  * **CO<sub>2</sub>**
 
-* Emissions: Energy-Related CO<sub>2</sub>
-  
-  * By Sector
-  
-  Economy-wide CO<sub>2</sub>e emissions from combustion of fuels for energy purposes broken out by sector (District Heat & Hydrogen, Water & Waste, Agriculture, Buildings, Transportation, Electricity, Industry, Geoengineering)
-  
-  * By Sector (reallocated energy carriers)
-  
-  Economy-wide CO<sub>2</sub>e emissions from combustion of fuels for energy purposes broken out by sector, with Electricity and District Heat and Hydrogen sector emissions reallocated to demand sectors (Water & Waste, Agriculture, Buildings, Transportation, Industry, Geoengineering)
-  
-  * By Fuel Type
-  
-  Economy-wide CO<sub>2</sub>e emissions from combustion of fuels for energy purposes broken out by fuel type
-  
-  * Per Unit GDP
-  
-  Economy-wide CO<sub>2</sub>e emissions from combustion of fuels for energy purposes per unit Gross Domestic Product
+  * **CH<sub>4</sub>**
 
-* Effects by Policy: CO<sub>2</sub>e Wedge Diagrams
+  * **N<sub>2</sub>O**
 
-This graph presents the relative impact of each enabled policy in a scenario in terms of the change in CO<sub>2</sub>e emissions.
+  * **F-gases (in CO<sub>2</sub>e)**
   
-  * Total
-  
-  * Agriculture
-  
-  * Buildings
-  
-  * District Heat & Hydrogen
-  
-  * Electricity
-  
-  * Industry
-  
-  * Transportation
+  * **PM<sub>2.5</sub>**
 
-* Effects by Policy: CO<sub>2</sub>e Abatement Cost Curve
-  
-  * NPV through 2050
-  
-  This graph presents the relative cost of each enabled policy in a scenario in terms of the average cost per ton CO<sub>2</sub>e abated. This version of the abatement cost curve is calculated by dividing the cumulative CO<sub>2</sub>e emissions reductions attributed to a given policy through 2050 by the net present value of the policy-induced change in capital, operational, and fuel expenditures through 2050.
-  
-  * NPV through 2030
-  
-  This graph presents the relative cost of each enabled policy in a scenario in terms of the average cost per ton CO<sub>2</sub>e abated. This version of the abatement cost curve is calculated by dividing the cumulative CO<sub>2</sub>e emissions reductions attributed to a given policy through 2030 by the net present value of the policy-induced change in capital, operational, and fuel expenditures through 2030.
+  * **PM<sub>10</sub>**
 
-* Financial: Policy Package Cost/Savings
+  * **BC**
+
+  * **OC**
+
+  * **NO<sub>x</sub>**
+
+  * **VOC**
+
+  * **SO<sub>x</sub>**
+
+  * **CO**
+
+* ### Emissions: Energy-Related CO<sub>2</sub>
   
-  * Change in CapEx + OpEx
+  * **By Sector**
   
-  Change in capital expenditures, fuel and operational expenditures (including labor), and additional carbon tax on process emissions. This metric does not include subsidy payments, as these are considered cash transfers rather than capital or operational expenditures. This graph displays each of these components in addition to their sum, which is one way to represent the overall costs or savings of a policy package. The "Change in CapEx and OpEx" reports only changes in amounts paid and excludes changes in amounts received. The changes in amounts paid can be positive or negative. For example, if a policy causes consumers to buy less fuel, then consumers have a positive cash flow change (because they have saved money on fuel), and the “Change in CapEx and OpEx” will be negative (because less money is being spent as a result of the policy package). It does not matter that the fuel industry is receiving less money, because changes in receipts are excluded from this cost metric.
+    _Economy-wide CO<sub>2</sub>e emissions from combustion of fuels for energy purposes broken out by sector (District Heat & Hydrogen, Water & Waste, Agriculture, Buildings, Transportation, Electricity, Industry, Geoengineering)_
   
-  * ^ Total Only
+  * **By Sector (reallocated energy carriers)**
   
-  This output graph reports only the Total Change in CapEx + OpEx from the metric above
+    _Economy-wide CO<sub>2</sub>e emissions from combustion of fuels for energy purposes broken out by sector, with emissions from Electricity, District Heat, and Hydrogen production reallocated to demand sectors (Water & Waste, Agriculture, Buildings, Transportation, Industry, Geoengineering)_
   
-  * Government Cash Flow Accounting
+  * **By Fuel Type**
   
-  This graph presents how the government handles added or lost revenue. This metric is broken out into spending increases or decreases in each of the following five categories: Corporate Income Taxes, Payroll Taxes, Household Taxes, Budget Deficit, and Government Spending (i.e., increases or decreases in spending proportional to how the existing government budget is spent). Positive values denote increased government spending and negative values denote decreased government spending. Users can control how the government allocates changes in spending across these five categories with the Government Revenue Accounting levers in the lefthand policy selector pane.
+    _Economy-wide CO<sub>2</sub>e emissions from combustion of fuels for energy purposes broken out by fuel type_
   
-  * Cumulative Change in National Debt
+  * **Per Unit GDP**
   
-  Change in national debt as a result of the selected policies. Changes to the budget deficit are cumulated across each year of the model run to find the cumulative change in the national debt (or surplus) as of each modeled year.
+    _Economy-wide CO<sub>2</sub>e emissions from combustion of fuels for energy purposes per unit Gross Domestic Product_
+
+* ### Effects by Policy: CO<sub>2</sub>e Wedge Diagrams
+
+  _These graphs present the relative impact of each enabled policy in a scenario in terms of the change in CO<sub>2</sub>e emissions. The "Total" wedge diagram includes all emission from the modeled region, while the sector-specific wedge diagrams only include direct emissions from those sectors.  Note that policies affectiong one sector may impact emissions in other sectors.  For example, electrification of industry (an Industry Sector policy) may affect emissions from the Electricity Sector.  Therefore, viewing a sector-specific wedge diagram may not show the full emissions impacts of that sector's policies.  For a detailed description of how wedge thicknesses are calculated, see [this GitHub thread](https://github.com/Energy-Innovation/eps-us/issues/119)._
   
-  * Change in Interest Paid on National Debt
+  * **Total**
+  
+  * **Agriculture**
+  
+  * **Buildings**
+  
+  * **District Heat & Hydrogen**
+  
+  * **Electricity**
+  
+  * **Industry**
+  
+  * **Transportation**
+
+* ### Effects by Policy: CO<sub>2</sub>e Abatement Cost Curve
+  
+  _These graphs show the abatement and cost-effectiveness of each policy. Each policy is displayed as a box whose horizontal width is based on the average annual abatement attributed to that policy (with abatement atributions made using the same procedure as in the wedge diagrams above) through 2050 or 2030. The height of each box, above or below the X-axis, is the average cost per ton CO<sub>2</sub>e abated. This is calculated by dividing the cumulative CO<sub>2</sub>e emissions reductions attributed to a given policy through 2050 or 2030 by the net present value of the policy-induced change in capital, operational, and fuel expenditures caused by that policy through 2050 or 2030._
+
+  * **NPV through 2050**
+  
+  * **NPV through 2030**
+
+* ### Financial: Policy Package Cost/Savings
+  
+  * **Change in CapEx + OpEx**
+  
+    _This graph shows one way to represent the overall costs of a policy package: the change in capital expenditures, fuel and operational expenditures (including labor), and additional carbon tax on process emissions. This graph displays each of these components in addition to their sum. Revenue-neutral taxes (i.e. taxes that are fully rebated to businesses and consumers, according to the policy package's [Government Revenue Accounting settings](io-model.html), controlled by levers in the policy selector pane) and revenue-neutral subsidies (similarly controlled by Government Revenue Accounting settings) are considered cash transfers rather than capital and operational expenditures and are therefore added to or subtracted from the metric such that the total excludes these cash transfers. The "Change in CapEx and OpEx" reports only changes in amounts paid and excludes changes in amounts received (which always equal the changes in amounts paid). The changes in amounts paid can be positive or negative. For example, if a policy causes consumers to buy less fuel, then the “Change in CapEx and OpEx” will be negative (because consumers are spending less money on fuel as a result of the policy package). It does not matter that the fuel industry is receiving less money, because changes in receipts are excluded from this cost metric._
+  
+  * **^ Total Only**
+  
+    _This output graph reports only the Total Change in CapEx + OpEx from the metric above, to allow for multiple scenarios to be compared on the same graph._
+  
+  * **Government Cash Flow Accounting**
+  
+    _This graph presents how the government handles added or reduced revenue. This metric is broken out into increases or decreases in each of the following five categories: Corporate Income Taxes, Payroll Taxes, Household Taxes, Budget Deficit, and Government Spending (i.e., increases or decreases in spending proportional to how the existing government budget is spent). Values on this graph should be read literally. For instance, a positive value for "budget deficit" indicates the government is running a higher budget deficit in order to make up for a reduction in its cash flow (rather than decreasing total amount spent or raising taxes), whereas a negative value for "budget deficit" indicates the government is using policy-driven increases in its cash flow to reduce the budget deficit (rather than increasing government spending or reducing taxes). Similarly, a positive value for "Change in Household Taxes" means taxes are increased, while a negative value indicates taxes have decreased. Thus, a policy package that increases government cash flow may be handled via accounting modes with a mixture of positive and negative values (such as increased spending combined with decreased household taxes). Users can control how the government handles changes in its revenues across these five categories by using the Government Revenue Accounting levers in the policy selector pane._
+  
+  * **Cumulative Change in National Debt**
+  
+    _Change in national debt as a result of the selected policies. Changes to the budget deficit are cumulated across each year of the model run to find the change in the national debt (or surplus) relative to business-as-usual as of each modeled year._
+  
+  * **Change in Interest Paid on National Debt**
  
- Change in national debt interest payments as a result of the selected policies in each year
+    _Change in national debt interest payments as a result of the selected policies in each year_
   
-  * Change in Government Cash Flow by Source
+  * **Change in Government Cash Flow by Source**
   
-  This graph presents the net effects of the selected policies on government cash flow prior to government decisions about how to handle its changes in cash flow (which can be controlled with the Government Revenue Accounting levers in the lefthand policy selector pane). This metric is broken out by sources of cash flow changes (Carbon Tax Revenue, Fuel Tax Revenue, EV Subsidy, Electric Generation Subsidy, Electricity Capacity Construction Subsidy, Distributed Solar Subsidy, Fuel Subsidy, National Debt Interest, Remaining Government Cash Flows).
+    _This graph presents the net effects of the selected policies on government cash flow prior to government decisions about how to handle its changes in cash flow (which can be controlled with the Government Revenue Accounting levers in the policy selector pane). This metric is broken out by sources of cash flow changes (Carbon Tax Revenue, Fuel Tax Revenue, EV Subsidy, Electric Generation Subsidy, Electricity Capacity Construction Subsidy, Distributed Solar Subsidy, Fuel Subsidy, National Debt Interest, Remaining Government Cash Flows). "Remaining Government Cash Flows" is often dominated by changes in tax receipts due to overall growth or shrinkage of the economy (GDP and Employee Compensation) but also includes changes in costs paid by government, such as spending on energy to power government buildings._
 
-* Financial: Jobs, GDP, and Earnings
+* ### Financial: Jobs, GDP, and Earnings
   
-  * Change in Jobs
+  * **Change in Jobs**
   
-  Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual). Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year). This graph reports the total change in jobs and also breaks out jobs by Fossil Fuel and Utility Jobs, Manufacturing and Construction Jobs, and Other Jobs.
+    _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual). Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year). This graph reports the total change in jobs and also breaks out jobs by Fossil Fuel and Utility Jobs, Manufacturing and Construction Jobs, and Other Jobs._
   
-  * Change in Union and Non-Union Jobs
+  * **Change in Union and Non-Union Jobs**
   
-  Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual). Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year). This graph reports the total change in jobs and also breaks out jobs by Union and Non-Union. Note that we currently use time-invariant union representation shares by industry to calculate this metric.
+    _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual). Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year). This graph reports the total change in jobs and also breaks out jobs by Union and Non-Union. Note that we currently use time-invariant union representation shares by industry to calculate this metric._
   
-  * Direct/Indirect/Induced Change in Jobs
+  * **Direct/Indirect/Induced Change in Jobs**
   
-  Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual). Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year). This graph reports the total change in jobs and also breaks out jobs by Direct, Indirect, and Induced impacts. For an explanation of these terms, see the [Input-Output Model](io-model.html) sheet.
+    _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual). Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year). This graph reports the total change in jobs and also breaks out jobs by Direct, Indirect, and Induced impacts. For an explanation of these terms, see the [Input-Output Model](io-model.html) sheet._
   
-  * Direct Plus Indirect Change in Jobs
+  * **Direct Plus Indirect Change in Jobs**
   
-  Policy-induced changes in jobs in each year, excluding induced changes in jobs (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual). Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year). This graph reports the Direct and Indirect changes in jobs but excludes the Induced changes in jobs. For an explanation of these terms, see the [Input-Output Model](io-model.html) sheet.
+    _Policy-induced changes in jobs in each year, excluding induced changes in jobs (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual). Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year). This graph reports the Direct and Indirect changes in jobs but excludes the Induced changes in jobs. For an explanation of these terms, see the [Input-Output Model](io-model.html) sheet._
   
-  * Change in GDP
+  * **Change in GDP**
   
-  Policy-induced changes in Gross Domestic Product in each year, relative to business-as-usual. This graph reports the total change in GDP and also breaks out changes in GDP by Fossil Fuel and Utilities, Manufacturing and Construction, and Other Contributors.
+    _Policy-induced changes in Gross Domestic Product in each year, relative to business-as-usual. This graph reports the total change in GDP and also breaks out changes in GDP by Fossil Fuel and Utilities, Manufacturing and Construction, and Other Contributors._
   
-  * Percent Change in GDP
+  * **Percent Change in GDP**
   
-  Percent change in Gross Domestic Product (relative to business-as-usual) in each year. This graph reports the total percent change in GDP and also breaks out changes in GDP by Fossil Fuel and Utilities, Manufacturing and Construction, and Other Contributors.
+    _Percent change in Gross Domestic Product (relative to business-as-usual) in each year. This graph reports the total percent change in GDP and also breaks out changes in GDP by Fossil Fuel and Utilities, Manufacturing and Construction, and Other Contributors._
   
-  * Direct/Indirect/Induced Change in GDP
+  * **Direct/Indirect/Induced Change in GDP**
   
-  Policy-induced changes in Gross Domestic Product in each year, relative to business-as-usual. This graph reports the total change in GDP and also breaks out changes in GDP by Direct, Indirect, and Induced impacts. For an explanation of these terms, see the [Input-Output Model](io-model.html) sheet.
+    _Policy-induced changes in Gross Domestic Product in each year, relative to business-as-usual. This graph reports the total change in GDP and also breaks out changes in GDP by Direct, Indirect, and Induced impacts. For an explanation of these terms, see the [Input-Output Model](io-model.html) sheet._
   
-  * Change in Employee Compensation
+  * **Change in Employee Compensation**
   
-  Policy-induced change in total employee compensation in each year, further broken out by compensation for Fossil Fuels and Utilities, Manufacturing and Construction, and Others.
+    _Policy-induced change in total employee compensation in each year, further broken out by compensation for Fossil Fuels and Utilities, Manufacturing and Construction, and Others._
   
-  * Change in Compensation per Employee
+  * **Change in Compensation per Employee**
   
-  Policy-induced change in compensation per employed person in each year.
+    _Policy-induced change in compensation per employed person in each year._
   
-  * Direct/Indirect/Induced Change in Compensation
+  * **Direct/Indirect/Induced Change in Compensation**
   
-  Policy-induced change in total employee compensation in each year, further broken out by Direct, Indirect, and Induced changes in compensation. For an explanation of these terms, see the [Input-Output Model](io-model.html) sheet.
+    _Policy-induced change in total employee compensation in each year, further broken out by Direct, Indirect, and Induced changes in compensation. For an explanation of these terms, see the [Input-Output Model](io-model.html) sheet._
 
-* Financial: Direct Cash Flow Changes
+* ### Financial: Direct Cash Flow Changes
+  
+  * **Cash Flow Change (by Entity)**
+  
+    _Direct (first-order) policy-induced change in cash flow for each of nine entities tracked in the Energy Policy Simulator (Government, Non-Energy Industries, Labor and Consumers, Foreign Entities, Electricity Suppliers, Coal Suppliers, Natural Gas and Petroleum Suppliers, Biomass and Biofuel Suppliers, and Other Energy Suppliers). This metric is upstream of the macroeconomic input-output model and therefore does not include how government, households, and industries respend additional money (or how they compensate for reductions in money), so it does not capture economy-wide growth or shrinkage caused by the modeled policies. (See the graphs in the "Financial: Jobs, GDP, and Earnings" section for financial outputs that include policy-driven changes in economy size.) Since any money that is spent by one entity is received by another, direct cash flow changes sum to zero._
+  
+  * **Government Cash Flow Components**
+  
+    _Direct (first-order) policy-induced change in government cash flow, broken out by Change in Revenue, Change in Energy Expenditures, and Change in Non-Energy Expenditures._
+  
+  * **Non-Energy Industries Cash Flow Components**
+  
+    _Direct (first-order) policy-induced change in non-energy industries cash flow, broken out by Change in Domestic Revenue, Change in Export Revenue, Change in Energy Expenditures, and Change in Non-Energy Expenditures._
+  
+  * **Labor and Consumers Cash Flow Components**
+  
+    _Direct (first-order) policy-induced change in labor and consumers cash flow, broken out by Change in Revenue, Change in Energy Expenditures, and Change in Non-Energy Expenditures._
+  
+  * **Foreign Entities Cash Flow Components**
+  
+    _Direct (first-order) policy-induced change in foreign entities cash flow, broken out by Change in Revenue, Change in Energy Expenditures, and Change in Non-Energy Expenditures._
+  
+  * **Electricity Supplier Cash Flow Components**
+  
+    _Direct (first-order) policy-induced change in electricity supplier cash flow, broken out by Change in Domestic Revenue, Change in Export Revenue, Change in Energy Expenditures, and Change in Non-Energy Expenditures._
+  
+  * **Coal Supplier Cash Flow Components**
+  
+    _Direct (first-order) policy-induced change in coal supplier cash flow, broken out by Change in Domestic Revenue, Change in Export Revenue, Change in Energy Expenditures, and Change in Non-Energy Expenditures._
+  
+  * **Natural Gas and Petroleum Supplier Cash Flow Components**
+  
+    _Direct (first-order) policy-induced change in natural gas and petroleum supplier cash flow, broken out by Change in Domestic Revenue, Change in Export Revenue, Change in Energy Expenditures, and Change in Non-Energy Expenditures._
+  
+  * **Biomass and Biofuel Supplier Cash Flow Components**
+  
+    _Direct (first-order) policy-induced change in biomass and biofuel supplier cash flow, broken out by Change in Domestic Revenue, Change in Export Revenue, Change in Energy Expenditures, and Change in Non-Energy Expenditures._
+  
+  * **Other Energy Supplier Cash Flow Components**
+  
+    _Direct (first-order) policy-induced change in other energy supplier cash flow, broken out by Change in Domestic Revenue, Change in Export Revenue, Change in Energy Expenditures, and Change in Non-Energy Expenditures._
 
-Direct (first-order) change in capital expenditures, fuel and operational expenditures (including labor), and additional carbon tax on process emissions. This metric does not include subsidy payments, as these are considered cash transfers rather than capital or operational expenditures. This graph displays each of these components in addition to their sum, which is one way to represent the overall costs or savings of a policy package. The "Change in CapEx and OpEx" reports 
+* ### Human Health & Social Benefits
   
-  * Cash Flow Change (by Entity)
+  * **Avoided Deaths Wedge Diagram**
   
-  Direct (first-order) policy-induced change in cash flow by each of the nine entities tracked in the Energy Policy Simulator (Government, Non-Energy Industries, Labor and Consumers, Foreign Entities, Electricity Suppliers, Coal Suppliers, Natural Gas and Petroleum Suppliers, Biomass and Biofuel Suppliers, and Other Energy Suppliers). This metric is upstream of the macroeconomic input-output model and therefore do not include how government and households respend money. Since any money that is spent by one entity is received by another, the total of these cash flow changes sums to zero.
+    _This graph presents the relative impact of each enabled policy in a scenario in terms of the number of avoided premature deaths_
   
-  * Government Cash Flow Components
+  * **Avoided Premature Deaths**
   
-  Direct (first-order) policy-induced change in government cash flow, broken out by Change in Revenue, Change in Energy Expenditures, and Change in Non-Energy Expenditures. 
+    _Annual avoided premature deaths as a result of a policy package_
   
-  * Non-Energy Industries Cash Flow Components
+  * **Monetized Avoided Deaths & Climate Benefits**
   
-  Direct (first-order) policy-induced change in non-energy industries cash flow, broken out by Change in Revenue, Change in Energy Expenditures, and Change in Non-Energy Expenditures.
+    _Monetized annual avoided premature deaths (according to the Value of a Statistical Life) and climate benefits (according to the Social Cost of Carbon) as a result of a policy package_
   
-  * Labor and Consumers Cash Flow Components
+  * **Avoided Lost Workdays**
   
-  Direct (first-order) policy-induced change in labor and consumers cash flow, broken out by Change in Revenue, Change in Energy Expenditures, and Change in Non-Energy Expenditures.
+    _Annual avoided lost workdays as a result of a policy package_
   
-  * Foreign Entities Cash Flow Components
+  * **Avoided Respiratory Symptoms and Bronchitis**
   
-  Direct (first-order) policy-induced change in foreign entities cash flow, broken out by Change in Revenue, Change in Energy Expenditures, and Change in Non-Energy Expenditures.
+    _Annual avoided respiratory symptoms and bronchitis as a result of a policy package_
   
-  * Electricity Supplier Cash Flow Components
+  * **Avoided Asthma Attacks**
   
-  Direct (first-order) policy-induced change in electricity supplier cash flow, broken out by Change in Revenue, Change in Energy Expenditures, and Change in Non-Energy Expenditures.
+    _Annual avoided asthma attacks as a result of a policy package_
   
-  * Coal Supplier Cash Flow Components
+  * **Avoided Nonfatal Heart Attacks**
   
-  Direct (first-order) policy-induced change in coal supplier cash flow, broken out by Change in Revenue, Change in Energy Expenditures, and Change in Non-Energy Expenditures.
+    _Annual avoided nonfatal heart attacks as a result of a policy package_
   
-  * Natural Gas and Petroleum Supplier Cash Flow Components
+  * **Avoided Hospital Admissions**
   
-  Direct (first-order) policy-induced change in natural gas and petroleum supplier cash flow, broken out by Change in Revenue, Change in Energy Expenditures, and Change in Non-Energy Expenditures.
+    _Annual avoided hospital admissions as a result of a policy package_
   
-  * Biomass and Biofuel Supplier Cash Flow Components
+  * **Avoided Respiratory ER Visits**
   
-  Direct (first-order) policy-induced change in biomass and biofuel supplier cash flow, broken out by Change in Revenue, Change in Energy Expenditures, and Change in Non-Energy Expenditures.
+    _Annual avoided respiratory emergency room visits as a result of a policy package_
   
-  * Other Energy Supplier Cash Flow Components
+  * **Avoided Minor Restricted Activity Days**
   
-  Direct (first-order) policy-induced change in other energy supplier cash flow, broken out by Change in Revenue, Change in Energy Expenditures, and Change in Non-Energy Expenditures.
+    _Annual avoided minor restricted activity days as a result of a policy package_
 
-* Human Health & Social Benefits
+* ### Electricity Generation, Capacity, and Demand
   
-  * Avoided Deaths Wedge Diagram
+  * **Generation**
   
-  This graph presents the relative impact of each enabled policy in a scenario in terms of the number of avoided premature deaths
+    _Annual electricity generation by power plant type_
   
-  * Avoided Premature Deaths
+  * **Policy-Driven Change in Generation**
   
-  Annual avoided premature deaths as a result of a policy package
+    _Changes in electricity generation by power plant type due to enabled policies_
   
-  * Monetized Avoided Deaths & Climate Benefits
+  * **Capacity**
   
-  Monetized annual avoided premature deaths (according to the Value of a Statistical Life) and climate benefits (according to the Social Cost of Carbon) as a result of a policy package
+    _Annual electricity generation capacity by power plant type_
   
-  * Avoided Lost Workdays
+  * **Policy-Driven Change in Capacity**
   
-  Annual avoided lost workdays as a result of a policy package
+    _Changes in electricity generation capacity by power plant type due to enabled policies_
   
-  * Avoided Respiratory Symptoms and Bronchitis
+  * **Electricity Demand by Sector**
   
-  Annual avoided respiratory symptoms and bronchitis as a result of a policy package
-  
-  * Avoided Asthma Attacks
-  
-  Annual avoided asthma attacks as a result of a policy package
-  
-  * Avoided Nonfatal Heart Attacks
-  
-  Annual avoided nonfatal heart attacks as a result of a policy package
-  
-  * Avoided Hospital Admissions
-  
-  Annual avoided hospital admissions as a result of a policy package
-  
-  * Avoided Respiratory ER Visits
-  
-  Annual avoided respiratory emergency room visits as a result of a policy package
-  
-  * Avoided Minor Restricted Activity Days
-  
-  Annual avoided minor restricted activity days as a result of a policy package
+    _Electricity demand broken out by sector (District Heat & Hydrogen, Water & Waste, Agriculture, Transportation, Industry, Buildings)_
 
-* Electricity Generation, Capacity, and Demand
+* ### Electricity: Levelized Costs, Curtailment, Emissions and Water Use
   
-  * Generation
+  * **Levelized Cost of Electricity (after subsidies)**
   
-  Annual electricity generation by power plant type
+    _Levelized Cost of Electricity by power plant type in 2020, 2030, 2040, and 2050 (after any subsidies for generation or power plant construction)_
   
-  * Policy-Driven Change in Generation
+  * **Curtailed Electricity from Renewables**
   
-  Changes in electricity generation by power plant type due to enabled policies
+    _Annual curtailed electricity broken out by renewable power plant type_
   
-  * Capacity
+  * **CO<sub>2</sub>e Emissions by Plant Type**
   
-  Annual electricity generation capacity by power plant type
+    _Annual Electricity sector CO<sub>2</sub>e emissions broken out by power plant type_
   
-  * Policy-Driven Change in Capacity
+  * **Water Withdrawals by Power Plants**
   
-  Changes in electricity generation capacity by power plant type due to enabled policies
+    _Annual water withdrawals (water taken to use for cooling) by power plant type_
   
-  * Electricity Demand by Sector
+  * **Water Consumption by Power Plants**
   
-  Electricity demand broken out by sector (District Heat & Hydrogen, Water & Waste, Agriculture, Transportation, Industry, Buildings)
+    _Annual water withdrawals (water taken and not returned to the water body, i.e. evaporated) by power plant type_
 
-* Electricity: Levelized Costs, Curtailment and Water Use
-  
-  * Levelized Cost of Electricity (after subsidies)
-  
-  Levelized Cost of Electricity by power plant type in 2020, 2030, 2040, and 2050 (after any subsidies for generation or power plant construction)
-  
-  * Curtailed Electricity from Renewables
-  
-  Annual curtailed electricity broken out by renewable power plant type
-  
-  * CO<sub>2</sub>e Emissions by Plant Type
-  
-  Annual Electricity sector CO<sub>2</sub>e emissions broken out by power plant type  
-  
-  * Water Withdrawals by Power Plants
-  
-  Annual water withdrawals (water taken to use for cooling) by power plant type 
-  
-  * Water Consumption by Power Plants
-  
-  Annual water withdrawals (water taken and not returned to the water body, i.e. evaporated) by power plant type 
+* ### Transport: Vehicles by Technology
 
-* Transport: Vehicles by Technology
+  _Sales by vehicle technology for the following classes of vehicles:_
+  
+  * **Sales: Cars and SUVs**
+  
+  * **Sales: Buses**
+  
+  * **Sales: Light Freight Trucks**
+  
+  * **Sales: Med & Heavy Freight Trucks**
+  
+  * **Sales: Motorbikes**
 
-Sales by vehicle technology for the following classes of vehicles:
+  _Stock by vehicle technology for the following classes of vehicles:_
   
-  * Sales: Cars and SUVs
+  * **Fleet Composition: Cars and SUVs**
   
-  * Sales: Buses
+  * **Fleet Composition: Buses**
   
-  * Sales: Light Freight Trucks
+  * **Fleet Composition: Light Freight Trucks**
   
-  * Sales: Med & Heavy Freight Trucks
+  * **Fleet Composition: Med & Heavy Freight Trucks**
   
-  * Sales: Motorbikes
+  * **Fleet Composition: Motorbikes**
 
-Stock by vehicle technology for the following classes of vehicles:
+* ### Transport: Travel Demand, Fuel Use, and Emissions
   
-  * Fleet Composition: Cars and SUVs
+  * **CO2 Emissions by Vehicle Type**
   
-  * Fleet Composition: Buses
+    _Annual Transportation sector CO<sub>2</sub> emissions by vehicle type_
   
-  * Fleet Composition: Light Freight Trucks
+  * **Fuel Use by Fuel Type**
   
-  * Fleet Composition: Med & Heavy Freight Trucks
+    _Annual Transportation sector fuel use by fuel type_
   
-  * Fleet Composition: Motorbikes
+  * **Fuel Use by Vehicle Type**
+  
+    _Annual Transportation sector fuel use by vehicle type_
+  
+  * **Travel Demand (Passenger Modes)**
+  
+    _Annual cargo distance traveled by passenger vehicles, by vehicle type_
+  
+  * **Travel Demand (Freight Modes)**
+  
+    _Annual cargo distance traveled by freight vehicles, by vehicle type_
 
-* Transport: Travel Demand, Fuel Use, and Emissions
+* ### Industry: Fuel Use
   
-  * CO2 Emissions by Vehicle Type
+  * **By Industry (Excluding Feedstocks)**
   
-  Annual Transportation sector CO<sub>2</sub> emissions by vehicle type
+    _Annual Industry sector fuel use by subindustry, excluding feedstocks and only including fuels used for energy purposes_
   
-  * Fuel Use by Fuel Type
+  * **By Fuel (Excluding Feedstocks)**
   
-  Annual Transportation sector fuel use by fuel type
+    _Annual Industry sector fuel use by fuel type, excluding feedstocks and only including fuels used for energy purposes_
   
-  * Fuel Use by Vehicle Type
+  * **By Industry (Including Feedstocks)**
   
-  Annual Transportation sector fuel use by vehicle type
+    _Annual Industry sector fuel use by subindustry, including feedstocks_
   
-  * Travel Demand (Passenger Modes)
+  * **By Fuel (Including Feedstocks)**
   
-  Annual cargo distance traveled by passenger vehicles, by vehicle type
-  
-  * Travel Demand (Freight Modes)
-  
-  Annual cargo distance traveled by freight vehicles, by vehicle type
+    _Annual Industry sector fuel use by fuel type, including feedstocks_
 
-* Industry: Fuel Use
+* ### Industry: CO<sub>2</sub>e Emissions
   
-  * By Industry (Including Feedstocks)
+  * **Total by Industry**
   
-  Annual Industry sector fuel use by subindustry, including feedstocks
+    _Annual Industry sector CO<sub>2</sub>e emissions by subindustry_
   
-  * By Fuel (Including Feedstocks)
+  * **Total by Pollutant**
   
-  Annual Industry sector fuel use by fuel type, including feedstocks
+    _Annual Industry sector CO<sub>2</sub>e emissions by pollutant (N<sub>2</sub>O, F-gases in CO<sub>2</sub>e, CH<sub>4</sub>, CO<sub>2</sub>)_
   
-  * By Industry (Excluding Feedstocks)
+  * **Process Emissions by Industry**
   
-  Annual Industry sector fuel use by subindustry, excluding feedstocks and only including fuels used for energy purposes
+    _Annual Industry sector process emissions by subindustry; process emissions refer to pollutants that occur as a result of industry operations and which were not related to the combustion of fuel for energy_
   
-  * By Fuel (Excluding Feedstocks)
+  * **Process Emissions by Pollutant**
   
-  Annual Industry sector fuel use by fuel type, excluding feedstocks and only including fuels used for energy purposes
-
-* Industry: CO<sub>2</sub>e Emissions
+    _Annual Industry sector process emissions by pollutant (N<sub>2</sub>O, F-gases in CO<sub>2</sub>e, CH<sub>4</sub>, CO<sub>2</sub>); process emissions refer to pollutants that occur as a result of industry operations and which were not related to the combustion of fuel for energy_
   
-  * Total by Industry
+  * **Energy-Related Emissions by Industry**
   
-  Annual Industry sector CO<sub>2</sub>e emissions by subindustry
+    _Annual Industry sector energy-related emissions by subindustry_
   
-  * Total by Pollutant
-  
-  Annual Industry sector CO<sub>2</sub>e emissions by pollutant (N<sub>2</sub>O, F-gases in CO<sub>2</sub>e, CH<sub>4</sub>, CO<sub>2</sub>)
-  
-  * Process Emissions by Industry
-  
-  Annual Industry sector process emissions by subindustry; process emissions refer to pollutants that occur as a result of industry operations and which were not related to the combustion of fuel for energy
-  
-  * Process Emissions by Pollutant
-  
-  Annual Industry sector process emissions by pollutant (N<sub>2</sub>O, F-gases in CO<sub>2</sub>e, CH<sub>4</sub>, CO<sub>2</sub>); process emissions refer to pollutants that occur as a result of industry operations and which were not related to the combustion of fuel for energy
-  
-  * Energy-Related Emissions by Industry
-  
-  Annual Industry sector energy-related emissions by subindustry
-  
-  * Energy-Related Emissions by Pollutant
+  * **Energy-Related Emissions by Pollutant**
    
-  Annual Industry sector energy-related emissions by pollutant
+    _Annual Industry sector energy-related emissions by pollutant_
 
-* Buildings: Energy Use
+* ### Buildings: Energy Use
   
-  * By Building Component
+  * **By Building Component**
   
-  Annual Buildings sector energy consumption by building component
+    _Annual Buildings sector energy consumption by building component_
   
-  * By Building Type
+  * **By Building Type**
   
-  Annual Buildings sector energy consumption by building type (commercial, rural residential, urban residential)
+    _Annual Buildings sector energy consumption by building type (commercial, rural residential, urban residential)_
   
-  * By Energy Source
+  * **By Energy Source**
   
-  Annual Buildings sector energy consumption by fuel type
+    _Annual Buildings sector energy consumption by fuel type_
 
-* Energy Consumption
+* ### Energy Consumption
   
-  * Primary Energy by Source
+  * **Primary Energy by Source**
   
-  Annual economy-wide primary energy consumption by fuel type
+    _Annual economy-wide primary energy consumption by fuel type_
   
-  * Primary Energy by End Use Sector
+  * **Primary Energy by End Use Sector**
   
-  Annual economy-wide primary energy consumption by end use sector (District Heat & Hydrogen, Water & Waste, Agriculture, Buildings, Transportation, Electricity, Industry, Geoengineering)
+    _Annual economy-wide primary energy consumption by end use sector (District Heat & Hydrogen, Water & Waste, Agriculture, Buildings, Transportation, Electricity, Industry, Geoengineering)_
   
-  * Per Unit GDP
+  * **Per Unit GDP**
   
-  Annual economy-wide primary energy consumption per unit Gross Domestic Product 
+    _Annual economy-wide primary energy consumption per unit Gross Domestic Product_
   
-  * Electricity Consumption
+  * **Electricity Consumption**
   
-  Annual electricity consumption
+    _Annual electricity consumption_
   
-  * Hard Coal Consumption
+  * **Hard Coal Consumption**
   
-  Annual hard coal consumption
+    _Annual hard coal consumption_
   
-  * Lignite Consumption
+  * **Lignite Consumption**
   
-  Annual lignite consumption
+    _Annual lignite consumption_
   
-  * Natural Gas Consumption
+  * **Natural Gas Consumption**
   
-  Annual natural gas consumption
+    _Annual natural gas consumption_
   
-  * Petroleum Fuels Consumption
+  * **Petroleum Fuels Consumption**
   
-  Annual petroleum fuels consumption
+    _Annual petroleum fuels consumption_
   
-  * Liquid Biofuels Consumption
+  * **Liquid Biofuels Consumption**
   
-  Annual liquid biofuels consumption
+    _Annual liquid biofuels consumption_
   
-  * Biomass Consumption
+  * **Biomass Consumption**
   
-  Annual biomass consumption
+    _Annual biomass consumption_
   
-  * LPG Propane & Butane Consumption
+  * **LPG Propane & Butane Consumption**
   
-  Annual liquefied petroleum gas and butane consumption
+    _Annual liquefied petroleum gas, propane, and butane consumption_
   
-  * Municipal Solid Waste Consumption
+  * **Municipal Solid Waste Consumption**
   
-  Annual municipal solid waste consumption
+    _Annual municipal solid waste consumption_
   
-  * Hydrogen Consumption
+  * **Hydrogen Consumption**
   
-  Annual hydrogen consumption
+    _Annual hydrogen consumption_
 
-* Energy Exports, Imports and Production
+* ### Energy Exports, Imports and Production
   
-  * Energy Exports
+  * **Energy Exports**
   
-  Annual energy exports by fuel type
+    _Annual energy exports by fuel type_
   
-  * Change in Energy Exports
+  * **Change in Energy Exports**
   
-  Annual policy-induced changes in energy exports by fuel type
+    _Annual policy-induced changes in energy exports by fuel type_
   
-  * Energy Export Revenue
+  * **Energy Export Revenue**
   
-  Annual energy export revenue by fuel type
+    _Annual energy export revenue by fuel type_
   
-  * Change in Energy Export Revenue
+  * **Change in Energy Export Revenue**
   
-  Annual policy-induced changes in energy export revenue by fuel type
+    _Annual policy-induced changes in energy export revenue by fuel type_
   
-  * Embedded CO<sub>2</sub> in Exported Fuels
+  * **Embedded CO<sub>2</sub> in Exported Fuels**
   
-  Annual embedded CO<sub>2</sub> emissions in exported fuels by fuel type (fuel exports times the carbon intensities of the respective fuels)
+    _Annual fuel exports in terms of the quantity of CO<sub>2</sub> that would be emitted if the fuels are combusted._
   
-  * Change in Embedded CO<sub>2</sub> in Exported Fuels
+  * **Change in Embedded CO<sub>2</sub> in Exported Fuels**
   
-  Annual policy-induced changes in embedded CO<sub>2</sub> emissions in exported fuels by fuel type (fuel exports times the carbon intensities of the respective fuels)
+    _Annual policy-induced changes in fuel exports in terms of the quantity of CO<sub>2</sub> that would be emitted if the fuels are combusted._
   
-  * Energy Imports
+  * **Energy Imports**
   
-  Annual energy imports by fuel type
+    _Annual energy imports by fuel type_
   
-  * Change in Energy Imports
+  * **Change in Energy Imports**
   
-  Annual policy-induced changes in energy imports by fuel type
+    _Annual policy-induced changes in energy imports by fuel type_
   
-  * Energy Import Expenditures
+  * **Energy Import Expenditures**
   
-  Annual energy import expenditures by fuel type
+    _Annual energy import expenditures by fuel type_
   
-  * Change in Energy Import Expenditures
+  * **Change in Energy Import Expenditures**
   
-  Annual policy-induced changes in import expenditures by fuel type
+    _Annual policy-induced changes in import expenditures by fuel type_
   
-  * Energy Production
+  * **Energy Production**
   
-  Annual domestic energy production by fuel type
+    _Annual domestic energy production by fuel type_
   
-  * Change in Energy Production
+  * **Change in Energy Production**
   
-  Annual policy-induced changes in domestic energy production by fuel type
+    _Annual policy-induced changes in domestic energy production by fuel type_
 
-* Fuel Costs (by Fuel, by Sector)
+* ### Fuel Costs (by Fuel, by Sector)
 
-Fuel costs in 2020, 2030, 2040, and 2050 by fuel type, by sector (Commercial Buildings, Residential Buildings, Electricity, Transportation, Industry, District Heat and Hydrogen)
+  _Fuel costs in 2020, 2030, 2040, and 2050 by fuel type, by sector (Commercial Buildings, Residential Buildings, Electricity, Transportation, Industry, District Heat and Hydrogen)_
   
-  * Electricity
-  * Hard Coal
-  * Lignite
-  * Natural Gas
-  * Petroleum Gasoline
-  * Petroleum Diesel
-  * Biomass
-  * Heavy or Residual Fuel Oil
-  * LPG Propane or Butane
-  * Hydrogen
+  * **Electricity**
 
-* Technology Costs
+  * **Hard Coal**
+
+  * **Lignite**
+
+  * **Natural Gas**
+
+  * **Petroleum Gasoline**
+
+  * **Petroleum Diesel**
+
+  * **Biomass**
+
+  * **Heavy or Residual Fuel Oil**
+
+  * **LPG Propane or Butane**
+
+  * **Hydrogen**
+
+* ### Technology Costs
   
-  * Batteries
+  * **Batteries**
   
-  Battery cost per kilowatt-hour, including the upfront battery cost and the balance of system costs (e.g., labor)
+    _Battery cost per kilowatt-hour, including the battery cost and the balance of system costs (e.g., labor for its installation)_
   
-  * CCS Capital Equipment
+  * **CCS Capital Equipment**
   
-  Capital cost of carbon capture and sequestration equipment to capture one metric ton of CO<sub>2</sub>e per year, broken out by sector (Electricity and Industry)
+    _Capital cost of carbon capture and sequestration equipment to capture one metric ton of CO<sub>2</sub>e per year, broken out by sector (Electricity and Industry)_
   
-  * Onshore Wind Turbines
+  * **Onshore Wind Turbines**
   
-  Construction cost per unit capacity of onshore wind turbines, before construction subsidies
+    _Construction cost per unit capacity of onshore wind turbines, before construction subsidies_
   
-  * Offshore Wind Turbines
+  * **Offshore Wind Turbines**
   
-  Construction cost per unit capacity of offshore wind turbines, before construction subsidies
+    _Construction cost per unit capacity of offshore wind turbines, before construction subsidies_
   
-  * Solar PV (Utility-Scale)
+  * **Solar PV (Utility-Scale)**
   
-  Construction cost per unit capacity of utility-scale solar photovoltaic systems, before construction subsidies
+    _Construction cost per unit capacity of utility-scale solar photovoltaic systems, before construction subsidies_
   
-  * Hydrogen Electrolyzers
+  * **Hydrogen Electrolyzers**
   
-  Capital cost of hydrogen production equipment to produce one kilogram H<sub>2</sub> per year
+    _Capital cost of hydrogen production equipment to produce one kilogram H<sub>2</sub> per year via electrolysis_
