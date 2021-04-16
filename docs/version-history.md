@@ -20,6 +20,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Updated the first simulated year to 2020
   * Recategorized the freight vehicle categories to group light-duty and medium-duty vehicles together and separately report heavy-duty vehicles
   * Updated BAU LULUCF emissions and N2O process emissions to match the latest EPA Greenhouse Gas Inventory 
+  * Updated to latest version of PRIMAP database (v2.1), used for process CO2 emissions in indst/BPE
   * Removed BAU Low Carbon Fuel Standard values 
   * Updated vehicle prices based on more current sources 
   * Updated international fuel prices
@@ -27,9 +28,6 @@ This page tracks updates that have been made with each version of the Energy Pol
 * Bug fixes
   * Fix equation for calculating aircraft fuel switching under the Low Carbon Fuel Standard policy
   * Fix small bug in cash flow calculations for electricity sector variable and fixed O&M costs
-  
-  
-  
 
 ### **3.1.3.1 - Mar. 19, 2021**
 
