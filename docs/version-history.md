@@ -4,7 +4,7 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
-### **3.2.0 - Apr. XX, 2021**
+### **3.2.0 - Apr. 19, 2021**
 
 * New Features
   * Added more detail to the Industry Category subscript, increasing the number of separately broken out industries from 8 to 25
