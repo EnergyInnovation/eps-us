@@ -14,7 +14,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Enabled new web app graph for carbon emissions by power plant type
   * Included new documentation, including guidance on all output graphs
 * Data Updates
-  * UPDATE WITH NEW SCENARIO DETAILS
+  * Updated the 1.5C scenario
   * Switched to using the AEO High Oil and Gas Supply scenario, which has historically tracked natural gas prices more closely
   * Data in input variables based on EIA Annual Energy Outlook updated to use AEO 2021 values, which includes estimated impacts from COVID-19
   * Updated the first simulated year to 2020
