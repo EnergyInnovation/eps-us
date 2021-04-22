@@ -4,6 +4,13 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **3.2.1 - Apr. 22, 2021**
+
+* Data Updates
+  * Updates NDC target to new NDC announced on 4/22/2021 of 50-52 percent reduction in GHG relative to 2005 by 2030
+* Bug fixes
+  * Fix input data bug for water and waste industry causing too large of increases in demand
+
 ### **3.2.0 - Apr. 19, 2021**
 
 * New Features
