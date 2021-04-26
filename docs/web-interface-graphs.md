@@ -170,15 +170,15 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
 
   * **Change in Jobs by Sex**
   
-    _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual), disaggregated into categories by sex. Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year)._
+    _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual), disaggregated into categories by sex. Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year).  In the U.S. version of the EPS, the available sex categories are based on those categories for which U.S. government data are available (in particular, from the Bureau of Labor Statistics) and should not be interpreted as a reflection Energy Innovation's views of which sex categories exist or are worthy of being reported separately._
 
   * **Change in Jobs by Race**
   
-    _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual), disaggregated into categories by race. Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year)._
+    _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual), disaggregated into categories by race. Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year).  In the U.S. version of the EPS, the available race categories are based on those categories for which U.S. government data are available (in particular, from the Bureau of Labor Statistics) and should not be interpreted as a reflection Energy Innovation's views of which race categories exist or are worthy of being reported separately._
 
   * **Change in Jobs by Hispanic or Latino Status**
   
-    _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual), disaggregated into categories by Hispanic or Latino status. Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year)._
+    _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual), disaggregated into categories by Hispanic or Latino status. Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year).  In the U.S. version of the EPS, the available Hispanic or Latino status categories are based on those categories for which U.S. government data are available (in particular, from the Bureau of Labor Statistics) and should not be interpreted as a reflection Energy Innovation's views of which Hispanic or Latino status categories exist or are worthy of being reported separately._
 
   * **Change in Jobs by Age Bracket**
   
@@ -270,15 +270,15 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
   
   * **Avoided Deaths by Sex**
 
-    _Annual avoided premature deaths as a result of a policy package disaggregated by sex_
+    _Annual avoided premature deaths as a result of a policy package disaggregated by sex.  In the U.S. version of the EPS, the available sex categories are based on those categories for which U.S. government data are available (in particular, from the Bureau of Labor Statistics, since we use these categories for job impacts as well as health impacts) and should not be interpreted as a reflection Energy Innovation's views of which sex categories exist or are worthy of being reported separately._
   
   * **Avoided Deaths by Race**
 
-    _Annual avoided premature deaths as a result of a policy package disaggregated by race_
+    _Annual avoided premature deaths as a result of a policy package disaggregated by race.  In the U.S. version of the EPS, the available race categories are based on those categories for which U.S. government data are available (in particular, from the Bureau of Labor Statistics, since we use these categories for job impacts as well as health impacts) and should not be interpreted as a reflection Energy Innovation's views of which race categories exist or are worthy of being reported separately._
   
   * **Avoided Deaths by Hispanic or Latino Status**
 
-    _Annual avoided premature deaths as a result of a policy package disaggregated by Hispanic or Latino status_
+    _Annual avoided premature deaths as a result of a policy package disaggregated by Hispanic or Latino status.  In the U.S. version of the EPS, the available Hispanic or Latino status categories are based on those categories for which U.S. government data are available (in particular, from the Bureau of Labor Statistics, since we use these categories for job impacts as well as health impacts) and should not be interpreted as a reflection Energy Innovation's views of which Hispanic or Latino status categories exist or are worthy of being reported separately._
   
   * **Avoided Premature Deaths**
   
