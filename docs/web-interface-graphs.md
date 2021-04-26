@@ -3,7 +3,7 @@ layout: page
 title:  "Output Graphs Available in the Web Interface"
 ---
 
-The web interface allows the user to visualize Energy Policy Simulator (EPS) results through a variety of output graphs.  As of EPS 3.3.0, there are 158 different output graphs available in the web interface.  However, which graphs are shown in the web interface may be customized for different EPS country or regional adaptations.  Many graphs include more than one data series, such as a graph of power plant capacity by plant type (coal, nuclear, hydro, etc.).  Therefore, over 600 different data series are available in the web interface.  (Thousands more are available in the [downloadable version](download.html) of the EPS.)
+The web interface allows the user to visualize Energy Policy Simulator (EPS) results through a variety of output graphs.  As of EPS 3.3.0, there are 161 different output graphs available in the web interface.  However, which graphs are shown in the web interface may be customized for different EPS country or regional adaptations.  Many graphs include more than one data series, such as a graph of power plant capacity by plant type (coal, nuclear, hydro, etc.).  Therefore, over 600 different data series are available in the web interface.  (Thousands more are available in the [downloadable version](download.html) of the EPS.)
 
 ## List of Output Graphs
 
@@ -267,6 +267,18 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
   * **Avoided Deaths Wedge Diagram**
   
     _This graph presents the relative impact of each enabled policy in a scenario in terms of the number of avoided premature deaths_
+  
+  * **Avoided Deaths by Sex**
+
+    _Annual avoided premature deaths as a result of a policy package disaggregated by sex_
+  
+  * **Avoided Deaths by Race**
+
+    _Annual avoided premature deaths as a result of a policy package disaggregated by race_
+  
+  * **Avoided Deaths by Hispanic or Latino Status**
+
+    _Annual avoided premature deaths as a result of a policy package disaggregated by Hispanic or Latino status_
   
   * **Avoided Premature Deaths**
   
