@@ -3,7 +3,7 @@ layout: page
 title:  "Output Graphs Available in the Web Interface"
 ---
 
-The web interface allows the user to visualize Energy Policy Simulator (EPS) results through a variety of output graphs.  As of EPS 3.3.0, there are 161 different output graphs available in the web interface.  However, which graphs are shown in the web interface may be customized for different EPS country or regional adaptations.  Many graphs include more than one data series, such as a graph of power plant capacity by plant type (coal, nuclear, hydro, etc.).  Therefore, over 600 different data series are available in the web interface.  (Thousands more are available in the [downloadable version](download.html) of the EPS.)
+The web interface allows the user to visualize Energy Policy Simulator (EPS) results through a variety of output graphs.  As of EPS 3.3.0, there are 165 different output graphs available in the web interface.  However, which graphs are shown in the web interface may be customized for different EPS country or regional adaptations.  Many graphs include more than one data series, such as a graph of power plant capacity by plant type (coal, nuclear, hydro, etc.).  Therefore, over 600 different data series are available in the web interface.  (Thousands more are available in the [downloadable version](download.html) of the EPS.)
 
 ## List of Output Graphs
 
@@ -172,17 +172,33 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
   
     _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual), disaggregated into categories by sex. Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year).  In the U.S. version of the EPS, the available sex categories are based on those categories for which U.S. government data are available (in particular, from the Bureau of Labor Statistics) and should not be interpreted as a reflection Energy Innovation's views of which sex categories exist or are worthy of being reported separately._
 
+  * **Percent Change in Jobs by Sex**
+  
+    _The same metric as above, graphed as a percent change in the number of jobs held by people of each sex (relative to the BAU case in that same year)._
+
   * **Change in Jobs by Race**
   
     _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual), disaggregated into categories by race. Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year).  In the U.S. version of the EPS, the available race categories are based on those categories for which U.S. government data are available (in particular, from the Bureau of Labor Statistics) and should not be interpreted as a reflection Energy Innovation's views of which race categories exist or are worthy of being reported separately._
+
+  * **Percent Change in Jobs by Race**
+  
+    _The same metric as above, graphed as a percent change in the number of jobs held by people of each race (relative to the BAU case in that same year)._
 
   * **Change in Jobs by Hispanic or Latino Status**
   
     _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual), disaggregated into categories by Hispanic or Latino status. Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year).  In the U.S. version of the EPS, the available Hispanic or Latino status categories are based on those categories for which U.S. government data are available (in particular, from the Bureau of Labor Statistics) and should not be interpreted as a reflection Energy Innovation's views of which Hispanic or Latino status categories exist or are worthy of being reported separately._
 
+  * **Perc Change in Jobs by Hispanic or Latino Status**
+  
+    _The same metric as above, graphed as a percent change in the number of jobs held by people of each Hispanic or Latino status (relative to the BAU case in that same year)._
+
   * **Change in Jobs by Age Bracket**
   
     _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual), disaggregated into categories by age bracket. Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year)._
+
+  * **Percent Change in Jobs by Age Bracket**
+  
+    _The same metric as above, graphed as a percent change in the number of jobs held by people of each age bracket (relative to the BAU case in that same year)._
   
   * **Change in Union and Non-Union Jobs**
   
