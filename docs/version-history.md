@@ -4,13 +4,55 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
-### **3.1.2 - Feb. XX, 2021**
+### **3.2.1 - Apr. 22, 2021**
+
+* Data Updates
+  * Updates NDC target to new NDC announced on 4/22/2021 of 50-52 percent reduction in GHG relative to 2005 by 2030
+* Bug fixes
+  * Fix input data bug for water and waste industry causing too large of increases in demand
+
+### **3.2.0 - Apr. 19, 2021**
+
+* New Features
+  * Added more detail to the Industry Category subscript, increasing the number of separately broken out industries from 8 to 25
+  * Added new policy lever to enable mandated power plant retirement schedule 
+  * Improved methodology for calculating the maximum amounts of power plant capacity and vehicles that can be deployed in a given year by implementing logit functions
+  * Simplified input data requirements by removing energy suppliers from input variables and using internal calculations instead
+  * Enabled new web app graph for carbon emissions by power plant type
+  * Included new documentation, including guidance on all output graphs
+* Data Updates
+  * Updated the 1.5C scenario
+  * Switched to using the AEO High Oil and Gas Supply scenario, which has historically tracked natural gas prices more closely
+  * Data in input variables based on EIA Annual Energy Outlook updated to use AEO 2021 values, which includes estimated impacts from COVID-19
+  * Updated the first simulated year to 2020
+  * Recategorized the freight vehicle categories to group light-duty and medium-duty vehicles together and separately report heavy-duty vehicles
+  * Updated BAU LULUCF emissions and N2O process emissions to match the latest EPA Greenhouse Gas Inventory 
+  * Updated to latest version of PRIMAP database (v2.1), used for process CO2 emissions in indst/BPE
+  * Removed BAU Low Carbon Fuel Standard values 
+  * Updated vehicle prices based on more current sources 
+  * Updated international fuel prices
+  * Other minor input data updates
+* Bug fixes
+  * Fix equation for calculating aircraft fuel switching under the Low Carbon Fuel Standard policy
+  * Fix small bug in cash flow calculations for electricity sector variable and fixed O&M costs
+
+### **3.1.3.1 - Mar. 19, 2021**
+
+* Bug fix to clean up overlapping text on EPS.vpmx file
+
+### **3.1.3 - Mar. 3, 2021**
+
+* Bug fix to correctly map changes in biomass and biofuel suppliers to ISIC codes
+
+### **3.1.2 - Feb. 18, 2021**
 
 * New Features
   * Split ISIC 05T06 into coal mining (ISIC 05) and oil and gas extraction (ISIC 06)
 * Data Updates
+  * Updated emissions intensities for non-GHGs to align with EPA's National Emissions Inventory
   * Updated HFC data with values supplied by the U.S. Climate Alliance
   * BAU electricity subsidies updated for recent PTC and ITC extensions
+  * Updated potential for industrial electrification, based on temperature ranges of industrial heat demand
   * Updated electric vehicle prices
   * Updated CCS costs
   * Other minor data input updates

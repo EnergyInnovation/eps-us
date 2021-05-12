@@ -19,7 +19,7 @@ Note that the EPS Vensim version 8 or later (64-bit).  If you already have Vensi
 
 Once Vensim Model Reader is installed, you should download the EPS by clicking the button below.
 
-<p><a href="https://github.com/Energy-Innovation/eps-us/archive/3.1.1.zip" class="btn">Download the Energy Policy Simulator</a></p>
+<p><a href="https://github.com/Energy-Innovation/eps-us/archive/3.2.1.zip" class="btn">Download the Energy Policy Simulator</a></p>
 
 A compressed archive (.zip file) will be downloaded named "eps-us-" followed by the model's current version number.
 
