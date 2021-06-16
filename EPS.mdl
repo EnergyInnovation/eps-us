@@ -1,29 +1,186 @@
 {UTF-8}
+LCFS Reduction Allocation by Credit Type[Vehicle Type, Cargo Type, Vehicle Technology\
+		]=
+	IF THEN ELSE(LCFS Required Emissions Reductions=0,0,
+	
+	
+	(
+	  LCFS Logit Shareweights[Vehicle Type,Cargo Type,Vehicle Technology]
+	  * (
+	      MAX(1, LCFS Carbon Credit Prices[Vehicle Type,Cargo Type,Vehicle Technology])
+	    )^LCFSLE LCFS Logit Exponent
+	)
+	/
+	(
+	  SUM(LCFS Logit Shareweights[Vehicle Type!,Cargo Type!,Vehicle Technology!]
+	  * (
+	      MAX(1, LCFS Carbon Credit Prices[Vehicle Type!,Cargo Type!,Vehicle Technology!\
+		])
+	    )^LCFSLE LCFS Logit Exponent
+	  )
+	)
+	)
+	~	
+	~		|
+
+LCFS Required Emissions Reductions=
+	SUM(BVTStL Boolean Vehicle Types Subject to LCFS[Vehicle Type!,Cargo Type!]*Fuel that would be Used by Regulated Vehicle Types in Absence of LCFS with Elec Eff Adj\
+		[
+	Vehicle Type!,Cargo Type!,Vehicle Technology!,Transportation Fuel!]*Transportation Fuel Pollutant Emissions Intensities before Fuel Economy Adjustment
+	[Vehicle Type!,CO2,Transportation Fuel!]*Transportation Fuel Pollutant Emissions Intensities before Fuel Economy Adjustment
+	[Vehicle Type!,CO2,petroleum gasoline tf])
+	
+	-
+	
+	SUM(BVTStL Boolean Vehicle Types Subject to LCFS[Vehicle Type!,Cargo Type!]*Fuel that would be Used by Regulated Vehicle Types in Absence of LCFS with Elec Eff Adj\
+		[
+	Vehicle Type!,Cargo Type!,Vehicle Technology!,Transportation Fuel!]*Transportation Fuel Pollutant Emissions Intensities before Fuel Economy Adjustment
+	[Vehicle Type!,CO2,Transportation Fuel!]*Transportation Fuel Pollutant Emissions Intensities before Fuel Economy Adjustment
+	[Vehicle Type!,CO2,petroleum gasoline tf])*(1- Required LCFS Percentage)
+	~	
+	~		|
+
+Max Emissions Reductions Achievable by Vehicle Technology[Vehicle Type,Cargo Type,gasoline vehicle\
+		]=
+	Last Year Transportation Sector Fuel Used[Vehicle Type,Cargo Type,gasoline vehicle,biofuel gasoline tf\
+		]*Percent Each Fuel Type Can be Increased by Vehicle Technology
+	[Vehicle Type,Cargo Type,gasoline vehicle,biofuel gasoline tf]*(Transportation Fuel Pollutant Emissions Intensities before Fuel Economy Adjustment
+	[Vehicle Type,CO2,petroleum gasoline tf]-Transportation Fuel Pollutant Emissions Intensities before Fuel Economy Adjustment
+	[Vehicle Type,CO2,biofuel gasoline tf]) ~~|
+Max Emissions Reductions Achievable by Vehicle Technology[Vehicle Type,Cargo Type,diesel vehicle\
+		]=
+	Last Year Transportation Sector Fuel Used[Vehicle Type,Cargo Type,diesel vehicle,biofuel diesel tf\
+		]*Percent Each Fuel Type Can be Increased by Vehicle Technology
+	[Vehicle Type,Cargo Type,diesel vehicle,biofuel diesel tf]*(Transportation Fuel Pollutant Emissions Intensities before Fuel Economy Adjustment
+	[Vehicle Type,CO2,petroleum diesel tf]-Transportation Fuel Pollutant Emissions Intensities before Fuel Economy Adjustment
+	[Vehicle Type,CO2,biofuel diesel tf]) ~~|
+Max Emissions Reductions Achievable by Vehicle Technology[Vehicle Type,Cargo Type,battery electric vehicle\
+		]=
+	Max Number of New Vehicles by Vehicle Technology[Vehicle Type,Cargo Type,battery electric vehicle\
+		]*(LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles
+	[Vehicle Type,Cargo Type,gasoline vehicle]-LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles\
+		[Vehicle Type
+	,Cargo Type,battery electric vehicle])*Grams per Metric Ton Pollutant ~~|
+Max Emissions Reductions Achievable by Vehicle Technology[Vehicle Type,Cargo Type,natural gas vehicle\
+		]=
+	Max Number of New Vehicles by Vehicle Technology[Vehicle Type,Cargo Type,natural gas vehicle\
+		]*(LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles
+	[Vehicle Type,Cargo Type,gasoline vehicle]-LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles\
+		[Vehicle Type
+	,Cargo Type,natural gas vehicle])*Grams per Metric Ton Pollutant ~~|
+Max Emissions Reductions Achievable by Vehicle Technology[Vehicle Type,Cargo Type,plugin hybrid vehicle\
+		]=
+	Max Number of New Vehicles by Vehicle Technology[Vehicle Type,Cargo Type,plugin hybrid vehicle\
+		]*(LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles
+	[Vehicle Type,Cargo Type,gasoline vehicle]-LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles\
+		[Vehicle Type
+	,Cargo Type,plugin hybrid vehicle])*Grams per Metric Ton Pollutant ~~|
+Max Emissions Reductions Achievable by Vehicle Technology[Vehicle Type,Cargo Type,LPG vehicle\
+		]=
+	Max Number of New Vehicles by Vehicle Technology[Vehicle Type,Cargo Type,LPG vehicle\
+		]*(LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles
+	[Vehicle Type,Cargo Type,gasoline vehicle]-LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles\
+		[Vehicle Type
+	,Cargo Type,LPG vehicle])*Grams per Metric Ton Pollutant ~~|
+Max Emissions Reductions Achievable by Vehicle Technology[Vehicle Type,Cargo Type,hydrogen vehicle\
+		]=
+	Max Number of New Vehicles by Vehicle Technology[Vehicle Type,Cargo Type,hydrogen vehicle\
+		]*(LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles
+	[Vehicle Type,Cargo Type,gasoline vehicle]-LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles\
+		[Vehicle Type
+	,Cargo Type,hydrogen vehicle])*Grams per Metric Ton Pollutant
+	~	
+	~		|
+
+LCFS Logit Shareweights[Vehicle Type, Cargo Type, Vehicle Technology] :EXCEPT:             \
+		[aircraft, Cargo Type, Vehicle Technology
+],[rail, Cargo Type, Vehicle Technology],[ships,Cargo Type,Vehicle Technology],[motorbikes\
+		, Cargo Type, Vehicle Technology
+]=
+	IF THEN ELSE(LCFS Carbon Credit Prices[Vehicle Type,Cargo Type,Vehicle Technology]<0\
+		,0,MIN(1,ZIDZ(Max Emissions Reductions Achievable by Vehicle Technology[Vehicle Type\
+		,Cargo Type,Vehicle Technology],LCFS Required Emissions Reductions))) ~~|
+LCFS Logit Shareweights[aircraft, Cargo Type, Vehicle Technology]=
+	0 ~~|
+LCFS Logit Shareweights[rail, Cargo Type, Vehicle Technology]=
+	0 ~~|
+LCFS Logit Shareweights[ships, Cargo Type, Vehicle Technology]=
+	0 ~~|
+LCFS Logit Shareweights[motorbikes, Cargo Type, Vehicle Technology]=
+	0
+	~	
+	~		|
+
+Max Number of New Vehicles by Vehicle Technology[Vehicle Type,Cargo Type,Vehicle Technology\
+		]=
+	TTS Transportation Technology Shareweights[Vehicle Type,Cargo Type,Vehicle Technology\
+		]*New Vehicles Demanded[Vehicle Type,Cargo Type]
+	~	
+	~		|
+
+Percent Each Fuel Type Can be Increased by Vehicle Technology[Vehicle Type,Cargo Type\
+		,Vehicle Technology,Transportation Fuel]=
+	MAX(0,MPoEFUbVT Max Perc of Each Fuel Usable by Vehicle Technology[Vehicle Type,Cargo Type\
+		,Vehicle Technology,Transportation Fuel]-BPoEFUbVT BAU Perc of Each Fuel Used by Veh Technology\
+		[Vehicle Type,Cargo Type,Vehicle Technology,Transportation Fuel])
+	~	
+	~		|
+
+LCFSLE LCFS Logit Exponent=
+	-3
+	~	
+	~		|
+
+LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles[Vehicle Type,Cargo Type\
+		,Vehicle Technology]=
+	SUM(ZIDZ(Average Annual Dist Traveled by Vehicle Type[Vehicle Type,Cargo Type,Vehicle Technology\
+		],New Vehicle Fuel Economy[
+	Vehicle Type
+	,Cargo Type,Vehicle Technology])*Transportation Fuel Pollutant Emissions Intensities before Fuel Economy Adjustment\
+		[Vehicle Type
+	,CO2,Transportation Fuel!]/Grams per Metric Ton Pollutant*AVLo Average Vehicle Loading\
+		[Vehicle Type,Cargo Type]*BPoEFUbVT BAU Perc of Each Fuel Used by Veh Technology
+	[Vehicle Type,Cargo Type,Vehicle Technology,Transportation Fuel!]*BPoEFUbVT BAU Perc of Each Fuel Used by Veh Technology\
+		[Vehicle Type,Cargo Type,Vehicle Technology,Transportation Fuel!]
+	
+	+
+	
+	ZIDZ(Average Annual Dist Traveled by Vehicle Type[Vehicle Type,Cargo Type,Vehicle Technology\
+		],New Vehicle Fuel Economy[
+	Vehicle Type
+	,Cargo Type,Vehicle Technology])/Grams per Metric Ton Pollutant*AVLo Average Vehicle Loading\
+		[Vehicle Type,Cargo Type]*BPoEFUbVT BAU Perc of Each Fuel Used by Veh Technology
+	[Vehicle Type,Cargo Type,Vehicle Technology,Transportation Fuel!]*BPoEFUbVT BAU Perc of Each Fuel Used by Veh Technology\
+		[Vehicle Type,Cargo Type,Vehicle Technology,Transportation Fuel!]*Electricity Sector Emissions Rate for Transportation\
+		[Transportation Fuel!])
+	~	metric tons
+	~		|
+
 LCFS Carbon Credit Prices[Vehicle Type,Cargo Type,battery electric vehicle]=
 	ZIDZ(Subsidy Required to Increase Sales Share One Percent[Vehicle Type,Cargo Type,battery electric vehicle\
 		],(LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles[Vehicle Type,\
-		Cargo Type, gasoline vehicle,petroleum gasoline tf]-LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles\
-		[Vehicle Type,Cargo Type,battery electric vehicle,electricity tf])) ~~|
+		Cargo Type, gasoline vehicle]-LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles\
+		[Vehicle Type,Cargo Type,battery electric vehicle])) ~~|
 LCFS Carbon Credit Prices[Vehicle Type,Cargo Type, natural gas vehicle]=
 	ZIDZ(Subsidy Required to Increase Sales Share One Percent[Vehicle Type,Cargo Type,natural gas vehicle\
 		],(LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles[Vehicle Type,\
-		Cargo Type, gasoline vehicle,petroleum gasoline tf]-LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles\
-		[Vehicle Type,Cargo Type,natural gas vehicle,natural gas tf])) ~~|
+		Cargo Type, gasoline vehicle]-LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles\
+		[Vehicle Type,Cargo Type,natural gas vehicle])) ~~|
 LCFS Carbon Credit Prices[Vehicle Type,Cargo Type,plugin hybrid vehicle]=
 	ZIDZ(Subsidy Required to Increase Sales Share One Percent[Vehicle Type,Cargo Type,plugin hybrid vehicle\
 		],(LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles[Vehicle Type,\
-		Cargo Type, gasoline vehicle,petroleum gasoline tf]-LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles\
-		[Vehicle Type,Cargo Type,plugin hybrid vehicle,petroleum gasoline tf])) ~~|
+		Cargo Type, gasoline vehicle]-LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles\
+		[Vehicle Type,Cargo Type,plugin hybrid vehicle])) ~~|
 LCFS Carbon Credit Prices[Vehicle Type,Cargo Type,LPG vehicle]=
 	ZIDZ(Subsidy Required to Increase Sales Share One Percent[Vehicle Type,Cargo Type,LPG vehicle\
 		],(LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles[Vehicle Type,\
-		Cargo Type, gasoline vehicle,petroleum gasoline tf]-LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles\
-		[Vehicle Type,Cargo Type,LPG vehicle,LPG propane or butane tf])) ~~|
+		Cargo Type, gasoline vehicle]-LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles\
+		[Vehicle Type,Cargo Type,LPG vehicle])) ~~|
 LCFS Carbon Credit Prices[Vehicle Type,Cargo Type,hydrogen vehicle]=
 	ZIDZ(Subsidy Required to Increase Sales Share One Percent[Vehicle Type,Cargo Type,hydrogen vehicle\
 		],(LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles[Vehicle Type,\
-		Cargo Type, gasoline vehicle,petroleum gasoline tf]-LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles\
-		[Vehicle Type,Cargo Type,hydrogen vehicle,hydrogen tf])) ~~|
+		Cargo Type, gasoline vehicle]-LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles\
+		[Vehicle Type,Cargo Type,hydrogen vehicle])) ~~|
 LCFS Carbon Credit Prices[Vehicle Type,Cargo Type,gasoline vehicle]=
 	ZIDZ((Transportation Fuel Cost per Unit Energy[biofuel gasoline tf]-Transportation Fuel Cost per Unit Energy\
 		[petroleum gasoline tf
@@ -40,6 +197,113 @@ LCFS Carbon Credit Prices[Vehicle Type,Cargo Type,diesel vehicle]=
 	]-Transportation Fuel Pollutant Emissions Intensities before Fuel Economy Adjustment\
 		[Vehicle Type,CO2,biofuel diesel tf
 	]))*Grams per Metric Ton Pollutant
+	~	
+	~		|
+
+Building Components Energy Use[Building Type,Building Fuel,Building Component] :EXCEPT:\
+		   [commercial,Building Fuel,Building Component]=
+	(Components Energy Use after Retrofitting Preexisting Buildings[Building Type,Building Fuel\
+		,Building Component]
+	  + Correction for Difference in Input vs Calculated BAU Components Energy Use[Building Type\
+		,Building Fuel,Building Component])
+	* (1 + Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment[residential buildings sector\
+		]) ~~|
+Building Components Energy Use[commercial,Building Fuel,Building Component]=
+	(Components Energy Use after Retrofitting Preexisting Buildings[commercial,Building Fuel\
+		,Building Component]
+	  + Correction for Difference in Input vs Calculated BAU Components Energy Use[commercial\
+		,Building Fuel,Building Component])
+	* (1 + Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment[commercial buildings sector\
+		])
+	~	BTU
+	~		|
+
+CO2 Emissions Intensity by Fuel for All Fuels[All Fuels] :EXCEPT:     [hard coal],[natural gas\
+		],[biomass],[petroleum gasoline
+],[petroleum diesel],[biofuel gasoline],[biofuel diesel],[jet fuel or kerosene],[lignite\
+		],[crude oil],[heavy or residual fuel oil
+],[LPG propane or butane],[municipal solid waste]=
+	0 ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[hard coal]=
+	Electricity Fuel Pollutant Emissions Intensities This Year[CO2,hard coal es] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[natural gas]=
+	Electricity Fuel Pollutant Emissions Intensities This Year[CO2,natural gas nonpeaker es\
+		] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[biomass]=
+	Electricity Fuel Pollutant Emissions Intensities This Year[CO2,biomass es] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[petroleum gasoline]=
+	Transportation Fuel Pollutant Emissions Intensities This Year[LDVs,CO2,petroleum gasoline tf\
+		] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[petroleum diesel]=
+	Transportation Fuel Pollutant Emissions Intensities This Year[HDVs,CO2,petroleum diesel tf\
+		] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[biofuel gasoline]=
+	Transportation Fuel Pollutant Emissions Intensities This Year[LDVs,CO2,biofuel gasoline tf\
+		] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[biofuel diesel]=
+	Transportation Fuel Pollutant Emissions Intensities This Year[HDVs,CO2,biofuel diesel tf\
+		] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[jet fuel or kerosene]=
+	Transportation Fuel Pollutant Emissions Intensities This Year[aircraft,CO2,jet fuel tf\
+		] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[lignite]=
+	Electricity Fuel Pollutant Emissions Intensities This Year[CO2,lignite es] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[crude oil]=
+	Industrial Fuel Pollutant Emissions Intensities This Year[refined petroleum and coke 19\
+		,CO2,crude oil if] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[heavy or residual fuel oil]=
+	Industrial Fuel Pollutant Emissions Intensities This Year[chemicals 20,CO2,heavy or residual fuel oil if\
+		] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[LPG propane or butane]=
+	Industrial Fuel Pollutant Emissions Intensities This Year[chemicals 20,CO2,LPG propane or butane if\
+		] ~~|
+CO2 Emissions Intensity by Fuel for All Fuels[municipal solid waste]=
+	Electricity Fuel Pollutant Emissions Intensities This Year[CO2,municipal solid waste es\
+		]
+	~	g pollutant/BTU
+	~		|
+
+BAU Building Components Energy Use[Building Type,Building Fuel,Building Component] :EXCEPT:\
+		  [commercial,Building Fuel,Building Component]=
+	(BAU Components Energy Use Before Correction Factor[Building Type,Building Fuel,Building Component\
+		]
+	  + BAU Correction for Difference in Input vs Calculated BAU Components Energy Use[Building Type\
+		,Building Fuel,Building Component])
+	* (1 + Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment[residential buildings sector\
+		]) ~~|
+BAU Building Components Energy Use[commercial,Building Fuel,Building Component]=
+	(BAU Components Energy Use Before Correction Factor[commercial,Building Fuel,Building Component\
+		]
+	  + BAU Correction for Difference in Input vs Calculated BAU Components Energy Use[commercial\
+		,Building Fuel,Building Component])
+	* (1 + Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment[commercial buildings sector\
+		])
+	~	BTU
+	~		|
+
+Fraction of Buildings Owned by Entity after Allocation to Energy Supplier Entities[Cash Flow Entity\
+		,Building Type] :EXCEPT:   [nonenergy industries,commercial],[energy supplier cash flow entity\
+		,commercial]=
+	FoBObE Fraction of Buildings Owned by Entity[Cash Flow Entity,Building Type] ~~|
+Fraction of Buildings Owned by Entity after Allocation to Energy Supplier Entities[nonenergy industries\
+		,commercial]=
+	FoBObE Fraction of Buildings Owned by Entity[nonenergy industries,commercial]
+	* (1 - SUM(Share of Output by Energy Supplier Cash Flow Entity[energy supplier cash flow entity\
+		!])) ~~|
+Fraction of Buildings Owned by Entity after Allocation to Energy Supplier Entities[energy supplier cash flow entity\
+		,commercial]=
+	FoBObE Fraction of Buildings Owned by Entity[nonenergy industries,commercial]
+	* Share of Output by Energy Supplier Cash Flow Entity[energy supplier cash flow entity\
+		]
+	~	Dmnl
+	~		|
+
+Electricity Sector Emissions Rate for Transportation[Transportation Fuel] :EXCEPT: [electricity tf\
+		]=
+	0 ~~|
+Electricity Sector Emissions Rate for Transportation[electricity tf]=
+	SUM(Electricity Sector Pollutant Emissions[CO2,Electricity Source!])/SUM(Electricity Generation by Type\
+		[Electricity Source!,Power Plant Quality!])*MWh per BTU
 	~	
 	~		|
 
@@ -286,17 +550,6 @@ Percent of Payroll Tax Allocation by ISIC Code[Private Business ISIC Code]=
 	BECbIC BAU Employee Compensation by ISIC Code[Private Business ISIC Code]
 	/ SUM(BECbIC BAU Employee Compensation by ISIC Code[Private Business ISIC Code!])
 	~	Dmnl
-	~		|
-
-LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles[Vehicle Type,Cargo Type\
-		,Vehicle Technology,Transportation Fuel]=
-	ZIDZ(Average Annual Dist Traveled by Vehicle Type[Vehicle Type,Cargo Type,Vehicle Technology\
-		],New Vehicle Fuel Economy[Vehicle Type
-	,Cargo Type,Vehicle Technology])*Transportation Fuel Pollutant Emissions Intensities before Fuel Economy Adjustment\
-		[Vehicle Type
-	,CO2,Transportation Fuel]/Grams per Metric Ton Pollutant*AVLo Average Vehicle Loading\
-		[Vehicle Type,Cargo Type]
-	~	metric tons
 	~		|
 
 BAU Construction Cost per Unit Capacity before Construction Subsidies[Electricity Source\
@@ -2513,24 +2766,6 @@ BAU BRAaCTSC BAU Range Anxiety and Charging Time Shadow Cost:INTERPOLATE::=
 	   'B2'
 	)
 	~	$/vehicle
-	~		|
-
-BAU Building Components Energy Use[Building Type,Building Fuel,Building Component] :EXCEPT:\
-		  [commercial,Building Fuel,Building Component]=
-	(BAU Components Energy Use Before Correction Factor[Building Type,Building Fuel,Building Component\
-		]
-	  + BAU Correction for Difference in Input vs Calculated BAU Components Energy Use[Building Type\
-		,Building Fuel,Building Component])
-	* (1 + Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment[residential buildings sector\
-		]) ~~|
-BAU Building Components Energy Use[commercial,Building Fuel,Building Component]=
-	(BAU Components Energy Use Before Correction Factor[commercial,Building Fuel,Building Component\
-		]
-	  + BAU Correction for Difference in Input vs Calculated BAU Components Energy Use[commercial\
-		,Building Fuel,Building Component])
-	* (1 + Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment[commercial buildings sector\
-		])
-	~	BTU
 	~		|
 
 BAU Buildings Average Hourly Electricity Demand[Building Type,Building Component]=
@@ -8979,24 +9214,6 @@ Building Component Rebate Amount Paid by Entity[Building Type,Building Component
 	~	$
 	~		|
 
-Building Components Energy Use[Building Type,Building Fuel,Building Component] :EXCEPT:\
-		   [commercial,Building Fuel,Building Component]=
-	(Components Energy Use after Retrofitting Preexisting Buildings[Building Type,Building Fuel\
-		,Building Component]
-	  + Correction for Difference in Input vs Calculated BAU Components Energy Use[Building Type\
-		,Building Fuel,Building Component])
-	* (1 + Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment[residential buildings sector\
-		]) ~~|
-Building Components Energy Use[commercial,Building Fuel,Building Component]=
-	(Components Energy Use after Retrofitting Preexisting Buildings[commercial,Building Fuel\
-		,Building Component]
-	  + Correction for Difference in Input vs Calculated BAU Components Energy Use[commercial\
-		,Building Fuel,Building Component])
-	* (1 + Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment[commercial buildings sector\
-		])
-	~	BTU
-	~		|
-
 Building Fuel:
 	electricity bf,
 	hard coal bf,
@@ -11881,51 +12098,6 @@ CO2 Captured via DAC in Grams=
 	* Grams per Metric Ton CO2e
 	* Grams Pollutant per Gram CO2e Unit Converter
 	~	g pollutant
-	~		|
-
-CO2 Emissions Intensity by Fuel for All Fuels[All Fuels] :EXCEPT:     [hard coal],[natural gas\
-		],[biomass],[petroleum gasoline
-],[petroleum diesel],[biofuel gasoline],[biofuel diesel],[jet fuel or kerosene],[lignite\
-		],[crude oil],[heavy or residual fuel oil
-],[LPG propane or butane],[municipal solid waste]=
-	0 ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[hard coal]=
-	Electricity Fuel Pollutant Emissions Intensities This Year[CO2,hard coal es] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[natural gas]=
-	Electricity Fuel Pollutant Emissions Intensities This Year[CO2,natural gas nonpeaker es\
-		] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[biomass]=
-	Electricity Fuel Pollutant Emissions Intensities This Year[CO2,biomass es] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[petroleum gasoline]=
-	Transportation Fuel Pollutant Emissions Intensities This Year[LDVs,CO2,petroleum gasoline tf\
-		] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[petroleum diesel]=
-	Transportation Fuel Pollutant Emissions Intensities This Year[HDVs,CO2,petroleum diesel tf\
-		] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[biofuel gasoline]=
-	Transportation Fuel Pollutant Emissions Intensities This Year[LDVs,CO2,biofuel gasoline tf\
-		] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[biofuel diesel]=
-	Transportation Fuel Pollutant Emissions Intensities This Year[HDVs,CO2,biofuel diesel tf\
-		] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[jet fuel or kerosene]=
-	Transportation Fuel Pollutant Emissions Intensities This Year[aircraft,CO2,jet fuel tf\
-		] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[lignite]=
-	Electricity Fuel Pollutant Emissions Intensities This Year[CO2,lignite es] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[crude oil]=
-	Industrial Fuel Pollutant Emissions Intensities This Year[refined petroleum and coke 19\
-		,CO2,crude oil if] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[heavy or residual fuel oil]=
-	Industrial Fuel Pollutant Emissions Intensities This Year[chemicals 20,CO2,heavy or residual fuel oil if\
-		] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[LPG propane or butane]=
-	Industrial Fuel Pollutant Emissions Intensities This Year[chemicals 20,CO2,LPG propane or butane if\
-		] ~~|
-CO2 Emissions Intensity by Fuel for All Fuels[municipal solid waste]=
-	Electricity Fuel Pollutant Emissions Intensities This Year[CO2,municipal solid waste es\
-		]
-	~	g pollutant/BTU
 	~		|
 
 CO2 Sequestered Outside Modeled Region Affecting Learning=
@@ -14959,23 +15131,6 @@ Fraction of Avoided Deforestation Achieved=
 Fraction of Avoided Deforestation Achieved This Year=
 	Fraction of Avoided Deforestation Achieved
 	* Selected Policy Implementation Schedule[land avoid deforestation X]
-	~	Dmnl
-	~		|
-
-Fraction of Buildings Owned by Entity after Allocation to Energy Supplier Entities[Cash Flow Entity\
-		,Building Type] :EXCEPT:   [nonenergy industries,commercial],[energy supplier cash flow entity\
-		,commercial]=
-	FoBObE Fraction of Buildings Owned by Entity[Cash Flow Entity,Building Type] ~~|
-Fraction of Buildings Owned by Entity after Allocation to Energy Supplier Entities[nonenergy industries\
-		,commercial]=
-	FoBObE Fraction of Buildings Owned by Entity[nonenergy industries,commercial]
-	* (1 - SUM(Share of Output by Energy Supplier Cash Flow Entity[energy supplier cash flow entity\
-		!])) ~~|
-Fraction of Buildings Owned by Entity after Allocation to Energy Supplier Entities[energy supplier cash flow entity\
-		,commercial]=
-	FoBObE Fraction of Buildings Owned by Entity[nonenergy industries,commercial]
-	* Share of Output by Energy Supplier Cash Flow Entity[energy supplier cash flow entity\
-		]
 	~	Dmnl
 	~		|
 
@@ -29473,661 +29628,710 @@ Other Industry Sector Policies
 V300  Do not put anything below this section - it will be ignored
 *Transportation - Main
 $192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,100,0
-10,1,Transportation Pollutant Emissions Disaggregated,5327,-145,79,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,2,Perc Change in New LDV Fuel Economy due to Feebate,-6733,-133,80,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,3,Fuel Cost per Unit Cargo Dist,-9485,-273,68,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,4,EoDfVUwFC Elasticity of Demand for Vehicle Use wrt Fuel Cost,-9256,143,88,31,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||255-0-0,0,0,0,0,0,0
-10,5,EoNVFEwFC Elasticity of New Veh Fuel Economy wrt Fuel Cost,-7276,-273,84,31,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,6,EoFoNVFE Effect of Feebate on New Veh Fuel Economy,-6452,-273,75,33,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,7,6,2,0,0,0,0,0,64,0,-1--1--1,,1|(-6588,-204)|
-10,8,AVL Avg Vehicle Lifetime,-4493,-549,61,24,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,9,BCDTRtSY BAU Cargo Dist Transported Relative to Start Year,-9724,396,75,29,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,10,Perc Change in Fuel Cost per Unit Cargo Dist,-9021,3,92,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,11,New Vehicle Fuel Economy,-6172,-8,65,24,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,12,Transportation Electricity Demand by Vehicle Type,5327,-9,92,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,13,Transportation Sector Electricity Demand,5620,-9,80,24,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-10,14,Transportation Sector Pollutant Emissions,5620,-145,80,24,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-1,15,1,14,0,0,0,0,0,64,0,-1--1--1,,1|(5465,-145)|
-10,16,BNVFE BAU New Vehicle Fuel Economy,-7276,-8,72,19,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-12,17,0,-8129,316,300,33,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,1,Transportation Pollutant Emissions Disaggregated,5516,-644,79,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,2,Perc Change in New LDV Fuel Economy due to Feebate,-6544,-632,80,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,3,Fuel Cost per Unit Cargo Dist,-9296,-772,68,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4,EoDfVUwFC Elasticity of Demand for Vehicle Use wrt Fuel Cost,-9071,-356,88,31,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||255-0-0,0,0,0,0,0,0
+10,5,EoNVFEwFC Elasticity of New Veh Fuel Economy wrt Fuel Cost,-7091,-772,84,31,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,6,EoFoNVFE Effect of Feebate on New Veh Fuel Economy,-6267,-772,75,33,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,7,6,2,0,0,0,0,0,64,0,-1--1--1,,1|(-6400,-705)|
+10,8,AVL Avg Vehicle Lifetime,-4304,-1048,61,24,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,9,BCDTRtSY BAU Cargo Dist Transported Relative to Start Year,-9539,-103,75,29,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,10,Perc Change in Fuel Cost per Unit Cargo Dist,-8832,-496,92,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,11,New Vehicle Fuel Economy,-5987,-507,65,24,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,12,Transportation Electricity Demand by Vehicle Type,5516,-508,92,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,13,Transportation Sector Electricity Demand,5805,-508,80,24,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+10,14,Transportation Sector Pollutant Emissions,5805,-644,80,24,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+1,15,1,14,0,0,0,0,0,64,0,-1--1--1,,1|(5653,-644)|
+10,16,BNVFE BAU New Vehicle Fuel Economy,-7091,-507,72,19,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+12,17,0,-7940,-183,300,33,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 The Transportation section of the model uses the unit "thing" in a number of places.  When the "Cargo Type" subscript has the value "passenger," a thing is a passenger.  When the "Cargo Type" subscript has the value "freight," a thing is a freight ton.
-12,18,0,-8120,403,289,16,8,135,0,20,-1,0,0,0,-1--1--1,255-255-128,|12|B|0-0-0,0,0,0,0,0,0
+12,18,0,-7935,-96,289,16,8,135,0,20,-1,0,0,0,-1--1--1,255-255-128,|12|B|0-0-0,0,0,0,0,0,0
 Subscript Terminology Clarification
-12,19,0,-8120,431,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
+12,19,0,-7935,-68,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
 Passenger LDVs = most LDVs
-12,20,0,-8120,460,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
+12,20,0,-7935,-39,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
 Freight LDVs = commercial light trucks
-12,21,0,-8120,491,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
+12,21,0,-7935,-8,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
 Passenger HDVs = buses (school, transit, and intercity)
-12,22,0,-8120,516,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
+12,22,0,-7935,17,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
 Freight HDVs = all other HDVs
-12,23,0,-8120,547,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
+12,23,0,-7935,48,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
 Passenger aircraft = commercial air travel for people (not general aviation)
-12,24,0,-8120,576,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
+12,24,0,-7935,77,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
 Freight aircraft = other commercial flights (not general aviation)
-12,25,0,-8120,607,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
+12,25,0,-7935,108,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
 Passenger rail = intercity, transit, and commuter rail
-12,26,0,-8120,635,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
+12,26,0,-7935,136,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
 Freight rail = all other rail
-12,27,0,-8120,664,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
+12,27,0,-7935,165,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
 Passenger ships = commercial ferries (recreational boats in U.S. model)
-12,28,0,-8120,692,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
+12,28,0,-7935,193,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
 Freight ships = cargo ships
-12,29,0,-1108,636,415,260,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,29,0,-923,137,415,260,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_CO2_Emissions
-12,30,0,-8424,375,8,8,2,131,0,4,-1,0,0,0,0-0-0,0-0-0,|12||0-0-0,0,0,0,0,0,0
-12,31,0,-8424,768,8,8,2,131,0,4,-1,0,0,0,0-0-0,0-0-0,|12||0-0-0,0,0,0,0,0,0
-12,32,0,-7821,375,8,8,2,131,0,4,-1,0,0,0,0-0-0,0-0-0,|12||0-0-0,0,0,0,0,0,0
-12,33,0,-7821,768,8,8,2,131,0,4,-1,0,0,0,0-0-0,0-0-0,|12||0-0-0,0,0,0,0,0,0
-1,34,31,33,32,0,0,13,3,64,0,0-0-0,|12||0-0-0,1|(-8123,768)|
-1,35,33,32,32,0,0,13,3,64,0,0-0-0,|12||0-0-0,1|(-7821,571)|
-1,36,32,30,32,0,0,13,3,64,0,0-0-0,|12||0-0-0,1|(-8123,375)|
-1,37,31,30,32,0,0,13,3,64,0,0-0-0,|12||0-0-0,1|(-8424,571)|
-10,38,Transportation Sector Fuel Used,4359,96,56,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-10,39,PTFURfE Percentage Transportation Fuel Use Reduction for Electricity,1352,-37,88,31,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,40,12,13,0,0,0,0,0,64,0,-1--1--1,,1|(5471,-9)|
-12,41,0,-8120,864,268,20,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+12,30,0,-8239,-124,8,8,2,131,0,4,-1,0,0,0,0-0-0,0-0-0,|12||0-0-0,0,0,0,0,0,0
+12,31,0,-8239,269,8,8,2,131,0,4,-1,0,0,0,0-0-0,0-0-0,|12||0-0-0,0,0,0,0,0,0
+12,32,0,-7632,-124,8,8,2,131,0,4,-1,0,0,0,0-0-0,0-0-0,|12||0-0-0,0,0,0,0,0,0
+12,33,0,-7632,269,8,8,2,131,0,4,-1,0,0,0,0-0-0,0-0-0,|12||0-0-0,0,0,0,0,0,0
+1,34,31,33,32,0,0,13,3,64,0,0-0-0,|12||0-0-0,1|(-7935,269)|
+1,35,33,32,32,0,0,13,3,64,0,0-0-0,|12||0-0-0,1|(-7632,72)|
+1,36,32,30,32,0,0,13,3,64,0,0-0-0,|12||0-0-0,1|(-7935,-124)|
+1,37,31,30,32,0,0,13,3,64,0,0-0-0,|12||0-0-0,1|(-8239,72)|
+10,38,Transportation Sector Fuel Used,4548,-403,56,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+10,39,PTFURfE Percentage Transportation Fuel Use Reduction for Electricity,1537,-536,88,31,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,40,12,13,0,0,0,0,0,64,0,-1--1--1,,1|(5659,-508)|
+12,41,0,-7935,365,268,20,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 The following modes are usually excluded from the EPS: general aviation, small electric craft (scooters, golf carts, etc.)
-12,42,0,-8120,720,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
+12,42,0,-7935,221,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
 Passenger motorbikes = registered motorcycles
-12,43,0,-8120,751,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
+12,43,0,-7935,252,289,16,8,135,0,0,-1,0,0,0,0,0,0,0,0,0
 Freight motorbikes = three-wheeled vehicles (in some country deployments)
-10,44,LDVs Feebate Rate This Year,-6733,-273,59,24,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-1,45,44,2,0,0,0,0,0,64,0,-1--1--1,,1|(-6733,-212)|
-10,46,Percentage Additional Improvement of Fuel Economy Std This Year,-6452,-133,83,27,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-10,47,RnD Transportation Fuel Use Perc Reduction This Year,-6172,-133,72,25,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-10,48,MWh per BTU,5327,115,37,23,8,131,0,20,-1,0,0,0,-1--1--1,192-255-192,|12|I|0-0-0,0,0,0,0,0,0
-1,49,48,12,0,0,0,0,0,128,0,-1--1--1,,1|(5327,60)|
-10,50,BAU Fuel Cost per Unit Cargo Dist,-9021,-273,63,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,51,BAU Transportation Fuel Cost per Unit Energy,-9021,-552,93,24,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,52,Transportation Fuel Cost per Unit Energy,-9485,-552,79,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,53,52,218,0,0,0,0,0,128,0,-1--1--1,,1|(-9485,-499)|
-10,54,Last Year Fleet Avg Fuel Economy,-9724,-273,65,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,55,54,3,0,0,0,0,0,128,0,-1--1--1,,1|(-9612,-273)|
-10,56,Fleet Avg Fuel Economy,-45,-197,47,19,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,57,Cargo Dist Transported after Mode Shifting,-9256,268,76,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,58,Cargo Dist Transported Allocated by Last Year Vehicle Technologies,-9021,268,76,28,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,59,57,58,0,0,0,0,0,128,0,-1--1--1,,1|(-9144,268)|
-1,60,10,369,0,0,0,0,0,128,0,-1--1--1,,1|(-9021,65)|
-1,61,4,369,0,0,0,0,0,128,0,-1--1--1,,1|(-9153,143)|
-10,62,Cargo Dist Transported Allocated by Last Year Vehicle Technologies,-7941,-569,84,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,63,New Cargo Dist Transported Allocated by Last Year Vehicle Technologies,-7941,-445,95,29,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
-1,64,62,63,0,0,0,0,0,128,0,-1--1--1,,1|(-7941,-512)|
-10,65,BAU Transportation Fuel Cost per Unit Energy,-7276,-424,93,24,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,66,Transportation Fuel Cost per Unit Energy,-7008,-552,79,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,67,Perc Change in Transportation Fuel Cost per Unit Energy,-7008,-424,69,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,68,65,67,0,0,0,0,0,128,0,-1--1--1,,1|(-7139,-424)|
-1,69,66,67,0,0,0,0,0,128,0,-1--1--1,,1|(-7008,-500)|
-10,70,Perc Change in Fuel Economy due to Fuel Price Effects,-7008,-273,104,25,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,71,New Vehicle Fuel Economy after Fuel Price Effects,-7008,-8,69,27,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,72,16,71,0,0,0,0,0,128,0,-1--1--1,,1|(-7149,-8)|
-1,73,67,70,0,0,0,0,0,128,0,-1--1--1,,1|(-7008,-353)|
-1,74,5,70,0,0,0,0,0,128,0,-1--1--1,,1|(-7161,-273)|
-1,75,70,197,0,0,0,0,0,128,0,-1--1--1,,1|(-7008,-211)|
-10,76,New Vehicle Fuel Economy after Feebate,-6733,-8,76,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,77,71,76,0,0,0,0,0,128,0,-1--1--1,,1|(-6880,-8)|
-1,78,2,76,0,0,0,0,0,128,0,-1--1--1,,1|(-6733,-72)|
-10,79,New Vehicle Fuel Economy after Standards,-6452,-8,81,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,80,46,79,0,0,0,0,0,128,0,-1--1--1,,1|(-6452,-73)|
-1,81,76,79,0,0,0,0,0,128,0,-1--1--1,,1|(-6603,-8)|
-1,82,47,11,0,0,0,0,0,128,0,-1--1--1,,1|(-6172,-77)|
-1,83,79,11,0,0,0,0,0,128,0,-1--1--1,,1|(-6313,-8)|
-12,84,0,-9385,-673,928,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,44,LDVs Feebate Rate This Year,-6544,-772,59,24,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+1,45,44,2,0,0,0,0,0,64,0,-1--1--1,,1|(-6544,-713)|
+10,46,Percentage Additional Improvement of Fuel Economy Std This Year,-6267,-632,83,27,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+10,47,RnD Transportation Fuel Use Perc Reduction This Year,-5987,-632,72,25,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+10,48,MWh per BTU,5516,-384,37,23,8,131,0,20,-1,0,0,0,-1--1--1,192-255-192,|12|I|0-0-0,0,0,0,0,0,0
+1,49,48,12,0,0,0,0,0,128,0,-1--1--1,,1|(5516,-440)|
+10,50,BAU Fuel Cost per Unit Cargo Dist,-8832,-772,63,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,51,BAU Transportation Fuel Cost per Unit Energy,-8832,-1051,93,24,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,52,Transportation Fuel Cost per Unit Energy,-9296,-1051,79,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,53,52,218,0,0,0,0,0,128,0,-1--1--1,,1|(-9296,-996)|
+10,54,Last Year Fleet Avg Fuel Economy,-9539,-772,65,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,55,54,3,0,0,0,0,0,128,0,-1--1--1,,1|(-9424,-772)|
+10,56,Fleet Avg Fuel Economy,144,-696,47,19,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,57,Cargo Dist Transported after Mode Shifting,-9071,-231,76,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,58,Cargo Dist Transported Allocated by Last Year Vehicle Technologies,-8832,-231,76,28,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,59,57,58,0,0,0,0,0,128,0,-1--1--1,,1|(-8956,-231)|
+1,60,10,369,0,0,0,0,0,128,0,-1--1--1,,1|(-8832,-435)|
+1,61,4,369,0,0,0,0,0,128,0,-1--1--1,,1|(-8965,-356)|
+10,62,Cargo Dist Transported Allocated by Last Year Vehicle Technologies,-7752,-1068,84,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,63,New Cargo Dist Transported Allocated by Last Year Vehicle Technologies,-7752,-944,95,29,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+1,64,62,63,0,0,0,0,0,128,0,-1--1--1,,1|(-7752,-1015)|
+10,65,BAU Transportation Fuel Cost per Unit Energy,-7091,-923,93,24,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,66,Transportation Fuel Cost per Unit Energy,-6823,-1051,79,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,67,Perc Change in Transportation Fuel Cost per Unit Energy,-6823,-923,69,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,68,65,67,0,0,0,0,0,128,0,-1--1--1,,1|(-6952,-923)|
+1,69,66,67,0,0,0,0,0,128,0,-1--1--1,,1|(-6823,-999)|
+10,70,Perc Change in Fuel Economy due to Fuel Price Effects,-6823,-772,104,25,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,71,New Vehicle Fuel Economy after Fuel Price Effects,-6823,-507,69,27,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,72,16,71,0,0,0,0,0,128,0,-1--1--1,,1|(-6960,-507)|
+1,73,67,70,0,0,0,0,0,128,0,-1--1--1,,1|(-6823,-853)|
+1,74,5,70,0,0,0,0,0,128,0,-1--1--1,,1|(-6972,-772)|
+1,75,70,197,0,0,0,0,0,128,0,-1--1--1,,1|(-6823,-712)|
+10,76,New Vehicle Fuel Economy after Feebate,-6544,-507,76,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,77,71,76,0,0,0,0,0,128,0,-1--1--1,,1|(-6692,-507)|
+1,78,2,76,0,0,0,0,0,128,0,-1--1--1,,1|(-6544,-572)|
+10,79,New Vehicle Fuel Economy after Standards,-6267,-507,81,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,80,46,79,0,0,0,0,0,128,0,-1--1--1,,1|(-6267,-573)|
+1,81,76,79,0,0,0,0,0,128,0,-1--1--1,,1|(-6415,-507)|
+1,82,47,11,0,0,0,0,0,128,0,-1--1--1,,1|(-5987,-577)|
+1,83,79,11,0,0,0,0,0,128,0,-1--1--1,,1|(-6124,-507)|
+12,84,0,-9196,-1172,928,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Cargo Distance Transported
-12,85,0,-7956,-673,368,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+12,85,0,-7771,-1172,368,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating New Cargo Distance Transported
-12,86,0,-6732,-673,680,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+12,86,0,-6547,-1172,680,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating New Vehicle Fuel Economy
-12,87,0,-4924,-673,956,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+12,87,0,-4739,-1172,956,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating NPV of Lifetime Vehicle Cost
-10,88,New Vehicle Fuel Economy,-5472,-424,64,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,89,New Vehicle Fuel Cost per Unit Cargo Dist,-5245,-424,75,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,90,88,89,0,0,0,0,0,128,0,-1--1--1,,1|(-5372,-424)|
-10,91,AVLo Average Vehicle Loading,-4989,-549,57,19,8,2,0,3,-1,0,0,0,128-128-128,192-128-192,|12||128-128-128,0,0,0,0,0,0
-10,92,New Vehicle Fuel Cost per Unit Vehicle Distance,-4989,-424,81,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,93,Annual Fuel Expenditures for a Vehicle Sold This Year,-4729,-424,81,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,94,NPV of Lifetime Annual Expenditures for a Vehicle Sold This Year,-4289,-424,84,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,95,VBDR Vehicle Buyer Discount Rate,-4289,-549,69,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,96,NPV of Lifetime Vehicle Cost,-4289,-168,53,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,97,89,92,0,0,0,0,0,128,0,-1--1--1,,1|(-5127,-424)|
-1,98,92,93,0,0,0,0,0,128,0,-1--1--1,,1|(-4864,-424)|
-1,99,93,94,0,0,0,0,0,128,0,-1--1--1,,1|(-4517,-424)|
-1,100,94,96,0,0,0,0,0,128,0,-1--1--1,,1|(-4289,-296)|
-1,101,91,92,0,0,0,0,0,128,0,-1--1--1,,1|(-4989,-493)|
-1,102,8,94,0,0,0,0,0,128,0,-1--1--1,,1|(-4399,-492)|
-1,103,95,94,0,0,0,0,0,128,0,-1--1--1,,1|(-4289,-496)|
-10,104,New Vehicle Fuel Economy,-5245,208,64,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,105,BNVFE BAU New Vehicle Fuel Economy,-4989,208,77,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,106,Perc Change in New Vehicle Fuel Economy,-4989,76,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,107,EoVPwFE Elasticity of Vehicle Price wrt Fuel Economy,-4989,-168,103,20,8,131,0,4,-1,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,108,New Vehicle Price after Fuel Economy Effects,-4989,-48,77,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,109,New Vehicle Price after RnD,-4732,-48,60,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,110,New Vehicle Price,-4493,-48,59,11,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,111,EV Subsidy Perc,-4493,76,56,11,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,112,107,108,0,0,0,0,0,128,0,-1--1--1,,1|(-4989,-112)|
-1,113,104,106,0,0,0,0,0,128,0,-1--1--1,,1|(-5123,145)|
-1,114,106,108,0,0,0,0,0,128,0,-1--1--1,,1|(-4989,21)|
-1,115,105,106,0,0,0,0,0,128,0,-1--1--1,,1|(-4989,149)|
-1,116,108,109,0,0,0,0,0,128,0,-1--1--1,,1|(-4860,-48)|
-1,117,111,110,0,0,0,0,0,128,0,-1--1--1,,1|(-4493,21)|
-10,118,RnD Transportation Capital Cost Perc Reduction This Year,-4732,-168,76,28,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-1,119,118,109,0,0,0,0,0,128,0,-1--1--1,,1|(-4732,-108)|
-1,120,110,484,0,0,0,0,0,128,0,-1--1--1,,1|(-4396,-48)|
-10,121,BESP BAU EV Subsidy Percentage,-4732,208,63,19,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,122,Additional EV Subsidy Percentage This Year,-4493,208,80,19,8,2,0,5,0,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-1,123,121,111,0,0,0,0,0,128,0,-1--1--1,,1|(-4612,141)|
-1,124,122,111,0,0,0,0,0,128,0,-1--1--1,,1|(-4493,145)|
-12,125,0,-3085,-673,761,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,88,New Vehicle Fuel Economy,-5287,-923,64,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,89,New Vehicle Fuel Cost per Unit Cargo Dist,-5056,-923,75,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,90,88,89,0,0,0,0,0,128,0,-1--1--1,,1|(-5184,-923)|
+10,91,AVLo Average Vehicle Loading,-4800,-1048,57,19,8,2,0,3,-1,0,0,0,128-128-128,192-128-192,|12||128-128-128,0,0,0,0,0,0
+10,92,New Vehicle Fuel Cost per Unit Vehicle Distance,-4800,-923,81,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,93,Annual Fuel Expenditures for a Vehicle Sold This Year,-4540,-923,81,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,94,NPV of Lifetime Annual Expenditures for a Vehicle Sold This Year,-4100,-923,84,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,95,VBDR Vehicle Buyer Discount Rate,-4100,-1048,69,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,96,NPV of Lifetime Vehicle Cost,-4100,-667,53,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,97,89,92,0,0,0,0,0,128,0,-1--1--1,,1|(-4936,-923)|
+1,98,92,93,0,0,0,0,0,128,0,-1--1--1,,1|(-4677,-923)|
+1,99,93,94,0,0,0,0,0,128,0,-1--1--1,,1|(-4328,-923)|
+1,100,94,96,0,0,0,0,0,128,0,-1--1--1,,1|(-4100,-797)|
+1,101,91,92,0,0,0,0,0,128,0,-1--1--1,,1|(-4800,-993)|
+1,102,8,94,0,0,0,0,0,128,0,-1--1--1,,1|(-4208,-992)|
+1,103,95,94,0,0,0,0,0,128,0,-1--1--1,,1|(-4100,-996)|
+10,104,New Vehicle Fuel Economy,-5056,-291,64,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,105,BNVFE BAU New Vehicle Fuel Economy,-4800,-291,77,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,106,Perc Change in New Vehicle Fuel Economy,-4800,-423,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,107,EoVPwFE Elasticity of Vehicle Price wrt Fuel Economy,-4800,-667,103,20,8,131,0,4,-1,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,108,New Vehicle Price after Fuel Economy Effects,-4800,-547,77,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,109,New Vehicle Price after RnD,-4547,-547,60,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,110,New Vehicle Price,-4304,-547,59,11,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,111,EV Subsidy Perc,-4304,-423,56,11,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,112,107,108,0,0,0,0,0,128,0,-1--1--1,,1|(-4800,-613)|
+1,113,104,106,0,0,0,0,0,128,0,-1--1--1,,1|(-4932,-353)|
+1,114,106,108,0,0,0,0,0,128,0,-1--1--1,,1|(-4800,-476)|
+1,115,105,106,0,0,0,0,0,128,0,-1--1--1,,1|(-4800,-348)|
+1,116,108,109,0,0,0,0,0,128,0,-1--1--1,,1|(-4672,-547)|
+1,117,111,110,0,0,0,0,0,128,0,-1--1--1,,1|(-4304,-476)|
+10,118,RnD Transportation Capital Cost Perc Reduction This Year,-4547,-667,76,28,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+1,119,118,109,0,0,0,0,0,128,0,-1--1--1,,1|(-4547,-609)|
+1,120,110,484,0,0,0,0,0,128,0,-1--1--1,,1|(-4209,-547)|
+10,121,BESP BAU EV Subsidy Percentage,-4547,-291,63,19,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,122,Additional EV Subsidy Percentage This Year,-4304,-291,80,19,8,2,0,5,0,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+1,123,121,111,0,0,0,0,0,128,0,-1--1--1,,1|(-4424,-357)|
+1,124,122,111,0,0,0,0,0,128,0,-1--1--1,,1|(-4304,-352)|
+12,125,0,-2896,-1172,761,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Number of New Vehicles
-10,126,AVLo Average Vehicle Loading,-3540,-424,57,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,127,New Vehicle Distance Traveled,-3540,-296,60,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,128,New Vehicles Allocated by Technology,-3112,-296,45,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,129,Minimum Required EV Sales Perc,-2657,76,61,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,130,BMRESP BAU Minimum Required EV Sales Percentage,-2889,76,72,27,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,131,Additional Minimum Required EV Sales Percentage This Year,-2657,208,73,28,8,130,0,5,0,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-10,132,NPV of Lifetime Vehicle Cost,-3112,-168,60,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,133,126,127,0,0,0,0,0,128,0,-1--1--1,,1|(-3540,-367)|
-1,134,127,200,0,0,0,0,0,128,0,-1--1--1,,1|(-3437,-296)|
-1,135,130,129,0,0,0,0,0,128,0,-1--1--1,,1|(-2772,76)|
-1,136,131,129,0,0,0,0,0,128,0,-1--1--1,,1|(-2657,144)|
-12,137,0,-1844,-673,364,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,126,AVLo Average Vehicle Loading,-3355,-923,57,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,127,New Vehicle Distance Traveled,-3355,-795,60,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,128,New Vehicles Allocated by Technology,-2927,-795,45,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,129,Minimum Required EV Sales Perc,-2468,-423,61,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,130,BMRESP BAU Minimum Required EV Sales Percentage,-2700,-423,72,27,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,131,Additional Minimum Required EV Sales Percentage This Year,-2468,-291,73,28,8,130,0,5,0,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+10,132,NPV of Lifetime Vehicle Cost,-2927,-667,60,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,133,126,127,0,0,0,0,0,128,0,-1--1--1,,1|(-3355,-864)|
+1,134,127,200,0,0,0,0,0,128,0,-1--1--1,,1|(-3249,-795)|
+1,135,130,129,0,0,0,0,0,128,0,-1--1--1,,1|(-2585,-423)|
+1,136,131,129,0,0,0,0,0,128,0,-1--1--1,,1|(-2468,-352)|
+12,137,0,-1659,-1172,364,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Tracking Vehicle Fleet
-10,138,Last Year Vehicles,-1860,-424,75,32,3,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-12,139,48,-2152,-424,12,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,140,142,138,4,0,0,22,0,0,0,-1--1--1,,1|(-1987,-424)|
-1,141,142,139,100,0,0,22,0,0,0,-1--1--1,,1|(-2099,-424)|
-11,142,48,-2044,-424,8,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,143,New Vehicles,-2044,-405,56,11,40,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,144,New Vehicles,-2432,-296,45,11,8,3,0,4,-1,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,145,129,496,0,0,0,0,0,128,0,-1--1--1,,1|(-2657,21)|
-12,146,48,-1533,-424,12,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,147,149,146,4,0,0,22,0,0,0,-1--1--1,,1|(-1600,-424)|
-1,148,149,138,100,0,0,22,0,0,0,-1--1--1,,1|(-1728,-424)|
-11,149,48,-1665,-424,8,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,150,Retiring Vehicles,-1665,-405,53,11,40,3,0,4,-1,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,151,SYVbT Start Year Vehicles by Technology,-1860,-304,81,19,8,130,0,3,0,0,0,0,128-128-128,255-128-192,|12||128-128-128,0,0,0,0,0,0
-10,152,New Vehicles After Lifetime,-1860,-133,53,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,153,AVL Avg Vehicle Lifetime,-1665,-133,64,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,154,Vehicles,-1860,-565,28,11,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,155,142,154,0,0,0,0,0,128,0,-1--1--1,,1|(-1963,-484)|
-1,156,149,154,0,0,0,0,0,128,0,-1--1--1,,1|(-1752,-484)|
-1,157,138,154,0,0,0,0,0,128,0,-1--1--1,,1|(-1860,-496)|
-1,158,151,138,0,0,0,0,0,128,1,-1--1--1,,1|(-1860,-348)|
-1,159,151,150,0,0,0,0,0,128,0,-1--1--1,,1|(-1761,-355)|
-1,160,153,150,0,0,0,0,0,128,0,-1--1--1,,1|(-1665,-264)|
-1,161,153,152,0,0,0,0,0,128,0,-1--1--1,,1|(-1761,-133)|
-1,162,143,152,0,0,0,0,0,128,0,-1--1--1,,1|(-1960,-276)|
-1,163,152,150,0,0,0,0,0,128,0,-1--1--1,,1|(-1764,-267)|
-12,164,0,-624,-673,696,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,138,Last Year Vehicles,-1675,-923,75,32,3,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+12,139,48,-1967,-923,12,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,140,142,138,4,0,0,22,0,0,0,-1--1--1,,1|(-1800,-923)|
+1,141,142,139,100,0,0,22,0,0,0,-1--1--1,,1|(-1912,-923)|
+11,142,48,-1859,-923,8,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,143,New Vehicles,-1859,-904,56,11,40,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,144,New Vehicles,-2247,-795,45,11,8,3,0,4,-1,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,145,129,496,0,0,0,0,0,128,0,-1--1--1,,1|(-2468,-476)|
+12,146,48,-1344,-923,12,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,147,149,146,4,0,0,22,0,0,0,-1--1--1,,1|(-1411,-923)|
+1,148,149,138,100,0,0,22,0,0,0,-1--1--1,,1|(-1540,-923)|
+11,149,48,-1476,-923,8,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,150,Retiring Vehicles,-1476,-904,53,11,40,3,0,4,-1,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,151,SYVbT Start Year Vehicles by Technology,-1675,-803,81,19,8,130,0,3,0,0,0,0,128-128-128,255-128-192,|12||128-128-128,0,0,0,0,0,0
+10,152,New Vehicles After Lifetime,-1675,-632,53,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,153,AVL Avg Vehicle Lifetime,-1476,-632,64,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,154,Vehicles,-1675,-1064,28,11,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,155,142,154,0,0,0,0,0,128,0,-1--1--1,,1|(-1776,-984)|
+1,156,149,154,0,0,0,0,0,128,0,-1--1--1,,1|(-1564,-984)|
+1,157,138,154,0,0,0,0,0,128,0,-1--1--1,,1|(-1675,-996)|
+1,158,151,138,0,0,0,0,0,128,1,-1--1--1,,1|(-1675,-849)|
+1,159,151,150,0,0,0,0,0,128,0,-1--1--1,,1|(-1572,-855)|
+1,160,153,150,0,0,0,0,0,128,0,-1--1--1,,1|(-1476,-767)|
+1,161,153,152,0,0,0,0,0,128,0,-1--1--1,,1|(-1572,-632)|
+1,162,143,152,0,0,0,0,0,128,0,-1--1--1,,1|(-1773,-779)|
+1,163,152,150,0,0,0,0,0,128,0,-1--1--1,,1|(-1577,-768)|
+12,164,0,-439,-1172,696,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Tracking Fleet Avg Fuel Economy
-10,165,AVL Avg Vehicle Lifetime,-1228,-197,64,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,166,New Vehicle Fuel Economy After Lifetime,-1065,-472,76,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,167,Retiring Vehicle Fuel Economy,-1065,68,68,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,168,Fleet Avg Fuel Economy,-9932,-273,52,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,169,168,54,0,0,0,0,0,128,0,-1--1--1,,1|(-9843,-273)|
-1,170,166,167,0,0,0,0,0,128,0,-1--1--1,,1|(-1065,-209)|
-1,171,165,166,0,0,0,0,0,128,0,-1--1--1,,1|(-1151,-328)|
-1,172,165,167,0,0,0,0,0,128,0,-1--1--1,,1|(-1151,-68)|
-10,173,BHNVFEAL BAU Historical New Vehicle Fuel Economy After Lifetime,-1065,188,92,32,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-1,174,173,167,0,0,0,0,0,128,0,-1--1--1,,1|(-1065,128)|
-10,175,BPoEFUbVT BAU Perc of Each Fuel Used by Veh Technology,440,96,80,29,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,176,BLP BAU LCFS Percentage,2132,228,56,19,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,177,Additional LCFS Percentage This Year,1931,407,73,19,8,2,0,5,0,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-10,178,Carbon Free Energy in Absence of LCFS by Vehicle Type,1656,96,73,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,179,Carbon Intensity Ratios by Transportation Fuel,1656,-37,75,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,180,Required LCFS Percentage,1931,228,52,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-1,181,179,178,0,0,0,0,0,128,0,-1--1--1,,1|(1656,20)|
-1,182,177,180,0,0,0,0,0,128,0,-1--1--1,,1|(1931,324)|
-1,183,176,180,0,0,0,0,0,128,0,-1--1--1,,1|(2035,228)|
-12,184,0,2431,-673,2180,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,165,AVL Avg Vehicle Lifetime,-1043,-696,64,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,166,New Vehicle Fuel Economy After Lifetime,-876,-971,76,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,167,Retiring Vehicle Fuel Economy,-876,-431,68,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,168,Fleet Avg Fuel Economy,-9747,-772,52,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,169,168,54,0,0,0,0,0,128,0,-1--1--1,,1|(-9656,-772)|
+1,170,166,167,0,0,0,0,0,128,0,-1--1--1,,1|(-876,-708)|
+1,171,165,166,0,0,0,0,0,128,0,-1--1--1,,1|(-963,-828)|
+1,172,165,167,0,0,0,0,0,128,0,-1--1--1,,1|(-963,-568)|
+10,173,BHNVFEAL BAU Historical New Vehicle Fuel Economy After Lifetime,-876,-311,92,32,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+1,174,173,167,0,0,0,0,0,128,0,-1--1--1,,1|(-876,-368)|
+10,175,BPoEFUbVT BAU Perc of Each Fuel Used by Veh Technology,625,-403,80,29,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,176,BLP BAU LCFS Percentage,2317,-271,56,19,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,177,Additional LCFS Percentage This Year,2120,-92,73,19,8,2,0,5,0,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+10,178,Carbon Free Energy in Absence of LCFS by Vehicle Type,1841,-403,73,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,179,Carbon Intensity Ratios by Transportation Fuel,1841,-536,75,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,180,Required LCFS Percentage,2120,-271,52,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+1,181,179,178,0,0,0,0,0,128,0,-1--1--1,,1|(1841,-480)|
+1,182,177,180,0,0,0,0,0,128,0,-1--1--1,,1|(2120,-175)|
+1,183,176,180,0,0,0,0,0,128,0,-1--1--1,,1|(2223,-271)|
+12,184,0,2620,-1172,2180,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Fuel Shifts Caused by LCFS
-10,185,LCPC LCFS Credit Price Cap,7031,-524,68,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,186,MPoEFUbVT Max Perc of Each Fuel Usable by Vehicle Technology,2756,-501,92,28,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,187,Cargo Dist Transported Allocated by Last Year Vehicle Technologies,700,-180,85,32,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-12,188,0,5251,-673,504,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,185,LCPC LCFS Credit Price Cap,7220,-1023,68,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,186,MPoEFUbVT Max Perc of Each Fuel Usable by Vehicle Technology,2941,-1000,92,28,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,187,Cargo Dist Transported Allocated by Last Year Vehicle Technologies,885,-679,85,32,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+12,188,0,5440,-1172,504,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Emissions and Electricity Use
-10,189,Transportation Sector Fuel Used,-9932,-424,61,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,190,Last Year Transportation Sector Fuel Used,-9724,-424,72,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,191,BAU Last Year Transportation Sector Fuel Used,-8764,-424,60,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,192,189,190,0,0,0,0,0,128,0,-1--1--1,,1|(-9840,-424)|
-10,193,BAU Last Year Fleet Avg Fuel Economy,-8764,-273,69,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,194,193,50,0,0,0,0,0,128,0,-1--1--1,,1|(-8889,-273)|
-10,195,One Year,-4289,-424,37,15,8,131,1,4,-1,0,0,0,-1--1--1,192-255-192,|12|I|128-128-128,0,0,0,0,0,0
-10,196,Last Year Transportation Sector Fuel Used,-7280,-133,72,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,197,Perc Change in Fuel Economy due to Fuel Price Effects Weighted by Fuel Type,-7008,-133,96,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,198,197,71,0,0,0,0,0,128,0,-1--1--1,,1|(-7008,-77)|
-1,199,196,197,0,0,0,0,0,128,0,-1--1--1,,1|(-7165,-133)|
-10,200,New Vehicles Demanded,-3333,-296,45,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,201,200,128,0,0,0,0,0,128,0,-1--1--1,,1|(-3228,-296)|
-10,202,INITIAL TIME,-1556,-296,60,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,203,202,150,0,1,0,0,0,64,0,-1--1--1,,1|(-1604,-345)|
-10,204,Time,-1525,-364,28,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,205,204,150,0,1,0,0,0,64,0,-1--1--1,,1|(-1583,-381)|
-10,206,One Year,-1665,-565,41,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,207,One Year,-2657,-352,41,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,208,207,144,0,1,0,0,0,128,0,-1--1--1,,1|(-2553,-324)|
-1,209,206,154,0,1,0,0,0,128,0,-1--1--1,,1|(-1763,-565)|
-10,210,INITIAL TIME,-1228,19,60,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,211,210,167,0,1,0,0,0,64,0,-1--1--1,,1|(-1167,37)|
-10,212,Time,-1228,88,28,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,213,212,167,0,1,0,0,0,64,0,-1--1--1,,1|(-1172,81)|
-10,214,BAU Weighted Avg Fuel Cost per Unit Energy by Vehicle Technology,-9021,-424,100,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,215,51,214,0,0,0,0,0,128,0,-1--1--1,,1|(-9021,-497)|
-1,216,191,214,0,0,0,0,0,128,0,-1--1--1,,1|(-8864,-424)|
-1,217,214,50,0,0,0,0,0,128,0,-1--1--1,,1|(-9021,-351)|
-10,218,Weighted Avg Fuel Cost per Unit Energy by Vehicle Technology,-9485,-424,92,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,219,218,3,0,0,0,0,0,128,0,-1--1--1,,1|(-9485,-353)|
-1,220,190,218,0,0,0,0,0,128,0,-1--1--1,,1|(-9620,-424)|
-10,221,BPoEFUbVT BAU Perc of Each Fuel Used by Veh Technology,2211,-501,93,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,222,Perc Points Each Transportation Fuel May be Increased,2507,-501,68,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,223,186,222,0,0,0,0,0,128,0,-1--1--1,,1|(2625,-501)|
-1,224,221,222,0,0,0,0,0,128,0,-1--1--1,,1|(2364,-501)|
-10,225,Carbon Intensity Ratios by Transportation Fuel,2211,-37,80,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,226,Achieved LCFS Percentage,3044,407,53,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-12,227,0,6552,-673,597,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,189,Transportation Sector Fuel Used,-9747,-923,61,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,190,Last Year Transportation Sector Fuel Used,-9539,-923,72,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,191,BAU Last Year Transportation Sector Fuel Used,-8579,-923,60,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,192,189,190,0,0,0,0,0,128,0,-1--1--1,,1|(-9655,-923)|
+10,193,BAU Last Year Fleet Avg Fuel Economy,-8579,-772,69,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,194,193,50,0,0,0,0,0,128,0,-1--1--1,,1|(-8701,-772)|
+10,195,One Year,-4100,-923,37,15,8,131,1,4,-1,0,0,0,-1--1--1,192-255-192,|12|I|128-128-128,0,0,0,0,0,0
+10,196,Last Year Transportation Sector Fuel Used,-7095,-632,72,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,197,Perc Change in Fuel Economy due to Fuel Price Effects Weighted by Fuel Type,-6823,-632,96,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,198,197,71,0,0,0,0,0,128,0,-1--1--1,,1|(-6823,-577)|
+1,199,196,197,0,0,0,0,0,128,0,-1--1--1,,1|(-6976,-632)|
+10,200,New Vehicles Demanded,-3144,-795,45,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,201,200,128,0,0,0,0,0,128,0,-1--1--1,,1|(-3040,-795)|
+10,202,INITIAL TIME,-1371,-795,60,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,203,202,150,0,1,0,0,0,64,0,-1--1--1,,1|(-1416,-845)|
+10,204,Time,-1336,-863,28,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,205,204,150,0,1,0,0,0,64,0,-1--1--1,,1|(-1395,-880)|
+10,206,One Year,-1476,-1064,41,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,207,One Year,-2468,-851,41,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,208,207,144,0,1,0,0,0,128,0,-1--1--1,,1|(-2365,-825)|
+1,209,206,154,0,1,0,0,0,128,0,-1--1--1,,1|(-1575,-1064)|
+10,210,INITIAL TIME,-1043,-480,60,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,211,210,167,0,1,0,0,0,64,0,-1--1--1,,1|(-979,-460)|
+10,212,Time,-1043,-411,28,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,213,212,167,0,1,0,0,0,64,0,-1--1--1,,1|(-984,-417)|
+10,214,BAU Weighted Avg Fuel Cost per Unit Energy by Vehicle Technology,-8832,-923,100,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,215,51,214,0,0,0,0,0,128,0,-1--1--1,,1|(-8832,-996)|
+1,216,191,214,0,0,0,0,0,128,0,-1--1--1,,1|(-8676,-923)|
+1,217,214,50,0,0,0,0,0,128,0,-1--1--1,,1|(-8832,-851)|
+10,218,Weighted Avg Fuel Cost per Unit Energy by Vehicle Technology,-9296,-923,92,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,219,218,3,0,0,0,0,0,128,0,-1--1--1,,1|(-9296,-853)|
+1,220,190,218,0,0,0,0,0,128,0,-1--1--1,,1|(-9432,-923)|
+10,221,BPoEFUbVT BAU Perc of Each Fuel Used by Veh Technology,2400,-1000,93,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,222,Perc Points Each Transportation Fuel May be Increased,2696,-1000,68,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,223,186,222,0,0,0,0,0,128,0,-1--1--1,,1|(2813,-1000)|
+1,224,221,222,0,0,0,0,0,128,0,-1--1--1,,1|(2553,-1000)|
+10,225,Carbon Intensity Ratios by Transportation Fuel,2400,-536,80,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,226,Achieved LCFS Percentage,3229,-92,53,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+12,227,0,6737,-1172,597,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 LCFS Credit Estimates
-10,228,SYFAFE Start Year Fleet Avg Fuel Economy,-9932,-133,56,32,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,229,228,54,0,0,0,0,0,128,1,-1--1--1,,1|(-9824,-205)|
-10,230,SYFAFE Start Year Fleet Avg Fuel Economy,-8565,-133,56,27,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,231,230,193,0,0,0,0,0,128,1,-1--1--1,,1|(-8664,-203)|
-10,232,BNVP BAU New Vehicle Price,-5245,-168,59,19,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-1,233,232,339,0,0,0,0,0,128,0,-1--1--1,,1|(-5245,-115)|
-10,234,BAU Transportation Sector Fuel Used,-8556,-424,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,235,234,191,0,0,0,0,0,128,0,-1--1--1,,1|(-8661,-424)|
-1,236,195,94,0,1,0,0,0,128,0,-1--1--1,,1|(-4289,-424)|
-10,237,Quantization Size for Percentage Changes,-6733,-424,68,19,8,3,0,4,0,0,0,0,-1--1--1,192-255-192,|12||0-0-0,0,0,0,0,0,0
-12,238,0,-5521,636,415,260,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+10,228,SYFAFE Start Year Fleet Avg Fuel Economy,-9747,-632,56,32,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,229,228,54,0,0,0,0,0,128,1,-1--1--1,,1|(-9639,-704)|
+10,230,SYFAFE Start Year Fleet Avg Fuel Economy,-8376,-632,56,27,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,231,230,193,0,0,0,0,0,128,1,-1--1--1,,1|(-8477,-704)|
+10,232,BNVP BAU New Vehicle Price,-5056,-667,59,19,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+1,233,232,339,0,0,0,0,0,128,0,-1--1--1,,1|(-5056,-612)|
+10,234,BAU Transportation Sector Fuel Used,-8371,-923,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,235,234,191,0,0,0,0,0,128,0,-1--1--1,,1|(-8472,-923)|
+1,236,195,94,0,1,0,0,0,128,0,-1--1--1,,1|(-4100,-923)|
+10,237,Quantization Size for Percentage Changes,-6544,-923,68,19,8,3,0,4,0,0,0,0,-1--1--1,192-255-192,|12||0-0-0,0,0,0,0,0,0
+12,238,0,-5332,137,415,260,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_Passenger_LDVs_by_Technology
-12,239,0,-4641,636,415,260,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,239,0,-4452,137,415,260,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_Freight_HDVs_by_Technology
-12,240,0,-2885,636,415,260,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,240,0,-2696,137,415,260,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_Sector_Fuel_Used_by_Fuel
-12,241,0,-7281,636,415,260,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,241,0,-7092,137,415,260,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_Passenger_Distance_by_Mode
-12,242,0,-6392,636,415,260,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,242,0,-6207,137,415,260,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_Freight_Distance_by_Mode
-1,243,237,67,0,0,0,0,0,128,0,-1--1--1,,1|(-6864,-424)|
-10,244,Vehicles,440,-37,37,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,245,Cargo Dist Transported by Vehicle Technology,700,-37,64,29,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-1,246,244,245,0,0,0,0,0,128,0,-1--1--1,,1|(547,-37)|
-1,247,187,245,0,0,0,0,0,128,0,-1--1--1,,1|(700,-112)|
-12,248,0,-1997,636,415,260,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+1,243,237,67,0,0,0,0,0,128,0,-1--1--1,,1|(-6676,-923)|
+10,244,Vehicles,625,-536,37,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,245,Cargo Dist Transported by Vehicle Technology,885,-536,64,29,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+1,246,244,245,0,0,0,0,0,128,0,-1--1--1,,1|(736,-536)|
+1,247,187,245,0,0,0,0,0,128,0,-1--1--1,,1|(885,-612)|
+12,248,0,-1808,137,415,260,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_CO2_Emissions_by_Vehicle_Type
-1,249,138,150,0,0,0,0,0,128,0,-1--1--1,,1|(-1759,-412)|
-1,250,206,149,0,1,0,0,0,128,0,-1--1--1,,1|(-1665,-500)|
-10,251,Transportation Sector Fuel that would be Used in Absence of LCFS,700,96,85,28,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,252,245,251,0,0,0,0,0,128,0,-1--1--1,,1|(700,23)|
-1,253,175,251,0,0,0,0,0,128,0,-1--1--1,,1|(560,96)|
-10,254,Fleet Avg Fuel Economy,700,228,52,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,255,254,251,0,0,0,0,0,128,0,-1--1--1,,1|(700,173)|
-10,256,Quantity Each Fuel May be Increased in Regulated Vehicle Types,2507,-365,84,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,257,Quantity Carbon Free Energy May be Increased by Fuel by Regulated Vehicle Type,2507,-37,96,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,258,256,322,0,0,0,0,0,128,0,-1--1--1,,1|(2507,-279)|
-1,259,225,257,0,0,0,0,0,128,0,-1--1--1,,1|(2344,-37)|
-10,260,Additional Carbon Free Energy Allocated by Fuel and Technology,3044,96,79,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,261,Additional Fuel Use by Fuel and Technology due to LCFS with Elec Eff Adj,3367,96,103,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,262,Transportation Sector Fuel that would be Used in Absence of LCFS,4359,-37,80,29,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,263,Transportation Sector Fuel Used,5055,-145,61,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,264,263,1,0,0,0,0,0,128,0,-1--1--1,,1|(5175,-145)|
-1,265,263,12,0,0,0,0,0,128,0,-1--1--1,,1|(5179,-80)|
-1,266,262,38,0,0,0,0,0,128,0,-1--1--1,,1|(4359,27)|
-10,267,Change in Fuel Use by Fuel and Technology due to LCFS with Elec Eff Adj,3696,96,104,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,268,261,267,0,0,0,0,0,128,0,-1--1--1,,1|(3523,96)|
-1,269,267,270,0,0,0,0,0,128,0,-1--1--1,,1|(3876,96)|
-10,270,Change in Fuel Use by Fuel and Technology due to LCFS,4056,96,88,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,271,270,38,0,0,0,0,0,128,0,-1--1--1,,1|(4215,96)|
-10,272,Achieved LCFS Percentage before Fuel Shifts,1656,228,76,28,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-10,273,Maximum Possible LCFS Percentage,2756,-37,60,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-10,274,Fuel that would be Used by Regulated Vehicle Types in Absence of LCFS with Elec Eff Adj,1352,96,115,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,275,274,178,0,0,0,0,0,128,0,-1--1--1,,1|(1516,96)|
-10,276,PTFURfE Percentage Transportation Fuel Use Reduction for Electricity,2211,-180,81,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,277,BVTStL Boolean Vehicle Types Subject to LCFS,1023,-37,84,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,278,178,272,0,0,0,0,0,128,0,-1--1--1,,1|(1656,155)|
-1,279,274,272,0,0,0,0,0,128,0,-1--1--1,,1|(1495,159)|
-10,280,Transportation Sector Fuel that would be Used in Absence of LCFS by Regulated Vehicle Types,1023,96,111,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,281,277,280,0,0,0,0,0,128,0,-1--1--1,,1|(1023,20)|
-1,282,280,274,0,0,0,0,0,128,0,-1--1--1,,1|(1177,96)|
-10,283,Required Increase in Carbon Free Energy,1931,96,68,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,284,Fuel that would be Used by Regulated Vehicle Types in Absence of LCFS with Elec Eff Adj,1931,-37,119,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,285,284,283,0,0,0,0,0,128,0,-1--1--1,,1|(1931,27)|
-1,286,178,283,0,0,0,0,0,128,0,-1--1--1,,1|(1788,96)|
-1,287,180,283,0,0,0,0,0,128,0,-1--1--1,,1|(1931,169)|
-10,288,Transportation Sector Fuel that would be Used in Absence of LCFS by Regulated Vehicle Types,2211,-365,116,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,289,222,256,0,0,0,0,0,128,0,-1--1--1,,1|(2507,-440)|
-1,290,288,256,0,0,0,0,0,128,0,-1--1--1,,1|(2368,-365)|
-10,291,Carbon Intensity Ratios by Transportation Fuel,3367,-37,80,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,292,291,261,0,0,0,0,0,128,0,-1--1--1,,1|(3367,20)|
-10,293,PTFURfE Percentage Transportation Fuel Use Reduction for Electricity,4056,-37,81,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,294,293,270,0,0,0,0,0,128,0,-1--1--1,,1|(4056,24)|
-1,295,276,322,0,0,0,0,0,128,0,-1--1--1,,1|(2344,-180)|
-1,296,39,274,0,0,0,0,0,128,0,-1--1--1,,1|(1352,24)|
-10,297,Required Increase in Carbon Free Energy Assigned to Vehicle and Fuel Types,2507,96,91,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,298,283,297,0,0,0,0,0,128,0,-1--1--1,,1|(2200,96)|
-1,299,257,297,0,0,0,0,0,128,0,-1--1--1,,1|(2507,24)|
-1,300,297,260,0,0,0,0,0,128,0,-1--1--1,,1|(2773,96)|
-10,301,Carbon Free Energy in Absence of LCFS by Vehicle Type,2756,228,80,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,302,Carbon Free Energy after LCFS,3044,228,68,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,303,260,302,0,0,0,0,0,128,0,-1--1--1,,1|(3044,159)|
-1,304,301,302,0,0,0,0,0,128,0,-1--1--1,,1|(2897,228)|
-10,305,Fuel that would be Used by Regulated Vehicle Types in Absence of LCFS with Elec Eff Adj,2756,407,119,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,306,302,226,0,0,0,0,0,128,0,-1--1--1,,1|(3044,312)|
-1,307,305,226,0,0,0,0,0,128,0,-1--1--1,,1|(2924,407)|
-10,308,Fuel that would be Used by Regulated Vehicle Types in Absence of LCFS with Elec Eff Adj,2756,-180,87,40,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,309,308,273,0,0,0,0,0,128,0,-1--1--1,,1|(2756,-105)|
-1,310,257,273,0,0,0,0,0,128,0,-1--1--1,,1|(2641,-37)|
-10,311,Carbon Free Energy in Absence of LCFS by Vehicle Type,3044,-37,80,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,312,311,273,0,0,0,0,0,128,0,-1--1--1,,1|(2895,-37)|
-1,313,260,261,0,0,0,0,0,128,0,-1--1--1,,1|(3185,96)|
-12,314,0,851,96,16,237,8,135,0,4,-1,0,0,0,-1--1--1,0-128-255,|12||0-0-0,0,0,0,0,0,0
+1,249,138,150,0,0,0,0,0,128,0,-1--1--1,,1|(-1571,-912)|
+1,250,206,149,0,1,0,0,0,128,0,-1--1--1,,1|(-1476,-1000)|
+10,251,Transportation Sector Fuel that would be Used in Absence of LCFS,885,-403,85,28,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,252,245,251,0,0,0,0,0,128,0,-1--1--1,,1|(885,-477)|
+1,253,175,251,0,0,0,0,0,128,0,-1--1--1,,1|(745,-403)|
+10,254,Fleet Avg Fuel Economy,885,-271,52,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,255,254,251,0,0,0,0,0,128,0,-1--1--1,,1|(885,-325)|
+10,256,Quantity Each Fuel May be Increased in Regulated Vehicle Types,2696,-864,84,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,257,Quantity Carbon Free Energy May be Increased by Fuel by Regulated Vehicle Type,2696,-536,96,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,258,256,322,0,0,0,0,0,128,0,-1--1--1,,1|(2696,-779)|
+1,259,225,257,0,0,0,0,0,128,0,-1--1--1,,1|(2533,-536)|
+10,260,Additional Carbon Free Energy Allocated by Fuel and Technology,3229,-403,79,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,261,Additional Fuel Use by Fuel and Technology due to LCFS with Elec Eff Adj,3556,-403,103,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,262,Transportation Sector Fuel that would be Used in Absence of LCFS,4548,-536,80,29,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,263,Transportation Sector Fuel Used,5244,-644,61,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,264,263,1,0,0,0,0,0,128,0,-1--1--1,,1|(5364,-644)|
+1,265,263,12,0,0,0,0,0,128,0,-1--1--1,,1|(5368,-583)|
+1,266,262,38,0,0,0,0,0,128,0,-1--1--1,,1|(4548,-472)|
+10,267,Change in Fuel Use by Fuel and Technology due to LCFS with Elec Eff Adj,3881,-403,104,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,268,261,267,0,0,0,0,0,128,0,-1--1--1,,1|(3711,-403)|
+1,269,267,270,0,0,0,0,0,128,0,-1--1--1,,1|(4061,-403)|
+10,270,Change in Fuel Use by Fuel and Technology due to LCFS,4241,-403,88,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,271,270,38,0,0,0,0,0,128,0,-1--1--1,,1|(4403,-403)|
+10,272,Achieved LCFS Percentage before Fuel Shifts,1841,-271,76,28,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+10,273,Maximum Possible LCFS Percentage,2941,-536,60,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+10,274,Fuel that would be Used by Regulated Vehicle Types in Absence of LCFS with Elec Eff Adj,1537,-403,115,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,275,274,178,0,0,0,0,0,128,0,-1--1--1,,1|(1703,-403)|
+10,276,PTFURfE Percentage Transportation Fuel Use Reduction for Electricity,2400,-679,81,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,277,BVTStL Boolean Vehicle Types Subject to LCFS,1212,-536,84,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,278,178,272,0,0,0,0,0,128,0,-1--1--1,,1|(1841,-344)|
+1,279,274,272,0,0,0,0,0,128,0,-1--1--1,,1|(1684,-339)|
+10,280,Transportation Sector Fuel that would be Used in Absence of LCFS by Regulated Vehicle Types,1212,-403,111,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,281,277,280,0,0,0,0,0,128,0,-1--1--1,,1|(1212,-480)|
+1,282,280,274,0,0,0,0,0,128,0,-1--1--1,,1|(1365,-403)|
+10,283,Required Increase in Carbon Free Energy,2120,-403,68,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,284,Fuel that would be Used by Regulated Vehicle Types in Absence of LCFS with Elec Eff Adj,2120,-536,119,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,285,284,283,0,0,0,0,0,128,0,-1--1--1,,1|(2120,-473)|
+1,286,178,283,0,0,0,0,0,128,0,-1--1--1,,1|(1976,-403)|
+1,287,180,283,0,0,0,0,0,128,0,-1--1--1,,1|(2120,-328)|
+10,288,Transportation Sector Fuel that would be Used in Absence of LCFS by Regulated Vehicle Types,2400,-864,116,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,289,222,256,0,0,0,0,0,128,0,-1--1--1,,1|(2696,-941)|
+1,290,288,256,0,0,0,0,0,128,0,-1--1--1,,1|(2557,-864)|
+10,291,Carbon Intensity Ratios by Transportation Fuel,3556,-536,80,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,292,291,261,0,0,0,0,0,128,0,-1--1--1,,1|(3556,-480)|
+10,293,PTFURfE Percentage Transportation Fuel Use Reduction for Electricity,4241,-536,81,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,294,293,270,0,0,0,0,0,128,0,-1--1--1,,1|(4241,-477)|
+1,295,276,322,0,0,0,0,0,128,0,-1--1--1,,1|(2531,-679)|
+1,296,39,274,0,0,0,0,0,128,0,-1--1--1,,1|(1537,-476)|
+10,297,Required Increase in Carbon Free Energy Assigned to Vehicle and Fuel Types,2696,-403,91,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,298,283,297,0,0,0,0,0,128,0,-1--1--1,,1|(2389,-403)|
+1,299,257,297,0,0,0,0,0,128,0,-1--1--1,,1|(2696,-476)|
+1,300,297,260,0,0,0,0,0,128,0,-1--1--1,,1|(2961,-403)|
+10,301,Carbon Free Energy in Absence of LCFS by Vehicle Type,2941,-271,80,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,302,Carbon Free Energy after LCFS,3229,-271,68,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,303,260,302,0,0,0,0,0,128,0,-1--1--1,,1|(3229,-339)|
+1,304,301,302,0,0,0,0,0,128,0,-1--1--1,,1|(3084,-271)|
+10,305,Fuel that would be Used by Regulated Vehicle Types in Absence of LCFS with Elec Eff Adj,2941,-92,119,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,306,302,226,0,0,0,0,0,128,0,-1--1--1,,1|(3229,-189)|
+1,307,305,226,0,0,0,0,0,128,0,-1--1--1,,1|(3111,-92)|
+10,308,Fuel that would be Used by Regulated Vehicle Types in Absence of LCFS with Elec Eff Adj,2941,-679,87,40,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,309,308,273,0,0,0,0,0,128,0,-1--1--1,,1|(2941,-605)|
+1,310,257,273,0,0,0,0,0,128,0,-1--1--1,,1|(2829,-536)|
+10,311,Carbon Free Energy in Absence of LCFS by Vehicle Type,3229,-536,80,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,312,311,273,0,0,0,0,0,128,0,-1--1--1,,1|(3084,-536)|
+1,313,260,261,0,0,0,0,0,128,0,-1--1--1,,1|(3373,-403)|
+12,314,0,1040,-403,16,237,8,135,0,4,-1,0,0,0,-1--1--1,0-128-255,|12||0-0-0,0,0,0,0,0,0
 Reg Veh Typ
-12,315,0,2507,-449,256,11,8,135,0,4,-1,0,0,0,-1--1--1,0-128-255,|12||0-0-0,0,0,0,0,0,0
+12,315,0,2696,-948,256,11,8,135,0,4,-1,0,0,0,-1--1--1,0-128-255,|12||0-0-0,0,0,0,0,0,0
 Reg Veh Typ
-12,316,0,1175,96,12,237,8,135,0,4,-1,0,0,0,-1--1--1,255-128-0,|12||0-0-0,0,0,0,0,0,0
+12,316,0,1364,-403,12,237,8,135,0,4,-1,0,0,0,-1--1--1,255-128-0,|12||0-0-0,0,0,0,0,0,0
 Elc Eff Adj
-12,317,0,2507,-277,256,11,8,135,0,4,-1,0,0,0,-1--1--1,255-128-0,|12||0-0-0,0,0,0,0,0,0
+12,317,0,2696,-776,256,11,8,135,0,4,-1,0,0,0,-1--1--1,255-128-0,|12||0-0-0,0,0,0,0,0,0
 Elc Eff Adj
-12,318,0,1499,96,9,237,8,135,0,4,-1,0,0,0,-1--1--1,64-160-98,|12||0-0-0,0,0,0,0,0,0
+12,318,0,1688,-403,9,237,8,135,0,4,-1,0,0,0,-1--1--1,64-160-98,|12||0-0-0,0,0,0,0,0,0
 CFE
-12,319,0,2583,-109,332,11,8,135,0,4,-1,0,0,0,-1--1--1,64-160-98,|12||0-0-0,0,0,0,0,0,0
+12,319,0,2772,-608,332,11,8,135,0,4,-1,0,0,0,-1--1--1,64-160-98,|12||0-0-0,0,0,0,0,0,0
 CFE
-12,320,0,3195,96,8,237,8,135,0,4,-1,0,0,0,-1--1--1,64-160-98,|12||0-0-0,0,0,0,0,0,0
+12,320,0,3384,-403,8,237,8,135,0,4,-1,0,0,0,-1--1--1,64-160-98,|12||0-0-0,0,0,0,0,0,0
 CFE
-12,321,0,4228,96,16,237,8,135,0,4,-1,0,0,0,-1--1--1,0-128-255,|12||0-0-0,0,0,0,0,0,0
+12,321,0,4413,-403,16,237,8,135,0,4,-1,0,0,0,-1--1--1,0-128-255,|12||0-0-0,0,0,0,0,0,0
 Reg Veh Typ
-10,322,Quantity Each Fuel May be Increased in Regulated Vehicle Types with Elec Eff Adj,2507,-180,100,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,323,322,257,0,0,0,0,0,128,0,-1--1--1,,1|(2507,-115)|
-12,324,0,3879,96,12,237,8,135,0,4,-1,0,0,0,-1--1--1,255-128-0,|12||0-0-0,0,0,0,0,0,0
+10,322,Quantity Each Fuel May be Increased in Regulated Vehicle Types with Elec Eff Adj,2696,-679,100,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,323,322,257,0,0,0,0,0,128,0,-1--1--1,,1|(2696,-615)|
+12,324,0,4068,-403,12,237,8,135,0,4,-1,0,0,0,-1--1--1,255-128-0,|12||0-0-0,0,0,0,0,0,0
 Elc Eff Adj
-1,325,251,280,0,0,0,0,0,128,0,-1--1--1,,1|(840,96)|
-12,326,0,2427,240,187,64,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+1,325,251,280,0,0,0,0,0,128,0,-1--1--1,,1|(1028,-403)|
+12,326,0,2616,-259,187,64,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 The LCFS calculation (and policy lever setting) refer only to the fuel used by regulated vehicle types (as specified by the model adapter in an input variable), after adjustment for the efficiency of use of electricity.  Hence, we calculate the various LCFS metrics here, as the ratio of carbon free energy to all energy that meets these two conditions.
-12,327,0,1583,-269,165,51,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+12,327,0,1772,-768,165,51,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 Carbon Free Energy (CFE) refers to the decarbonized portion of the energy from natural gas and biofuels (relative to the reference fuels gasoline or diesel) and all electricity used as a transport fuel (irrespective of how the electricity was produced).
-12,328,0,-3765,636,415,260,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,328,0,-3576,137,415,260,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Transportation_LCFS_Performance
-10,329,SoCDTtiNTY Share of Cargo Dist Transported that is New This Year,-8193,-445,80,31,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,330,329,63,0,0,0,0,0,128,0,-1--1--1,,1|(-8081,-445)|
-10,331,Retiring Vehicles,-8193,-20,32,19,8,2,0,3,-1,0,0,0,128-128-128,255-0-0,|12||128-128-128,0,0,0,0,0,0
-10,332,Retiring Vehicles Summed Across Technologies,-7941,-20,67,32,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,333,331,332,0,0,0,0,0,128,0,-1--1--1,,1|(-8091,-20)|
-12,334,0,-7985,-257,335,33,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,329,SoCDTtiNTY Share of Cargo Dist Transported that is New This Year,-8004,-944,80,31,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,330,329,63,0,0,0,0,0,128,0,-1--1--1,,1|(-7892,-944)|
+10,331,Retiring Vehicles,-8004,-519,32,19,8,2,0,3,-1,0,0,0,128-128-128,255-0-0,|12||128-128-128,0,0,0,0,0,0
+10,332,Retiring Vehicles Summed Across Technologies,-7752,-519,67,32,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,333,331,332,0,0,0,0,0,128,0,-1--1--1,,1|(-7900,-519)|
+12,334,0,-7796,-756,335,33,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 SoCDTtiNTY values for each vehicle/cargo type combination should typically be found via calibration.  After all other Transportation Sector data are in place, adjust the values of SoCDTtiNTY so as to eliminate abrupt changes in the variable "Retiring Vehicles" at the years corresponding to vehicle lifetimes.
-10,335,BAU Fleet Avg Fuel Economy,-8556,-273,57,23,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,336,335,193,0,0,0,0,0,128,0,-1--1--1,,1|(-8649,-273)|
-12,337,0,-10093,-120,96,51,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,335,BAU Fleet Avg Fuel Economy,-8371,-772,57,23,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,336,335,193,0,0,0,0,0,128,0,-1--1--1,,1|(-8460,-772)|
+12,337,0,-9904,-619,96,51,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 When adapting the EPS to other regions or updating U.S. data, note that SYFAFE includes a calibration step.  See the Excel file for this variable for details.
-10,338,One Vehicle,-1549,-565,40,11,8,3,1,4,0,0,0,0,-1--1--1,192-255-192,|12||0-0-0,0,0,0,0,0,0
-10,339,New Vehicle Price after Endogenous EV Learning,-5245,-48,81,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,340,339,108,0,0,0,0,0,128,0,-1--1--1,,1|(-5120,-48)|
-10,341,Weighted Avg Fuel Cost per Unit Energy by Vehicle Technology,-5245,-549,79,29,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,342,341,89,0,0,0,0,0,128,0,-1--1--1,,1|(-5245,-488)|
-10,343,SYBSoEVP Start Year Battery Share of Electric Vehicle Price,-5245,76,80,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,344,343,339,0,0,0,0,0,128,0,-1--1--1,,1|(-5245,16)|
-10,345,SYVbT Start Year Vehicles by Technology,-10188,143,76,19,8,3,0,4,-1,0,0,0,-1--1--1,255-128-192,|12||128-128-128,0,0,0,0,0,0
-10,346,AVLo Average Vehicle Loading,-10188,268,52,19,8,3,0,4,-1,0,0,0,-1--1--1,192-128-192,|12||128-128-128,0,0,0,0,0,0
-10,347,BAADTbVT BAU Average Annual Dist Traveled by Vehicle Type,-10188,396,92,28,8,131,0,4,-1,0,0,0,-1--1--1,192-128-192,|12||128-128-128,0,0,0,0,0,0
-10,348,Start Year Cargo Dist Transported,-9932,268,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,349,345,348,0,0,0,0,0,128,1,-1--1--1,,1|(-10068,204)|
-1,350,346,348,0,0,0,0,0,128,1,-1--1--1,,1|(-10079,268)|
-1,351,347,348,0,0,0,0,0,128,1,-1--1--1,,1|(-10059,332)|
-10,352,BAU Cargo Dist Transported,-9724,268,56,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,353,348,352,0,0,0,0,0,128,0,-1--1--1,,1|(-9829,268)|
-1,354,9,352,0,0,0,0,0,128,0,-1--1--1,,1|(-9724,336)|
-1,355,352,536,0,0,0,0,0,128,0,-1--1--1,,1|(-9620,268)|
-10,356,Est Start Year Transportation Sector Fuel Used,-9928,20,72,28,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,357,228,356,0,0,0,0,0,128,0,-1--1--1,,1|(-9932,-61)|
-1,358,348,356,0,0,0,0,0,128,0,-1--1--1,,1|(-9932,155)|
-10,359,BPoEFUbVT BAU Perc of Each Fuel Used by Veh Technology,-10188,20,93,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,360,359,356,0,0,0,0,0,128,0,-1--1--1,,1|(-10056,20)|
-10,361,Est Start Year Transportation Sector Fuel Used,-8764,-552,72,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,362,361,191,0,0,0,0,0,128,1,-1--1--1,,1|(-8764,-495)|
-10,363,Est Start Year Transportation Sector Fuel Used,-9724,-552,72,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,364,363,190,0,0,0,0,0,128,1,-1--1--1,,1|(-9724,-495)|
-12,365,0,-9756,91,92,128,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,338,One Vehicle,-1360,-1064,40,11,8,3,1,4,0,0,0,0,-1--1--1,192-255-192,|12||0-0-0,0,0,0,0,0,0
+10,339,New Vehicle Price after Endogenous EV Learning,-5056,-547,81,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,340,339,108,0,0,0,0,0,128,0,-1--1--1,,1|(-4933,-547)|
+10,341,Weighted Avg Fuel Cost per Unit Energy by Vehicle Technology,-5056,-1048,79,29,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,342,341,89,0,0,0,0,0,128,0,-1--1--1,,1|(-5056,-988)|
+10,343,SYBSoEVP Start Year Battery Share of Electric Vehicle Price,-5056,-423,80,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,344,343,339,0,0,0,0,0,128,0,-1--1--1,,1|(-5056,-480)|
+10,345,SYVbT Start Year Vehicles by Technology,-10003,-356,76,19,8,3,0,4,-1,0,0,0,-1--1--1,255-128-192,|12||128-128-128,0,0,0,0,0,0
+10,346,AVLo Average Vehicle Loading,-10003,-231,52,19,8,3,0,4,-1,0,0,0,-1--1--1,192-128-192,|12||128-128-128,0,0,0,0,0,0
+10,347,BAADTbVT BAU Average Annual Dist Traveled by Vehicle Type,-10003,-103,92,28,8,131,0,4,-1,0,0,0,-1--1--1,192-128-192,|12||128-128-128,0,0,0,0,0,0
+10,348,Start Year Cargo Dist Transported,-9747,-231,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,349,345,348,0,0,0,0,0,128,1,-1--1--1,,1|(-9881,-297)|
+1,350,346,348,0,0,0,0,0,128,1,-1--1--1,,1|(-9892,-231)|
+1,351,347,348,0,0,0,0,0,128,1,-1--1--1,,1|(-9872,-168)|
+10,352,BAU Cargo Dist Transported,-9539,-231,56,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,353,348,352,0,0,0,0,0,128,0,-1--1--1,,1|(-9640,-231)|
+1,354,9,352,0,0,0,0,0,128,0,-1--1--1,,1|(-9539,-165)|
+1,355,352,536,0,0,0,0,0,128,0,-1--1--1,,1|(-9432,-231)|
+10,356,Est Start Year Transportation Sector Fuel Used,-9743,-479,72,28,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,357,228,356,0,0,0,0,0,128,0,-1--1--1,,1|(-9745,-561)|
+1,358,348,356,0,0,0,0,0,128,0,-1--1--1,,1|(-9745,-343)|
+10,359,BPoEFUbVT BAU Perc of Each Fuel Used by Veh Technology,-10003,-479,93,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,360,359,356,0,0,0,0,0,128,0,-1--1--1,,1|(-9869,-479)|
+10,361,Est Start Year Transportation Sector Fuel Used,-8579,-1051,72,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,362,361,191,0,0,0,0,0,128,1,-1--1--1,,1|(-8579,-992)|
+10,363,Est Start Year Transportation Sector Fuel Used,-9539,-1051,72,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,364,363,190,0,0,0,0,0,128,1,-1--1--1,,1|(-9539,-992)|
+12,365,0,-9571,-408,92,128,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 We estimate start year fuel use (that is, one year before the first simulated year) by calculating it using data from the first simulated year.  This saves us the burden of calculating it in Excel and providing it as input data, and it prevents discontinuities as the model switches over from the provided value to a value calculated from the properties of the fleet.
-12,366,0,-8025,-108,296,33,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+12,366,0,-7836,-607,296,33,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 To calibrate a vehicle type with a lifetime longer than the model run, such as rail, temporarily extend the model run by changing FINAL TIME to a farther-out value, such as 2060.  Perform the calibration, then restore FINAL TIME to its former value (2050).
-10,367,This Year Battery Cost as Fraction of First Year Battery Cost,-5472,-48,84,32,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,368,367,339,0,0,0,0,0,128,0,-1--1--1,,1|(-5365,-48)|
-10,369,Perc Change in Avg Annual Dist Traveled by Vehicle Type,-9021,143,101,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,370,369,58,0,0,0,0,0,128,0,-1--1--1,,1|(-9021,196)|
-10,371,BAADTbVT BAU Average Annual Dist Traveled by Vehicle Type,-8764,-12,93,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,372,Average Annual Dist Traveled by Vehicle Type,-8764,143,84,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,373,371,372,0,0,0,0,0,128,0,-1--1--1,,1|(-8764,63)|
-1,374,369,372,0,0,0,0,0,128,0,-1--1--1,,1|(-8892,143)|
-10,375,Average Annual Dist Traveled by Vehicle Type,-4729,-549,87,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,376,375,93,0,0,0,0,0,128,0,-1--1--1,,1|(-4729,-496)|
-10,377,Average Annual Dist Traveled by Vehicle Type,-3333,-549,87,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,378,377,521,0,0,0,0,0,128,0,-1--1--1,,1|(-3333,-500)|
-12,379,0,7756,-673,471,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,367,This Year Battery Cost as Fraction of First Year Battery Cost,-5287,-547,84,32,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,368,367,339,0,0,0,0,0,128,0,-1--1--1,,1|(-5177,-547)|
+10,369,Perc Change in Avg Annual Dist Traveled by Vehicle Type,-8832,-356,101,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,370,369,58,0,0,0,0,0,128,0,-1--1--1,,1|(-8832,-303)|
+10,371,BAADTbVT BAU Average Annual Dist Traveled by Vehicle Type,-8579,-511,93,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,372,Average Annual Dist Traveled by Vehicle Type,-8579,-356,84,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,373,371,372,0,0,0,0,0,128,0,-1--1--1,,1|(-8579,-437)|
+1,374,369,372,0,0,0,0,0,128,0,-1--1--1,,1|(-8704,-356)|
+10,375,Average Annual Dist Traveled by Vehicle Type,-4540,-1048,87,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,376,375,93,0,0,0,0,0,128,0,-1--1--1,,1|(-4540,-996)|
+10,377,Average Annual Dist Traveled by Vehicle Type,-3144,-1048,87,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,378,377,521,0,0,0,0,0,128,0,-1--1--1,,1|(-3144,-1000)|
+12,379,0,7941,-1172,471,23,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Additional Transportation Outputs
-10,380,New Vehicles,7623,-545,56,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,381,One Year,7396,-545,43,11,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,382,CIRbTF Carbon Intensity Ratios by Transportation Fuel,1931,-180,84,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,383,382,179,0,0,0,0,0,128,0,-1--1--1,,1|(1789,-107)|
-12,384,0,1931,-237,119,28,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,380,New Vehicles,7812,-1044,56,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,381,One Year,7581,-1044,43,11,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,382,CIRbTF Carbon Intensity Ratios by Transportation Fuel,2120,-679,84,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,383,382,179,0,0,0,0,0,128,0,-1--1--1,,1|(1977,-607)|
+12,384,0,2120,-736,119,28,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 The model calculates carbon intensity ratios from data in PEI unless the "-1" flags in this variable are changed.
-10,385,Fleet Avg Fuel Economy,7396,-157,56,21,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,386,Vehicles,8088,-296,37,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,387,AVLo Average Vehicle Loading,7623,-296,57,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,388,Output Fleet Avg Fuel Economy Summed Across Vehicle Technologies,8088,-157,85,28,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-10,389,BCF Vehicle Fuel Economy Unit Conversion Factors,7859,-296,80,28,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,390,Fleet Avg Fuel Economy in Vehicle Distance,7623,-157,64,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,391,385,390,0,0,0,0,0,128,0,-1--1--1,,1|(7497,-157)|
-1,392,387,390,0,0,0,0,0,128,0,-1--1--1,,1|(7623,-236)|
-10,393,Output Fleet Avg Fuel Economy,7859,-157,56,19,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-1,394,390,393,0,0,0,0,0,128,0,-1--1--1,,1|(7740,-157)|
-1,395,389,393,0,0,0,0,0,128,0,-1--1--1,,1|(7859,-229)|
-1,396,393,388,0,0,0,0,0,128,0,-1--1--1,,1|(7951,-157)|
-1,397,386,388,0,0,0,0,0,128,0,-1--1--1,,1|(8088,-240)|
-10,398,Carbon Intensity Ratios by Transportation Fuel,6060,-396,80,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,399,Reduction in Carbon Intensity of This Fuel Relative to Reference Fuel,6312,-396,88,27,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,400,398,399,0,0,0,0,0,128,0,-1--1--1,,1|(6173,-396)|
-10,401,Change in Fuel Use by Fuel and Technology due to LCFS with Elec Eff Adj,6543,-252,91,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,402,Reduction in CO2 Emissions due to LCFS,6543,-396,52,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,403,399,402,0,0,0,0,0,128,0,-1--1--1,,1|(6437,-396)|
-1,404,401,402,0,0,0,0,0,128,0,-1--1--1,,1|(6543,-317)|
-12,405,0,6504,-168,131,48,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,385,Fleet Avg Fuel Economy,7581,-656,56,21,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,386,Vehicles,8273,-795,37,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,387,AVLo Average Vehicle Loading,7812,-795,57,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,388,Output Fleet Avg Fuel Economy Summed Across Vehicle Technologies,8273,-656,85,28,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+10,389,BCF Vehicle Fuel Economy Unit Conversion Factors,8048,-795,80,28,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,390,Fleet Avg Fuel Economy in Vehicle Distance,7812,-656,64,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,391,385,390,0,0,0,0,0,128,0,-1--1--1,,1|(7685,-656)|
+1,392,387,390,0,0,0,0,0,128,0,-1--1--1,,1|(7812,-736)|
+10,393,Output Fleet Avg Fuel Economy,8048,-656,56,19,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+1,394,390,393,0,0,0,0,0,128,0,-1--1--1,,1|(7927,-656)|
+1,395,389,393,0,0,0,0,0,128,0,-1--1--1,,1|(8048,-729)|
+1,396,393,388,0,0,0,0,0,128,0,-1--1--1,,1|(8139,-656)|
+1,397,386,388,0,0,0,0,0,128,0,-1--1--1,,1|(8273,-740)|
+10,398,Carbon Intensity Ratios by Transportation Fuel,6245,-895,80,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,399,Reduction in Carbon Intensity of This Fuel Relative to Reference Fuel,6497,-895,88,27,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,400,398,399,0,0,0,0,0,128,0,-1--1--1,,1|(6360,-895)|
+10,401,Change in Fuel Use by Fuel and Technology due to LCFS with Elec Eff Adj,6732,-751,91,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,402,Reduction in CO2 Emissions due to LCFS,6732,-895,52,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,403,399,402,0,0,0,0,0,128,0,-1--1--1,,1|(6625,-895)|
+1,404,401,402,0,0,0,0,0,128,0,-1--1--1,,1|(6732,-816)|
+12,405,0,6689,-667,131,48,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 We care about the amount of reference fuel displaced by each low carbon fuel, not the amount of low carbon fuel added, so we use the version of this variable with the electricity efficiency adjustment.
-10,406,LCFS Credits Generated,6815,-396,48,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-1,407,402,406,0,0,0,0,0,128,0,-1--1--1,,1|(6676,-396)|
-10,408,GCApLC Grams CO2e Avoided per LCFS Credit,6815,-524,84,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,409,408,406,0,0,0,0,0,128,0,-1--1--1,,1|(6815,-467)|
-10,410,ICtPSFfL Incremental Cost to Produce Substitute Fuel for LCFS,6815,-125,88,27,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,411,Incremental Costs from Substitute Fuel Production due to LCFS,6815,-252,81,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,412,401,411,0,0,0,0,0,128,0,-1--1--1,,1|(6677,-252)|
-1,413,410,411,0,0,0,0,0,128,0,-1--1--1,,1|(6815,-180)|
-10,414,LCFS Credit Price,7031,-396,60,11,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-1,415,185,414,0,0,0,0,0,128,0,-1--1--1,,1|(7031,-463)|
-1,416,411,414,0,0,0,0,0,128,0,-1--1--1,,1|(6932,-329)|
-1,417,406,414,0,0,0,0,0,128,0,-1--1--1,,1|(6912,-396)|
-10,418,BPoEFUbVT BAU Perc of Each Fuel Used by Veh Technology,-9256,-424,76,32,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,419,418,214,0,0,0,0,0,128,0,-1--1--1,,1|(-9156,-424)|
-1,420,418,218,0,0,0,0,0,128,0,-1--1--1,,1|(-9356,-424)|
-10,421,Transportation Fuel Pollutant Emissions Intensities before Fuel Economy Adjustment,5327,-292,103,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,422,Fleet Avg Fuel Economy,5055,-420,52,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,423,BAU Fleet Avg Fuel Economy,4852,-292,55,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,424,Percent Change in Fleet Avg Fuel Economy,5055,-292,76,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,425,422,424,0,0,0,0,0,128,0,-1--1--1,,1|(5055,-363)|
-1,426,423,424,0,0,0,0,0,128,0,-1--1--1,,1|(4935,-292)|
-10,427,SRPbVT Separately Regulated Pollutants by Vehicle Type,5620,-292,101,20,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,428,424,1,0,0,0,0,0,128,0,-1--1--1,,1|(5184,-221)|
-1,429,427,421,0,0,0,0,0,128,0,-1--1--1,,1|(5480,-292)|
-1,430,421,1,0,0,0,0,0,128,0,-1--1--1,,1|(5327,-221)|
-12,431,0,5352,-524,364,67,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,406,LCFS Credits Generated,7004,-895,48,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+1,407,402,406,0,0,0,0,0,128,0,-1--1--1,,1|(6863,-895)|
+10,408,GCApLC Grams CO2e Avoided per LCFS Credit,7004,-1023,84,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,409,408,406,0,0,0,0,0,128,0,-1--1--1,,1|(7004,-964)|
+10,410,ICtPSFfL Incremental Cost to Produce Substitute Fuel for LCFS,7004,-624,88,27,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,411,Incremental Costs from Substitute Fuel Production due to LCFS,7004,-751,81,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,412,401,411,0,0,0,0,0,128,0,-1--1--1,,1|(6868,-751)|
+1,413,410,411,0,0,0,0,0,128,0,-1--1--1,,1|(7004,-680)|
+10,414,LCFS Credit Price,7220,-895,60,11,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+1,415,185,414,0,0,0,0,0,128,0,-1--1--1,,1|(7220,-960)|
+1,416,411,414,0,0,0,0,0,128,0,-1--1--1,,1|(7119,-828)|
+1,417,406,414,0,0,0,0,0,128,0,-1--1--1,,1|(7099,-895)|
+10,418,BPoEFUbVT BAU Perc of Each Fuel Used by Veh Technology,-9071,-923,76,32,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,419,418,214,0,0,0,0,0,128,0,-1--1--1,,1|(-8968,-923)|
+1,420,418,218,0,0,0,0,0,128,0,-1--1--1,,1|(-9168,-923)|
+10,421,Transportation Fuel Pollutant Emissions Intensities before Fuel Economy Adjustment,5516,-791,103,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,422,Fleet Avg Fuel Economy,5244,-919,52,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,423,BAU Fleet Avg Fuel Economy,5037,-791,55,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,424,Percent Change in Fleet Avg Fuel Economy,5244,-791,76,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,425,422,424,0,0,0,0,0,128,0,-1--1--1,,1|(5244,-860)|
+1,426,423,424,0,0,0,0,0,128,0,-1--1--1,,1|(5123,-791)|
+10,427,SRPbVT Separately Regulated Pollutants by Vehicle Type,5805,-791,101,20,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,428,424,1,0,0,0,0,0,128,0,-1--1--1,,1|(5373,-721)|
+1,429,427,421,0,0,0,0,0,128,0,-1--1--1,,1|(5668,-791)|
+1,430,421,1,0,0,0,0,0,128,0,-1--1--1,,1|(5516,-721)|
+12,431,0,5537,-1023,364,67,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 Separately-regulated pollutants are non-CO2 combustion byproducts whose emissions are limited by law, such as a limit on NOx emissions per kilometer.  Improving fuel efficiency causes less fuel to be burned per kilometer, but it may not reduce emissions of NOx per kilometer.  Vehicle manufacturers design vehicles to meet fuel economy and conventional pollutant standards separately and may narrowly comply with each standard.  So, if fuel economy improves, the vehicle manufacturer may allow more NOx to be emitted per gram of gasoline burned, to keep the NOx rate per kilometer just under the standard.  We assume that separately-regulated pollutants are unaffected by changes in fuel economy, while other pollutants increase or decrease in proportion to changes in fuel economy.
-10,432,Percentage Reduction of Separately Regulated Pollutants This Year,5327,-420,120,20,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-1,433,432,421,0,0,0,0,0,128,0,-1--1--1,,1|(5327,-367)|
-10,434,New Vehicles,-837,-324,56,11,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,435,New Vehicle Fuel Economy,-837,-472,64,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,436,Percentage of Vehicle Stock New This Year,-608,-324,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,437,Last Year Fleet Avg Fuel Economy,-608,-589,72,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,438,434,436,0,0,0,0,0,128,0,-1--1--1,,1|(-736,-324)|
-10,439,Percentage Difference in New Vehicle vs Fleet Avg Fuel Economy,-608,-472,80,32,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,440,435,439,0,0,0,0,0,128,0,-1--1--1,,1|(-736,-472)|
-1,441,437,439,0,0,0,0,0,128,0,-1--1--1,,1|(-608,-544)|
-10,442,New Vehicles Contribution to Percentage Change to Fleet Avg Fuel Economy,-312,-324,87,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,443,436,442,0,0,0,0,0,128,0,-1--1--1,,1|(-476,-324)|
-1,444,439,442,0,0,0,0,0,128,0,-1--1--1,,1|(-465,-399)|
-10,445,Retiring Vehicles,-837,-76,32,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,446,Vehicles,-608,-197,37,11,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,447,Last Year Fleet Avg Fuel Economy,-608,188,72,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,448,Percentage of Vehicle Stock Retired This Year,-608,-76,80,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,449,446,448,0,0,0,0,0,128,0,-1--1--1,,1|(-608,-147)|
-1,450,445,448,0,0,0,0,0,128,0,-1--1--1,,1|(-752,-76)|
-10,451,One Year,-837,-197,43,11,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,452,451,448,0,1,0,0,0,128,0,-1--1--1,,1|(-737,-143)|
-10,453,Percentage Difference in Retired Vehicle vs Fleet Avg Fuel Economy,-608,68,79,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,454,447,453,0,0,0,0,0,128,0,-1--1--1,,1|(-608,139)|
-10,455,Retired Vehicles Contribution to Percentage Change to Fleet Avg Fuel Economy,-312,-76,95,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,456,448,455,0,0,0,0,0,128,0,-1--1--1,,1|(-476,-76)|
-1,457,453,455,0,0,0,0,0,128,0,-1--1--1,,1|(-469,0)|
-10,458,Percentage Change in Fleet Avg Fuel Economy,-312,-197,79,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,459,442,458,0,0,0,0,0,128,0,-1--1--1,,1|(-312,-260)|
-1,460,455,458,0,0,0,0,0,128,0,-1--1--1,,1|(-312,-132)|
-1,461,451,436,0,1,0,0,0,128,0,-1--1--1,,1|(-736,-253)|
-1,462,446,436,0,0,0,0,0,128,0,-1--1--1,,1|(-608,-249)|
-10,463,Last Year Fleet Avg Fuel Economy,-45,-324,72,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,464,463,56,0,0,0,0,0,128,0,-1--1--1,,1|(-45,-267)|
-1,465,458,56,0,0,0,0,0,128,0,-1--1--1,,1|(-168,-197)|
-1,466,435,166,0,0,0,0,0,128,0,-1--1--1,,1|(-936,-472)|
-1,467,167,453,0,0,0,0,0,128,0,-1--1--1,,1|(-848,68)|
-10,468,VTStFES Vehicle Technologies Subject to Fuel Economy Standard,-6452,115,84,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,469,468,79,0,0,0,0,0,128,0,-1--1--1,,1|(-6452,56)|
-1,470,338,149,0,1,0,0,0,128,0,-1--1--1,,1|(-1604,-497)|
-10,471,Transportation Fuel Pollutant Emissions Intensities This Year,5620,-420,76,28,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,472,471,421,0,0,0,0,0,128,0,-1--1--1,,1|(5480,-356)|
-10,473,Transportation Fuel Pollutant Emissions Intensities This Year,1656,-180,116,21,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,474,473,179,0,0,0,0,0,128,0,-1--1--1,,1|(1656,-112)|
-10,475,Transportation Fuel Pollutant Emissions Intensities This Year,6312,-524,120,20,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,476,475,399,0,0,0,0,0,128,0,-1--1--1,,1|(6312,-468)|
-10,477,BRAaCTSC BAU Range Anxiety and Charging Time Shadow Cost,-4289,208,83,28,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,478,EV Charger Deployment To Date,-2657,-424,76,24,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-10,479,Reduce EV Range Anxiety and Charging Time This Year,-4073,76,76,29,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-10,480,EoCSoEVMS Effect of Charging Stations on EV Market Share,-2889,-549,79,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,481,Range Anxiety and Charging Time Shadow Cost,-4289,76,64,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,482,479,481,0,0,0,0,0,128,0,-1--1--1,,1|(-4180,76)|
-1,483,477,481,0,0,0,0,0,128,0,-1--1--1,,1|(-4289,149)|
-10,484,New Vehicle Price Including EV Shadow Cost,-4289,-48,60,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,485,481,484,0,0,0,0,0,128,0,-1--1--1,,1|(-4289,20)|
-1,486,484,96,0,0,0,0,0,128,0,-1--1--1,,1|(-4289,-105)|
-10,487,Change in EV Market Share due to Charger Deployment,-2889,-424,72,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,488,480,487,0,0,0,0,0,128,0,-1--1--1,,1|(-2889,-493)|
-1,489,478,487,0,0,0,0,0,128,0,-1--1--1,,1|(-2768,-424)|
-10,490,New Vehicles after Charger Deployment,-2889,-296,67,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,491,128,490,0,0,0,0,0,128,0,-1--1--1,,1|(-3019,-296)|
-1,492,487,490,0,0,0,0,0,128,0,-1--1--1,,1|(-2889,-360)|
-1,493,427,1,0,0,0,0,0,128,0,-1--1--1,,1|(5477,-221)|
-12,494,0,5760,-221,196,35,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,432,Percentage Reduction of Separately Regulated Pollutants This Year,5516,-919,120,20,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+1,433,432,421,0,0,0,0,0,128,0,-1--1--1,,1|(5516,-864)|
+10,434,New Vehicles,-648,-823,56,11,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,435,New Vehicle Fuel Economy,-648,-971,64,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,436,Percentage of Vehicle Stock New This Year,-423,-823,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,437,Last Year Fleet Avg Fuel Economy,-423,-1088,72,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,438,434,436,0,0,0,0,0,128,0,-1--1--1,,1|(-548,-823)|
+10,439,Percentage Difference in New Vehicle vs Fleet Avg Fuel Economy,-423,-971,80,32,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,440,435,439,0,0,0,0,0,128,0,-1--1--1,,1|(-548,-971)|
+1,441,437,439,0,0,0,0,0,128,0,-1--1--1,,1|(-423,-1044)|
+10,442,New Vehicles Contribution to Percentage Change to Fleet Avg Fuel Economy,-127,-823,87,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,443,436,442,0,0,0,0,0,128,0,-1--1--1,,1|(-289,-823)|
+1,444,439,442,0,0,0,0,0,128,0,-1--1--1,,1|(-276,-896)|
+10,445,Retiring Vehicles,-648,-575,32,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,446,Vehicles,-423,-696,37,11,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,447,Last Year Fleet Avg Fuel Economy,-423,-311,72,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,448,Percentage of Vehicle Stock Retired This Year,-423,-575,80,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,449,446,448,0,0,0,0,0,128,0,-1--1--1,,1|(-423,-647)|
+1,450,445,448,0,0,0,0,0,128,0,-1--1--1,,1|(-564,-575)|
+10,451,One Year,-648,-696,43,11,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,452,451,448,0,1,0,0,0,128,0,-1--1--1,,1|(-548,-643)|
+10,453,Percentage Difference in Retired Vehicle vs Fleet Avg Fuel Economy,-423,-431,79,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,454,447,453,0,0,0,0,0,128,0,-1--1--1,,1|(-423,-359)|
+10,455,Retired Vehicles Contribution to Percentage Change to Fleet Avg Fuel Economy,-127,-575,95,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,456,448,455,0,0,0,0,0,128,0,-1--1--1,,1|(-289,-575)|
+1,457,453,455,0,0,0,0,0,128,0,-1--1--1,,1|(-280,-499)|
+10,458,Percentage Change in Fleet Avg Fuel Economy,-127,-696,79,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,459,442,458,0,0,0,0,0,128,0,-1--1--1,,1|(-127,-760)|
+1,460,455,458,0,0,0,0,0,128,0,-1--1--1,,1|(-127,-632)|
+1,461,451,436,0,1,0,0,0,128,0,-1--1--1,,1|(-549,-753)|
+1,462,446,436,0,0,0,0,0,128,0,-1--1--1,,1|(-423,-749)|
+10,463,Last Year Fleet Avg Fuel Economy,144,-823,72,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,464,463,56,0,0,0,0,0,128,0,-1--1--1,,1|(144,-767)|
+1,465,458,56,0,0,0,0,0,128,0,-1--1--1,,1|(17,-696)|
+1,466,435,166,0,0,0,0,0,128,0,-1--1--1,,1|(-749,-971)|
+1,467,167,453,0,0,0,0,0,128,0,-1--1--1,,1|(-660,-431)|
+10,468,VTStFES Vehicle Technologies Subject to Fuel Economy Standard,-6267,-384,84,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,469,468,79,0,0,0,0,0,128,0,-1--1--1,,1|(-6267,-444)|
+1,470,338,149,0,1,0,0,0,128,0,-1--1--1,,1|(-1412,-997)|
+10,471,Transportation Fuel Pollutant Emissions Intensities This Year,5805,-919,76,28,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,472,471,421,0,0,0,0,0,128,0,-1--1--1,,1|(5668,-857)|
+10,473,Transportation Fuel Pollutant Emissions Intensities This Year,1841,-679,116,21,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,474,473,179,0,0,0,0,0,128,0,-1--1--1,,1|(1841,-612)|
+10,475,Transportation Fuel Pollutant Emissions Intensities This Year,6497,-1023,120,20,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,476,475,399,0,0,0,0,0,128,0,-1--1--1,,1|(6497,-969)|
+10,477,BRAaCTSC BAU Range Anxiety and Charging Time Shadow Cost,-4100,-291,83,28,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,478,EV Charger Deployment To Date,-2468,-923,76,24,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+10,479,Reduce EV Range Anxiety and Charging Time This Year,-3884,-423,76,29,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+10,480,EoCSoEVMS Effect of Charging Stations on EV Market Share,-2700,-1048,79,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,481,Range Anxiety and Charging Time Shadow Cost,-4100,-423,64,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,482,479,481,0,0,0,0,0,128,0,-1--1--1,,1|(-3991,-423)|
+1,483,477,481,0,0,0,0,0,128,0,-1--1--1,,1|(-4100,-349)|
+10,484,New Vehicle Price Including EV Shadow Cost,-4100,-547,60,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,485,481,484,0,0,0,0,0,128,0,-1--1--1,,1|(-4100,-476)|
+1,486,484,96,0,0,0,0,0,128,0,-1--1--1,,1|(-4100,-604)|
+10,487,Change in EV Market Share due to Charger Deployment,-2700,-923,72,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,488,480,487,0,0,0,0,0,128,0,-1--1--1,,1|(-2700,-993)|
+1,489,478,487,0,0,0,0,0,128,0,-1--1--1,,1|(-2579,-923)|
+10,490,New Vehicles after Charger Deployment,-2700,-795,67,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,491,128,490,0,0,0,0,0,128,0,-1--1--1,,1|(-2831,-795)|
+1,492,487,490,0,0,0,0,0,128,0,-1--1--1,,1|(-2700,-861)|
+1,493,427,1,0,0,0,0,0,128,0,-1--1--1,,1|(5665,-721)|
+12,494,0,5945,-720,196,35,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 We break the separately regulated pollutant emissions intensity adjustment into two steps to avoid creating a very large emissions intensities variable, thereby reducing memory use and helping to maintain Vensim 7.x-series compatibility.
-10,495,Minimum Required Hydrogen Vehicle Sales Percentage This Year,-2889,-48,81,29,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-10,496,Minimum Required Sales Perc by Technology Type,-2657,-48,84,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,497,495,496,0,0,0,0,0,128,0,-1--1--1,,1|(-2781,-48)|
-10,498,QSfV Quantization Size for Vehicles,-2432,-401,61,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,499,Minimum Required New Vehicles by Technology,-2657,-168,79,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,500,496,499,0,0,0,0,0,128,0,-1--1--1,,1|(-2657,-101)|
-10,501,Spare New Vehicles by Technology,-2432,-168,68,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,502,499,501,0,0,0,0,0,128,0,-1--1--1,,1|(-2547,-168)|
-10,503,New Vehicles Before Quantization,-2657,-296,69,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,504,490,503,0,0,0,0,0,128,0,-1--1--1,,1|(-2781,-296)|
-1,505,501,503,0,0,0,0,0,128,0,-1--1--1,,1|(-2536,-228)|
-1,506,499,503,0,0,0,0,0,128,0,-1--1--1,,1|(-2657,-225)|
-10,507,New Vehicles to Shift to Different Technology,-2889,-168,80,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,508,490,507,0,0,0,0,0,128,0,-1--1--1,,1|(-2889,-239)|
-1,509,499,507,0,0,0,0,0,128,0,-1--1--1,,1|(-2765,-168)|
-1,510,507,503,0,0,0,0,0,128,0,-1--1--1,,1|(-2779,-228)|
-1,511,503,144,0,0,0,0,0,128,0,-1--1--1,,1|(-2540,-296)|
-1,512,498,144,0,0,0,0,0,128,0,-1--1--1,,1|(-2432,-351)|
-10,513,New Vehicles after Charger Deployment,-2432,-48,71,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,514,513,501,0,0,0,0,0,128,0,-1--1--1,,1|(-2432,-101)|
-1,515,513,499,0,0,0,0,0,128,0,-1--1--1,,1|(-2536,-104)|
-12,516,0,-8120,808,268,28,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,495,Minimum Required Hydrogen Vehicle Sales Percentage This Year,-2700,-547,81,29,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+10,496,Minimum Required Sales Perc by Technology Type,-2468,-547,84,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,497,495,496,0,0,0,0,0,128,0,-1--1--1,,1|(-2592,-547)|
+10,498,QSfV Quantization Size for Vehicles,-2247,-900,61,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,499,Minimum Required New Vehicles by Technology,-2468,-667,79,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,500,496,499,0,0,0,0,0,128,0,-1--1--1,,1|(-2468,-600)|
+10,501,Spare New Vehicles by Technology,-2247,-667,68,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,502,499,501,0,0,0,0,0,128,0,-1--1--1,,1|(-2359,-667)|
+10,503,New Vehicles Before Quantization,-2468,-795,69,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,504,490,503,0,0,0,0,0,128,0,-1--1--1,,1|(-2592,-795)|
+1,505,501,503,0,0,0,0,0,128,0,-1--1--1,,1|(-2348,-727)|
+1,506,499,503,0,0,0,0,0,128,0,-1--1--1,,1|(-2468,-724)|
+10,507,New Vehicles to Shift to Different Technology,-2700,-667,80,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,508,490,507,0,0,0,0,0,128,0,-1--1--1,,1|(-2700,-736)|
+1,509,499,507,0,0,0,0,0,128,0,-1--1--1,,1|(-2576,-667)|
+1,510,507,503,0,0,0,0,0,128,0,-1--1--1,,1|(-2588,-727)|
+1,511,503,144,0,0,0,0,0,128,0,-1--1--1,,1|(-2352,-795)|
+1,512,498,144,0,0,0,0,0,128,0,-1--1--1,,1|(-2247,-851)|
+10,513,New Vehicles after Charger Deployment,-2247,-547,71,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,514,513,501,0,0,0,0,0,128,0,-1--1--1,,1|(-2247,-600)|
+1,515,513,499,0,0,0,0,0,128,0,-1--1--1,,1|(-2348,-603)|
+12,516,0,-7935,309,268,28,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 Depending on the EPS country deployment, the following modes may be included in the Industry sector rather than the Transportation sector: military fuel use, energy use to power pipelines, non-truck construction vehicles, non-truck agricultural vehicles
-1,517,50,10,0,0,0,0,0,128,0,-1--1--1,,1|(-9021,-144)|
-1,518,3,10,0,0,0,0,0,128,0,-1--1--1,,1|(-9259,-136)|
-10,519,Last Year Vehicles,-3540,-549,37,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,520,519,521,0,0,0,0,0,128,0,-1--1--1,,1|(-3452,-496)|
-10,521,Average Annual Dist Traveled by Vehicle Type Weighted by Technology,-3333,-424,88,32,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,522,521,200,0,0,0,0,0,128,0,-1--1--1,,1|(-3333,-360)|
-10,523,Last Year Vehicles,-9021,396,37,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,524,523,58,0,0,0,0,0,128,0,-1--1--1,,1|(-9021,343)|
-12,525,0,492,-108,92,40,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+1,517,50,10,0,0,0,0,0,128,0,-1--1--1,,1|(-8832,-645)|
+1,518,3,10,0,0,0,0,0,128,0,-1--1--1,,1|(-9068,-639)|
+10,519,Last Year Vehicles,-3355,-1048,37,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,520,519,521,0,0,0,0,0,128,0,-1--1--1,,1|(-3264,-996)|
+10,521,Average Annual Dist Traveled by Vehicle Type Weighted by Technology,-3144,-923,88,32,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,522,521,200,0,0,0,0,0,128,0,-1--1--1,,1|(-3144,-859)|
+10,523,Last Year Vehicles,-8832,-103,37,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,524,523,58,0,0,0,0,0,128,0,-1--1--1,,1|(-8832,-155)|
+12,525,0,677,-607,92,40,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 Here we re-allocate Cargo Dist Transported based on our updated vehicle count for the current year.
-10,526,New Cargo Dist Transported,-7705,-445,53,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,527,63,526,0,0,0,0,0,128,0,-1--1--1,,1|(-7809,-445)|
-10,528,New Cargo Dist Transported,-3764,-296,60,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,529,528,127,0,0,0,0,0,128,0,-1--1--1,,1|(-3661,-296)|
-12,530,0,-7956,-332,368,23,3,135,0,12,-1,3,0,0,-1--1--1,128-192-0,|18||0-0-0,0,0,0,0,0,0
+10,526,New Cargo Dist Transported,-7516,-944,53,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,527,63,526,0,0,0,0,0,128,0,-1--1--1,,1|(-7620,-944)|
+10,528,New Cargo Dist Transported,-3579,-795,60,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,529,528,127,0,0,0,0,0,128,0,-1--1--1,,1|(-3472,-795)|
+12,530,0,-7771,-831,368,23,3,135,0,12,-1,3,0,0,-1--1--1,128-192-0,|18||0-0-0,0,0,0,0,0,0
 Calibration of SoCDTtiNTY
-12,531,0,-7960,-181,357,33,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+12,531,0,-7775,-680,357,33,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 If you are in a hurry and do not wish to calibrate every vehicle/cargo/tech combination, you can give all technologies (within a specific vehicle/cargo combination) the same SoCDTtiNTY value.  In this case, eliminate abrupt changes in "Retiring Vehicles Summed Across Technologies" rather than in "Retiring Vehicles."
-10,532,Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment,-8764,396,100,35,8,130,0,5,-1,0,0,0,128-128-128,128-192-0,|12||128-128-128,0,0,0,0,0,0
-1,533,532,58,0,0,0,0,0,128,0,-1--1--1,,1|(-8893,331)|
-10,534,AVMC Annual Vehicle Maintenance Cost,-4493,-296,75,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,535,534,94,0,0,0,0,0,128,0,-1--1--1,,1|(-4403,-351)|
-10,536,Cargo Dist Transported after Macroeconomic Feedbacks,-9485,268,76,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,537,536,57,0,0,0,0,0,128,0,-1--1--1,,1|(-9376,268)|
-10,538,Last Year Percent Change in Contribution to Gross Domestic Product Excluding Direct Impacts by ISIC Code,-9485,396,104,39,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,539,BDMFL Boolean Disable Macroeconomic Feedback Loops,-9485,143,84,28,8,130,0,5,-1,0,0,0,128-128-128,128-192-0,|12||128-128-128,0,0,0,0,0,0
-1,540,539,536,0,0,0,0,0,128,0,-1--1--1,,1|(-9485,200)|
-1,541,538,536,0,0,0,0,0,128,0,-1--1--1,,1|(-9485,333)|
-10,542,Initial New EV Price,-5472,-168,48,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,543,232,542,0,0,0,0,0,128,1,-1--1--1,,1|(-5356,-168)|
-1,544,542,339,0,0,0,0,0,128,0,-1--1--1,,1|(-5365,-111)|
-1,545,109,110,0,0,0,0,0,128,0,-1--1--1,,1|(-4620,-48)|
-10,546,Percent of Travel Demand Shifted to Other Modes or Eliminated This Year,-9021,523,89,28,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-10,547,RTMF Recipient Transportation Mode Fractions,-9485,523,60,29,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,548,Cargo Dist Reductions due to Mode Shifting,-9256,396,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,549,Cargo Dist Increases due to Mode Shifting,-9256,523,67,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,550,536,548,0,0,0,0,0,128,0,-1--1--1,,1|(-9369,333)|
-1,551,546,548,0,0,0,0,0,128,0,-1--1--1,,1|(-9141,460)|
-1,552,536,549,0,0,0,0,0,128,0,-1--1--1,,1|(-9372,396)|
-1,553,546,549,0,0,0,0,0,128,0,-1--1--1,,1|(-9143,523)|
-1,554,547,549,0,0,0,0,0,128,0,-1--1--1,,1|(-9380,523)|
-1,555,548,57,0,0,0,0,0,128,0,-1--1--1,,1|(-9256,339)|
-1,556,549,57,0,0,0,0,0,128,0,-1--1--1,,1|(-9256,404)|
-10,557,TTS Transportation Technology Shareweights,-3112,-424,87,21,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,558,TTLE Transportation Technology Logit Exponents,-3333,-168,72,29,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,559,558,128,0,0,0,0,0,128,0,-1--1--1,,1|(-3227,-229)|
-1,560,557,128,0,0,0,0,0,128,0,-1--1--1,,1|(-3112,-368)|
-10,561,Vehicle Allocation Unit Correction,-3005,-361,60,19,8,3,1,0,-1,0,0,0,0,0,0,0,0,0
-1,562,561,128,0,1,0,0,0,128,0,-1--1--1,,1|(-3044,-335)|
-1,563,132,128,0,0,0,0,0,128,0,-1--1--1,,1|(-3112,-220)|
-10,565,Transportation Fuel Cost per Unit Energy,425,768,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,566,Transportation Fuel Pollutant Emissions Intensities before Fuel Economy Adjustment,625,728,103,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,572,TTLE Transportation Technology Logit Exponents,152,396,72,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,573,TTS Transportation Technology Shareweights,235,580,88,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,574,NPV of Lifetime Vehicle Cost,203,711,60,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,575,New Vehicle Technology Shares before LCFS Subsidy,187,511,77,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,576,572,575,0,0,0,0,0,128,0,-1--1--1,,1|(168,444)|
-1,577,574,575,0,0,0,0,0,128,0,-1--1--1,,1|(196,623)|
-1,578,573,575,0,0,0,0,0,128,0,-1--1--1,,1|(219,557)|
-10,579,Vehicle Allocation Unit Correction,296,387,63,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,580,579,575,0,0,0,0,0,128,0,-1--1--1,,1|(252,437)|
-10,581,Subsidy Required to Increase Sales Share One Percent,387,504,84,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,582,579,581,0,0,0,0,0,128,0,-1--1--1,,1|(332,435)|
-1,583,572,581,0,0,0,0,0,128,0,-1--1--1,,1|(264,445)|
-1,584,573,581,0,0,0,0,0,128,0,-1--1--1,,1|(295,549)|
-1,585,574,581,0,0,0,0,0,128,0,-1--1--1,,1|(285,617)|
-1,586,575,581,0,0,0,0,0,128,0,-1--1--1,,1|(276,508)|
-10,587,Fleet Avg Fuel Economy,472,391,52,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,588,Average Annual Dist Traveled by Vehicle Type,635,384,87,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,589,Transportation Fuel Pollutant Emissions Intensities before Fuel Economy Adjustment,871,408,103,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,590,LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles,604,503,96,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,591,588,590,0,0,0,0,0,128,0,-1--1--1,,1|(621,431)|
-1,592,589,590,0,0,0,0,0,128,0,-1--1--1,,1|(743,452)|
-10,593,New Vehicle Fuel Economy,783,511,64,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,594,593,590,0,0,0,0,0,128,0,-1--1--1,,1|(715,508)|
-10,596,LCFS Carbon Credit Prices,463,624,69,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,597,581,596,0,0,0,0,0,128,0,-1--1--1,,1|(420,560)|
-1,598,590,596,0,0,0,0,0,128,0,-1--1--1,,1|(537,560)|
-10,599,AVLo Average Vehicle Loading,739,624,57,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,600,599,590,0,0,0,0,0,128,0,-1--1--1,,1|(681,571)|
-10,601,Grams per Metric Ton Pollutant,620,624,64,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128,0,0,0,0,0,0
-1,602,601,596,0,0,0,0,0,64,0,-1--1--1,,1|(551,624)|
-1,606,565,596,0,0,0,0,0,128,0,-1--1--1,,1|(440,708)|
-1,607,566,596,0,0,0,0,0,128,0,-1--1--1,,1|(549,680)|
-1,608,601,590,0,0,0,0,0,128,0,-1--1--1,,1|(613,573)|
+10,532,Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment,-8579,-103,100,35,8,130,0,5,-1,0,0,0,128-128-128,128-192-0,|12||128-128-128,0,0,0,0,0,0
+1,533,532,58,0,0,0,0,0,128,0,-1--1--1,,1|(-8705,-167)|
+10,534,AVMC Annual Vehicle Maintenance Cost,-4304,-795,75,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,535,534,94,0,0,0,0,0,128,0,-1--1--1,,1|(-4212,-848)|
+10,536,Cargo Dist Transported after Macroeconomic Feedbacks,-9296,-231,76,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,537,536,57,0,0,0,0,0,128,0,-1--1--1,,1|(-9188,-231)|
+10,538,Last Year Percent Change in Contribution to Gross Domestic Product Excluding Direct Impacts by ISIC Code,-9296,-103,104,39,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,539,BDMFL Boolean Disable Macroeconomic Feedback Loops,-9296,-356,84,28,8,130,0,5,-1,0,0,0,128-128-128,128-192-0,|12||128-128-128,0,0,0,0,0,0
+1,540,539,536,0,0,0,0,0,128,0,-1--1--1,,1|(-9296,-301)|
+1,541,538,536,0,0,0,0,0,128,0,-1--1--1,,1|(-9296,-165)|
+10,542,Initial New EV Price,-5287,-667,48,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,543,232,542,0,0,0,0,0,128,1,-1--1--1,,1|(-5168,-667)|
+1,544,542,339,0,0,0,0,0,128,0,-1--1--1,,1|(-5177,-608)|
+1,545,109,110,0,0,0,0,0,128,0,-1--1--1,,1|(-4432,-547)|
+10,546,Percent of Travel Demand Shifted to Other Modes or Eliminated This Year,-8832,24,89,28,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+10,547,RTMF Recipient Transportation Mode Fractions,-9296,24,60,29,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,548,Cargo Dist Reductions due to Mode Shifting,-9071,-103,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,549,Cargo Dist Increases due to Mode Shifting,-9071,24,67,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,550,536,548,0,0,0,0,0,128,0,-1--1--1,,1|(-9181,-165)|
+1,551,546,548,0,0,0,0,0,128,0,-1--1--1,,1|(-8953,-41)|
+1,552,536,549,0,0,0,0,0,128,0,-1--1--1,,1|(-9184,-105)|
+1,553,546,549,0,0,0,0,0,128,0,-1--1--1,,1|(-8955,24)|
+1,554,547,549,0,0,0,0,0,128,0,-1--1--1,,1|(-9192,24)|
+1,555,548,57,0,0,0,0,0,128,0,-1--1--1,,1|(-9071,-160)|
+1,556,549,57,0,0,0,0,0,128,0,-1--1--1,,1|(-9071,-97)|
+10,557,TTS Transportation Technology Shareweights,-2927,-923,87,21,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,558,TTLE Transportation Technology Logit Exponents,-3144,-667,72,29,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,559,558,128,0,0,0,0,0,128,0,-1--1--1,,1|(-3039,-728)|
+1,560,557,128,0,0,0,0,0,128,0,-1--1--1,,1|(-2927,-869)|
+10,561,Vehicle Allocation Unit Correction,-2816,-860,60,19,8,3,1,0,-1,0,0,0,0,0,0,0,0,0
+1,562,561,128,0,1,0,0,0,128,0,-1--1--1,,1|(-2856,-836)|
+1,563,132,128,0,0,0,0,0,128,0,-1--1--1,,1|(-2927,-719)|
+10,564,Transportation Fuel Cost per Unit Energy,732,175,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,565,Transportation Fuel Pollutant Emissions Intensities before Fuel Economy Adjustment,583,427,103,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,566,TTLE Transportation Technology Logit Exponents,328,-44,72,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,567,TTS Transportation Technology Shareweights,319,147,88,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,568,NPV of Lifetime Vehicle Cost,323,76,60,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,569,New Vehicle Technology Shares before LCFS Subsidy,72,12,77,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,570,566,569,0,0,0,0,0,128,0,-1--1--1,,1|(208,-16)|
+1,571,568,569,0,0,0,0,0,128,0,-1--1--1,,1|(212,47)|
+1,572,567,569,0,0,0,0,0,128,0,-1--1--1,,1|(212,89)|
+10,573,Vehicle Allocation Unit Correction,305,-148,63,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,574,573,569,0,0,0,0,0,128,0,-1--1--1,,1|(204,-76)|
+10,575,Subsidy Required to Increase Sales Share One Percent,576,5,84,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,576,573,575,0,0,0,0,0,128,0,-1--1--1,,1|(425,-79)|
+1,577,566,575,0,0,0,0,0,128,0,-1--1--1,,1|(440,-21)|
+1,578,567,575,0,0,0,0,0,128,0,-1--1--1,,1|(432,84)|
+1,579,568,575,0,0,0,0,0,128,0,-1--1--1,,1|(432,45)|
+1,580,569,575,0,0,0,0,0,128,0,-1--1--1,,1|(313,9)|
+10,582,Average Annual Dist Traveled by Vehicle Type,25,168,87,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,583,Transportation Fuel Pollutant Emissions Intensities before Fuel Economy Adjustment,20,295,103,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,584,LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles,255,292,96,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,585,582,584,0,0,0,0,0,128,0,-1--1--1,,1|(124,221)|
+1,586,583,584,0,0,0,0,0,128,0,-1--1--1,,1|(133,293)|
+10,587,New Vehicle Fuel Economy,48,423,64,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,588,587,584,0,0,0,0,0,128,0,-1--1--1,,1|(137,365)|
+10,589,LCFS Carbon Credit Prices,608,312,69,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,590,575,589,0,0,0,0,0,128,0,-1--1--1,,1|(589,152)|
+1,591,584,589,0,0,0,0,0,128,0,-1--1--1,,1|(437,300)|
+10,592,AVLo Average Vehicle Loading,353,356,57,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,593,592,584,0,0,0,0,0,128,0,-1--1--1,,1|(316,331)|
+10,594,Grams per Metric Ton Pollutant,516,209,64,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,595,594,589,0,0,0,0,0,64,0,-1--1--1,,1|(552,249)|
+1,596,564,589,0,0,0,0,0,128,0,-1--1--1,,1|(676,232)|
+1,597,565,589,0,0,0,0,0,128,0,-1--1--1,,1|(592,375)|
+1,598,594,584,0,0,0,0,0,128,0,-1--1--1,,1|(405,243)|
+10,599,BPoEFUbVT BAU Perc of Each Fuel Used by Veh Technology,260,216,93,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,600,599,584,0,0,0,0,0,128,0,-1--1--1,,1|(256,248)|
+10,601,Electricity Sector Pollutant Emissions,480,503,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,602,Electricity Generation by Type,71,492,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,603,MWh per BTU,249,591,60,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,604,Electricity Sector Emissions Rate for Transportation,260,485,76,36,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,605,602,604,0,0,0,0,0,128,0,-1--1--1,,1|(156,487)|
+1,606,601,604,0,0,0,0,0,128,0,-1--1--1,,1|(380,495)|
+1,607,603,604,0,0,0,0,0,128,0,-1--1--1,,1|(252,557)|
+1,608,604,584,0,0,0,0,0,128,0,-1--1--1,,1|(256,391)|
+10,609,LCFSLE LCFS Logit Exponent,896,224,52,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,610,LCFS Logit Shareweights,875,408,43,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,611,LCFS Reduction Allocation by Credit Type,892,316,65,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,612,589,611,0,0,0,0,0,128,0,-1--1--1,,1|(744,312)|
+1,613,609,611,0,0,0,0,0,128,0,-1--1--1,,1|(893,260)|
+1,614,610,611,0,0,0,0,0,128,0,-1--1--1,,1|(880,372)|
+1,615,589,610,0,0,0,0,0,128,0,-1--1--1,,1|(748,359)|
+10,616,MPoEFUbVT Max Perc of Each Fuel Usable by Vehicle Technology,427,772,93,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128,0,0,0,0,0,0
+10,617,BPoEFUbVT BAU Perc of Each Fuel Used by Veh Technology,640,892,93,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128,0,0,0,0,0,0
+10,619,Transportation Fuel Pollutant Emissions Intensities before Fuel Economy Adjustment,1116,616,103,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128,0,0,0,0,0,0
+10,620,Electricity Sector Emissions Rate for Transportation,1343,708,59,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128,0,0,0,0,0,0
+10,621,Percent Each Fuel Type Can be Increased by Vehicle Technology,643,773,92,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,622,616,621,0,0,0,0,0,128,0,-1--1--1,,1|(528,771)|
+1,623,617,621,0,0,0,0,0,128,0,-1--1--1,,1|(640,839)|
+10,624,Max Emissions Reductions Achievable by Vehicle Technology,871,612,85,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,625,621,624,0,0,0,0,0,128,0,-1--1--1,,1|(752,695)|
+10,631,Last Year Transportation Sector Fuel Used,648,605,72,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128,0,0,0,0,0,0
+1,632,631,624,0,0,0,0,0,128,0,-1--1--1,,1|(744,608)|
+1,633,619,624,0,0,0,0,0,128,0,-1--1--1,,1|(992,613)|
+10,634,LCFS Required Emissions Reductions,1117,373,69,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,635,Fuel that would be Used by Regulated Vehicle Types in Absence of LCFS with Elec Eff Adj,1349,493,119,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128,0,0,0,0,0,0
+1,636,619,634,0,0,0,0,0,128,0,-1--1--1,,1|(1116,496)|
+10,637,Required LCFS Percentage,1272,377,56,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128,0,0,0,0,0,0
+1,638,637,634,0,0,0,0,0,128,0,-1--1--1,,1|(1207,375)|
+1,639,635,634,0,0,0,0,0,128,0,-1--1--1,,1|(1232,431)|
+1,641,624,610,0,0,0,0,0,128,0,-1--1--1,,1|(872,512)|
+1,642,634,610,0,0,0,0,0,128,0,-1--1--1,,1|(989,392)|
+10,643,BVTStL Boolean Vehicle Types Subject to LCFS,1272,288,80,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128,0,0,0,0,0,0
+1,644,643,634,0,0,0,0,0,128,0,-1--1--1,,1|(1191,332)|
+1,645,634,611,0,0,0,0,0,128,0,-1--1--1,,1|(1009,345)|
+10,646,New Vehicles Demanded,1188,952,52,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128,0,0,0,0,0,0
+10,647,TTS Transportation Technology Shareweights,977,980,88,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128,0,0,0,0,0,0
+10,648,Max Number of New Vehicles by Vehicle Technology,1076,845,72,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,649,647,648,0,0,0,0,0,128,0,-1--1--1,,1|(1020,921)|
+1,650,646,648,0,0,0,0,0,128,0,-1--1--1,,1|(1141,908)|
+10,651,LCFS Annual Vehicle Emissions by Vehicle Type for Non ICE Vehicles,1181,741,96,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128,0,0,0,0,0,0
+1,652,648,624,0,0,0,0,0,128,0,-1--1--1,,1|(980,732)|
+1,653,651,624,0,0,0,0,0,128,0,-1--1--1,,1|(1032,680)|
+10,654,Grams per Metric Ton Pollutant,760,475,64,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128,0,0,0,0,0,0
+1,655,654,624,0,0,0,0,0,128,0,-1--1--1,,1|(805,532)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Transportation - BAU
@@ -39164,7 +39368,7 @@ Revenue changes for fuel-supplying cash flow entities should be the same after a
 :L<%^E!@
 1:MostRecentRun.vdfx
 4:Time
-5:Absolute Change in In Scope Emissions due to Electricity Imports[Pollutant,Electricity Source]
+5:Max Emissions Reductions Achievable by Vehicle Technology[Vehicle Type,Cargo Type,Vehicle Technology]
 6:Acute bronchitis
 6:agriculture and forestry 01T03
 6:agriculture crop and rice measures
