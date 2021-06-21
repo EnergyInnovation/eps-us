@@ -4,6 +4,21 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **3.3.0 - TBD**
+
+* New Features
+  * New Policy: Buy In-Region Products allows the user to specify a percentage of imported products (in the BAU case) that are shifted to domestic suppliers (in the policy case) for each individual industry.
+  * Added demographic breakdowns disaggregating changes in jobs and lives saved due to reduced pollution by sex, race, Hispanic or Latino status, and age bracket.  New graphs show results as absolute numbers and as percent changes relative to BAU.
+  * The EPS core model structure now supports model run end dates as far out as 2100.  Each EPS region's developers may choose their preferred model run end date.  (The U.S. national model's end date remains 2050.)
+* Data Updates
+  * Minor updates to spending allocations to ISIC codes
+  * Update LULUCF rebound pollutant emissions factors
+* Web Interface
+  * Added a new user interface (UI) for setting policy values and implementation schedules for multiple subscripted elements of the same policy.  Updates to WebAppData.xlsx format support the improved UI.
+* Bug Fixes
+  * In models configured to treat emissions associated with imported electricity as in-region emissions, exclude these emissions from health impact calculations
+  * Use BEA domestic requirements table instead of BEA total requirements table when splitting certain ISIC codes in io-table/DLIM
+
 ### **3.2.1 - Apr. 22, 2021**
 
 * Data Updates
