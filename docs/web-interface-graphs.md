@@ -3,7 +3,7 @@ layout: page
 title:  "Output Graphs Available in the Web Interface"
 ---
 
-The web interface allows the user to visualize Energy Policy Simulator (EPS) results through a variety of output graphs.  As of EPS 3.3.0, there are 168 different output graphs available in the web interface.  However, which graphs are shown in the web interface may be customized for different EPS country or regional adaptations.  Many graphs include more than one data series, such as a graph of power plant capacity by plant type (coal, nuclear, hydro, etc.).  Therefore, over 600 different data series are available in the web interface.  (Thousands more are available in the [downloadable version](download.html) of the EPS.)
+The web interface allows the user to visualize Energy Policy Simulator (EPS) results through a variety of output graphs.  As of EPS 3.3.0, there are 169 different output graphs available in the web interface.  However, which graphs are shown in the web interface may be customized for different EPS country or regional adaptations.  Many graphs include more than one data series, such as a graph of power plant capacity by plant type (coal, nuclear, hydro, etc.).  Therefore, over 600 different data series are available in the web interface.  (Thousands more are available in the [downloadable version](download.html) of the EPS.)
 
 ## List of Output Graphs
 
@@ -200,10 +200,14 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
   
     _The same metric as above, graphed as a percent change in the number of jobs held by people of each age bracket (relative to the BAU case in that same year)._
   
-  * **Change in Union and Non-Union Jobs**
+  * **Change in Jobs by Union Status**
   
     _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual), disaggregated into categories by union representation status. Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year)._
+
+  * **Percent Change in Jobs by Union Status**
   
+    _The same metric as above, graphed as a percent change in the number of jobs held by people of each union status (relative to the BAU case in that same year)._
+
   * **Direct/Indirect/Induced Change in Jobs**
   
     _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual). Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year). This graph reports the total change in jobs and also breaks out jobs by Direct, Indirect, and Induced impacts. For an explanation of these terms, see the [Input-Output Model](io-model.html) sheet._
