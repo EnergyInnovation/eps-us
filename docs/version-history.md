@@ -16,6 +16,8 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Update LULUCF rebound pollutant emissions factors
 * Web Interface
   * Added a new user interface (UI) for setting policy values and implementation schedules for multiple subscripted elements of the same policy.  Updates to WebAppData.xlsx format support the improved UI.
+* Minor Updates
+  * The carbon tax is no longer levied on industrial feedstocks (such as the natural gas that goes into plastics, or the crude oil that goes into secondary petroleum products). This avoids double-taxation of crude and secondary petroleum products.
 * Bug Fixes
   * In models configured to treat emissions associated with imported electricity as in-region emissions, exclude these emissions from health impact calculations
   * Use BEA domestic requirements table instead of BEA total requirements table when splitting certain ISIC codes in io-table/DLIM
