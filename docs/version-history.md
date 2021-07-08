@@ -19,6 +19,7 @@ This page tracks updates that have been made with each version of the Energy Pol
 * Minor Updates
   * The carbon tax is no longer levied on industrial feedstocks (such as the natural gas that goes into plastics, or the crude oil that goes into secondary petroleum products). This avoids double-taxation of crude and secondary petroleum products.
   * The model now ensures input data for BAU fuel production, consumption, imports, and exports are in balance, with behavior customizable in variable fuels/FPIEBP
+  * Added district heat losses in heat distribution systems
 * Bug Fixes
   * In models configured to treat emissions associated with imported electricity as in-region emissions, exclude these emissions from health impact calculations
   * Use BEA domestic requirements table instead of BEA total requirements table when splitting certain ISIC codes in io-table/DLIM
