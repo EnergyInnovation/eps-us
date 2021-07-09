@@ -11,6 +11,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Added demographic breakdowns disaggregating changes in jobs and lives saved due to reduced pollution by sex, race, Hispanic or Latino status, and age bracket.  New graphs show results as absolute numbers and as percent changes relative to BAU.
   * The EPS core model structure now supports model run end dates as far out as 2100.  Each EPS region's developers may choose their preferred model run end date.  (The U.S. national model's end date remains 2050.)
   * New Policy: N<sub>2</sub>O abatement (from the chemicals industry, primarily from nitric and adipic acid production)
+  * Projected future changes in BAU Output, BAU Employment, BAU Value Added, and BAU Employee Compensation disaggregated by ISIC code improve the accuracy of some input/output model results
 * Data Updates
   * Minor updates to spending allocations to ISIC codes
   * Update LULUCF rebound pollutant emissions factors
