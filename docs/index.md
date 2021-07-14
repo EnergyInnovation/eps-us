@@ -59,7 +59,7 @@ Links to doc pages are followed by a number indicating the [version](version-his
   * [Input-Output Model](io-model.html) - 3.0.0
   * [Macroeconomic Feedbacks](macro-feedbacks.html) - 3.0.0
   * [Cost Outputs](cost-outputs.html) - 3.0.0
-  * [Public Health and Additional Outputs](additional-outputs.html) - 3.0.0
+  * [Public Health and Additional Outputs](additional-outputs.html) - 3.3.0
   * [Web Application Support Variables](web-app-support.html) - 3.0.0
   * [Debugging Assistance](debugging-assistance.html) - 3.0.0
 * [Automated Analysis with Python Scripts](automated-analysis.html) - 3.0.0
@@ -76,7 +76,7 @@ Links to doc pages are followed by a number indicating the [version](version-his
 * [Acknowledgement of Contributors and Reviewers](acknowledgement.html) - 3.0.0
 * [Contact Us](contact.html) - 3.0.0
 * [Software License and Image Credits](software-license.html) - 3.0.0
-* [Version History](version-history.html) - 3.2.0
+* [Version History](version-history.html) - 3.3.0
   * [Archived Model Releases](archived-releases.html) - 3.0.0
 
 ## Deprecated Documentation

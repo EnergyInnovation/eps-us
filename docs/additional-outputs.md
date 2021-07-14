@@ -37,13 +37,21 @@ Particulates are the primary cause of these negative health outcomes, including 
 
 ### Model Structure
 
-The total emissions of each pollutant in the BAU and policy cases are obtained from the [Cross-Sector Totals](cross-sector-totals.html) sheet, and we take the difference to find the change in pollutant emissions caused by the policy package.  We then multiply the change in emissions of each pollutant by a set of `Health Outcome Incidence per Ton Pollutant` multipliers, from the reduded-form tools discussed above.  Outcomes are quantized (rounded down) to the nearest whole number, such as 1 death or 1 lost workday.
+The total emissions of each pollutant in the BAU and policy cases are obtained from the [Cross-Sector Totals](cross-sector-totals.html) sheet, and we take the difference to find the change in pollutant emissions caused by the policy package.  (For the small number of EPS models configured to include emissions associated with imported electricity in the in-region emissions total, we exclude these emissions from the public health calculations, as we are only tracking health incidents caused by in-region emissions.)   We then multiply the change in emissions of each pollutant by a set of `Health Outcome Incidence per Ton Pollutant` multipliers, from the reduded-form tools discussed above.  Outcomes are quantized (rounded down) to the nearest whole number, such as 1 death or 1 lost workday.
 
 ![public health benefits in the EPS](additional-outputs-PublicHealthBenefits.png)
 
-In some cases, it is useful to be able to see public health benefits in currency units - e.g. for comparison with other costs or savings.  The EPS monetizes avoided premature mortality using a Value of a Statistical Life (VSL) figure, taken in as input data.  Only premature mortality, not other health outcomes, are monetized.  (Premature mortality often represents on the order of 97% of monetized benefits, due to the high value assigned to incidents of premature mortality and far smaller value assigned to other health impacts.)
+In some cases, it is useful to be able to see public health benefits in currency units - e.g. for comparison with other costs or savings.  The EPS monetizes avoided premature mortality using a Value of a Statistical Life (VSL) figure, taken in as input data.  Only premature mortality, not other health outcomes, are monetized.  (Premature mortality often represents on the order of 97% of monetized benefits, due to the high value assigned to incidents of premature mortality and far smaller values assigned to other health impacts.)
 
 ![monetized avoided premature mortality](additional-outputs-MonetizedBenefits.png)
+
+Additionally, the EPS provides an estimated demographic breakdown of premature mortality incidents, where input data are available.  We take in input data from `FoHObDT Fraction of Health Outcomes by Demographic Trait` and multiply by the number of avoided premature deaths to allocate them to specific demographic traits.  For the U.S. model, the relevant traits are sex, race, and Hispanic or Latino status.  The main complexity of this process occurs not within Vensium but within the Excel file for variable `FoHObDT Fraction of Health Outcomes by Demographic Trait` (which draws from results from air quality and public health models).  The sources and methods are carefully documented and explained within that file - simply [download the model](download.html) and review the file for more details.
+
+![avoided premature mortality by demographic trait](additional-outputs-AvoidedDeathsDemographics.png)
+
+So that we can display demographic mortality results as percentage changes (which is helpful for making comparisons between demographic groups), we calculate the number of deaths by demographic trait (in the policy case) by subtracting avoided deaths from BAU deaths, and we compare policy case deaths to BAU deaths by demographic trait to find percent changes.
+
+![percent change in deaths](additional-outputs-PercCngDeaths.png)
 
 ## Avoided Climate Damages
 
@@ -59,9 +67,9 @@ Finally, we sum the changes in monetized public health impacts (from particulate
 
 ## Energy-Related Emissions
 
-Some users might want to know the amount of emissions from the production of energy (in any form, such as heat, electricity, light, or force).  All emissions in the Energy Policy Simulator (EPS) are "energy-related" except industrial sector process emissions and anthropogenic LULUCF emissions.  We include the effects of carbon sequestration, so sequestered CO<sub>2</sub> is removed from the total emissions reported here.
+Some users might want to know the amount of emissions from the production of energy (in any form, such as heat, electricity, light, or force).  All emissions in the Energy Policy Simulator (EPS) are "energy-related" except industrial sector process emissions and anthropogenic LULUCF emissions.  We include the effects of carbon sequestration conducted by the electricity and industry sectors, which effectively reduces these sectors' net CO<sub>2</sub> emissions, so the total energy-related emissions reported here do not include CO<sub>2</sub> sequestered by these sectors.  In contrast, for the geoengineering sector, we do not subtract captured CO<sub>2</sub> (i.e., from direct air capture; DAC) from total energy-related emissions.  (We only include emissions from energy used to power geoengineering processes.)  In the geoengineering sector, the CO<sub>2</sub> removal is the product/purpose and these negative emissions are not considered *energy-related*.
 
-We calculate energy-related emissions for both the BAU and policy cases.  From "Total Pollutant Emissions," we subtract anthropogenic LULUCF emissions and Industry sector process emissions.  We then convert this to CO<sub>2</sub>e using the user-specified GWP factor.  A screenshot of the structure for the policy case is shown below:
+We calculate energy-related emissions for both the BAU and policy cases.  From "Total Pollutant Emissions," we subtract anthropogenic LULUCF emissions and Industry sector process emissions.  For geoengineering, we take the total emissions excluding captured CO<sub>2</sub>.  We then convert this to CO<sub>2</sub>e using the user-specified GWP factor.  A screenshot of the structure for the policy case is shown below:
 
 ![energy-related emissions excluding leakage](additional-outputs-EnergyRelatedEmis.png)
 
