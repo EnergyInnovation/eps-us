@@ -4,7 +4,7 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
-### **3.3.0 - TBD**
+### **3.3.0 - Aug. 9, 2021**
 
 * New Features
   * New Policy: Buy In-Region Products allows the user to specify a percentage of imported products (in the BAU case) that are shifted to domestic suppliers (in the policy case) for each individual industry.
@@ -13,8 +13,16 @@ This page tracks updates that have been made with each version of the Energy Pol
   * New Policy: N<sub>2</sub>O abatement (from the chemicals industry, primarily from nitric and adipic acid production)
   * Projected future changes in BAU Output, BAU Employment, BAU Value Added, and BAU Employee Compensation disaggregated by ISIC code improve the accuracy of some input/output model results
 * Data Updates
-  * Minor updates to spending allocations to ISIC codes
+
   * Update LULUCF rebound pollutant emissions factors
+  * Update electricity sector prices to NREL ATB 2021
+  * Update endogenous learning variables for electric vehicles
+  * Revert to EPA data for HFCs
+  * Update building envelope component lifetime
+  * Update NDC targets based on the 2021 CRF submission
+  * Update BAU and maximum biofuel blending amounts in trans/BPoEFUbVT and trans/MPoEFUbVT
+  * Minor updates to spending allocations to ISIC codes
+  * Other minor data updates
 * Web Interface
   * Added a new user interface (UI) for setting policy values and implementation schedules for multiple subscripted elements of the same policy.  Updates to WebAppData.xlsx format support the improved UI.
 * Minor Updates
@@ -22,6 +30,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * The model now ensures input data for BAU fuel production, consumption, imports, and exports are in balance, with behavior customizable in variable fuels/FPIEBP
   * Added district heat losses in heat distribution systems
   * Building retrofitting policy effects are now cumulative with the effects of other buildings sector policies that affect the energy efficiency of newly sold building components
+  * Subscript battery share of electric vehicle price by Vehicle Type
 * Bug Fixes
   * In models configured to treat emissions associated with imported electricity as in-region emissions, exclude these emissions from health impact calculations
   * Use BEA domestic requirements table instead of BEA total requirements table when splitting certain ISIC codes in io-table/DLIM
