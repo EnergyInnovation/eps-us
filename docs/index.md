@@ -57,7 +57,7 @@ Links to doc pages are followed by a number indicating the [version](version-his
   * [Endogenous Learning](endogenous-learning.html) - 3.0.0
   * [Cross-Sector Totals](cross-sector-totals.html) - 3.0.0
   * [Input-Output Model](io-model.html) - 3.0.0
-  * [Macroeconomic Feedbacks](macro-feedbacks.html) - 3.0.0
+  * [Macroeconomic Feedbacks](macro-feedbacks.html) - 3.3.0
   * [Cost Outputs](cost-outputs.html) - 3.0.0
   * [Public Health and Additional Outputs](additional-outputs.html) - 3.3.0
   * [Web Application Support Variables](web-app-support.html) - 3.0.0
