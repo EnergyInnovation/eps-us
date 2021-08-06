@@ -13,7 +13,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * New Policy: N<sub>2</sub>O abatement (from the chemicals industry, primarily from nitric and adipic acid production)
   * Projected future changes in BAU Output, BAU Employment, BAU Value Added, and BAU Employee Compensation disaggregated by ISIC code improve the accuracy of some input/output model results
 * Data Updates
-
+  * Updated NDC scenario to include incentives for electric vehicles and efficient building components
   * Update LULUCF rebound pollutant emissions factors
   * Update electricity sector prices to NREL ATB 2021
   * Update endogenous learning variables for electric vehicles
