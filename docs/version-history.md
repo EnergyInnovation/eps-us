@@ -4,7 +4,7 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
-### **3.3.0 - Aug. 9, 2021**
+### **3.3.0 - Aug. 16, 2021**
 
 * New Features
   * New Policy: Buy In-Region Products allows the user to specify a percentage of imported products (in the BAU case) that are shifted to domestic suppliers (in the policy case) for each individual industry.
