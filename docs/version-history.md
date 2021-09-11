@@ -4,6 +4,13 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **3.3.1 - TBD**
+
+* New Features
+  * Electricity generation subsidies can now be set separately for power plants of the same type in different quality tiers (both BAU and policy lever)
+* Other Improvements
+  * Electricity dispatch choice is now handled via a logit function rather than ALLOCATE AVAILABLE
+
 ### **3.3.0 - Aug. 16, 2021**
 
 * New Features
