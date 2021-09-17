@@ -8,8 +8,9 @@ This page tracks updates that have been made with each version of the Energy Pol
 
 * New Features
   * Electricity generation subsidies can now be set separately for power plants of the same type in different quality tiers (both BAU and policy lever)
-* Other Improvements
-  * Electricity dispatch choice is now handled via a logit function rather than ALLOCATE AVAILABLE
+  * Electricity dispatch choice is now handled via a logit function rather than ALLOCATE AVAILABLE.  Logit shareweights are calculated endogenously and are policy-responsive.  A manual override for these shareweights has been added, allowing detailed customization of electricity dispatch behavior for regions with unusual electricity dispatch approaches.
+* Bug Fixes
+  * "Buy In-Region" policy lever's direct effects are now included in macroecnomic feedback loops, plus minor formula fix
 
 ### **3.3.0 - Aug. 16, 2021**
 
