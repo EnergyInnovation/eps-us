@@ -11,6 +11,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Electricity dispatch choice is now handled via a logit function rather than ALLOCATE AVAILABLE.  Logit shareweights are calculated endogenously and are policy-responsive.  A manual override for these shareweights has been added, allowing detailed customization of electricity dispatch behavior for regions with unusual electricity dispatch approaches.
 * Bug Fixes
   * "Buy In-Region" policy lever's direct effects are now included in macroecnomic feedback loops, plus minor formula fix
+  * Correct the share of natural gas used for energy (vs. as feedstock) by the refining industry in indst/BPoIFUfE
 
 ### **3.3.0 - Aug. 16, 2021**
 
