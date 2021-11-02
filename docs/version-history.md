@@ -12,7 +12,8 @@ This page tracks updates that have been made with each version of the Energy Pol
   * The fuel tax policy can now be used to reduce the BAU tax rate or apply subsidies.  Positive values increase the tax rate.  Negative values reduce the BAU tax rate or apply subsidies.
 * Bug Fixes
   * "Buy In-Region" policy lever's direct effects are now included in macroecnomic feedback loops, plus minor formula fix
-  * Correct the share of natural gas used for energy (vs. as feedstock) by the refining industry in indst/BPoIFUfE
+  * Corrected the share of natural gas used for energy (vs. as feedstock) by the refining industry in indst/BPoIFUfE
+  * Corrected formula for exclusion of deaths caused by pollution associated with imported electricity for EPS regions that count emissions from imported electricity
 
 ### **3.3.0 - Aug. 16, 2021**
 
