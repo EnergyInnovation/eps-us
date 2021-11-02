@@ -9,6 +9,7 @@ This page tracks updates that have been made with each version of the Energy Pol
 * New Features
   * Electricity generation subsidies can now be set separately for power plants of the same type in different quality tiers (both BAU and policy lever)
   * Electricity dispatch choice is now handled via a logit function rather than ALLOCATE AVAILABLE.  Logit shareweights are calculated endogenously and are policy-responsive.  A manual override for these shareweights has been added, allowing detailed customization of electricity dispatch behavior for regions with unusual electricity dispatch approaches.
+  * The fuel tax policy can now be used to reduce the BAU tax rate or apply subsidies.  Positive values increase the tax rate.  Negative values reduce the BAU tax rate or apply subsidies.
 * Bug Fixes
   * "Buy In-Region" policy lever's direct effects are now included in macroecnomic feedback loops, plus minor formula fix
   * Correct the share of natural gas used for energy (vs. as feedstock) by the refining industry in indst/BPoIFUfE
