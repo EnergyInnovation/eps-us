@@ -112,7 +112,7 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
 
 * ### Effects by Policy: CO<sub>2</sub>e Wedge Diagrams
 
-  _These graphs present the relative impact of each enabled policy in a scenario in terms of the change in CO<sub>2</sub>e emissions. The "Total" wedge diagram includes all emission from the modeled region, while the sector-specific wedge diagrams only include direct emissions from those sectors.  Note that policies affectiong one sector may impact emissions in other sectors.  For example, electrification of industry (an Industry Sector policy) may affect emissions from the Electricity Sector.  Therefore, viewing a sector-specific wedge diagram may not show the full emissions impacts of that sector's policies.  For a detailed description of how wedge thicknesses are calculated, see [this GitHub thread](https://github.com/Energy-Innovation/eps-us/issues/119)._
+  _These graphs present the relative impact of each enabled policy in a scenario in terms of the change in CO<sub>2</sub>e emissions. The "Total" wedge diagram includes all emission from the modeled region, while the sector-specific wedge diagrams only include direct emissions from those sectors.  Note that policies affectiong one sector may impact emissions in other sectors.  For example, electrification of industry (an Industry Sector policy) may affect emissions from the Electricity Sector.  Therefore, viewing a sector-specific wedge diagram may not show the full emissions impacts of that sector's policies.  For a detailed description of how wedge thicknesses are calculated, see [Calculating Wedge Diagrams and Cost Curves](calculating-wedge-diagrams-and-cost-curves.html)._
   
   * **Total**
   
