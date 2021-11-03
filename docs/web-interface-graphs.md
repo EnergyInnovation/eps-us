@@ -3,7 +3,7 @@ layout: page
 title:  "Output Graphs Available in the Web Interface"
 ---
 
-The web interface allows the user to visualize Energy Policy Simulator (EPS) results through a variety of output graphs.  As of EPS 3.3.0, there are 169 different output graphs available in the web interface.  However, which graphs are shown in the web interface may be customized for different EPS country or regional adaptations.  Many graphs include more than one data series, such as a graph of power plant capacity by plant type (coal, nuclear, hydro, etc.).  Therefore, over 600 different data series are available in the web interface.  (Thousands more are available in the [downloadable version](download.html) of the EPS.)
+The web interface allows the user to visualize Energy Policy Simulator (EPS) results through a variety of output graphs.  As of EPS 3.3.1, there are 174 different output graphs available in the web interface.  However, which graphs are shown in the web interface may be customized for different EPS country or regional adaptations.  Many graphs include more than one data series, such as a graph of power plant capacity by plant type (coal, nuclear, hydro, etc.).  Therefore, over 600 different data series are available in the web interface.  (Thousands more are available in the [downloadable version](download.html) of the EPS.)
 
 ## List of Output Graphs
 
@@ -435,6 +435,10 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
   * **Fuel Use by Vehicle Type**
   
     _Annual Transportation sector fuel use by vehicle type_
+
+  * **Fuel Use (Total)**
+
+    _Annual Transportation sector fuel use (total)_
   
   * **Travel Demand (Passenger Modes)**
   
@@ -453,7 +457,11 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
   * **By Fuel (Excluding Feedstocks)**
   
     _Annual Industry sector fuel use by fuel type, excluding feedstocks and only including fuels used for energy purposes_
+
+  * **Total (Excluding Feedstocks)**
   
+    _Annual Industry sector fuel use (total), excluding feedstocks and only including fuels used for energy purposes_
+
   * **By Industry (Including Feedstocks)**
   
     _Annual Industry sector fuel use by subindustry, including feedstocks_
@@ -461,6 +469,10 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
   * **By Fuel (Including Feedstocks)**
   
     _Annual Industry sector fuel use by fuel type, including feedstocks_
+
+  * **Total (Including Feedstocks)**
+  
+    _Annual Industry sector fuel use (total), including feedstocks_
 
 * ### Industry: CO<sub>2</sub>e Emissions
   
@@ -501,6 +513,10 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
   * **By Energy Source**
   
     _Annual Buildings sector energy consumption by fuel type_
+
+  * **Total**
+  
+    _Annual Buildings sector energy consumption (total)_
 
 * ### Energy Consumption
   
