@@ -11,8 +11,9 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Electricity dispatch choice is now handled via a logit function rather than ALLOCATE AVAILABLE.  Logit shareweights are calculated endogenously and are policy-responsive.  A manual override for these shareweights has been added, allowing detailed customization of electricity dispatch behavior for regions with unusual electricity dispatch approaches.
   * The fuel tax policy can now be used to reduce the BAU tax rate or apply subsidies.  Positive values increase the tax rate.  Negative values reduce the BAU tax rate or apply subsidies.
   * Added single-line graphs of total energy use for each end use sector.  Breakdowns showing total energy use as stacked area graphs already existed, but a single-line graph is sometimes preferable for simplicity or for comparing multiple policy packages on the same graph.
+  * The toggle for 100-year vs. 20-year GWP values is now shown in the web application interface
 * Bug Fixes
-  * "Buy In-Region" policy lever's direct effects are now included in macroecnomic feedback loops, plus minor formula fix
+  * "Buy In-Region" policy lever's direct effects are now included in macroecnomic feedback loops, plus other formula fixes for this policy
   * Corrected the share of natural gas used for energy (vs. as feedstock) by the refining industry in indst/BPoIFUfE
   * Corrected formula for exclusion of deaths caused by pollution associated with imported electricity for EPS regions that count emissions from imported electricity
   * The change in demand for the "energy pipelines and gas processing" industry is now based on the change in domestic + exported natural gas demand, rather than natural gas production, to better handle regions with gas transmission but little-to-no gas production
