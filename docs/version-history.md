@@ -12,6 +12,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * The fuel tax policy can now be used to reduce the BAU tax rate or apply subsidies.  Positive values increase the tax rate.  Negative values reduce the BAU tax rate or apply subsidies.
   * Added single-line graphs of total energy use for each end use sector.  Breakdowns showing total energy use as stacked area graphs already existed, but a single-line graph is sometimes preferable for simplicity or for comparing multiple policy packages on the same graph.
   * The toggle for 100-year vs. 20-year GWP values is now shown in the web application interface
+  * Changes in the amount of money paid for passenger transport fares (airfare, bus fare, train fare) are now calculated
 * Bug Fixes
   * "Buy In-Region" policy lever's direct effects are now included in macroecnomic feedback loops, plus other formula fixes for this policy
   * Corrected the share of natural gas used for energy (vs. as feedstock) by the refining industry in indst/BPoIFUfE
