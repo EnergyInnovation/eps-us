@@ -13,6 +13,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Transportation Sector
     * Changes in the amount of money paid for passenger transport fares (airfare, bus fare, train fare) are now calculated.
     * Annual vehicle insurance costs for all on-road vehicles are now included.
+    * Annual vehicle parking costs are now included.
   * The fuel tax policy can now be used to reduce the BAU tax rate or apply subsidies.  Positive values increase the tax rate.  Negative values reduce the BAU tax rate or apply subsidies.
   * Added single-line graphs of total energy use for each end use sector.  Breakdowns showing total energy use as stacked area graphs already existed, but a single-line graph is sometimes preferable for simplicity or for comparing multiple policy packages on the same graph.
   * Policy schedules (FoPITY) are now managed by a single Python script rather than via several large Excel files.  This allows policies to be added and changed more easily, policy schedules are generated more quickly, and there is no longer any risk of policy properties not aligning across different Excel files.
