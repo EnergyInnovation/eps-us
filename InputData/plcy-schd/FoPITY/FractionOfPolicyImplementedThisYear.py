@@ -3,12 +3,27 @@
 # This script is used to generate .csv policy schedule files for all built-in (reference) scenarios.
 # It creates schedules in the formats expected by Vensim and by the web app.  It also creates the
 # Policy Elements file required to populate the relevant subscript in Vensim.
+#
+# The first schedule is the default schedule.  At least one schedule must be
+# defined for every policy.  The script will produce schedule files for a number of
+# schedules defined by "MaxSchedules".  All the policy elements do not need to have
+# the same number of schedules defined in this script.  If you leave a particular schedule
+# for a particular element undefined, the script will use the default schedule for
+# that element in that schedule.  For example, if you specify four schedules for
+# PolicyElement A, then schedules 1-4 will contain the values you defined for that policy
+# element and schedules 5-9 will contain the same data as schedule 1 for that policy element.
+# This is done on an element-by-element basis, so a different policy element may have only
+# two schedules defined in this script, and schedules 1-2 will use your definitions, and
+# schedules 3-9 will use the same data as schedule 1 for that policy element.
 
 
-# First Year
-# ----------
-# Update this based on the first simulated year of the model run.
-FirstYear = 2020
+# Global Constants
+# ----------------
+FirstYear = 2020 # Update this based on the first simulated year of the model run.
+FinalYear = 2100 # This should be the final year supported by EPS.mdl (i.e., 2100), not the final year actually used in a given region.
+MaxSchedules = 9
+MaxSubscripts = 3
+RoundingDigits = 6
 
 
 # Policy Implementation Schedules
@@ -6824,14 +6839,6 @@ PolicyElements = (
 )
 
 
-# Global Constants
-# ----------------
-MaxSchedules = 9
-MaxSubscripts = 3
-FinalYear = 2100 # This should be the final year supported by EPS.mdl (i.e., 2100), not the final year actually used in a given region.
-RoundingDigits = 6
-
-
 # Functions
 # ---------
 
@@ -6854,6 +6861,14 @@ def WritePolicyAndSubscriptNames(PolicyElement):
     else:
       f.write(",")
 
+# DetermiActiveSchedule = SetActiveSchedule()ne which schedule to use when writing data for a policy element
+def SetActiveSchedule(PolicyElement):
+  # If we don't have data for a schedule, use the first schedule's data
+  if Schedule > len(PolicyElement)-1:
+    return 1
+  else:
+    return Schedule
+
 # Write a .csv file formatted for use by Vensim
 def WriteVensimFile():
 
@@ -6868,11 +6883,7 @@ def WriteVensimFile():
   
     WritePolicyAndSubscriptNames(PolicyElement)
     
-    # If we don't have data for a schedule, use the first schedule's data.
-    if Schedule > len(PolicyElements[0])-1:
-      ActiveSchedule = 1
-    else:
-      ActiveSchedule = Schedule
+    ActiveSchedule = SetActiveSchedule(PolicyElement)
     
     # Write policy implementation percentages for each year
     for Year in range(FirstYear,FinalYear+1):
@@ -6926,11 +6937,7 @@ def WriteWebAppFile():
   
     WritePolicyAndSubscriptNames(PolicyElement)
 
-    # If we don't have data for a schedule, use the first schedule's data.
-    if Schedule > len(PolicyElements[0])-1:
-      ActiveSchedule = 1
-    else:
-      ActiveSchedule = Schedule
+    ActiveSchedule = SetActiveSchedule(PolicyElement)
 
     # Write schedule data
     for Year in range(FirstYear,FinalYear+1):
