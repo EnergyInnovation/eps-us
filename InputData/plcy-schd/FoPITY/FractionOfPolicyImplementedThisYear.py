@@ -4,17 +4,15 @@
 # It creates schedules in the formats expected by Vensim and by the web app.  It also creates the
 # Policy Elements file required to populate the relevant subscript in Vensim.
 #
-# The first schedule is the default schedule.  At least one schedule must be
-# defined for every policy.  The script will produce schedule files for a number of
-# schedules defined by "MaxSchedules".  All the policy elements do not need to have
-# the same number of schedules defined in this script.  If you leave a particular schedule
-# for a particular element undefined, the script will use the default schedule for
-# that element in that schedule.  For example, if you specify four schedules for
-# PolicyElement A, then schedules 1-4 will contain the values you defined for that policy
-# element and schedules 5-9 will contain the same data as schedule 1 for that policy element.
-# This is done on an element-by-element basis, so a different policy element may have only
-# two schedules defined in this script, and schedules 1-2 will use your definitions, and
-# schedules 3-9 will use the same data as schedule 1 for that policy element.
+# At least one schedule must be defined for every policy element.  Each schedule has a schedule number
+# ahead of its data indicating which schedule file should use those data.  The script will produce
+# files for a number of schedules defined by "MaxSchedules".  All the policy elements do not need to have
+# the same number of schedules defined.  If you leave a particular schedule for a
+# particular element undefined, the script will use the that policy element's first listed schedule.
+# (The first listed schedule is typically, but not necessarily, labeled "Schedule 1".)
+# For example, in "Example Policy Element", if you provide data only for "Schedule 1" and "Schedule 2",
+# this script will use the data from whichever schedule is listed first (likely Schedule 1) to populate
+# schedules 3 through MaxSchedules for Example Policy Element.
 
 
 # Global Constants
