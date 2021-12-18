@@ -4309,7 +4309,7 @@ def WritePolicyAndSubscriptNames(PolicyElement):
     else:
       f.write(",")
 
-# DetermiActiveSchedule = SetActiveSchedule()ne which schedule to use when writing data for a policy element
+# Determine which schedule to use when writing data for a policy element
 def SetActiveSchedule(PolicyElement):
   # If we don't have data for a schedule, use the first schedule's data
   if Schedule > len(PolicyElement)-1:
