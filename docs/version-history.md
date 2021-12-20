@@ -24,6 +24,15 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Corrected formula for exclusion of deaths caused by pollution associated with imported electricity for EPS regions that count emissions from imported electricity
   * The change in demand for the "energy pipelines and gas processing" industry is now based on the change in domestic + exported natural gas demand, rather than natural gas production, to better handle regions with gas transmission but little-to-no gas production
   * Fixed omission of geoengineering primary energy use from "Primary Energy Use by Sector" graph
+* Data Updates
+  * Updated BAU trajectory to incorporate the AIM Act
+  * Updated BAU carbon capture and sequestration amounts in industry based on a Rhodium analysis
+  * Updated currency year to 2020
+  * Separated combined cycle, steam turbine, and combustion turbine natural gas plants in the input data
+  * Updated battery storage costs and recalibrated vehicle prices
+  * Corrected BAU Production Tax Credit values for onshore wind
+  * Other minor data updates
+  
 
 ### **3.3.0 - Aug. 16, 2021**
 
