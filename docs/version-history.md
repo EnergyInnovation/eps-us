@@ -4,7 +4,7 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
-### **3.3.1 - TBD**
+### **3.3.1 - Jan. 18, 2022**
 
 * New Features
   * Electricity Sector
@@ -23,7 +23,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Corrected the share of natural gas used for energy (vs. as feedstock) by the refining industry in indst/BPoIFUfE
   * Corrected formula for exclusion of deaths caused by pollution associated with imported electricity for EPS regions that count emissions from imported electricity
   * The change in demand for the "energy pipelines and gas processing" industry is now based on the change in domestic + exported natural gas demand, rather than natural gas production, to better handle regions with gas transmission but little-to-no gas production
-  * Fixed omission of geoengineering primary energy use from "Primary Energy Use by Sector" graph
+  * Fixed omission of geoengineering primary energy use from "Primary Energy Use by Sector" and Fuel Costs graphs
 * Data Updates
   * Updated BAU trajectory to incorporate the AIM Act
   * Updated BAU carbon capture and sequestration amounts in industry based on a Rhodium analysis
