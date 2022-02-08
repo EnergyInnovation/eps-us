@@ -23,13 +23,14 @@ Links to doc pages are followed by a number indicating the [version](version-his
   * [The Included Input Data Set](input-data.html) - 3.0.0
   * [Assumptions and Limitations](assumptions.html) - 3.0.0
   * [How the EPS Avoids Double Counting Policy Effects](how-the-eps-avoids-double-counting.html) - 3.1.0
-  * [Comparing Results to Reality or Other Models](comparing-results.html) - 3.0.0
+  * [Comparing Results to Reality or Other Models](comparing-results.html) - 3.3.1
   * [Evaluating Policy Packages' Financial Effects](evaluating-package-financials.html) - 3.0.0
   * [Notes on Unit Conversion](unit-conversion.html) - 3.0.0
   * [Remapping Subscript Elements](remapping.html) - 3.0.0
 * About the Web Interface
   * [Web Interface Tutorial](online-model-tutorial.html) - 3.0.0
   * [Output Graphs Available in the Web Interface](web-interface-graphs.html) - 3.3.0
+  * [Calculating Wedge Diagrams and Cost Curves](calculating-wedge-diagrams-and-cost-curves.html) - 3.3.1
   * [Background and Technical Info about the Web Interface](background-and-technical-info.html) - 3.0.0
   * [Web App Hosting and Integration into a Partner's Website](integrating-the-web-app.html) - 3.2.0
 * [Download and Installation Instructions](download.html) - 3.0.0
@@ -66,7 +67,6 @@ Links to doc pages are followed by a number indicating the [version](version-his
   * [Selecting Ouput Variables for a Python Script](selecting-output-variables.html) - 3.0.0
   * [Logging Output for Multiple Scenarios](logging-output.html)- 3.0.0
   * [Testing Policy Combinations](testing-policy-combinations.html) - 3.0.0
-  * [Testing Policy Contributions to a Policy Package](testing-policy-contributions.html) - 3.0.0
   * [Simulating a Cap-and-Trade Policy](simulating-cap-and-trade.html) - 3.0.0
 
 ## [Policy Descriptions](policy-design-index.html)
@@ -84,3 +84,4 @@ Links to doc pages are followed by a number indicating the [version](version-his
 The documentation pages listed below do not apply to the most recent version of the Energy Policy Simulator.  However, they contain information that may be relevant if using an older software version (which may be the latest available version for some geographic regions, if a region has not updated to the latest software).
 
   * [Notes on Carbon Tax Revenue Use](carbon-tax-revenue-use.html) - written for 1.4.2, no longer applicable after 2.1.1
+  * [Testing Policy Contributions to a Policy Package](testing-policy-contributions.html) - The Python script uses the procedure from the EPS up through version 3.0.0.  In EPS 3.1.0, a more refined procedure was introduced.  To learn about the new procedure, see [Calculating Wedge Diagrams and Cost Curves](calculating-wedge-diagrams-and-cost-curves.html).

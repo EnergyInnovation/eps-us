@@ -4,14 +4,35 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
-### **3.3.1 - TBD**
+### **3.3.1 - Jan. 18, 2022**
 
 * New Features
-  * Electricity generation subsidies can now be set separately for power plants of the same type in different quality tiers (both BAU and policy lever)
-  * Electricity dispatch choice is now handled via a logit function rather than ALLOCATE AVAILABLE.  Logit shareweights are calculated endogenously and are policy-responsive.  A manual override for these shareweights has been added, allowing detailed customization of electricity dispatch behavior for regions with unusual electricity dispatch approaches.
+  * Electricity Sector
+    * Electricity generation subsidies can now be set separately for power plants of the same type in different quality tiers (both BAU and policy lever)
+    * Electricity dispatch choice is now handled via a logit function rather than ALLOCATE AVAILABLE.  Logit shareweights are calculated endogenously and are policy-responsive.  A manual override for these shareweights has been added, allowing detailed customization of electricity dispatch behavior for regions with unusual electricity dispatch approaches.
+  * Transportation Sector
+    * Changes in the amount of money paid for passenger transport fares (airfare, bus fare, train fare) are now calculated.
+    * Annual vehicle insurance costs for all on-road vehicles are now included.
+    * Annual vehicle parking costs are now included.
+    * Annual vehicle licensing, registration, and property tax costs are now included.
+  * The fuel tax policy can now be used to reduce the BAU tax rate or apply subsidies.  Positive values increase the tax rate.  Negative values reduce the BAU tax rate or apply subsidies.
+  * Added single-line graphs of total energy use for each end use sector.  Breakdowns showing total energy use as stacked area graphs already existed, but a single-line graph is sometimes preferable for simplicity or for comparing multiple policy packages on the same graph.
+  * Policy schedules (FoPITY) are now managed by a single Python script rather than via several large Excel files.  This allows policies to be added and changed more easily, policy schedules are generated more quickly, and there is no longer any risk of policy properties not aligning across different Excel files.
 * Bug Fixes
-  * "Buy In-Region" policy lever's direct effects are now included in macroecnomic feedback loops, plus minor formula fix
-  * Correct the share of natural gas used for energy (vs. as feedstock) by the refining industry in indst/BPoIFUfE
+  * "Buy In-Region" policy lever's direct effects are now included in macroecnomic feedback loops, plus other formula fixes for this policy
+  * Corrected the share of natural gas used for energy (vs. as feedstock) by the refining industry in indst/BPoIFUfE
+  * Corrected formula for exclusion of deaths caused by pollution associated with imported electricity for EPS regions that count emissions from imported electricity
+  * The change in demand for the "energy pipelines and gas processing" industry is now based on the change in domestic + exported natural gas demand, rather than natural gas production, to better handle regions with gas transmission but little-to-no gas production
+  * Fixed omission of geoengineering primary energy use from "Primary Energy Use by Sector" and Fuel Costs graphs
+* Data Updates
+  * Updated BAU trajectory to incorporate the AIM Act
+  * Updated BAU carbon capture and sequestration amounts in industry based on a Rhodium analysis
+  * Updated currency year to 2020
+  * Separated combined cycle, steam turbine, and combustion turbine natural gas plants in the input data
+  * Updated battery storage costs and recalibrated vehicle prices
+  * Corrected BAU Production Tax Credit values for onshore wind
+  * Other minor data updates
+  
 
 ### **3.3.0 - Aug. 16, 2021**
 
