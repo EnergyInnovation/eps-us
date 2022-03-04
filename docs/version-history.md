@@ -8,6 +8,8 @@ This page tracks updates that have been made with each version of the Energy Pol
 
 * New Policies
   * Industrial fuel shifting is now controlled by two policy levers.  A new lever allows use of indusrtial heat pumps to electrify low-temperature heat.  The existing lever now governs only medium and high temperature heat and continues to allow shifting to electricity, hydrogen, and/or other fuels.
+* New Features
+  * The model now allows users to override endogenous learning for battery electric vehicles (in trans/BNVP)
 * Data
   * 
 
