@@ -12,6 +12,8 @@ This page tracks updates that have been made with each version of the Energy Pol
   * The model now allows users to override endogenous learning for battery electric vehicles (in trans/BNVP)
   * Labor productivity growth rates now support time series data (io-model/LPGRbIC)
   * Demand response now reduces the need for generation from peaker power plants
+  * Capital costs of electricity sector CCS equipment are now properly adjusted to account for power plant capacity factors
+  * Single-pollutant graphs are now stacked area graphs (by sector) instead of single-line graphs
 * Data
   * 
 
