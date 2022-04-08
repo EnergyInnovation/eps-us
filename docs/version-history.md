@@ -9,12 +9,16 @@ This page tracks updates that have been made with each version of the Energy Pol
 * New Policies
   * Industrial fuel shifting is now controlled by two policy levers.  A new lever allows use of indusrtial heat pumps to electrify low-temperature heat.  The existing lever now governs only medium and high temperature heat and continues to allow shifting to electricity, hydrogen, and/or other fuels.
   * New Policy: CO<sub>2</sub> storage in agricultural soils from altered tillage practices
+  * New Policy: Carbon border adjustments (regarding carbon pricing) can now be toggled on and off
 * New Features
-  * The model now allows users to override endogenous learning for battery electric vehicles (in trans/BNVP)
+  * Import substitution (the extent to which the policy package increases or decreases imports of non-energy products) is now calculated.  (The EPS already handled import substitution for energy products.)
+  * Users may now override endogenous learning for battery electric vehicles (in trans/BNVP)
   * Labor productivity growth rates now support time series data (io-model/LPGRbIC)
   * Demand response now reduces the need for generation from peaker power plants
   * Capital costs of electricity sector CCS equipment are now properly adjusted to account for power plant capacity factors
   * Single-pollutant graphs are now stacked area graphs (by sector) instead of single-line graphs
+* New Graphs
+  * 
 * Data
   * 
 
