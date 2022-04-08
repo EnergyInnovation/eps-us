@@ -17,6 +17,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Demand response now reduces the need for generation from peaker power plants
   * Capital costs of electricity sector CCS equipment are now properly adjusted to account for power plant capacity factors
   * Single-pollutant graphs are now stacked area graphs (by sector) instead of single-line graphs
+  * Whether the carbon tax exempts process emissions by default (ctrl-settings/BEPEfCT), and the policy lever to reverse this behavior, can now be set separately for each industry
 * New Graphs
   * 
 * Data
