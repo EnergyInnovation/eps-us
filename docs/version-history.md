@@ -10,6 +10,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Industrial fuel shifting is now controlled by two policy levers.  A new lever allows use of indusrtial heat pumps to electrify low-temperature heat.  The existing lever now governs only medium and high temperature heat and continues to allow shifting to electricity, hydrogen, and/or other fuels.
   * New Policy: CO<sub>2</sub> storage in agricultural soils from altered tillage practices
   * New Policy: Carbon border adjustments (regarding carbon pricing) can now be toggled on and off
+  * New Policy: The F-gas Equipment Maintenance & Retrofits policy is now subscripted by both the chemicals and other metals (aluminum) industry
 * New Features
   * Import substitution (the extent to which the policy package increases or decreases imports of non-energy products) is now calculated.  (The EPS already handled import substitution for energy products.)
   * Users may now override endogenous learning for battery electric vehicles (in trans/BNVP)
