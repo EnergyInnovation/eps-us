@@ -4046,7 +4046,6 @@ PolicyElements = (
   ),
   (("land forest management"),
     ("Schedule 1",(2020,0),(2021,0),(2050,1)),
-    ("Schedule 2",(2020,0),(2021,0),(2030,1),(2050,1)),
   ),
   (("land avoid deforestation"),
     ("Schedule 1",(2020,0),(2021,0),(2050,1)),
