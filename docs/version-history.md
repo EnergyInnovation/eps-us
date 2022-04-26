@@ -12,7 +12,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * New Policy: Carbon border adjustments (regarding carbon pricing) can now be toggled on and off
   * New Policy: The F-gas Equipment Maintenance & Retrofits policy is now subscripted by both the chemicals and other metals (aluminum) industry
 * New Features
-  * Import substitution (the extent to which the policy package increases or decreases imports of non-energy products) is now calculated.  (The EPS already handled import substitution for energy products.)
+  * Import and export substitution (the extent to which the policy package increases or decreases imports and exports of non-energy products) is now calculated.  (The EPS already handled import substitution for energy products.) This also allows us to calculate domestic consumption of nonenergy products and changes in domestic consumption of nonenergy products.
   * Users may now override endogenous learning for battery electric vehicles (in trans/BNVP)
   * Labor productivity growth rates now support time series data (io-model/LPGRbIC)
   * Demand response now reduces the need for generation from peaker power plants
@@ -20,7 +20,13 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Single-pollutant graphs are now stacked area graphs (by sector) instead of single-line graphs
   * Whether the carbon tax exempts process emissions by default (ctrl-settings/BEPEfCT), and the policy lever to reverse this behavior, can now be set separately for each industry
 * New Graphs
-  * 
+  * Exports, imports, production, and domestic consumption of nonenergy products, as well as policy-induced changes in these metrics
+  * Share of electricity generation from clean sources
+  * Carbon intensity of electricity generation
+  * Electricity intensity per unit GDP
+  * Industrial CO2 by source type (energy vs. process)
+  * Industrial process CO2 emissions by industry
+  * Industrial energy-related CO2 emissions by industry
 * Data
   * 
 
