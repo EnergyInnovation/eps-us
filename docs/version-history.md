@@ -12,13 +12,14 @@ This page tracks updates that have been made with each version of the Energy Pol
   * New Policy: Carbon border adjustments (regarding carbon pricing) can now be toggled on and off
   * New Policy: The F-gas Equipment Maintenance & Retrofits policy is now subscripted by both the chemicals and other metals (aluminum) industry
 * New Features
-  * Import and export substitution (the extent to which the policy package increases or decreases imports and exports of non-energy products) is now calculated.  (The EPS already handled import substitution for energy products.) This also allows us to calculate domestic consumption of nonenergy products and changes in domestic consumption of nonenergy products.
+  * Import and export substitution (the extent to which the policy package increases or decreases imports and exports of non-energy products) are now calculated.  (The EPS already handled import and export substitution for energy products.) This also allows the model to calculate domestic consumption, and changes in consumption, of nonenergy products.
   * Users may now override endogenous learning for battery electric vehicles (in trans/BNVP)
   * Labor productivity growth rates now support time series data (io-model/LPGRbIC)
   * Demand response now reduces the need for generation from peaker power plants
   * Capital costs of electricity sector CCS equipment are now properly adjusted to account for power plant capacity factors
   * Single-pollutant graphs are now stacked area graphs (by sector) instead of single-line graphs
   * Whether the carbon tax exempts process emissions by default (ctrl-settings/BEPEfCT), and the policy lever to reverse this behavior, can now be set separately for each industry
+  * The model's handling of value-added taxes (VAT) and sales taxes is now more sophisticated and accurate.
 * New Graphs
   * Exports, imports, production, and domestic consumption of nonenergy products, as well as policy-induced changes in these metrics
   * Share of electricity generation from clean sources
