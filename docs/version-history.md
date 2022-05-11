@@ -4,6 +4,11 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **3.3.1.1 - May 11, 2022**
+
+* Bug Fixes
+  * Fix to allow for different values of electricity dispatch shareweights for each power plant type (file elec/MOfEDS, which includes an option to manually override the model's calculated shareweights)  
+
 ### **3.3.1 - Jan. 18, 2022**
 
 * New Features
