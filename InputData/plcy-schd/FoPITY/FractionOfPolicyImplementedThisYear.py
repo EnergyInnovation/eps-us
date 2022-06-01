@@ -4694,6 +4694,11 @@ def CheckForScheduleErrors():
         f.write("Year(s) are not in ascending order in Schedule "+str(ScheduleNum)+" of Policy Element: "+str(PolicyElement[0])+"\n")
         ErrorFound = 1
       
+      # Ensure all years are integers.
+      if any(not isinstance(Year, int) for Year in Years):
+        f.write("Non-integer year(s) found in Schedule "+str(ScheduleNum)+" of Policy Element: "+str(PolicyElement[0])+"\n")
+        ErrorFound = 1
+      
       # Ensure all implementation fractions are between 0 and 1 inclusive.
       if any(ImplementationFraction < 0 or ImplementationFraction > 1 for ImplementationFraction in ImplementationFractions):
         f.write("Out-of-bounds implementation fraction(s) found in Schedule "+str(ScheduleNum)+" of Policy Element: "+str(PolicyElement[0])+"\n")
