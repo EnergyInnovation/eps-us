@@ -1591,7 +1591,7 @@ PolicyElements = (
   ),
   (("indst f gas substitution"),
     ("Schedule 1",(2020,0),(2021,0),(2050,1)),
-    ("Schedule 2",(2020,0),(2021,0),(2021,1),(2050,1)),
+    ("Schedule 2",(2020,0),(2021,0),(2050,1)),
   ),
   (("indst f gas destruction"),
     ("Schedule 1",(2020,0),(2021,0),(2050,1)),
