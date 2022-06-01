@@ -21,6 +21,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Whether the carbon tax exempts process emissions by default (ctrl-settings/BEPEfCT), and the policy lever to reverse this behavior, can now be set separately for each industry
   * The model's handling of value-added taxes (VAT) and sales taxes is now more sophisticated and accurate.
   * The Macroeconomic Feedbacks sheet is clearer and easier to understand.
+  * The policy schedule Python script (plcy-schd/FoPITY) now includes internal error checking capabilities.
 * New Graphs
   * Exports, imports, production, and domestic consumption of nonenergy products, as well as policy-induced changes in these metrics
   * Share of electricity generation from clean sources
