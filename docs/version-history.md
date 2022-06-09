@@ -30,6 +30,8 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Industrial CO2 by source type (energy vs. process)
   * Industrial process CO2 emissions by industry
   * Industrial energy-related CO2 emissions by industry
+* Bug Fixes
+  * Fix to share of demand response capacity costs by cash flow entity
 * Data
   * 
 
