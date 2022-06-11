@@ -22,6 +22,8 @@ This page tracks updates that have been made with each version of the Energy Pol
   * The model's handling of value-added taxes (VAT) and sales taxes is now more sophisticated and accurate.
   * The Macroeconomic Feedbacks sheet is clearer and easier to understand.
   * The policy schedule Python script (plcy-schd/FoPITY) now includes internal error checking capabilities.
+  * Improved the metrics used to calculate macroeconomic feedback for transportation service demand.
+  * Added the ability for government to rebate carbon tax on exported products (if carbon border adjustments are enabled), with a new control setting to toggle this behavior on or orr.
 * New Graphs
   * Exports, imports, production, and domestic consumption of nonenergy products, as well as policy-induced changes in these metrics
   * Share of electricity generation from clean sources
@@ -32,6 +34,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Industrial energy-related CO2 emissions by industry
 * Bug Fixes
   * Fix to share of demand response capacity costs by cash flow entity
+  * Revert to using ALLOCATE AVAILABLE() for electricity dispatch (as in EPS 3.3.0) rather than a logit function
 * Data
   * 
 
