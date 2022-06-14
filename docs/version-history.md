@@ -9,7 +9,7 @@ This page tracks updates that have been made with each version of the Energy Pol
 * New Policies
   * Industrial fuel shifting is now controlled by two policy levers.  A new lever allows use of indusrtial heat pumps to electrify low-temperature heat.  The existing lever now governs only medium and high temperature heat and continues to allow shifting to electricity, hydrogen, and/or other fuels.
   * New Policy: CO<sub>2</sub> storage in agricultural soils from altered tillage practices
-  * New Policy: Carbon border adjustments (regarding carbon pricing) can now be toggled on and off
+  * New Policy: Carbon border adjustments (regarding carbon pricing) can now be toggled on and off. For the U.S., we assume border adjustments are off by default.
   * New Policy: The F-gas Equipment Maintenance & Retrofits policy is now subscripted by both the chemicals and other metals (aluminum) industry
 * New Features
   * Import and export substitution (the extent to which the policy package increases or decreases imports and exports of non-energy products) are now calculated.  (The EPS already handled import and export substitution for energy products.) This also allows the model to calculate domestic consumption and changes in consumption.
@@ -24,6 +24,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * The policy schedule Python script (plcy-schd/FoPITY) now includes internal error checking capabilities.
   * Improved the metrics used to calculate macroeconomic feedback for transportation service demand.
   * Added the ability for government to rebate carbon tax on exported products (if carbon border adjustments are enabled), with a new control setting to toggle this behavior on or orr.
+  * Added customizable smoothing times for electricity generation capacity, grid battery storage, and transmission capital costs (in file elec/ESCCST) to spread power sector capital costs over a number of years
 * New Graphs
   * Exports, imports, production, and domestic consumption of nonenergy products, as well as policy-induced changes in these metrics
   * Share of electricity generation from clean sources
