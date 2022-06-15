@@ -9619,10 +9619,25 @@ Change in Electricity Imports[Electricity Source]=
 	~		|
 
 Change in Electricity Sector Battery Costs=
-	Amount Spent on Grid Batteries
-	- BAU Amount Spent on Grid Batteries
+	DEPRECIATE STRAIGHTLINE(
+	
+	  Amount Spent on Grid Batteries
+	  - BAU Amount Spent on Grid Batteries,
+	 
+	  STfESCE Smoothing Time for Electricity Sector Capital Expenditures,
+	
+	  1,
+	
+	  0
+	)
 	~	$
-	~		|
+	~	We use a DEPRECIATE STRAIGHTLINE function to even out price spikes that \
+		unrealistically affect the price of electricity, because the costs of \
+		construction of new generation assets really would be spread out over a \
+		few years.  We use an initial value of zero because prior to the start of \
+		the model run, the change in construction costs due to policies is zero \
+		(none were in effect).
+	|
 
 Change in Electricity Sector CCS OM Costs[Electricity Source]=
 	CCS OM Cost by Electricity Source[Electricity Source]
@@ -9640,26 +9655,24 @@ Change in Electricity Sector CCS OM Costs by Recipient ISIC Code[ISIC Code]=
 	~		|
 
 Change in Electricity Sector Construction Costs[Electricity Source]=
-	SMOOTHI(
+	DEPRECIATE STRAIGHTLINE(
 	
 	  Cost of Capacity Construction[Electricity Source]
 	  - BAU Cost of Capacity Construction[Electricity Source],
 	 
-	  Smoothing Time for Generation Construction Cost,
+	  STfESCE Smoothing Time for Electricity Sector Capital Expenditures,
+	
+	  1,
 	
 	  0
 	)
 	~	$
-	~	We use a SMOOTHI function to even out price spikes that unrealistically \
-		affect the price of electricity, because the costs of construction of new \
-		generation assets really would be spread out over a few years.  We use an \
-		initial value of zero (and SMOOTHI rather than SMOOTH) because prior to \
-		the start of the model run, the change in construction costs due to \
-		policies is zero (none were in effect).  If we do not, then the first year \
-		has a strongly negative change in construction cost that then affects all \
-		the prices down the line and pulls them down in an unrealistic way.  The \
-		curve with an initial value of zero is much closer to the original \
-		(unsmoothed) curve than SMOOTH with no initial value.
+	~	We use a DEPRECIATE STRAIGHTLINE function to even out price spikes that \
+		unrealistically affect the price of electricity, because the costs of \
+		construction of new generation assets really would be spread out over a \
+		few years.  We use an initial value of zero because prior to the start of \
+		the model run, the change in construction costs due to policies is zero \
+		(none were in effect).
 	|
 
 Change in Electricity Sector Construction Costs by Recipient ISIC Code[ISIC Code]=
@@ -9714,8 +9727,8 @@ Change in Electricity Sector Variable OM Costs by Recipient ISIC Code[ISIC Code]
 
 Change in Electricity Supplier Expenditures After Subsidies=
 	Electricity Sector Change in Energy Expenditures by Entity[electricity suppliers]
-	+ SUM(Electricity Sector Change in Amount Spent on Capital Equipment by ISIC Code[ISIC Code\
-		!])
+	+ SUM(Electricity Sector Change in Amount Spent on Capital Equipment by ISIC Code with Smoothing Time Applied\
+		[ISIC Code!])
 	+ SUM(Electricity Sector Change in Amount Spent on OM and Decommissioning by ISIC Code\
 		[ISIC Code!])
 	+ SUM(Change in Demand Response Costs by Recipient[Cash Flow Entity!])
@@ -11072,10 +11085,25 @@ Change in Total Pollutant Emissions by Sector Excluding Imported Electricity Emi
 	|
 
 Change in Transmission Construction Costs=
-	Transmission Capacity Constructed This Year vs BAU
-	* TCCpUCD Transmission Construction Cost per Unit Capacity Distance
+	DEPRECIATE STRAIGHTLINE(
+	
+	  Transmission Capacity Constructed This Year vs BAU
+	  * TCCpUCD Transmission Construction Cost per Unit Capacity Distance,
+	 
+	  STfESCE Smoothing Time for Electricity Sector Capital Expenditures,
+	
+	  1,
+	
+	  0
+	)
 	~	$
-	~		|
+	~	We use a DEPRECIATE STRAIGHTLINE function to even out price spikes that \
+		unrealistically affect the price of electricity, because the costs of \
+		construction of new generation assets really would be spread out over a \
+		few years.  We use an initial value of zero because prior to the start of \
+		the model run, the change in construction costs due to policies is zero \
+		(none were in effect).
+	|
 
 Change in Transmission Construction Costs by Recipient ISIC Code[ISIC Code]=
 	Change in Transmission Construction Costs
@@ -13552,6 +13580,22 @@ Electricity Sector Change in Amount Spent on Capital Equipment by ISIC Code[ISIC
 	Change in Electricity Sector Construction Costs by Recipient ISIC Code[ISIC 27]
 	
 	+ Change in Electricity Sector Battery Costs
+	~	$
+	~		|
+
+Electricity Sector Change in Amount Spent on Capital Equipment by ISIC Code with Smoothing Time Applied\
+		[ISIC Code]=
+	DEPRECIATE STRAIGHTLINE(
+	
+	  Electricity Sector Change in Amount Spent on Capital Equipment by ISIC Code[ISIC Code\
+		],
+	 
+	  Smoothing Time for Electricity Price Changes,
+	
+	  1,
+	
+	  0
+	)
 	~	$
 	~		|
 
@@ -27867,8 +27911,12 @@ Slope of Line Approaching Future RPS Percentages by Year[Future Year]=
 		policy is not in effect (thus mirroring BAU case foresight).
 	|
 
-Smoothing Time for Generation Construction Cost=
-	5
+Smoothing Time for Electricity Price Changes=
+	GET DIRECT CONSTANTS(
+	   'InputData/elec/STfEPC/STfEPC.csv',
+	   ',',
+	   'B2*'
+	)
 	~	Year
 	~		|
 
@@ -28161,6 +28209,15 @@ Start Year Cargo Dist Transported[Vehicle Type,Cargo Type,Vehicle Technology]= I
 	* BAADTbVT BAU Average Annual Dist Traveled by Vehicle Type[Vehicle Type,Cargo Type]\
 		)
 	~	thing*miles
+	~		|
+
+STfESCE Smoothing Time for Electricity Sector Capital Expenditures=
+	GET DIRECT CONSTANTS(
+	   'InputData/elec/STfESCE/STfESCE.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Year
 	~		|
 
 strict industries within industry category:
@@ -33470,7 +33527,7 @@ Output_Electricity_Generation_Capacity_Change_due_to_Policies
 1,211,729,3,0,0,0,0,0,64,0,-1--1--1,,1|(-1504,-446)|
 1,212,214,52,4,0,0,22,0,0,0,-1--1--1,,1|(3243,-675)|
 1,213,214,60,100,0,0,22,0,0,0,-1--1--1,,1|(3116,-675)|
-11,214,59646,3179,-675,8,9,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+11,214,59690,3179,-675,8,9,34,3,0,0,1,0,0,0,0,0,0,0,0,0
 10,215,New Generation Capacity,3179,-646,65,24,40,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
 10,216,New Generation Capacity,5847,-1758,59,24,8,3,0,4,-1,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
 10,217,New Generation Capacity,-1077,445,65,24,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
@@ -34934,424 +34991,434 @@ Summing New Capacity
 V300  Do not put anything below this section - it will be ignored
 *Electricity Supply - Cash Flow
 $192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,70,0
-12,1,0,369,-2413,456,36,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+12,1,0,-2,55,456,36,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 This page calculates changes in cash flows due to spending by the electricity sector, including on constructing new generation, buying fuel, OM, building transmission, etc.  It also calculates changes in electricity prices, for use on the "Fuels" sheet.  This sheet does not calculate cash flow impacts of changes in electricity sales, because those are handled on the cash flow pages of the various electricity-demanding sectors.
-10,2,Electricity Sector Change in Fuel Industry Cash Flow before Subsidies and Electricity Exports,493,-1989,112,28,8,131,0,20,0,0,0,0,-1--1--1,255-192-128,|12|I|0-0-0,0,0,0,0,0,0
-10,3,Change in Amount Spent on Electricity Fuels,54,-1989,87,24,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
-10,4,Electricity Generation by Type,300,-2257,76,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,5,4,96,0,0,0,0,0,64,0,-1--1--1,,1|(384,-2212)|
-10,6,CCaMC Annual Fixed OM Cost per Unit Capacity,477,-1245,73,29,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,7,6,34,0,0,0,0,0,64,0,-1--1--1,,1|(477,-1298)|
-10,8,CCaMC Variable OM Cost per Unit Output,-14,-1245,72,31,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,9,8,38,0,0,0,0,0,64,0,-1--1--1,,1|(-14,-1186)|
-10,10,Cost of Capacity Construction,1744,-2036,64,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,11,BAU Cost of Capacity Construction,1744,-1786,79,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,12,Change in Electricity Sector Construction Costs,1744,-1910,93,19,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
-1,13,10,12,0,0,0,0,0,64,0,-1--1--1,,1|(1744,-1977)|
-1,14,11,12,0,0,0,0,0,64,0,-1--1--1,,1|(1744,-1843)|
-10,15,Smoothing Time for Generation Construction Cost,2005,-1910,96,24,8,131,0,4,-1,0,0,0,-1--1--1,192-255-192,|12||0-0-0,0,0,0,0,0,0
-1,16,15,12,0,0,0,0,0,64,0,-1--1--1,,1|(1880,-1910)|
-12,17,0,473,-1557,595,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,2,Electricity Sector Change in Fuel Industry Cash Flow before Subsidies and Electricity Exports,122,479,112,28,8,131,0,20,0,0,0,0,-1--1--1,255-192-128,|12|I|0-0-0,0,0,0,0,0,0
+10,3,Change in Amount Spent on Electricity Fuels,-317,479,87,24,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
+10,4,Electricity Generation by Type,-71,211,76,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,5,4,96,0,0,0,0,0,64,0,-1--1--1,,1|(15,256)|
+10,6,CCaMC Annual Fixed OM Cost per Unit Capacity,106,1223,73,29,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,7,6,34,0,0,0,0,0,64,0,-1--1--1,,1|(106,1169)|
+10,8,CCaMC Variable OM Cost per Unit Output,-385,1223,72,31,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,9,8,38,0,0,0,0,0,64,0,-1--1--1,,1|(-385,1281)|
+10,10,Cost of Capacity Construction,1373,432,64,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,11,BAU Cost of Capacity Construction,1373,682,79,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,12,Change in Electricity Sector Construction Costs,1373,558,93,19,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
+1,13,10,12,0,0,0,0,0,64,0,-1--1--1,,1|(1373,491)|
+1,14,11,12,0,0,0,0,0,64,0,-1--1--1,,1|(1373,624)|
+10,15,STfESCE Smoothing Time for Electricity Sector Capital Expenditures,1644,558,106,26,8,131,0,4,-1,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,16,15,12,0,0,0,0,0,64,1,-1--1--1,,1|(1509,558)|
+12,17,0,102,911,595,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Change in OM Costs
-12,18,0,497,-2340,633,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+12,18,0,126,128,633,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Change in Fuel Costs
-12,19,0,1736,-2340,520,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+12,19,0,1365,128,520,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Change in Generation Construction Costs
-10,20,BAU Electricity Generation by Type,-14,-1009,76,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,21,BAU Electricity Generation by Type,300,-1718,76,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,22,21,97,0,0,0,0,0,64,0,-1--1--1,,1|(385,-1760)|
-12,23,0,1060,-154,441,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,20,BAU Electricity Generation by Type,-385,1459,76,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,21,BAU Electricity Generation by Type,-71,750,76,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,22,21,97,0,0,0,0,0,64,0,-1--1--1,,1|(16,707)|
+12,23,0,689,2314,441,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Change in Generation Subsidies
-10,24,Electricity Generation by Type,1364,67,76,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,25,BAU Electricity Generation by Type,1364,314,76,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,26,Electricity Generation Subsidies Paid,1101,67,76,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,27,BAU Electricity Generation Subsidies Paid,1101,314,93,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,28,25,27,0,0,0,0,0,64,0,-1--1--1,,1|(1248,314)|
-1,29,24,26,0,0,0,0,0,64,0,-1--1--1,,1|(1240,67)|
-10,30,Change in Electricity Generation Subsidies Paid,1101,186,93,21,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
-1,31,26,30,0,0,0,0,0,64,0,-1--1--1,,1|(1101,121)|
-1,32,27,30,0,0,0,0,0,64,0,-1--1--1,,1|(1101,254)|
-10,33,Change in Electricity Generation Subsidies Paid,3765,1176,95,22,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,34,Elec Supplier Fixed OM Costs,477,-1361,72,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,35,BAU Elec Supplier Fixed OM Costs,477,-1121,68,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,36,6,35,0,0,0,0,0,64,0,-1--1--1,,1|(477,-1187)|
-10,37,Elec Supplier Variable OM Costs,-14,-1361,80,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,38,BAU Elec Supplier Variable OM Costs,-14,-1121,80,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,39,8,37,0,0,0,0,0,64,0,-1--1--1,,1|(-14,-1299)|
-10,40,Electricity Generation by Type,-14,-1473,76,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,41,40,37,0,0,0,0,0,64,0,-1--1--1,,1|(-14,-1424)|
-1,42,20,38,0,0,0,0,0,64,0,-1--1--1,,1|(-14,-1058)|
-12,43,0,1556,-1518,324,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,24,Electricity Generation by Type,993,2535,76,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,25,BAU Electricity Generation by Type,993,2782,76,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,26,Electricity Generation Subsidies Paid,730,2535,76,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,27,BAU Electricity Generation Subsidies Paid,730,2782,93,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,28,25,27,0,0,0,0,0,64,0,-1--1--1,,1|(878,2782)|
+1,29,24,26,0,0,0,0,0,64,0,-1--1--1,,1|(869,2535)|
+10,30,Change in Electricity Generation Subsidies Paid,730,2654,93,21,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
+1,31,26,30,0,0,0,0,0,64,0,-1--1--1,,1|(730,2589)|
+1,32,27,30,0,0,0,0,0,64,0,-1--1--1,,1|(730,2721)|
+10,33,Change in Electricity Generation Subsidies Paid,3394,3667,95,22,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,34,Elec Supplier Fixed OM Costs,106,1107,72,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,35,BAU Elec Supplier Fixed OM Costs,106,1347,68,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,36,6,35,0,0,0,0,0,64,0,-1--1--1,,1|(106,1280)|
+10,37,Elec Supplier Variable OM Costs,-385,1107,80,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,38,BAU Elec Supplier Variable OM Costs,-385,1347,80,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,39,8,37,0,0,0,0,0,64,0,-1--1--1,,1|(-385,1169)|
+10,40,Electricity Generation by Type,-385,995,76,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,41,40,37,0,0,0,0,0,64,0,-1--1--1,,1|(-385,1044)|
+1,42,20,38,0,0,0,0,0,64,0,-1--1--1,,1|(-385,1410)|
+12,43,0,1185,950,324,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Change in Rebate for Sequestered CO2
-10,44,Amount of CO2 Sequestered by Electricity Sector,1521,-1273,57,32,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,45,This Year Pollutants Sequestered by Electricity Sector,1521,-1413,93,31,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,46,45,44,0,0,0,0,0,64,0,-1--1--1,,1|(1521,-1350)|
-10,47,Grams per Metric Ton CO2e,1753,-1273,72,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,48,GWP by Pollutant,1316,-1273,40,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,49,47,44,0,0,0,0,0,64,0,-1--1--1,,1|(1636,-1273)|
-1,50,48,44,0,0,0,0,0,64,0,-1--1--1,,1|(1403,-1273)|
-10,51,Electricity Sector Carbon Tax Rebate due to CCS,1521,-1130,68,29,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
-1,52,44,51,0,0,0,0,0,64,0,-1--1--1,,1|(1521,-1207)|
-10,53,Electricity Sector Carbon Tax Rebate due to CCS,3765,1281,96,23,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,54,Electricity Generation Capacity,477,-1473,80,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,55,54,34,0,0,0,0,0,64,0,-1--1--1,,1|(477,-1424)|
-10,56,BAU Electricity Generation Capacity,477,-1009,80,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,57,56,35,0,0,0,0,0,64,0,-1--1--1,,1|(477,-1058)|
-10,58,New Generation Capacity,2005,-2133,65,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,59,BAU New Generation Capacity,1497,-1786,80,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,60,59,11,0,0,0,0,0,64,0,-1--1--1,,1|(1614,-1786)|
-10,61,One Year,2038,-1968,48,12,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,62,61,10,0,1,0,0,0,64,0,-1--1--1,,1|(1906,-1998)|
-1,63,61,11,0,1,0,0,0,64,0,-1--1--1,,1|(1906,-1886)|
-10,64,Subsidy per Unit Electricity Output,785,67,60,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,65,BS BAU Subsidy per Unit Electricity Output,785,314,75,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,66,64,26,0,0,0,0,0,64,0,-1--1--1,,1|(928,67)|
-1,67,65,27,0,0,0,0,0,64,0,-1--1--1,,1|(927,314)|
-12,68,0,2516,-1518,528,21,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,44,Amount of CO2 Sequestered by Electricity Sector,1150,1195,57,32,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,45,This Year Pollutants Sequestered by Electricity Sector,1150,1055,93,31,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,46,45,44,0,0,0,0,0,64,0,-1--1--1,,1|(1150,1117)|
+10,47,Grams per Metric Ton CO2e,1382,1195,72,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,48,GWP by Pollutant,945,1195,40,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,49,47,44,0,0,0,0,0,64,0,-1--1--1,,1|(1265,1195)|
+1,50,48,44,0,0,0,0,0,64,0,-1--1--1,,1|(1032,1195)|
+10,51,Electricity Sector Carbon Tax Rebate due to CCS,1150,1338,68,29,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
+1,52,44,51,0,0,0,0,0,64,0,-1--1--1,,1|(1150,1261)|
+10,53,Electricity Sector Carbon Tax Rebate due to CCS,3394,3772,96,23,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,54,Electricity Generation Capacity,106,995,80,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,55,54,34,0,0,0,0,0,64,0,-1--1--1,,1|(106,1044)|
+10,56,BAU Electricity Generation Capacity,106,1459,80,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,57,56,35,0,0,0,0,0,64,0,-1--1--1,,1|(106,1410)|
+10,58,New Generation Capacity,1634,335,65,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,59,BAU New Generation Capacity,1126,682,80,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,60,59,11,0,0,0,0,0,64,0,-1--1--1,,1|(1243,682)|
+10,61,One Year,1667,500,48,12,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,62,61,10,0,1,0,0,0,64,0,-1--1--1,,1|(1535,470)|
+1,63,61,11,0,1,0,0,0,64,0,-1--1--1,,1|(1535,581)|
+10,64,Subsidy per Unit Electricity Output,414,2535,60,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,65,BS BAU Subsidy per Unit Electricity Output,414,2782,75,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,66,64,26,0,0,0,0,0,64,0,-1--1--1,,1|(557,2535)|
+1,67,65,27,0,0,0,0,0,64,0,-1--1--1,,1|(556,2782)|
+12,68,0,2145,950,528,21,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Change in Grid Battery Costs
-10,69,BCpUC Battery Cost per Unit Capacity,2773,-1416,72,19,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,70,Change in Electricity Sector Battery Costs,2318,-1185,72,19,8,3,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
-10,71,MWh per BTU,4292,919,40,21,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,72,Electricity Generation by Type,4113,809,76,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,73,Total Electricity Generation in BTU,4113,919,67,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,74,71,73,0,0,0,0,0,64,0,-1--1--1,,1|(4223,919)|
-1,75,72,73,0,0,0,0,0,64,0,-1--1--1,,1|(4113,857)|
-10,76,Additional Carbon Tax Rate This Year,1753,-1130,71,19,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-1,77,76,51,0,0,0,0,0,64,0,-1--1--1,,1|(1642,-1130)|
-12,78,0,204,-154,324,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,69,BCpUC Battery Cost per Unit Capacity,2511,1052,72,19,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,70,Change in Electricity Sector Battery Costs,1947,1283,72,19,8,3,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
+10,71,MWh per BTU,3921,3387,40,21,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,72,Electricity Generation by Type,3742,3277,76,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,73,Total Electricity Generation in BTU,3742,3387,67,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,74,71,73,0,0,0,0,0,64,0,-1--1--1,,1|(3852,3387)|
+1,75,72,73,0,0,0,0,0,64,0,-1--1--1,,1|(3742,3325)|
+10,76,Additional Carbon Tax Rate This Year,1382,1338,71,19,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+1,77,76,51,0,0,0,0,0,64,0,-1--1--1,,1|(1271,1338)|
+12,78,0,-167,2314,324,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Change in Transmission Costs
-10,79,BTC BAU Transmission Capacity,73,228,80,23,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,80,TCCpUCD Transmission Construction Cost per Unit Capacity Distance,73,359,88,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,81,Percentage Increase in Transmission Capacity vs BAU This Year,73,-49,79,31,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-10,82,Percentage Increase in Transmission Capacity Last Year,344,-49,76,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,83,Percentage Change in Transmission Capacity vs BAU Since Last Year,344,95,88,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,84,82,83,0,0,0,0,0,128,0,-1--1--1,,1|(344,16)|
-1,85,81,83,0,0,0,0,0,128,0,-1--1--1,,1|(204,22)|
-10,86,Transmission Capacity Constructed This Year vs BAU,344,228,108,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,87,79,86,0,0,0,0,0,128,0,-1--1--1,,1|(187,228)|
-1,88,83,86,0,0,0,0,0,128,0,-1--1--1,,1|(344,157)|
-1,89,81,82,0,0,0,0,0,128,0,-1--1--1,,1|(203,-49)|
-10,90,Change in Transmission Construction Costs,344,359,83,20,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
-1,91,86,90,0,0,0,0,0,128,0,-1--1--1,,1|(344,289)|
-1,92,80,90,0,0,0,0,0,128,0,-1--1--1,,1|(204,359)|
-10,93,Subsidy for Elec Production by Fuel This Year,785,-49,96,20,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-1,94,93,26,0,0,0,0,0,128,0,-1--1--1,,1|(930,5)|
-10,95,Heat Rate by Electricity Fuel,493,-2257,52,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,96,Quantity of Fuel Consumed by Electricity Sector,493,-2156,60,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,97,BAU Quantity of Fuel Consumed by Electricity Sector,493,-1814,67,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,98,95,96,0,0,0,0,0,128,0,-1--1--1,,1|(493,-2218)|
-10,99,Fuel Used for CCS by Electricity Sector,694,-2257,77,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,100,BAU Fuel Used for CCS by Electricity Sector,694,-1718,87,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,101,100,97,0,0,0,0,0,128,0,-1--1--1,,1|(609,-1758)|
-1,102,99,96,0,0,0,0,0,128,0,-1--1--1,,1|(609,-2214)|
-10,103,Electricity Fuel Cost per Unit Energy,54,-2257,76,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,104,BAU Electricity Fuel Cost per Unit Energy,54,-1718,79,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,105,Amount Spent on Electricity Fuels,54,-2156,56,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,106,BAU Amount Spent on Electricity Fuels,54,-1814,75,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,107,97,106,0,0,0,0,0,128,0,-1--1--1,,1|(284,-1814)|
-1,108,104,106,0,0,0,0,0,128,0,-1--1--1,,1|(54,-1759)|
-1,109,96,105,0,0,0,0,0,128,0,-1--1--1,,1|(278,-2156)|
-1,110,103,105,0,0,0,0,0,128,0,-1--1--1,,1|(54,-2213)|
-10,111,Electricity Fuel Total Tax or Subsidy Amount per Unit Energy,953,-2257,80,28,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,112,BAU Electricity Fuel Total Tax or Subsidy Amount per Unit Energy,953,-1718,90,30,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,113,Total Tax Paid on Electricity Fuels,953,-2156,57,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,114,BAU Total Tax Paid on Electricity Fuels,953,-1814,68,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,115,97,114,0,0,0,0,0,128,0,-1--1--1,,1|(715,-1814)|
-1,116,112,114,0,0,0,0,0,128,0,-1--1--1,,1|(953,-1764)|
-1,117,96,113,0,0,0,0,0,128,0,-1--1--1,,1|(717,-2156)|
-1,118,111,113,0,0,0,0,0,128,0,-1--1--1,,1|(953,-2209)|
-10,119,Change in Electricity Fuel Taxes Paid,953,-1989,65,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,120,113,119,0,0,0,0,0,128,0,-1--1--1,,1|(953,-2079)|
-1,121,114,119,0,0,0,0,0,128,0,-1--1--1,,1|(953,-1894)|
-1,122,119,2,0,0,0,0,0,128,0,-1--1--1,,1|(753,-1989)|
-1,123,3,2,0,0,0,0,0,128,0,-1--1--1,,1|(254,-1989)|
-1,124,105,3,0,0,0,0,0,128,0,-1--1--1,,1|(54,-2082)|
-1,125,106,3,0,0,0,0,0,128,0,-1--1--1,,1|(54,-1892)|
-12,126,0,2005,-864,845,21,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,79,BTC BAU Transmission Capacity,-298,2696,80,23,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,80,TCCpUCD Transmission Construction Cost per Unit Capacity Distance,-298,2827,88,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,81,Percentage Increase in Transmission Capacity vs BAU This Year,-298,2419,79,31,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+10,82,Percentage Increase in Transmission Capacity Last Year,-27,2419,76,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,83,Percentage Change in Transmission Capacity vs BAU Since Last Year,-27,2563,88,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,84,82,83,0,0,0,0,0,128,0,-1--1--1,,1|(-27,2484)|
+1,85,81,83,0,0,0,0,0,128,0,-1--1--1,,1|(-165,2489)|
+10,86,Transmission Capacity Constructed This Year vs BAU,-27,2696,108,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,87,79,86,0,0,0,0,0,128,0,-1--1--1,,1|(-183,2696)|
+1,88,83,86,0,0,0,0,0,128,0,-1--1--1,,1|(-27,2624)|
+1,89,81,82,0,0,0,0,0,128,0,-1--1--1,,1|(-168,2419)|
+10,90,Change in Transmission Construction Costs,-27,2827,83,20,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
+1,91,86,90,0,0,0,0,0,128,0,-1--1--1,,1|(-27,2756)|
+1,92,80,90,0,0,0,0,0,128,0,-1--1--1,,1|(-167,2827)|
+10,93,Subsidy for Elec Production by Fuel This Year,414,2419,96,20,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+1,94,93,26,0,0,0,0,0,128,0,-1--1--1,,1|(560,2472)|
+10,95,Heat Rate by Electricity Fuel,122,211,52,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,96,Quantity of Fuel Consumed by Electricity Sector,122,312,60,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,97,BAU Quantity of Fuel Consumed by Electricity Sector,122,654,67,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,98,95,96,0,0,0,0,0,128,0,-1--1--1,,1|(122,250)|
+10,99,Fuel Used for CCS by Electricity Sector,323,211,77,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,100,BAU Fuel Used for CCS by Electricity Sector,323,750,87,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,101,100,97,0,0,0,0,0,128,0,-1--1--1,,1|(239,709)|
+1,102,99,96,0,0,0,0,0,128,0,-1--1--1,,1|(240,254)|
+10,103,Electricity Fuel Cost per Unit Energy,-317,211,76,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,104,BAU Electricity Fuel Cost per Unit Energy,-317,750,79,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,105,Amount Spent on Electricity Fuels,-317,312,56,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,106,BAU Amount Spent on Electricity Fuels,-317,654,75,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,107,97,106,0,0,0,0,0,128,0,-1--1--1,,1|(-86,654)|
+1,108,104,106,0,0,0,0,0,128,0,-1--1--1,,1|(-317,709)|
+1,109,96,105,0,0,0,0,0,128,0,-1--1--1,,1|(-92,312)|
+1,110,103,105,0,0,0,0,0,128,0,-1--1--1,,1|(-317,255)|
+10,111,Electricity Fuel Total Tax or Subsidy Amount per Unit Energy,582,211,80,28,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,112,BAU Electricity Fuel Total Tax or Subsidy Amount per Unit Energy,582,750,90,30,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,113,Total Tax Paid on Electricity Fuels,582,312,57,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,114,BAU Total Tax Paid on Electricity Fuels,582,654,68,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,115,97,114,0,0,0,0,0,128,0,-1--1--1,,1|(345,654)|
+1,116,112,114,0,0,0,0,0,128,0,-1--1--1,,1|(582,703)|
+1,117,96,113,0,0,0,0,0,128,0,-1--1--1,,1|(347,312)|
+1,118,111,113,0,0,0,0,0,128,0,-1--1--1,,1|(582,259)|
+10,119,Change in Electricity Fuel Taxes Paid,582,479,65,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,120,113,119,0,0,0,0,0,128,0,-1--1--1,,1|(582,389)|
+1,121,114,119,0,0,0,0,0,128,0,-1--1--1,,1|(582,573)|
+1,122,119,2,0,0,0,0,0,128,0,-1--1--1,,1|(383,479)|
+1,123,3,2,0,0,0,0,0,128,0,-1--1--1,,1|(-117,479)|
+1,124,105,3,0,0,0,0,0,128,0,-1--1--1,,1|(-317,386)|
+1,125,106,3,0,0,0,0,0,128,0,-1--1--1,,1|(-317,576)|
+12,126,0,1634,1604,845,21,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Change in Electricity Import/Export Costs
-10,127,Imported Electricity,1760,-760,36,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,128,Exported Electricity,2745,-760,36,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,129,Exported Electricity Price,2217,-760,52,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,130,Amount Spent on Importing Electricity,1537,-760,64,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,131,Amount Received from Exporting Electricity,2476,-760,76,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,132,129,131,0,0,0,0,0,128,0,-1--1--1,,1|(2327,-760)|
-1,133,128,131,0,0,0,0,0,128,0,-1--1--1,,1|(2637,-760)|
-1,134,127,130,0,0,0,0,0,128,0,-1--1--1,,1|(1669,-760)|
-12,135,0,1773,-397,305,40,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,127,Imported Electricity,1389,1708,36,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,128,Exported Electricity,2374,1708,36,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,129,Exported Electricity Price,1846,1708,52,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,130,Amount Spent on Importing Electricity,1166,1708,64,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,131,Amount Received from Exporting Electricity,2105,1708,76,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,132,129,131,0,0,0,0,0,128,0,-1--1--1,,1|(1956,1708)|
+1,133,128,131,0,0,0,0,0,128,0,-1--1--1,,1|(2266,1708)|
+1,134,127,130,0,0,0,0,0,128,0,-1--1--1,,1|(1298,1708)|
+12,135,0,1402,2071,305,40,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 In this case, electricity suppliers are paying other electricity suppliers, so we don't recognize cash flow changes by entity.  (Broken-out industries are not restricted to the modeled region's borders.)  We do add the Change in Amount Spend on Importing Electricity to the Change in Total Outlays and Change in Capital Labor and Fuel Expenditures metrics, however.
-10,136,EIaE BAU Exported Electricity,2745,-477,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,137,EIaE BAU Imported Electricity,1760,-477,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,138,BAU Amount Spent on Importing Electricity,1537,-477,75,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,139,BAU Amount Received from Exporting Electricity,2476,-477,81,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,140,137,138,0,0,0,0,0,128,0,-1--1--1,,1|(1659,-477)|
-1,141,136,139,0,0,0,0,0,128,0,-1--1--1,,1|(2624,-477)|
-10,142,MWh per BTU,2016,-760,60,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,143,Change in Amount Spent on Importing Electricity,1537,-618,85,19,8,3,0,20,0,0,0,0,-1--1--1,255-192-128,|12|I|0-0-0,0,0,0,0,0,0
-10,144,Change in Amount Received from Exporting Electricity,2476,-618,104,20,8,131,0,20,0,0,0,0,-1--1--1,255-192-128,|12|I|0-0-0,0,0,0,0,0,0
-1,145,130,143,0,0,0,0,0,128,0,-1--1--1,,1|(1537,-696)|
-1,146,138,143,0,0,0,0,0,128,0,-1--1--1,,1|(1537,-540)|
-1,147,131,144,0,0,0,0,0,128,0,-1--1--1,,1|(2476,-696)|
-1,148,139,144,0,0,0,0,0,128,0,-1--1--1,,1|(2476,-540)|
-12,149,0,2573,-402,204,28,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,136,EIaE BAU Exported Electricity,2374,1991,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,137,EIaE BAU Imported Electricity,1389,1991,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,138,BAU Amount Spent on Importing Electricity,1166,1991,75,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,139,BAU Amount Received from Exporting Electricity,2105,1991,81,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,140,137,138,0,0,0,0,0,128,0,-1--1--1,,1|(1288,1991)|
+1,141,136,139,0,0,0,0,0,128,0,-1--1--1,,1|(2253,1991)|
+10,142,MWh per BTU,1645,1708,60,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,143,Change in Amount Spent on Importing Electricity,1166,1850,85,19,8,3,0,20,0,0,0,0,-1--1--1,255-192-128,|12|I|0-0-0,0,0,0,0,0,0
+10,144,Change in Amount Received from Exporting Electricity,2105,1850,104,20,8,131,0,20,0,0,0,0,-1--1--1,255-192-128,|12|I|0-0-0,0,0,0,0,0,0
+1,145,130,143,0,0,0,0,0,128,0,-1--1--1,,1|(1166,1772)|
+1,146,138,143,0,0,0,0,0,128,0,-1--1--1,,1|(1166,1927)|
+1,147,131,144,0,0,0,0,0,128,0,-1--1--1,,1|(2105,1771)|
+1,148,139,144,0,0,0,0,0,128,0,-1--1--1,,1|(2105,1928)|
+12,149,0,2202,2066,204,28,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 For simplicity, particularly because of the potential involvement of taxes deriving from regions outside the model boundaries, we disregard taxes on electricity imports and exports.
-10,150,BHRbEF BAU Heat Rate by Electricity Fuel,493,-1718,79,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,151,150,97,0,0,0,0,0,128,0,-1--1--1,,1|(493,-1754)|
-10,152,First Year Battery Cost per Unit Capacity,2533,-1416,75,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,153,69,152,0,0,0,0,0,128,1,-1--1--1,,1|(2661,-1416)|
-10,154,Battery Cost per Unit Capacity,2533,-1294,56,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,155,152,154,0,0,0,0,0,128,0,-1--1--1,,1|(2533,-1362)|
-10,156,New Generation Capacity,2468,-2164,60,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,157,Subsidy per Unit Electricity Capacity Built,2701,-2269,83,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,158,One Year,2932,-2077,43,11,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,159,Capacity Construction Subsidies Paid,2701,-2164,71,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,160,157,159,0,0,0,0,0,128,0,-1--1--1,,1|(2701,-2223)|
-1,161,156,159,0,0,0,0,0,128,0,-1--1--1,,1|(2572,-2164)|
-1,162,158,159,0,1,0,0,0,128,0,-1--1--1,,1|(2833,-2114)|
-10,163,BS BAU Subsidy per Unit Electricity Capacity Built,2701,-1789,96,24,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,164,BAU New Generation Capacity,2468,-1913,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,165,BAU Capacity Construction Subsidies Paid,2701,-1913,92,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,166,164,165,0,0,0,0,0,128,0,-1--1--1,,1|(2567,-1913)|
-1,167,163,165,0,0,0,0,0,128,0,-1--1--1,,1|(2701,-1844)|
-10,168,Change in Capacity Construction Subsidies Paid,2701,-2038,95,24,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
-1,169,159,168,0,0,0,0,0,128,0,-1--1--1,,1|(2701,-2110)|
-1,170,165,168,0,0,0,0,0,128,0,-1--1--1,,1|(2701,-1968)|
-12,171,0,2694,-2337,361,21,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,150,BHRbEF BAU Heat Rate by Electricity Fuel,122,750,79,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,151,150,97,0,0,0,0,0,128,0,-1--1--1,,1|(122,713)|
+10,152,First Year Battery Cost per Unit Capacity,2271,1052,75,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,153,69,152,0,0,0,0,0,128,1,-1--1--1,,1|(2399,1052)|
+10,154,Battery Cost per Unit Capacity,2271,1174,56,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,155,152,154,0,0,0,0,0,128,0,-1--1--1,,1|(2271,1106)|
+10,156,New Generation Capacity,2097,304,60,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,157,Subsidy per Unit Electricity Capacity Built,2330,199,83,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,158,One Year,2561,391,43,11,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,159,Capacity Construction Subsidies Paid,2330,304,71,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,160,157,159,0,0,0,0,0,128,0,-1--1--1,,1|(2330,245)|
+1,161,156,159,0,0,0,0,0,128,0,-1--1--1,,1|(2201,304)|
+1,162,158,159,0,1,0,0,0,128,0,-1--1--1,,1|(2462,354)|
+10,163,BS BAU Subsidy per Unit Electricity Capacity Built,2330,679,96,24,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,164,BAU New Generation Capacity,2097,555,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,165,BAU Capacity Construction Subsidies Paid,2330,555,92,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,166,164,165,0,0,0,0,0,128,0,-1--1--1,,1|(2196,555)|
+1,167,163,165,0,0,0,0,0,128,0,-1--1--1,,1|(2330,624)|
+10,168,Change in Capacity Construction Subsidies Paid,2330,430,95,24,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
+1,169,159,168,0,0,0,0,0,128,0,-1--1--1,,1|(2330,358)|
+1,170,165,168,0,0,0,0,0,128,0,-1--1--1,,1|(2330,500)|
+12,171,0,2323,131,361,21,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Change in Construction Subsidies
-10,172,This Year Battery Cost as Fraction of First Year Battery Cost,2773,-1294,92,28,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,173,172,154,0,0,0,0,0,128,0,-1--1--1,,1|(2642,-1294)|
-10,174,BAU This Year Battery Cost as Fraction of First Year Battery Cost,2773,-1070,88,29,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,175,BAU Battery Cost per Unit Capacity,2533,-1070,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,176,174,175,0,0,0,0,0,128,0,-1--1--1,,1|(2652,-1070)|
-10,177,Amount Spent on Grid Batteries,2318,-1294,56,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,178,BAU Amount Spent on Grid Batteries,2318,-1070,65,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,179,154,177,0,0,0,0,0,128,0,-1--1--1,,1|(2432,-1294)|
-1,180,175,178,0,0,0,0,0,128,0,-1--1--1,,1|(2429,-1070)|
-1,181,177,70,0,0,0,0,0,128,0,-1--1--1,,1|(2318,-1246)|
-1,182,178,70,0,0,0,0,0,128,0,-1--1--1,,1|(2318,-1120)|
-1,183,152,175,0,0,0,0,0,128,0,-1--1--1,,1|(2533,-1250)|
-12,184,0,2937,-1416,80,52,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,172,This Year Battery Cost as Fraction of First Year Battery Cost,2511,1174,92,28,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,173,172,154,0,0,0,0,0,128,0,-1--1--1,,1|(2380,1174)|
+10,174,BAU This Year Battery Cost as Fraction of First Year Battery Cost,2511,1398,88,29,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,175,BAU Battery Cost per Unit Capacity,2271,1398,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,176,174,175,0,0,0,0,0,128,0,-1--1--1,,1|(2390,1398)|
+10,177,Amount Spent on Grid Batteries,1947,1174,56,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,178,BAU Amount Spent on Grid Batteries,1947,1398,65,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,179,154,177,0,0,0,0,0,128,0,-1--1--1,,1|(2116,1174)|
+1,180,175,178,0,0,0,0,0,128,0,-1--1--1,,1|(2112,1398)|
+1,181,177,70,0,0,0,0,0,128,0,-1--1--1,,1|(1947,1221)|
+1,182,178,70,0,0,0,0,0,128,0,-1--1--1,,1|(1947,1347)|
+1,183,152,175,0,0,0,0,0,128,0,-1--1--1,,1|(2271,1218)|
+12,184,0,2675,1052,80,52,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 Only the first year of this time series input variable is used, and remaining years are handled via endogenous learning.
-12,185,0,422,-864,568,21,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+12,185,0,51,1604,568,21,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Change in Demand Response Costs
-10,186,DRCo Annual Cost per Unit Demand Response Capacity,572,-518,75,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,187,Cost of Providing Demand Response by Recipient,861,-656,64,27,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,188,BAU Cost of Providing Demand Response by Recipient,861,-382,75,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,189,186,187,0,0,0,0,0,128,0,-1--1--1,,1|(710,-584)|
-1,190,186,188,0,0,0,0,0,128,0,-1--1--1,,1|(709,-452)|
-10,191,Change in Demand Response Costs by Recipient,861,-518,68,28,8,3,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
-1,192,187,191,0,0,0,0,0,128,0,-1--1--1,,1|(861,-594)|
-1,193,188,191,0,0,0,0,0,128,0,-1--1--1,,1|(861,-443)|
-10,194,DRCo Share of DR by Provider,285,-518,64,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,195,This Year DR Capacity by Provider,285,-656,68,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,196,BAU This Year DR Capacity by Provider,285,-382,68,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,197,194,195,0,0,0,0,0,128,0,-1--1--1,,1|(285,-580)|
-1,198,194,196,0,0,0,0,0,128,0,-1--1--1,,1|(285,-457)|
-1,199,195,187,0,0,0,0,0,128,0,-1--1--1,,1|(568,-656)|
-1,200,196,188,0,0,0,0,0,128,0,-1--1--1,,1|(562,-382)|
-12,201,0,1920,-154,279,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,186,DRCo Annual Cost per Unit Demand Response Capacity,201,1950,75,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,187,Cost of Providing Demand Response by Recipient,490,1812,64,27,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,188,BAU Cost of Providing Demand Response by Recipient,490,2086,75,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,189,186,187,0,0,0,0,0,128,0,-1--1--1,,1|(341,1883)|
+1,190,186,188,0,0,0,0,0,128,0,-1--1--1,,1|(340,2015)|
+10,191,Change in Demand Response Costs by Recipient,490,1950,68,28,8,3,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
+1,192,187,191,0,0,0,0,0,128,0,-1--1--1,,1|(490,1873)|
+1,193,188,191,0,0,0,0,0,128,0,-1--1--1,,1|(490,2025)|
+10,194,DRCo Share of DR by Provider,-86,1950,64,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,195,This Year DR Capacity by Provider,-86,1812,68,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,196,BAU This Year DR Capacity by Provider,-86,2086,68,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,197,194,195,0,0,0,0,0,128,0,-1--1--1,,1|(-86,1888)|
+1,198,194,196,0,0,0,0,0,128,0,-1--1--1,,1|(-86,2011)|
+1,199,195,187,0,0,0,0,0,128,0,-1--1--1,,1|(197,1812)|
+1,200,196,188,0,0,0,0,0,128,0,-1--1--1,,1|(192,2086)|
+12,201,0,1549,2314,279,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Change in Decommissioning Costs
-10,202,Change in Retiring Generation Capacity,1797,60,68,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,203,DCpUC Decommissioning Cost per Unit Capacity,2045,-45,92,24,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,204,Change in Decommissioning Costs,2045,60,91,23,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
-1,205,203,204,0,0,0,0,0,128,0,-1--1--1,,1|(2045,1)|
-1,206,202,204,0,0,0,0,0,128,0,-1--1--1,,1|(1902,60)|
-10,207,Change in Electricity Imports,1760,-618,64,19,8,3,0,20,0,0,0,0,-1--1--1,255-192-128,|12|I|0-0-0,0,0,0,0,0,0
-1,208,127,207,0,0,0,0,0,128,0,-1--1--1,,1|(1760,-696)|
-1,209,137,207,0,0,0,0,0,128,0,-1--1--1,,1|(1760,-540)|
-10,210,Change in Electricity Exports,2745,-618,64,19,8,3,0,20,0,0,0,0,-1--1--1,255-192-128,|12|I|0-0-0,0,0,0,0,0,0
-1,211,128,210,0,0,0,0,0,128,0,-1--1--1,,1|(2745,-696)|
-1,212,136,210,0,0,0,0,0,128,0,-1--1--1,,1|(2745,-540)|
-10,213,Electricity Sector Change in Nonenergy Expenditures by Entity,358,1083,119,25,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-10,214,Electricity Sector Change in Energy Expenditures by Entity,49,1083,103,24,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-10,215,Change in Amount Spent on Electricity Fuels,49,976,85,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,216,215,214,0,0,0,0,0,128,0,-1--1--1,,1|(49,1020)|
-10,217,Change in Demand Response Costs by Recipient,358,802,103,24,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,218,217,213,0,0,0,0,0,128,0,-1--1--1,,1|(358,935)|
-10,219,Change in Amount Spent on Importing Electricity,49,891,84,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,220,219,214,0,0,0,0,0,128,0,-1--1--1,,1|(49,978)|
-12,221,0,214,535,332,28,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,202,Change in Retiring Generation Capacity,1426,2528,68,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,203,DCpUC Decommissioning Cost per Unit Capacity,1674,2423,92,24,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,204,Change in Decommissioning Costs,1674,2528,91,23,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,|12|I|0-0-0,0,0,0,0,0,0
+1,205,203,204,0,0,0,0,0,128,0,-1--1--1,,1|(1674,2469)|
+1,206,202,204,0,0,0,0,0,128,0,-1--1--1,,1|(1531,2528)|
+10,207,Change in Electricity Imports,1389,1850,64,19,8,3,0,20,0,0,0,0,-1--1--1,255-192-128,|12|I|0-0-0,0,0,0,0,0,0
+1,208,127,207,0,0,0,0,0,128,0,-1--1--1,,1|(1389,1772)|
+1,209,137,207,0,0,0,0,0,128,0,-1--1--1,,1|(1389,1927)|
+10,210,Change in Electricity Exports,2374,1850,64,19,8,3,0,20,0,0,0,0,-1--1--1,255-192-128,|12|I|0-0-0,0,0,0,0,0,0
+1,211,128,210,0,0,0,0,0,128,0,-1--1--1,,1|(2374,1772)|
+1,212,136,210,0,0,0,0,0,128,0,-1--1--1,,1|(2374,1927)|
+10,213,Electricity Sector Change in Nonenergy Expenditures by Entity,-13,3551,119,25,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+10,214,Electricity Sector Change in Energy Expenditures by Entity,-322,3551,103,24,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+10,215,Change in Amount Spent on Electricity Fuels,-322,3444,85,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,216,215,214,0,0,0,0,0,128,0,-1--1--1,,1|(-322,3488)|
+10,217,Change in Demand Response Costs by Recipient,-13,3270,103,24,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,218,217,213,0,0,0,0,0,128,0,-1--1--1,,1|(-13,3403)|
+10,219,Change in Amount Spent on Importing Electricity,-322,3359,84,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,220,219,214,0,0,0,0,0,128,0,-1--1--1,,1|(-322,3445)|
+12,221,0,-157,3003,332,28,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Allocating Changes in Expenditures
-10,222,Change in Amount Received from Exporting Electricity,49,802,104,21,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,223,222,214,0,0,0,0,0,128,0,-1--1--1,,1|(49,934)|
-12,224,0,1891,535,1277,28,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,222,Change in Amount Received from Exporting Electricity,-322,3270,104,21,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,223,222,214,0,0,0,0,0,128,0,-1--1--1,,1|(-322,3402)|
+12,224,0,1520,3003,1277,28,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Allocating Changes in Revenue
-12,225,0,873,599,257,29,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+12,225,0,502,3067,257,29,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 Changes in revenue from electricity sales are handled in each demand sector.  This is just changes in revenues for items tracked in the Electricity Supply sector, such as the fuels burned to produce electricity, capital equipment purchases, etc.
-10,226,Electricity Sector Change in Revenue by Entity,3002,1255,99,23,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-10,227,Electricity Sector Carbon Tax Rebate due to CCS,358,635,85,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,228,227,213,0,0,0,0,0,128,0,-1--1--1,,1|(358,849)|
-10,229,Change in Decommissioning Costs,2099,1099,83,21,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,230,Change in Electricity Fuel Taxes Paid,2402,987,72,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,231,Electricity Sector Change in Fuel Industry Cash Flow before Subsidies and Electricity Exports,2402,1099,108,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,232,231,248,0,0,0,0,0,128,0,-1--1--1,,1|(2402,1174)|
-10,233,Electricity Sector Change in Amount Spent on Capital Equipment by ISIC Code,1825,1255,88,28,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,234,Change in Electricity Sector Battery Costs,1825,1099,72,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,235,Change in Transmission Construction Costs,1269,879,80,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,236,234,233,0,0,0,0,0,128,0,-1--1--1,,1|(1825,1165)|
-10,237,Change in Demand Response Costs by Recipient,1553,1255,68,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,238,237,226,0,0,0,0,0,128,0,-1--1--1,,1|(2255,1255)|
-10,239,Change in Capacity Construction Subsidies Paid,358,716,101,21,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,240,239,213,0,0,0,0,0,128,0,-1--1--1,,1|(358,891)|
-10,241,Change in Capacity Construction Subsidies Paid,3002,987,101,24,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,242,230,248,0,0,0,0,0,128,0,-1--1--1,,1|(2402,1114)|
-10,243,Electricity Sector Carbon Tax Rebate due to CCS,3002,1099,85,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,244,Electricity Sector Change in Subsidies and Tax Rebates by Recipient,2701,1255,88,32,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,245,241,357,0,0,0,0,0,128,0,-1--1--1,,1|(2863,1039)|
-1,246,243,357,0,0,0,0,0,128,0,-1--1--1,,1|(2865,1099)|
-1,247,244,226,0,0,0,0,0,128,0,-1--1--1,,1|(2839,1255)|
-10,248,Electricity Sector Change in Fuel Costs by Recipient,2402,1255,83,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,249,248,226,0,0,0,0,0,128,0,-1--1--1,,1|(2687,1255)|
-10,250,Change in Amount Spent on Importing Electricity,2402,768,84,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,251,Change in Amount Received from Exporting Electricity,2402,880,97,24,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,252,251,248,0,0,0,0,0,128,0,-1--1--1,,1|(2402,1063)|
-1,253,250,248,0,0,0,0,0,128,0,-1--1--1,,1|(2402,1005)|
-10,254,Electricity Sector Change in Amount Spent on Capital Equipment by ISIC Code,358,891,93,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,255,254,213,0,0,0,0,0,128,0,-1--1--1,,1|(358,982)|
-10,256,Construction Cost per Unit Capacity before Construction Subsidies,1744,-2141,83,32,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,257,BAU Construction Cost per Unit Capacity before Construction Subsidies,1744,-1661,96,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,258,257,11,0,0,0,0,0,128,0,-1--1--1,,1|(1744,-1718)|
-1,259,256,10,0,0,0,0,0,128,0,-1--1--1,,1|(1744,-2091)|
-12,260,0,1752,-2233,132,39,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,226,Electricity Sector Change in Revenue by Entity,2631,3723,99,23,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+10,227,Electricity Sector Carbon Tax Rebate due to CCS,-13,3103,85,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,228,227,213,0,0,0,0,0,128,0,-1--1--1,,1|(-13,3317)|
+10,229,Change in Decommissioning Costs,1728,3567,83,21,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,230,Change in Electricity Fuel Taxes Paid,2031,3455,72,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,231,Electricity Sector Change in Fuel Industry Cash Flow before Subsidies and Electricity Exports,2031,3567,108,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,232,231,248,0,0,0,0,0,128,0,-1--1--1,,1|(2031,3642)|
+10,233,Electricity Sector Change in Amount Spent on Capital Equipment by ISIC Code,1454,3723,88,28,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,234,Change in Electricity Sector Battery Costs,1454,3567,72,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,235,Change in Transmission Construction Costs,898,3347,80,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,236,234,233,0,0,0,0,0,128,0,-1--1--1,,1|(1454,3633)|
+10,237,Change in Demand Response Costs by Recipient,1182,3723,68,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,238,237,226,0,0,0,0,0,128,0,-1--1--1,,1|(1884,3723)|
+10,239,Change in Capacity Construction Subsidies Paid,-13,3184,101,21,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,240,239,213,0,0,0,0,0,128,0,-1--1--1,,1|(-13,3358)|
+10,241,Change in Capacity Construction Subsidies Paid,2631,3455,101,24,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,242,230,248,0,0,0,0,0,128,0,-1--1--1,,1|(2031,3582)|
+10,243,Electricity Sector Carbon Tax Rebate due to CCS,2631,3567,85,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,244,Electricity Sector Change in Subsidies and Tax Rebates by Recipient,2330,3723,88,32,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,245,241,357,0,0,0,0,0,128,0,-1--1--1,,1|(2492,3506)|
+1,246,243,357,0,0,0,0,0,128,0,-1--1--1,,1|(2494,3567)|
+1,247,244,226,0,0,0,0,0,128,0,-1--1--1,,1|(2468,3723)|
+10,248,Electricity Sector Change in Fuel Costs by Recipient,2031,3723,83,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,249,248,226,0,0,0,0,0,128,0,-1--1--1,,1|(2316,3723)|
+10,250,Change in Amount Spent on Importing Electricity,2031,3236,84,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,251,Change in Amount Received from Exporting Electricity,2031,3348,97,24,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,252,251,248,0,0,0,0,0,128,0,-1--1--1,,1|(2031,3531)|
+1,253,250,248,0,0,0,0,0,128,0,-1--1--1,,1|(2031,3472)|
+10,254,Electricity Sector Change in Amount Spent on Capital Equipment by ISIC Code,-13,3359,93,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,255,254,213,0,0,0,0,0,128,0,-1--1--1,,1|(-13,3449)|
+10,256,Construction Cost per Unit Capacity before Construction Subsidies,1373,327,83,32,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,257,BAU Construction Cost per Unit Capacity before Construction Subsidies,1373,807,96,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,258,257,11,0,0,0,0,0,128,0,-1--1--1,,1|(1373,749)|
+1,259,256,10,0,0,0,0,0,128,0,-1--1--1,,1|(1373,377)|
+12,260,0,1381,235,132,39,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 Construction subsidies are paid separately from government to electricity suppliers (below), reimbursing them for some of these costs.
-10,261,One Year,2486,-1786,41,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,262,261,165,0,1,0,0,0,64,0,-1--1--1,,1|(2575,-1839)|
-10,263,CCS OM Cost by Electricity Source,928,-1361,68,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,264,BAU CCS OM Cost by Electricity Source,928,-1121,76,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,265,CCS New Capital Eqpt Cost by Electricity Source,2005,-2036,96,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,266,BAU CCS New Capital Eqpt Cost by Electricity Source,2005,-1786,109,20,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,267,265,10,0,0,0,0,0,128,0,-1--1--1,,1|(1865,-2036)|
-1,268,266,11,0,0,0,0,0,128,0,-1--1--1,,1|(1866,-1786)|
-10,269,Change in Electricity Supplier Expenditures After Subsidies per Unit Electricity Produced,4113,1049,112,28,8,3,0,20,0,0,0,0,-1--1--1,255-192-128,|12|I|0-0-0,0,0,0,0,0,0
-1,270,73,269,0,0,0,0,0,128,0,-1--1--1,,1|(4113,975)|
-10,271,FSCaFoCC Fuel Shifting Cost as Fraction of Construction Cost,1497,-1910,81,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,272,Electricity Generation Capacity Shifted,1497,-2036,73,19,8,2,0,3,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,273,58,10,0,0,0,0,0,128,0,-1--1--1,,1|(1881,-2086)|
-1,274,271,10,0,0,0,0,0,128,0,-1--1--1,,1|(1617,-1971)|
-1,275,272,10,0,0,0,0,0,128,0,-1--1--1,,1|(1618,-2036)|
-10,276,Electricity Generation Capacity Shifted,2937,-2164,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,277,276,159,0,0,0,0,0,128,0,-1--1--1,,1|(2825,-2164)|
-12,278,0,2045,180,136,51,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,261,One Year,2115,682,41,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,262,261,165,0,1,0,0,0,64,0,-1--1--1,,1|(2204,628)|
+10,263,CCS OM Cost by Electricity Source,557,1107,68,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,264,BAU CCS OM Cost by Electricity Source,557,1347,76,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,265,CCS New Capital Eqpt Cost by Electricity Source,1634,432,96,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,266,BAU CCS New Capital Eqpt Cost by Electricity Source,1634,682,109,20,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,267,265,10,0,0,0,0,0,128,0,-1--1--1,,1|(1494,432)|
+1,268,266,11,0,0,0,0,0,128,0,-1--1--1,,1|(1495,682)|
+10,269,Change in Electricity Supplier Expenditures After Subsidies per Unit Electricity Produced,3742,3517,112,28,8,3,0,20,0,0,0,0,-1--1--1,255-192-128,|12|I|0-0-0,0,0,0,0,0,0
+1,270,73,269,0,0,0,0,0,128,0,-1--1--1,,1|(3742,3443)|
+10,271,FSCaFoCC Fuel Shifting Cost as Fraction of Construction Cost,1126,558,81,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,272,Electricity Generation Capacity Shifted,1126,432,73,19,8,2,0,3,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,273,58,10,0,0,0,0,0,128,0,-1--1--1,,1|(1510,382)|
+1,274,271,10,0,0,0,0,0,128,0,-1--1--1,,1|(1246,497)|
+1,275,272,10,0,0,0,0,0,128,0,-1--1--1,,1|(1247,432)|
+10,276,Electricity Generation Capacity Shifted,2566,304,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,277,276,159,0,0,0,0,0,128,0,-1--1--1,,1|(2454,304)|
+12,278,0,1674,2648,136,51,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 We assume that any decommissioning costs associated with capacity shifts are accounted for in the retrofitting cost (elec/FSCaFoCC) and shouldn't also be added here to avoid double-counting.
-10,279,Electricity Sector Change in Nonenergy Industry Revenue by ISIC Code,1825,1380,97,28,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0,0,0,0,0,0,0
-1,280,237,279,0,0,0,0,0,128,0,-1--1--1,,1|(1682,1314)|
-1,281,233,279,0,0,0,0,0,128,0,-1--1--1,,1|(1825,1310)|
-10,282,EIaE Imported Electricity Price,1233,-618,52,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,283,282,130,0,0,0,0,0,128,0,-1--1--1,,1|(1378,-686)|
-1,284,282,138,0,0,0,0,0,128,0,-1--1--1,,1|(1378,-550)|
-10,285,EIaE BAU Exported Electricity Price,2217,-477,67,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,286,285,139,0,0,0,0,0,128,0,-1--1--1,,1|(2332,-477)|
-1,287,285,129,0,0,0,0,0,128,0,-1--1--1,,1|(2217,-611)|
-10,288,Change in Baseline Energy Costs,2016,-618,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,289,142,129,0,0,0,0,0,128,0,-1--1--1,,1|(2113,-760)|
-1,290,288,129,0,0,0,0,0,128,0,-1--1--1,,1|(2110,-684)|
-10,291,BCpUC Battery Balance of System Cost per Unit Capacity,2773,-1185,76,29,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-1,292,291,154,0,0,0,0,0,128,0,-1--1--1,,1|(2648,-1241)|
-1,293,291,175,0,0,0,0,0,128,0,-1--1--1,,1|(2648,-1125)|
-12,294,0,1689,611,444,44,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,279,Electricity Sector Change in Nonenergy Industry Revenue by ISIC Code,1454,3848,97,28,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0,0,0,0,0,0,0
+1,280,237,279,0,0,0,0,0,128,0,-1--1--1,,1|(1311,3782)|
+1,281,233,279,0,0,0,0,0,128,0,-1--1--1,,1|(1454,3778)|
+10,282,EIaE Imported Electricity Price,862,1850,52,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,283,282,130,0,0,0,0,0,128,0,-1--1--1,,1|(1007,1781)|
+1,284,282,138,0,0,0,0,0,128,0,-1--1--1,,1|(1007,1917)|
+10,285,EIaE BAU Exported Electricity Price,1846,1991,67,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,286,285,139,0,0,0,0,0,128,0,-1--1--1,,1|(1961,1991)|
+1,287,285,129,0,0,0,0,0,128,0,-1--1--1,,1|(1846,1856)|
+10,288,Change in Baseline Energy Costs,1645,1850,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,289,142,129,0,0,0,0,0,128,0,-1--1--1,,1|(1742,1708)|
+1,290,288,129,0,0,0,0,0,128,0,-1--1--1,,1|(1739,1783)|
+10,291,BCpUC Battery Balance of System Cost per Unit Capacity,2511,1283,76,29,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+1,292,291,154,0,0,0,0,0,128,0,-1--1--1,,1|(2386,1226)|
+1,293,291,175,0,0,0,0,0,128,0,-1--1--1,,1|(2386,1342)|
+12,294,0,1318,3079,444,44,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 The portion of non-energy industries' revenue going to labor (e.g. payments to their workers), to taxes (e.g. sales taxes on their products and corporate and worker income taxes), and to foreign entities (e.g. if the non-energy goods were purchased from abroad rather than from a domestic company) are separated out after the change in nonenergy industry revenue has been totaled across sectors.  Taxes on fuel/energy and special policy lever-driven taxes (and subsidies) are handled here.
-1,295,233,226,0,0,0,0,0,128,0,-1--1--1,,1|(2401,1255)|
-10,296,Change in Electricity Sector Fixed OM Costs,688,-1246,80,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,297,Change in Electricity Sector CCS OM Costs,928,-1245,76,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,298,Change in Electricity Sector Variable OM Costs,216,-1248,68,28,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,299,264,297,0,0,0,0,0,128,0,-1--1--1,,1|(928,-1176)|
-1,300,263,297,0,0,0,0,0,128,0,-1--1--1,,1|(928,-1310)|
-10,301,Change in Electricity Sector Fixed OM Costs,1269,1163,84,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,302,Change in Electricity Sector Variable OM Costs,1269,1274,72,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,303,Change in Electricity Sector CCS OM Costs,1269,1390,81,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,304,Change in Electricity Sector Construction Costs,1269,766,91,23,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,305,SoESCaOMCbIC Share of Electricity Sector Capital Costs by ISIC Code,726,766,92,29,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,306,SoESCaOMCbIC Share of Electricity Sector Fixed OM Costs by ISIC Code,726,1163,92,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,307,SoESCaOMCbIC Share of Electricity Sector Variable OM Costs by ISIC Code,726,1274,99,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,308,Change in Capacity Construction Costs by Recipient ISIC Code,1005,766,71,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,309,304,308,0,0,0,0,0,128,0,-1--1--1,,1|(1134,766)|
-1,310,305,308,0,0,0,0,0,128,0,-1--1--1,,1|(869,766)|
-10,311,Change in Electricity Sector Variable OM Costs by Recipient ISIC Code,1005,1274,88,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,312,302,311,0,0,0,0,0,128,0,-1--1--1,,1|(1152,1274)|
-1,313,307,311,0,0,0,0,0,128,0,-1--1--1,,1|(864,1274)|
-10,314,Change in Electricity Sector Fixed OM Costs by Recipient ISIC Code,1005,1163,84,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,315,306,314,0,0,0,0,0,128,0,-1--1--1,,1|(862,1163)|
-1,316,301,314,0,0,0,0,0,128,0,-1--1--1,,1|(1144,1163)|
-10,317,Change in Electricity Sector CCS OM Costs by Recipient ISIC Code,1005,1390,81,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,318,303,317,0,0,0,0,0,128,0,-1--1--1,,1|(1144,1390)|
-1,319,307,317,0,0,0,0,0,128,0,-1--1--1,,1|(855,1327)|
-10,320,Change in Electricity Sector OM Costs by Recipient ISIC Code,1005,1535,107,24,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,321,317,320,0,0,0,0,0,128,0,-1--1--1,,1|(1005,1459)|
-1,322,311,320,0,0,0,0,0,128,0,-1--1--1,,1|(1005,1399)|
-1,323,314,320,0,0,0,0,0,128,0,-1--1--1,,1|(1005,1344)|
-10,324,Change in Electricity Sector OM Costs by Recipient ISIC Code,2099,987,112,21,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,325,GBSC Start Year Grid Battery Storage Capacity,2093,-1185,81,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,326,Grid Battery Storage Capacity,2093,-1417,60,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,327,GBSC BAU Grid Battery Storage Capacity,2093,-957,85,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,328,Last Year Grid Battery Storage Capacity,2093,-1294,73,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,329,BAU Last Year Grid Battery Storage Capacity,2093,-1081,81,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,330,327,329,0,0,0,0,0,128,0,-1--1--1,,1|(2093,-1012)|
-1,331,329,339,0,0,0,0,0,128,0,-1--1--1,,1|(2198,-1022)|
-1,332,327,339,0,0,0,0,0,128,0,-1--1--1,,1|(2202,-957)|
-1,333,325,329,0,0,0,0,0,128,1,-1--1--1,,1|(2093,-1140)|
-1,334,325,328,0,0,0,0,0,128,1,-1--1--1,,1|(2093,-1232)|
-1,335,326,328,0,0,0,0,0,128,0,-1--1--1,,1|(2093,-1362)|
-1,336,328,338,0,0,0,0,0,128,0,-1--1--1,,1|(2198,-1350)|
-1,337,326,338,0,0,0,0,0,128,0,-1--1--1,,1|(2198,-1415)|
-10,338,New Grid Battery Storage Capacity,2318,-1413,60,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,339,BAU New Grid Battery Storage Capacity,2318,-957,77,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,340,339,178,0,0,0,0,0,128,0,-1--1--1,,1|(2318,-1006)|
-1,341,338,177,0,0,0,0,0,128,0,-1--1--1,,1|(2318,-1360)|
-10,342,Retiring Generation Capacity by Quality Level,1797,-45,92,21,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,343,342,202,0,0,0,0,0,128,0,-1--1--1,,1|(1797,2)|
-10,344,One Year,1641,-45,43,11,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,345,344,202,0,0,0,0,0,128,0,-1--1--1,,1|(1706,0)|
-10,346,SoTCCbIC Share of Transmission Capital Costs by ISIC Code,726,879,71,29,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,347,Change in Transmission Construction Costs by Recipient ISIC Code,1005,879,75,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,348,235,347,0,0,0,0,0,128,0,-1--1--1,,1|(1141,879)|
-1,349,346,347,0,0,0,0,0,128,0,-1--1--1,,1|(856,879)|
-10,350,Change in Electricity Sector Construction Costs by Recipient ISIC Code,1005,1023,88,28,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,351,347,350,0,0,0,0,0,128,0,-1--1--1,,1|(1005,944)|
-1,352,308,350,0,0,0,0,0,128,0,-1--1--1,,1|(1005,888)|
-10,353,Change in Electricity Sector Construction Costs by Recipient ISIC Code,1825,987,93,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,354,353,233,0,0,0,0,0,128,0,-1--1--1,,1|(1825,1114)|
-10,355,BAU Retiring Generation Capacity,1797,162,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,356,355,202,0,0,0,0,0,128,0,-1--1--1,,1|(1797,118)|
-10,357,Electricity Sector Change in Subsidies and Tax Rebates by Electricity Source,2701,1099,99,28,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0,0,0,0,0,0,0
-1,358,357,244,0,0,0,0,0,128,0,-1--1--1,,1|(2701,1168)|
-10,359,Amount Spent on Industry Fuels,1553,1482,65,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,360,Percent of Nonenergy Industry Electricity Spending by ISIC Code,1553,1380,80,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,361,359,360,0,0,0,0,0,128,0,-1--1--1,,1|(1553,1443)|
-1,362,360,279,0,0,0,0,0,128,0,-1--1--1,,1|(1673,1380)|
-1,363,35,296,0,0,0,0,0,64,0,-1--1--1,,1|(579,-1182)|
-1,364,34,296,0,0,0,0,0,64,0,-1--1--1,,1|(580,-1304)|
-1,365,38,298,0,0,0,0,0,64,0,-1--1--1,,1|(90,-1179)|
-1,366,37,298,0,0,0,0,0,64,0,-1--1--1,,1|(90,-1309)|
-10,367,Fraction of Additional Demand Response Potential Achieved This Year,39,-660,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,368,DRC Potential Additional Demand Response Capacity,39,-768,86,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,369,Demand Responsive Electricity Capacity for Electrolyzers,285,-768,73,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,370,DRC BAU Demand Response Capacity,39,-518,70,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,371,BAU Demand Responsive Electricity Capacity for Electrolyzers,285,-261,89,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,372,370,196,0,0,0,0,0,128,0,-1--1--1,,1|(155,-453)|
-1,373,370,195,0,0,0,0,0,128,0,-1--1--1,,1|(155,-583)|
-1,374,371,196,0,0,0,0,0,128,0,-1--1--1,,1|(285,-319)|
-1,375,367,195,0,0,0,0,0,128,0,-1--1--1,,1|(166,-658)|
-1,376,368,195,0,0,0,0,0,128,0,-1--1--1,,1|(165,-710)|
-1,377,369,195,0,0,0,0,0,128,0,-1--1--1,,1|(285,-714)|
-10,378,Electricity Sector Change in Energy Expenditures by Entity,3765,919,103,23,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|0||128-128-128,0,0,0,0,0,0
-10,379,Change in Demand Response Costs by Recipient,3765,809,107,21,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|0||128-128-128,0,0,0,0,0,0
-10,380,Electricity Sector Change in Amount Spent on Capital Equipment by ISIC Code,3438,1050,93,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|0||128-128-128,0,0,0,0,0,0
-12,381,0,3830,535,539,40,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+1,295,233,226,0,0,0,0,0,128,0,-1--1--1,,1|(2030,3723)|
+10,296,Change in Electricity Sector Fixed OM Costs,317,1222,80,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,297,Change in Electricity Sector CCS OM Costs,557,1223,76,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,298,Change in Electricity Sector Variable OM Costs,-155,1220,68,28,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,299,264,297,0,0,0,0,0,128,0,-1--1--1,,1|(557,1292)|
+1,300,263,297,0,0,0,0,0,128,0,-1--1--1,,1|(557,1158)|
+10,301,Change in Electricity Sector Fixed OM Costs,898,3631,84,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,302,Change in Electricity Sector Variable OM Costs,898,3742,72,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,303,Change in Electricity Sector CCS OM Costs,898,3858,81,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,304,Change in Electricity Sector Construction Costs,898,3234,91,23,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,305,SoESCaOMCbIC Share of Electricity Sector Capital Costs by ISIC Code,355,3234,92,29,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,306,SoESCaOMCbIC Share of Electricity Sector Fixed OM Costs by ISIC Code,355,3631,92,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,307,SoESCaOMCbIC Share of Electricity Sector Variable OM Costs by ISIC Code,355,3742,99,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,308,Change in Capacity Construction Costs by Recipient ISIC Code,634,3234,71,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,309,304,308,0,0,0,0,0,128,0,-1--1--1,,1|(763,3234)|
+1,310,305,308,0,0,0,0,0,128,0,-1--1--1,,1|(498,3234)|
+10,311,Change in Electricity Sector Variable OM Costs by Recipient ISIC Code,634,3742,88,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,312,302,311,0,0,0,0,0,128,0,-1--1--1,,1|(781,3742)|
+1,313,307,311,0,0,0,0,0,128,0,-1--1--1,,1|(493,3742)|
+10,314,Change in Electricity Sector Fixed OM Costs by Recipient ISIC Code,634,3631,84,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,315,306,314,0,0,0,0,0,128,0,-1--1--1,,1|(492,3631)|
+1,316,301,314,0,0,0,0,0,128,0,-1--1--1,,1|(773,3631)|
+10,317,Change in Electricity Sector CCS OM Costs by Recipient ISIC Code,634,3858,81,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,318,303,317,0,0,0,0,0,128,0,-1--1--1,,1|(774,3858)|
+1,319,307,317,0,0,0,0,0,128,0,-1--1--1,,1|(485,3795)|
+10,320,Change in Electricity Sector OM Costs by Recipient ISIC Code,634,4003,107,24,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,321,317,320,0,0,0,0,0,128,0,-1--1--1,,1|(634,3927)|
+1,322,311,320,0,0,0,0,0,128,0,-1--1--1,,1|(634,3867)|
+1,323,314,320,0,0,0,0,0,128,0,-1--1--1,,1|(634,3812)|
+10,324,Change in Electricity Sector OM Costs by Recipient ISIC Code,1728,3455,112,21,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,325,GBSC Start Year Grid Battery Storage Capacity,1722,1283,81,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,326,Grid Battery Storage Capacity,1722,1051,60,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,327,GBSC BAU Grid Battery Storage Capacity,1722,1511,85,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,328,Last Year Grid Battery Storage Capacity,1722,1174,73,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,329,BAU Last Year Grid Battery Storage Capacity,1722,1387,81,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,330,327,329,0,0,0,0,0,128,0,-1--1--1,,1|(1722,1456)|
+1,331,329,339,0,0,0,0,0,128,0,-1--1--1,,1|(1827,1445)|
+1,332,327,339,0,0,0,0,0,128,0,-1--1--1,,1|(1831,1511)|
+1,333,325,329,0,0,0,0,0,128,1,-1--1--1,,1|(1722,1328)|
+1,334,325,328,0,0,0,0,0,128,1,-1--1--1,,1|(1722,1235)|
+1,335,326,328,0,0,0,0,0,128,0,-1--1--1,,1|(1722,1105)|
+1,336,328,338,0,0,0,0,0,128,0,-1--1--1,,1|(1827,1117)|
+1,337,326,338,0,0,0,0,0,128,0,-1--1--1,,1|(1827,1052)|
+10,338,New Grid Battery Storage Capacity,1947,1055,60,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,339,BAU New Grid Battery Storage Capacity,1947,1511,77,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,340,339,178,0,0,0,0,0,128,0,-1--1--1,,1|(1947,1461)|
+1,341,338,177,0,0,0,0,0,128,0,-1--1--1,,1|(1947,1107)|
+10,342,Retiring Generation Capacity by Quality Level,1426,2423,92,21,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,343,342,202,0,0,0,0,0,128,0,-1--1--1,,1|(1426,2469)|
+10,344,One Year,1270,2423,43,11,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,345,344,202,0,0,0,0,0,128,0,-1--1--1,,1|(1335,2467)|
+10,346,SoTCCbIC Share of Transmission Capital Costs by ISIC Code,355,3347,71,29,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,347,Change in Transmission Construction Costs by Recipient ISIC Code,634,3347,75,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,348,235,347,0,0,0,0,0,128,0,-1--1--1,,1|(771,3347)|
+1,349,346,347,0,0,0,0,0,128,0,-1--1--1,,1|(486,3347)|
+10,350,Change in Electricity Sector Construction Costs by Recipient ISIC Code,634,3491,88,28,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,351,347,350,0,0,0,0,0,128,0,-1--1--1,,1|(634,3412)|
+1,352,308,350,0,0,0,0,0,128,0,-1--1--1,,1|(634,3355)|
+10,353,Change in Electricity Sector Construction Costs by Recipient ISIC Code,1454,3455,93,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,354,353,233,0,0,0,0,0,128,0,-1--1--1,,1|(1454,3582)|
+10,355,BAU Retiring Generation Capacity,1426,2630,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,356,355,202,0,0,0,0,0,128,0,-1--1--1,,1|(1426,2586)|
+10,357,Electricity Sector Change in Subsidies and Tax Rebates by Electricity Source,2330,3567,99,28,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0,0,0,0,0,0,0
+1,358,357,244,0,0,0,0,0,128,0,-1--1--1,,1|(2330,3636)|
+10,359,Amount Spent on Industry Fuels,1182,3950,65,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,360,Percent of Nonenergy Industry Electricity Spending by ISIC Code,1182,3848,80,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,361,359,360,0,0,0,0,0,128,0,-1--1--1,,1|(1182,3911)|
+1,362,360,279,0,0,0,0,0,128,0,-1--1--1,,1|(1302,3848)|
+1,363,35,296,0,0,0,0,0,64,0,-1--1--1,,1|(210,1285)|
+1,364,34,296,0,0,0,0,0,64,0,-1--1--1,,1|(211,1163)|
+1,365,38,298,0,0,0,0,0,64,0,-1--1--1,,1|(-279,1288)|
+1,366,37,298,0,0,0,0,0,64,0,-1--1--1,,1|(-280,1158)|
+10,367,Fraction of Additional Demand Response Potential Achieved This Year,-332,1808,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,368,DRC Potential Additional Demand Response Capacity,-332,1700,86,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,369,Demand Responsive Electricity Capacity for Electrolyzers,-86,1700,73,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,370,DRC BAU Demand Response Capacity,-332,1950,70,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,371,BAU Demand Responsive Electricity Capacity for Electrolyzers,-86,2207,89,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,372,370,196,0,0,0,0,0,128,0,-1--1--1,,1|(-215,2014)|
+1,373,370,195,0,0,0,0,0,128,0,-1--1--1,,1|(-215,1884)|
+1,374,371,196,0,0,0,0,0,128,0,-1--1--1,,1|(-86,2149)|
+1,375,367,195,0,0,0,0,0,128,0,-1--1--1,,1|(-204,1809)|
+1,376,368,195,0,0,0,0,0,128,0,-1--1--1,,1|(-205,1757)|
+1,377,369,195,0,0,0,0,0,128,0,-1--1--1,,1|(-86,1753)|
+10,378,Electricity Sector Change in Energy Expenditures by Entity,3394,3387,103,23,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,379,Change in Demand Response Costs by Recipient,3394,3277,107,21,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,380,Electricity Sector Change in Amount Spent on Capital Equipment by ISIC Code,3067,3387,93,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+12,381,0,3459,3003,539,40,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Change in Electricity Supplier Expenditures After Subsidies per Unit Electricity Produced (Used to Adjust Electricity Prices)
-10,382,Change in Electricity Supplier Expenditures After Subsidies,3765,1050,102,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,383,378,382,0,0,0,0,0,128,0,-1--1--1,,1|(3765,977)|
-1,384,380,382,0,0,0,0,0,128,0,-1--1--1,,1|(3590,1050)|
-1,385,379,382,0,0,0,0,0,128,0,-1--1--1,,1|(3765,921)|
-1,386,33,382,0,0,0,0,0,128,0,-1--1--1,,1|(3765,1120)|
-1,387,53,382,0,0,0,0,0,128,0,-1--1--1,,1|(3765,1172)|
-1,388,382,269,0,0,0,0,0,128,0,-1--1--1,,1|(3926,1049)|
-10,389,Electricity Sector Change in Amount Spent on OM and Decommissioning by ISIC Code,2099,1255,103,28,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|0||0-0-0,0,0,0,0,0,0
-1,390,229,389,0,0,0,0,0,128,0,-1--1--1,,1|(2099,1166)|
-1,391,324,389,0,0,0,0,0,128,0,-1--1--1,,1|(2099,1110)|
-1,392,389,226,0,0,0,0,0,128,0,-1--1--1,,1|(2545,1255)|
-10,393,Electricity Sector Change in Amount Spent on OM and Decommissioning by ISIC Code,358,976,108,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|0||128-128-128,0,0,0,0,0,0
-1,394,393,213,0,0,0,0,0,128,0,-1--1--1,,1|(358,1024)|
-10,395,Electricity Sector Change in Amount Spent on OM and Decommissioning by ISIC Code,3765,692,108,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|0||128-128-128,0,0,0,0,0,0
-1,396,395,382,0,0,0,0,0,128,0,-1--1--1,,1|(3765,866)|
+10,382,Change in Electricity Supplier Expenditures After Subsidies,3394,3518,102,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,383,378,382,0,0,0,0,0,128,0,-1--1--1,,1|(3394,3445)|
+1,385,379,382,0,0,0,0,0,128,0,-1--1--1,,1|(3394,3389)|
+1,386,33,382,0,0,0,0,0,128,0,-1--1--1,,1|(3394,3600)|
+1,387,53,382,0,0,0,0,0,128,0,-1--1--1,,1|(3394,3652)|
+1,388,382,269,0,0,0,0,0,128,0,-1--1--1,,1|(3555,3517)|
+10,389,Electricity Sector Change in Amount Spent on OM and Decommissioning by ISIC Code,1728,3723,103,28,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,390,229,389,0,0,0,0,0,128,0,-1--1--1,,1|(1728,3634)|
+1,391,324,389,0,0,0,0,0,128,0,-1--1--1,,1|(1728,3578)|
+1,392,389,226,0,0,0,0,0,128,0,-1--1--1,,1|(2174,3723)|
+10,393,Electricity Sector Change in Amount Spent on OM and Decommissioning by ISIC Code,-13,3444,108,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,394,393,213,0,0,0,0,0,128,0,-1--1--1,,1|(-13,3491)|
+10,395,Electricity Sector Change in Amount Spent on OM and Decommissioning by ISIC Code,3394,3160,108,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,396,395,382,0,0,0,0,0,128,0,-1--1--1,,1|(3394,3334)|
+10,397,STfESCE Smoothing Time for Electricity Sector Capital Expenditures,2147,1283,98,30,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128,0,0,0,0,0,0
+1,398,397,70,0,0,0,0,0,128,1,-1--1--1,,1|(2041,1283)|
+10,399,STfESCE Smoothing Time for Electricity Sector Capital Expenditures,-27,2919,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128,0,0,0,0,0,0
+1,400,399,90,0,0,0,0,0,128,1,-1--1--1,,1|(-27,2876)|
+10,401,Electricity Sector Change in Amount Spent on Capital Equipment by ISIC Code with Smoothing Time Applied,3067,3518,117,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,402,380,401,0,0,0,0,0,128,0,-1--1--1,,1|(3067,3445)|
+10,403,Smoothing Time for Electricity Price Changes,3067,3667,90,19,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|0||0-0-0,0,0,0,0,0,0
+1,404,403,401,0,0,0,0,0,128,1,-1--1--1,,1|(3067,3604)|
+1,406,401,382,0,0,0,0,0,128,0,-1--1--1,,1|(3231,3518)|
+1,408,10,407,0,0,0,0,0,128,0,-1--1--1,,1|(1371,523)|
+1,409,11,407,0,0,0,0,0,128,0,-1--1--1,,1|(1371,656)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Buildings - Main

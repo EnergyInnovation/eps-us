@@ -24,7 +24,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * The policy schedule Python script (plcy-schd/FoPITY) now includes internal error checking capabilities.
   * Improved the metrics used to calculate macroeconomic feedback for transportation service demand.
   * Added the ability for government to rebate carbon tax on exported products (if carbon border adjustments are enabled), with a new control setting to toggle this behavior on or orr.
-  * Added customizable smoothing times for electricity generation capacity, grid battery storage, and transmission capital costs (in file elec/ESCCST) to spread power sector capital costs over a number of years
+  * Edited or added smoothing times for electricity generation capacity, grid battery storage, transmission capital costs, and electricity prices (in files elec/STfESCE and elec/STfEPC) to spread power sector capital costs over a number of years
 * New Graphs
   * Exports, imports, production, and domestic consumption of nonenergy products, as well as policy-induced changes in these metrics
   * Share of electricity generation from clean sources
