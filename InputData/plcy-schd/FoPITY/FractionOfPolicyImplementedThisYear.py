@@ -253,7 +253,7 @@ PolicyElements = (
   ),
   (("trans LCFS"),
     ("Schedule 1",(2020,0),(2021,0),(2050,1)),
-    ("Schedule 2",(2020,0),(2039,0),(2040,0.7265),(2050,1)),
+    ("Schedule 2",(2020,0),(2039,0),(2040,0.70),(2050,1)),
   ),
   (("trans reduce regulated pollutants","LDVs","CO2"),
     ("Schedule 1",(2020,0),(2021,0),(2050,1)),
