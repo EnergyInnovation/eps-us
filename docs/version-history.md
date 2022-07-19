@@ -37,7 +37,22 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Fix to share of demand response capacity costs by cash flow entity
   * Revert to using ALLOCATE AVAILABLE() for electricity dispatch (as in EPS 3.3.0) rather than a logit function
 * Data
-  * 
+  * Updated to the Energy Information Administration's Annual Energy Outlook 2022. We chose to use the Low Economic Growth side case because it more closely aligns with economic projections from the Congressional Budget Office.
+  * Updated to use the National Renewable Energy Laboratory's Annual Technology Baseline 2022
+  * Updated BAU to reflect components of the U.S. Infrastructure Investment and Jobs Act
+  * Updated short-term natural gas prices to reflect futures prices
+  * Updated new vehicle fuel economy to reflect latest Environmental Protection Agency standards
+  * Updated NDC Scenario to reach net zero GHGs by 2050, including greater carbon capture and sequestration and direct air capture
+  * Updated LULUCF potential and costs based on consultation with external forestry experts
+  * Updated process emissions to align with the Environmental Protection Agency Greenhouse Gas Inventory in the start year, with growth tied to AEO projections
+  * Updated to use the International Energy Agency Methane Tracker 2022 for process methane
+  * Updated direct air capture potential
+  * Updated control settings to specify that all fuel prices should be affected by changes in fuel production costs
+  * Updated control settings to exempt certain process emissions from the carbon tax by default
+  * Updated cost of transmission
+  * Updated cost of industrial energy efficiency policy
+  * Updated vehicle maintenance costs
+  * Other minor data updates
 
 ### **3.3.1.1 - May 11, 2022**
 
