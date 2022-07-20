@@ -43,6 +43,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Updated short-term natural gas prices to reflect futures prices
   * Updated new vehicle fuel economy to reflect latest Environmental Protection Agency standards
   * Updated NDC Scenario to reach net zero GHGs by 2050, including greater carbon capture and sequestration and direct air capture
+  * Updated LULUCF emissions trajectory based on the 1990-2020 trend in the Greenhouse Gas Inventory
   * Updated LULUCF potential and costs based on consultation with external forestry experts
   * Updated process emissions to align with the Environmental Protection Agency Greenhouse Gas Inventory in the start year, with growth tied to AEO projections
   * Updated to use the International Energy Agency Methane Tracker 2022 for process methane
