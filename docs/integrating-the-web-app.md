@@ -39,5 +39,5 @@ For consistency in naming, the simulator will *also* remain accessible at its UR
 
 The following partners have chosen to use the supported method above to integrate the EPS with their websites.  Their EPS models can be accessed at the following URLs on their domains:
 
-* [eps.kapsarc.org](eps.kapsarc.org) - King Abdullah Petroleum Studies and Research Center, Saudi Arabia
-* [policysolutions.pembina.org](policysolutions.pembina.org) - Pembina Institute, Canada
+* [https://eps.kapsarc.org/](eps.kapsarc.org) - King Abdullah Petroleum Studies and Research Center, Saudi Arabia
+* [https://policysolutions.pembina.org/](policysolutions.pembina.org) - Pembina Institute, Canada

@@ -4,6 +4,122 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **3.4.0 - TBD, 2022**
+
+* New Policies
+  * Industrial fuel shifting is now controlled by two policy levers.  A new lever allows use of indusrtial heat pumps to electrify low-temperature heat.  The existing lever now governs only medium and high temperature heat and continues to allow shifting to electricity, hydrogen, and/or other fuels.
+  * New Policy: CO<sub>2</sub> storage in agricultural soils from altered tillage practices
+  * New Policy: Carbon border adjustments (regarding carbon pricing) can now be toggled on and off. For the U.S., we assume border adjustments are off by default.
+  * New Policy: The F-gas Equipment Maintenance & Retrofits policy is now subscripted by both the chemicals and other metals (aluminum) industry
+* New Features
+  * Import and export substitution (the extent to which the policy package increases or decreases imports and exports of non-energy products) are now calculated.  (The EPS already handled import and export substitution for energy products.) This also allows the model to calculate domestic consumption and changes in consumption.
+  * Users may now override endogenous learning for battery electric vehicles (in trans/BNVP)
+  * Labor productivity growth rates now support time series data (io-model/LPGRbIC)
+  * Demand response now reduces the need for generation from peaker power plants
+  * Capital costs of electricity sector CCS equipment are now properly adjusted to account for power plant capacity factors
+  * Single-pollutant graphs are now stacked area graphs (by sector) instead of single-line graphs
+  * Whether the carbon tax exempts process emissions by default (ctrl-settings/BEPEfCT), and the policy lever to reverse this behavior, can now be set separately for each industry
+  * The model's handling of value-added taxes (VAT) and sales taxes is now more sophisticated and accurate.
+  * The Macroeconomic Feedbacks sheet is clearer and easier to understand.
+  * The policy schedule Python script (plcy-schd/FoPITY) now includes internal error checking capabilities.
+  * Improved the metrics used to calculate macroeconomic feedback for transportation service demand.
+  * Added the ability for government to rebate carbon tax on exported products (if carbon border adjustments are enabled), with a new control setting to toggle this behavior on or orr.
+  * Edited or added smoothing times for electricity generation capacity, grid battery storage, transmission capital costs, and electricity prices (in files elec/STfESCE and elec/STfEPC) to spread power sector capital costs over a number of years
+* New Graphs
+  * Exports, imports, production, and domestic consumption of nonenergy products, as well as policy-induced changes in these metrics
+  * Share of electricity generation from clean sources
+  * Carbon intensity of electricity generation
+  * Electricity intensity per unit GDP
+  * Industrial CO2 by source type (energy vs. process)
+  * Industrial process CO2 emissions by industry
+  * Industrial energy-related CO2 emissions by industry
+* Bug Fixes
+  * Fix to share of demand response capacity costs by cash flow entity
+  * Revert to using ALLOCATE AVAILABLE() for electricity dispatch (as in EPS 3.3.0) rather than a logit function
+* Data
+  * Updated to the Energy Information Administration's Annual Energy Outlook 2022. We chose to use the Low Economic Growth side case because it more closely aligns with economic projections from the Congressional Budget Office.
+  * Updated to use the National Renewable Energy Laboratory's Annual Technology Baseline 2022
+  * Updated BAU to reflect components of the U.S. Infrastructure Investment and Jobs Act
+  * Updated short-term natural gas prices to reflect futures prices
+  * Updated new vehicle fuel economy to reflect latest Environmental Protection Agency standards
+  * Updated NDC Scenario to reach net zero GHGs by 2050, including greater carbon capture and sequestration and direct air capture
+  * Updated LULUCF potential and costs based on consultation with external forestry experts
+  * Updated process emissions to align with the Environmental Protection Agency Greenhouse Gas Inventory in the start year, with growth tied to AEO projections
+  * Updated to use the International Energy Agency Methane Tracker 2022 for process methane
+  * Updated direct air capture potential
+  * Updated control settings to specify that all fuel prices should be affected by changes in fuel production costs
+  * Updated control settings to exempt certain process emissions from the carbon tax by default
+  * Updated cost of transmission
+  * Updated cost of industrial energy efficiency policy
+  * Updated vehicle maintenance costs
+  * Other minor data updates
+
+### **3.3.1.1 - May 11, 2022**
+
+* Bug Fixes
+  * Fix to allow for different values of electricity dispatch shareweights for each power plant type (file elec/MOfEDS, which includes an option to manually override the model's calculated shareweights)  
+
+### **3.3.1 - Jan. 18, 2022**
+
+* New Features
+  * Electricity Sector
+    * Electricity generation subsidies can now be set separately for power plants of the same type in different quality tiers (both BAU and policy lever)
+    * Electricity dispatch choice is now handled via a logit function rather than ALLOCATE AVAILABLE.  Logit shareweights are calculated endogenously and are policy-responsive.  A manual override for these shareweights has been added, allowing detailed customization of electricity dispatch behavior for regions with unusual electricity dispatch approaches.
+  * Transportation Sector
+    * Changes in the amount of money paid for passenger transport fares (airfare, bus fare, train fare) are now calculated.
+    * Annual vehicle insurance costs for all on-road vehicles are now included.
+    * Annual vehicle parking costs are now included.
+    * Annual vehicle licensing, registration, and property tax costs are now included.
+  * The fuel tax policy can now be used to reduce the BAU tax rate or apply subsidies.  Positive values increase the tax rate.  Negative values reduce the BAU tax rate or apply subsidies.
+  * Added single-line graphs of total energy use for each end use sector.  Breakdowns showing total energy use as stacked area graphs already existed, but a single-line graph is sometimes preferable for simplicity or for comparing multiple policy packages on the same graph.
+  * Policy schedules (FoPITY) are now managed by a single Python script rather than via several large Excel files.  This allows policies to be added and changed more easily, policy schedules are generated more quickly, and there is no longer any risk of policy properties not aligning across different Excel files.
+* Bug Fixes
+  * "Buy In-Region" policy lever's direct effects are now included in macroecnomic feedback loops, plus other formula fixes for this policy
+  * Corrected the share of natural gas used for energy (vs. as feedstock) by the refining industry in indst/BPoIFUfE
+  * Corrected formula for exclusion of deaths caused by pollution associated with imported electricity for EPS regions that count emissions from imported electricity
+  * The change in demand for the "energy pipelines and gas processing" industry is now based on the change in domestic + exported natural gas demand, rather than natural gas production, to better handle regions with gas transmission but little-to-no gas production
+  * Fixed omission of geoengineering primary energy use from "Primary Energy Use by Sector" and Fuel Costs graphs
+* Data Updates
+  * Updated BAU trajectory to incorporate the AIM Act
+  * Updated BAU carbon capture and sequestration amounts in industry based on a Rhodium analysis
+  * Updated currency year to 2020
+  * Separated combined cycle, steam turbine, and combustion turbine natural gas plants in the input data
+  * Updated battery storage costs and recalibrated vehicle prices
+  * Corrected BAU Production Tax Credit values for onshore wind
+  * Other minor data updates
+  
+
+### **3.3.0 - Aug. 16, 2021**
+
+* New Features
+  * New Policy: Buy In-Region Products allows the user to specify a percentage of imported products (in the BAU case) that are shifted to domestic suppliers (in the policy case) for each individual industry.
+  * Added demographic breakdowns disaggregating changes in lives saved due to reduced pollution by sex, race, and Hispanic or Latino status.  New graphs show results as absolute numbers and as percent changes relative to BAU.
+  * The EPS core model structure now supports model run end dates as far out as 2100.  Each EPS region's developers may choose their preferred model run end date.  (The U.S. national model's end date remains 2050.)
+  * New Policy: N<sub>2</sub>O abatement (from the chemicals industry, primarily from nitric and adipic acid production)
+  * Projected future changes in BAU Output, BAU Employment, BAU Value Added, and BAU Employee Compensation disaggregated by ISIC code improve the accuracy of some input/output model results
+* Data Updates
+  * Updated NDC scenario to include incentives for electric vehicles and efficient building components
+  * Update LULUCF rebound pollutant emissions factors
+  * Update electricity sector prices to NREL ATB 2021
+  * Update endogenous learning variables for electric vehicles
+  * Revert to EPA data for HFCs
+  * Update building envelope component lifetime
+  * Update NDC targets based on the 2021 CRF submission
+  * Update BAU and maximum biofuel blending amounts in trans/BPoEFUbVT and trans/MPoEFUbVT
+  * Minor updates to spending allocations to ISIC codes
+  * Other minor data updates
+* Web Interface
+  * Added a new user interface (UI) for setting policy values and implementation schedules for multiple subscripted elements of the same policy.  Updates to WebAppData.xlsx format support the improved UI.
+* Minor Updates
+  * The carbon tax is no longer levied on industrial feedstocks (such as the natural gas that goes into plastics, or the crude oil that goes into secondary petroleum products). This avoids double-taxation of crude and secondary petroleum products.
+  * The model now ensures input data for BAU fuel production, consumption, imports, and exports are in balance, with behavior customizable in variable fuels/FPIEBP
+  * Added district heat losses in heat distribution systems
+  * Building retrofitting policy effects are now cumulative with the effects of other buildings sector policies that affect the energy efficiency of newly sold building components
+  * Subscript battery share of electric vehicle price by Vehicle Type
+* Bug Fixes
+  * In models configured to treat emissions associated with imported electricity as in-region emissions, exclude these emissions from health impact calculations
+  * Use BEA domestic requirements table instead of BEA total requirements table when splitting certain ISIC codes in io-table/DLIM
+
 ### **3.2.1 - Apr. 22, 2021**
 
 * Data Updates

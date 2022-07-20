@@ -3,7 +3,7 @@ layout: page
 title:  "Output Graphs Available in the Web Interface"
 ---
 
-The web interface allows the user to visualize Energy Policy Simulator (EPS) results through a variety of output graphs.  As of EPS 3.2.0, there are 154 different output graphs available in the web interface.  However, which graphs are shown in the web interface may be customized for different EPS country or regional adaptations.  Many graphs include more than one data series, such as a graph of power plant capacity by plant type (coal, nuclear, hydro, etc.).  Therefore, over 600 different data series are available in the web interface.  (Thousands more are available in the [downloadable version](download.html) of the EPS.)
+The web interface allows the user to visualize Energy Policy Simulator (EPS) results through a variety of output graphs.  As of EPS 3.3.1, there are 174 different output graphs available in the web interface.  However, which graphs are shown in the web interface may be customized for different EPS country or regional adaptations.  Many graphs include more than one data series, such as a graph of power plant capacity by plant type (coal, nuclear, hydro, etc.).  Therefore, over 600 different data series are available in the web interface.  (Thousands more are available in the [downloadable version](download.html) of the EPS.)
 
 ## List of Output Graphs
 
@@ -112,7 +112,7 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
 
 * ### Effects by Policy: CO<sub>2</sub>e Wedge Diagrams
 
-  _These graphs present the relative impact of each enabled policy in a scenario in terms of the change in CO<sub>2</sub>e emissions. The "Total" wedge diagram includes all emission from the modeled region, while the sector-specific wedge diagrams only include direct emissions from those sectors.  Note that policies affectiong one sector may impact emissions in other sectors.  For example, electrification of industry (an Industry Sector policy) may affect emissions from the Electricity Sector.  Therefore, viewing a sector-specific wedge diagram may not show the full emissions impacts of that sector's policies.  For a detailed description of how wedge thicknesses are calculated, see [this GitHub thread](https://github.com/Energy-Innovation/eps-us/issues/119)._
+  _These graphs present the relative impact of each enabled policy in a scenario in terms of the change in CO<sub>2</sub>e emissions. The "Total" wedge diagram includes all emission from the modeled region, while the sector-specific wedge diagrams only include direct emissions from those sectors.  Note that policies affectiong one sector may impact emissions in other sectors.  For example, electrification of industry (an Industry Sector policy) may affect emissions from the Electricity Sector.  Therefore, viewing a sector-specific wedge diagram may not show the full emissions impacts of that sector's policies.  For a detailed description of how wedge thicknesses are calculated, see [Calculating Wedge Diagrams and Cost Curves](calculating-wedge-diagrams-and-cost-curves.html)._
   
   * **Total**
   
@@ -167,11 +167,47 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
   * **Change in Jobs**
   
     _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual). Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year). This graph reports the total change in jobs and also breaks out jobs by Fossil Fuel and Utility Jobs, Manufacturing and Construction Jobs, and Other Jobs._
+
+  * **Change in Jobs by Sex**
   
-  * **Change in Union and Non-Union Jobs**
+    _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual), disaggregated into categories by sex. Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year).  In the U.S. version of the EPS, the available sex categories are based on those categories for which U.S. government data are available (in particular, from the Bureau of Labor Statistics) and should not be interpreted as a reflection Energy Innovation's views of which sex categories exist or are worthy of being reported separately._
+
+  * **Percent Change in Jobs by Sex**
   
-    _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual). Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year). This graph reports the total change in jobs and also breaks out jobs by Union and Non-Union. Note that we currently use time-invariant union representation shares by industry to calculate this metric._
+    _The same metric as above, graphed as a percent change in the number of jobs held by people of each sex (relative to the BAU case in that same year)._
+
+  * **Change in Jobs by Race**
   
+    _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual), disaggregated into categories by race. Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year).  In the U.S. version of the EPS, the available race categories are based on those categories for which U.S. government data are available (in particular, from the Bureau of Labor Statistics) and should not be interpreted as a reflection Energy Innovation's views of which race categories exist or are worthy of being reported separately._
+
+  * **Percent Change in Jobs by Race**
+  
+    _The same metric as above, graphed as a percent change in the number of jobs held by people of each race (relative to the BAU case in that same year)._
+
+  * **Change in Jobs by Hispanic or Latino Status**
+  
+    _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual), disaggregated into categories by Hispanic or Latino status. Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year).  In the U.S. version of the EPS, the available Hispanic or Latino status categories are based on those categories for which U.S. government data are available (in particular, from the Bureau of Labor Statistics) and should not be interpreted as a reflection Energy Innovation's views of which Hispanic or Latino status categories exist or are worthy of being reported separately._
+
+  * **Perc Change in Jobs by Hispanic or Latino Status**
+  
+    _The same metric as above, graphed as a percent change in the number of jobs held by people of each Hispanic or Latino status (relative to the BAU case in that same year)._
+
+  * **Change in Jobs by Age Bracket**
+  
+    _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual), disaggregated into categories by age bracket. Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year)._
+
+  * **Percent Change in Jobs by Age Bracket**
+  
+    _The same metric as above, graphed as a percent change in the number of jobs held by people of each age bracket (relative to the BAU case in that same year)._
+  
+  * **Change in Jobs by Union Status**
+  
+    _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual), disaggregated into categories by union representation status. Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year)._
+
+  * **Percent Change in Jobs by Union Status**
+  
+    _The same metric as above, graphed as a percent change in the number of jobs held by people of each union status (relative to the BAU case in that same year)._
+
   * **Direct/Indirect/Induced Change in Jobs**
   
     _Policy-induced changes in jobs in each year (i.e., increase or decrease in number of employed individuals in a given year, relative to business-as-usual). Note that some jobs (e.g., construction) may be short-term, meaning this metric can be thought of in terms of job-years (one job that lasts for one year equates to one job-year). This graph reports the total change in jobs and also breaks out jobs by Direct, Indirect, and Induced impacts. For an explanation of these terms, see the [Input-Output Model](io-model.html) sheet._
@@ -251,6 +287,34 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
   * **Avoided Deaths Wedge Diagram**
   
     _This graph presents the relative impact of each enabled policy in a scenario in terms of the number of avoided premature deaths_
+
+  * **Percent Change in Deaths**
+  
+    _This graph shows the percentage change in the number of deaths occurring each year (relative to the BAU case in that same year)._
+  
+  * **Avoided Deaths by Sex**
+
+    _Annual avoided premature deaths as a result of a policy package disaggregated by sex.  In the U.S. version of the EPS, the available sex categories are based on those categories for which U.S. government data are available (in particular, from the Bureau of Labor Statistics, since we use these categories for job impacts as well as health impacts) and should not be interpreted as a reflection Energy Innovation's views of which sex categories exist or are worthy of being reported separately._
+
+  * **Percent Change in Deaths by Sex**
+
+    _The same metric as above, graphed as a percent change in the number of deaths of people of each sex (relative to the BAU case in that same year)._
+  
+  * **Avoided Deaths by Race**
+
+    _Annual avoided premature deaths as a result of a policy package disaggregated by race.  In the U.S. version of the EPS, the available race categories are based on those categories for which U.S. government data are available (in particular, from the Bureau of Labor Statistics, since we use these categories for job impacts as well as health impacts) and should not be interpreted as a reflection Energy Innovation's views of which race categories exist or are worthy of being reported separately._
+
+  * **Percent Change in Deaths by Race**
+
+    _The same metric as above, graphed as a percent change in the number of deaths of people of each race (relative to the BAU case in that same year)._
+  
+  * **Avoided Deaths by Hispanic or Latino Status**
+
+    _Annual avoided premature deaths as a result of a policy package disaggregated by Hispanic or Latino status.  In the U.S. version of the EPS, the available Hispanic or Latino status categories are based on those categories for which U.S. government data are available (in particular, from the Bureau of Labor Statistics, since we use these categories for job impacts as well as health impacts) and should not be interpreted as a reflection Energy Innovation's views of which Hispanic or Latino status categories exist or are worthy of being reported separately._
+
+  * **Percent Change in Deaths by Hispanic or Latino Status**
+
+    _The same metric as above, graphed as a percent change in the number of deaths of people of each Hispanic or Latino status (relative to the BAU case in that same year)._
   
   * **Avoided Premature Deaths**
   
@@ -310,6 +374,18 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
   
     _Electricity demand broken out by sector (District Heat & Hydrogen, Water & Waste, Agriculture, Transportation, Industry, Buildings)_
 
+  * **Share of Generation from Clean Sources**
+  
+   _Share of electricity generation from clean sources (dependent on region's RPS or CES definitions)_  
+ 
+  * **Carbon Intensity of Electricity Generation**
+  
+   _Metric tons CO2e per megawatt-hour_  
+
+  * **Electricity Intensity per Unit GDP**
+  
+   _Kilowatt-hour per unit GDP_  
+   
 * ### Electricity: Levelized Costs, Curtailment, Emissions and Water Use
   
   * **Levelized Cost of Electricity (after subsidies)**
@@ -371,6 +447,10 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
   * **Fuel Use by Vehicle Type**
   
     _Annual Transportation sector fuel use by vehicle type_
+
+  * **Fuel Use (Total)**
+
+    _Annual Transportation sector fuel use (total)_
   
   * **Travel Demand (Passenger Modes)**
   
@@ -389,7 +469,11 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
   * **By Fuel (Excluding Feedstocks)**
   
     _Annual Industry sector fuel use by fuel type, excluding feedstocks and only including fuels used for energy purposes_
+
+  * **Total (Excluding Feedstocks)**
   
+    _Annual Industry sector fuel use (total), excluding feedstocks and only including fuels used for energy purposes_
+
   * **By Industry (Including Feedstocks)**
   
     _Annual Industry sector fuel use by subindustry, including feedstocks_
@@ -397,6 +481,10 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
   * **By Fuel (Including Feedstocks)**
   
     _Annual Industry sector fuel use by fuel type, including feedstocks_
+
+  * **Total (Including Feedstocks)**
+  
+    _Annual Industry sector fuel use (total), including feedstocks_
 
 * ### Industry: CO<sub>2</sub>e Emissions
   
@@ -424,6 +512,18 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
    
     _Annual Industry sector energy-related emissions by pollutant_
 
+  * **CO<sub>2 Emissions by Source Type**
+  
+    _Annual Industry sector CO<sub>2< emissions by source type (energy-related vs. process)_
+	
+  * **Process CO<sub>2 Emissions by Industry**
+  
+    _Annual Industry sector process CO<sub>2< emissions by subindustry_
+
+  * **Energy-Related CO<sub>2 Emissions by Industry**
+  
+    _Annual Industry sector energy-related CO<sub>2< emissions by subindustry_
+
 * ### Buildings: Energy Use
   
   * **By Building Component**
@@ -437,6 +537,10 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
   * **By Energy Source**
   
     _Annual Buildings sector energy consumption by fuel type_
+
+  * **Total**
+  
+    _Annual Buildings sector energy consumption (total)_
 
 * ### Energy Consumption
   
@@ -492,7 +596,7 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
   
     _Annual hydrogen consumption_
 
-* ### Energy Exports, Imports and Production
+* ### Exports, Imports, Production, and Consumption
   
   * **Energy Exports**
   
@@ -541,6 +645,38 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
   * **Change in Energy Production**
   
     _Annual policy-induced changes in domestic energy production by fuel type_
+
+  * **Exports of Nonenergy Products**
+  
+    _Annual exports of nonenergy products by industry_
+	
+  * **Change in Exports of Nonenergy Products**
+  
+    _Annual change in exports of nonenergy products by industry_
+
+  * **Imports of Nonenergy Products**
+  
+    _Annual imports of nonenergy products by industry_
+	
+  * **Change in Imports of Nonenergy Products**
+  
+    _Annual change in imports of nonenergy products by industry_
+
+  * **Nonenergy Production**
+  
+    _Annual production of nonenergy products by industry_
+	
+  * **Change in Nonenergy Production**
+  
+    _Annual change in production of nonenergy products by industry_
+
+  * **Domestic Consumption of Nonenergy Products**
+  
+    _Annual domestic consumption of nonenergy products by industry_
+	
+  * **Change in Domestic Consumption of Nonenergy Products**
+  
+    _Annual change in domestic consumption of nonenergy products by industry_
 
 * ### Fuel Costs (by Fuel, by Sector)
 
