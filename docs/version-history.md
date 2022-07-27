@@ -28,6 +28,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Added the ability for government to rebate carbon tax on exported products (if carbon border adjustments are enabled), with a new control setting to toggle this behavior on or orr.
   * Edited or added smoothing times for electricity generation capacity, grid battery storage, transmission capital costs, and electricity prices (in files elec/STfESCE and elec/STfEPC) to spread power sector capital costs over a number of years
   * Exogenous GDP growth rate adjustment (ctrl-settings/EGGRA) now accepts time-series input data and can be toggled on and off in the web interface via a control lever
+  * BAU control lever settings are now read from input data by the web app and no longer need to be specified in a Scenario_BAU.cin file.
 * New Graphs
   * Exports, imports, production, and domestic consumption of nonenergy products, as well as policy-induced changes in these metrics
   * Share of electricity generation from clean sources
