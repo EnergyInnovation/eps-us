@@ -29,7 +29,7 @@ Links to doc pages are followed by a number indicating the [version](version-his
   * [Remapping Subscript Elements](remapping.html) - 3.0.0
 * About the Web Interface
   * [Web Interface Tutorial](online-model-tutorial.html) - 3.0.0
-  * [Output Graphs Available in the Web Interface](web-interface-graphs.html) - 3.3.0
+  * [Output Graphs Available in the Web Interface](web-interface-graphs.html) - 3.4.0
   * [Calculating Wedge Diagrams and Cost Curves](calculating-wedge-diagrams-and-cost-curves.html) - 3.3.1
   * [Background and Technical Info about the Web Interface](background-and-technical-info.html) - 3.0.0
   * [Web App Hosting and Integration into a Partner's Website](integrating-the-web-app.html) - 3.2.0

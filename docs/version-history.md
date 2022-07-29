@@ -4,6 +4,61 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **3.4.0 - July 28, 2022**
+
+* New Policies
+  * Industrial fuel shifting is now controlled by two policy levers.  A new lever allows use of indusrtial heat pumps to electrify low-temperature heat.  The existing lever now governs only medium and high temperature heat and continues to allow shifting to electricity, hydrogen, and/or other fuels.
+  * New Policy: CO<sub>2</sub> storage in agricultural soils from altered tillage and other soil practices
+  * New Policy: CO<sub>2</sub> sequestration due to avoided conversion and restoration of grasslands
+  * New Policy: CO<sub>2</sub> sequestration due to wetland restoration
+  * New Policy: Carbon border adjustments (regarding carbon pricing) can now be toggled on and off. For the U.S., we assume border adjustments are off by default.
+  * New Policy: The F-gas Equipment Maintenance & Retrofits policy is now subscripted by both the chemicals and other metals (aluminum) industry
+* New Features
+  * Import and export substitution (the extent to which the policy package increases or decreases imports and exports of non-energy products) are now calculated.  (The EPS already handled import and export substitution for energy products.) This also allows the model to calculate domestic consumption and changes in consumption.
+  * Users may now override endogenous learning for battery electric vehicles (in trans/BNVP)
+  * Labor productivity growth rates now support time series data (io-model/LPGRbIC)
+  * Demand response now reduces the need for generation from peaker power plants
+  * Capital costs of electricity sector CCS equipment are now properly adjusted to account for power plant capacity factors
+  * Single-pollutant graphs are now stacked area graphs (by sector) instead of single-line graphs
+  * Whether the carbon tax exempts process emissions by default (ctrl-settings/BEPEfCT), and the policy lever to reverse this behavior, can now be set separately for each industry
+  * The model's handling of value-added taxes (VAT) and sales taxes is now more sophisticated and accurate.
+  * The Macroeconomic Feedbacks sheet is clearer and easier to understand.
+  * The policy schedule Python script (plcy-schd/FoPITY) now includes internal error checking capabilities.
+  * Improved the metrics used to calculate macroeconomic feedback for transportation service demand.
+  * Added the ability for government to rebate carbon tax on exported products (if carbon border adjustments are enabled), with a new control setting to toggle this behavior on or orr.
+  * Edited or added smoothing times for electricity generation capacity, grid battery storage, transmission capital costs, and electricity prices (in files elec/STfESCE and elec/STfEPC) to spread power sector capital costs over a number of years
+  * Exogenous GDP growth rate adjustment (ctrl-settings/EGGRA) now accepts time-series input data and can be toggled on and off in the web interface via a control lever
+  * BAU control lever settings are now read from input data by the web app and no longer need to be specified in a Scenario_BAU.cin file.
+* New Graphs
+  * Exports, imports, production, and domestic consumption of nonenergy products, as well as policy-induced changes in these metrics
+  * Share of electricity generation from clean sources
+  * Carbon intensity of electricity generation
+  * Electricity intensity per unit GDP
+  * Industrial CO2 by source type (energy vs. process)
+  * Industrial process CO2 emissions by industry
+  * Industrial energy-related CO2 emissions by industry
+* Bug Fixes
+  * Fix to share of demand response capacity costs by cash flow entity
+  * Revert to using ALLOCATE AVAILABLE() for electricity dispatch (as in EPS 3.3.0) rather than a logit function
+* Data
+  * Updated to the Energy Information Administration's Annual Energy Outlook 2022. We chose to use the Low Economic Growth side case because it more closely aligns with economic projections from the Congressional Budget Office.
+  * Updated to use the National Renewable Energy Laboratory's Annual Technology Baseline 2022
+  * Updated BAU to reflect components of the U.S. Infrastructure Investment and Jobs Act
+  * Updated short-term natural gas prices to reflect futures prices
+  * Updated new vehicle fuel economy to reflect latest Environmental Protection Agency standards
+  * Updated NDC Scenario to reach net zero GHGs by 2050, including greater carbon capture and sequestration and direct air capture
+  * Updated LULUCF emissions trajectory based on the 1990-2020 trend in the Greenhouse Gas Inventory
+  * Updated LULUCF potential and costs based on consultation with external forestry experts
+  * Updated process emissions to align with the Environmental Protection Agency Greenhouse Gas Inventory in the start year, with growth tied to AEO projections
+  * Updated to use the International Energy Agency Methane Tracker 2022 for process methane
+  * Updated direct air capture potential
+  * Updated control settings to specify that all fuel prices should be affected by changes in fuel production costs
+  * Updated control settings to exempt certain process emissions from the carbon tax by default
+  * Updated cost of transmission
+  * Updated cost of industrial energy efficiency policy
+  * Updated vehicle maintenance costs
+  * Other minor data updates
+
 ### **3.3.1.1 - May 11, 2022**
 
 * Bug Fixes

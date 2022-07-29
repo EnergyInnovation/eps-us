@@ -374,6 +374,18 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
   
     _Electricity demand broken out by sector (District Heat & Hydrogen, Water & Waste, Agriculture, Transportation, Industry, Buildings)_
 
+  * **Share of Generation from Clean Sources**
+  
+   _Share of electricity generation from clean sources (dependent on region's RPS or CES definitions)_  
+ 
+  * **Carbon Intensity of Electricity Generation**
+  
+   _Metric tons CO2e per megawatt-hour_  
+
+  * **Electricity Intensity per Unit GDP**
+  
+   _Kilowatt-hour per unit GDP_  
+   
 * ### Electricity: Levelized Costs, Curtailment, Emissions and Water Use
   
   * **Levelized Cost of Electricity (after subsidies)**
@@ -500,6 +512,18 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
    
     _Annual Industry sector energy-related emissions by pollutant_
 
+  * **CO<sub>2 Emissions by Source Type**
+  
+    _Annual Industry sector CO<sub>2< emissions by source type (energy-related vs. process)_
+	
+  * **Process CO<sub>2 Emissions by Industry**
+  
+    _Annual Industry sector process CO<sub>2< emissions by subindustry_
+
+  * **Energy-Related CO<sub>2 Emissions by Industry**
+  
+    _Annual Industry sector energy-related CO<sub>2< emissions by subindustry_
+
 * ### Buildings: Energy Use
   
   * **By Building Component**
@@ -572,7 +596,7 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
   
     _Annual hydrogen consumption_
 
-* ### Energy Exports, Imports and Production
+* ### Exports, Imports, Production, and Consumption
   
   * **Energy Exports**
   
@@ -621,6 +645,38 @@ The web interface allows the user to visualize Energy Policy Simulator (EPS) res
   * **Change in Energy Production**
   
     _Annual policy-induced changes in domestic energy production by fuel type_
+
+  * **Exports of Nonenergy Products**
+  
+    _Annual exports of nonenergy products by industry_
+	
+  * **Change in Exports of Nonenergy Products**
+  
+    _Annual change in exports of nonenergy products by industry_
+
+  * **Imports of Nonenergy Products**
+  
+    _Annual imports of nonenergy products by industry_
+	
+  * **Change in Imports of Nonenergy Products**
+  
+    _Annual change in imports of nonenergy products by industry_
+
+  * **Nonenergy Production**
+  
+    _Annual production of nonenergy products by industry_
+	
+  * **Change in Nonenergy Production**
+  
+    _Annual change in production of nonenergy products by industry_
+
+  * **Domestic Consumption of Nonenergy Products**
+  
+    _Annual domestic consumption of nonenergy products by industry_
+	
+  * **Change in Domestic Consumption of Nonenergy Products**
+  
+    _Annual change in domestic consumption of nonenergy products by industry_
 
 * ### Fuel Costs (by Fuel, by Sector)
 
