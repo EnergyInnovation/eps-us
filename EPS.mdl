@@ -516,6 +516,18 @@ ARpUIiRC Annual Retirement per Unit Increase in Relative Cost[Electricity Source
 	~	MW/($/(MW*hour))
 	~		|
 
+Available Capacity After Guaranteed Dispatch[Electricity Source,Power Plant Quality,Day\
+		,Hour]=
+	MAX(
+	  0,
+	
+	  Available Capacity by Hour[Electricity Source,Power Plant Quality,Day,Hour]
+	  - Electricity Dispatched via Guaranteed Dispatch[Electricity Source,Power Plant Quality\
+		,Day,Hour]
+	)
+	~	MW
+	~		|
+
 Available Capacity by Hour[Electricity Source,Power Plant Quality,Day,Hour]=
 	Electricity Generation Capacity[Electricity Source,Power Plant Quality]
 	* Hourly Electricity Capacity Factors by Plant Type[Electricity Source,Day,Hour]
@@ -524,13 +536,16 @@ Available Capacity by Hour[Electricity Source,Power Plant Quality,Day,Hour]=
 
 Available Capacity by Hour with Collapsed Quality Subscript[Day,Hour,preexisting retiring plants within PPTbQ\
 		]=
-	Available Capacity by Hour[Electricity Source,preexisting retiring,Day,Hour] ~~|
+	Available Capacity After Guaranteed Dispatch[Electricity Source,preexisting retiring\
+		,Day,Hour] ~~|
 Available Capacity by Hour with Collapsed Quality Subscript[Day,Hour,preexisting nonretiring plants within PPTbQ\
 		]=
-	Available Capacity by Hour[Electricity Source,preexisting nonretiring,Day,Hour] ~~|
+	Available Capacity After Guaranteed Dispatch[Electricity Source,preexisting nonretiring\
+		,Day,Hour] ~~|
 Available Capacity by Hour with Collapsed Quality Subscript[Day,Hour,newly built plants within PPTbQ\
 		]=
-	Available Capacity by Hour[Electricity Source,newly built,Day,Hour]
+	Available Capacity After Guaranteed Dispatch[Electricity Source,newly built,Day,Hour\
+		]
 	~	MW
 	~		|
 
@@ -12279,7 +12294,7 @@ Daily Quantity of Electricity Charged and Discharged by Grid Batteries=
 
 Daily Rank of Hours by Spare Capacity[Day,Hour]=
 	VECTOR RANK(
-	  Spare Capacity After Meeting Demand by Hour[Day,Hour],
+	  Spare Capacity After Meeting Demand[Day,Hour],
 	  1
 	)
 	~	hours
@@ -13494,7 +13509,7 @@ Electricity Dispatched by Least Cost by Hour[Day,Hour,Power Plant Type by Qualit
 	  Available Capacity by Hour with Collapsed Quality Subscript[Day,Hour,Power Plant Type by Quality\
 		],
 	  Least Cost Dispatch Priority Profile[Power Plant Type by Quality,ptype],
-	  Total Electricity Demand After Grid Battery Effects by Hour[Day,Hour]
+	  Unmet Electricity Demand After Grid Battery Effects[Day,Hour]
 	)
 	~	MW
 	~		|
@@ -13508,6 +13523,26 @@ Electricity Dispatched by Least Cost in One Vector[Power Plant Type by Quality]=
 	)
 	~	MW*hour
 	~		|
+
+Electricity Dispatched via Guaranteed Dispatch[Electricity Source,Power Plant Quality\
+		,Day,Hour]=
+	Guaranteed Dispatch Amount before Constraints[Electricity Source,Power Plant Quality\
+		,Day,Hour]
+	* MIN(
+	    1,
+	
+	    ZIDZ(
+	      Total Electricity Demand by Hour[Day,Hour],      
+	
+	      Summed Guaranteed Dispatch Amount before Constraints[Day,Hour]
+	    )
+	  )
+	~	MW
+	~	If the amount of guaranteed dispatch exceeds the total amount of \
+		electricity demand in a given hour (this should rarely if ever happen), \
+		all sources of guaranteed dispatch are scaled back proportionately so \
+		total demand is not exceeded.
+	|
 
 Electricity Energy Use by Fuel[Electricity Source]=
 	SUM(Electricity Fuel Use[Electricity Source,Power Plant Quality!])
@@ -17179,6 +17214,13 @@ Gross Domestic Product Excluding Most Direct Impacts by ISIC Code[ISIC Code]=
 	  + Direct Change in Domestic Value Added Due to Buy In Region Policy[ISIC Code]
 	)
 	~	$
+	~		|
+
+Guaranteed Dispatch Amount before Constraints[Electricity Source,Power Plant Quality,\
+		Day,Hour]=
+	Available Capacity by Hour[Electricity Source,Power Plant Quality,Day,Hour]
+	* Guaranteed Dispatch Percentages for Policy Case[Electricity Source]
+	~	MW
 	~		|
 
 Guaranteed Dispatch Percentages for Policy Case[Electricity Source]=
@@ -28355,9 +28397,10 @@ Source ISIC Code:
 	~	
 	~		|
 
-Spare Capacity After Meeting Demand by Hour[Day,Hour]=
-	SUM(Available Capacity by Hour[Electricity Source!,Power Plant Quality!,Day,Hour])
-	- Total Electricity Demand by Hour[Day,Hour]
+Spare Capacity After Meeting Demand[Day,Hour]=
+	SUM(Available Capacity After Guaranteed Dispatch[Electricity Source!,Power Plant Quality\
+		!,Day,Hour])
+	- Unmet Demand After Guarangeed Dispatch[Day,Hour]
 	~	MW
 	~		|
 
@@ -28706,6 +28749,12 @@ Sum of Transportation Sector Changes in Cash Flows=
 	~	$
 	~		~	:SUPPLEMENTARY 
 	|
+
+Summed Guaranteed Dispatch Amount before Constraints[Day,Hour]=
+	SUM(Guaranteed Dispatch Amount before Constraints[Electricity Source!,Power Plant Quality\
+		!,Day,Hour])
+	~	MW
+	~		|
 
 Surviving Electricity Generation Capacity[Electricity Source,Power Plant Quality]=
 	Last Year Electricity Generation Capacity[Electricity Source,Power Plant Quality]
@@ -29808,17 +29857,6 @@ Total Electricity Demand=
 	~	MW*hour
 	~		|
 
-Total Electricity Demand After Grid Battery Effects by Hour[Day,Hour]=
-	MAX(
-	  0,
-	
-	  Total Electricity Demand by Hour[Day,Hour]
-	  + Change in Electricity Demand due to Grid Battery Charging and Discharging[Day,Hour\
-		]
-	)
-	~	MW
-	~		|
-
 Total Electricity Demand by Hour[Day,Hour]=
 	(SUM(Buildings Sector Net Electricity Demand[urban residential,Building Component!])
 	  + SUM(Buildings Sector Net Electricity Demand[rural residential,Building Component\
@@ -30902,6 +30940,17 @@ Union Status:
 	~	
 	~		|
 
+Unmet Demand After Guarangeed Dispatch[Day,Hour]=
+	MAX(
+	  0,
+	
+	  Total Electricity Demand by Hour[Day,Hour]
+	  - SUM(Electricity Dispatched via Guaranteed Dispatch[Electricity Source!,Power Plant Quality\
+		!,Day,Hour])
+	)
+	~	MW
+	~		|
+
 Unmet Electricity Demand=
 	QUANTUM(
 	  Elec Demand Including TnD Losses
@@ -30913,6 +30962,17 @@ Unmet Electricity Demand=
 	~	MW*hour
 	~		~	:SUPPLEMENTARY 
 	|
+
+Unmet Electricity Demand After Grid Battery Effects[Day,Hour]=
+	MAX(
+	  0,
+	
+	  Unmet Demand After Guarangeed Dispatch[Day,Hour]
+	  + Change in Electricity Demand due to Grid Battery Charging and Discharging[Day,Hour\
+		]
+	)
+	~	MW
+	~		|
 
 URPbIC Union Representation Percentage by ISIC Code[ISIC Code]=
 	GET DIRECT CONSTANTS(
@@ -30979,6 +31039,11 @@ Vehicles per Million Vehicles=
 Vehicles per Thousand Vehicles=
 	1000
 	~	vehicles/thousand vehicles
+	~		|
+
+Vintage:
+	(Vintage1891-Vintage2100)
+	~	
 	~		|
 
 VoaSL Value of a Statistical Life=
@@ -33560,1068 +33625,1078 @@ Change in Vehicle Licensing, Registration, and Property Tax Costs
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Electricity Supply - Main
-$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,120,0
-10,1,New Elec Output Allocated Under RPS,939,-2684,81,23,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,2,New Elec Output Allocated Freely,1933,-2784,64,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,3,Cost per Unit New Elec Output,-540,-1535,68,24,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,4,Annualized Construction Cost per Unit Capacity,-1668,-1535,87,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,5,CCaMC Annual Fixed OM Cost per Unit Capacity,-1409,-1683,65,31,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,6,Annualized Fixed Costs per Unit Capacity,-1409,-1535,84,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,7,6,35,0,0,0,0,0,64,0,-1--1--1,,1|(-1277,-1535)|
-1,8,4,6,0,0,0,0,0,64,0,-1--1--1,,1|(-1544,-1535)|
-1,9,5,6,0,0,0,0,0,64,0,-1--1--1,,1|(-1409,-1612)|
-10,10,BGCL BAU Generation Capacity Lifetime,-1668,-1820,92,24,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,11,CCaMC BAU Construction Cost per Unit Capacity,-2216,-1404,68,33,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-1,12,11,37,0,0,0,0,0,64,0,-1--1--1,,1|(-2216,-1465)|
-10,13,Max Capacity Buildable This Year,-1513,-400,63,19,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,14,Max RPS Qualifying Electric Output Buildable,939,-2399,92,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,15,Max New Elec Output Buildable after RPS,1933,-2532,84,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,16,New Elec Output Allocated Under RPS,2424,-2667,88,24,8,130,0,6,-1,0,0,0,-1--1--1,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,17,16,23,0,0,0,0,0,64,0,-1--1--1,,1|(2424,-2720)|
-10,18,Elec Output to Allocate Without RPS,939,-2784,79,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,19,1,18,0,0,0,0,0,64,0,-1--1--1,,1|(939,-2726)|
-1,20,18,2,0,0,0,0,0,64,0,-1--1--1,,1|(1436,-2784)|
-10,21,Electricity Sector Pollutant Emissions,2979,-43,68,24,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-1,22,2,23,0,0,0,0,0,64,0,-1--1--1,,1|(2177,-2784)|
-10,23,New Allocated Output,2424,-2784,51,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,24,Fuel Cost per Unit Output,-540,-1683,52,24,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,25,Electricity Fuel Cost per Unit Energy,-540,-1820,85,24,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,26,25,24,0,0,0,0,0,64,0,-1--1--1,,1|(-540,-1758)|
-10,27,Electricity Fuel Pollutant Emissions Intensity per MWh,2732,-580,88,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,28,Electricity Fuel Pollutant Emissions Intensities This Year,2504,-580,83,33,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,29,28,27,0,0,0,0,0,64,0,-1--1--1,,1|(2608,-580)|
-10,30,CCaMC Variable OM Cost per Unit Output,-833,-1403,92,24,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-1,31,30,235,0,0,0,0,0,64,0,-1--1--1,,1|(-833,-1460)|
-12,32,0,7083,-459,373,235,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,110,0
+10,1,New Elec Output Allocated Under RPS,761,-2609,81,23,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,2,New Elec Output Allocated Freely,1755,-2709,64,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,3,Cost per Unit New Elec Output,-718,-1460,68,24,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,4,Annualized Construction Cost per Unit Capacity,-1846,-1460,87,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,5,CCaMC Annual Fixed OM Cost per Unit Capacity,-1587,-1608,65,31,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,6,Annualized Fixed Costs per Unit Capacity,-1587,-1460,84,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,7,6,35,0,0,0,0,0,64,0,-1--1--1,,1|(-1455,-1460)|
+1,8,4,6,0,0,0,0,0,64,0,-1--1--1,,1|(-1722,-1460)|
+1,9,5,6,0,0,0,0,0,64,0,-1--1--1,,1|(-1587,-1537)|
+10,10,BGCL BAU Generation Capacity Lifetime,-1846,-1745,92,24,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,11,CCaMC BAU Construction Cost per Unit Capacity,-2394,-1329,68,33,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+1,12,11,37,0,0,0,0,0,64,0,-1--1--1,,1|(-2394,-1390)|
+10,13,Max Capacity Buildable This Year,-1691,-325,63,19,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,14,Max RPS Qualifying Electric Output Buildable,761,-2324,92,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,15,Max New Elec Output Buildable after RPS,1755,-2457,84,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,16,New Elec Output Allocated Under RPS,2246,-2592,88,24,8,130,0,6,-1,0,0,0,-1--1--1,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,17,16,23,0,0,0,0,0,64,0,-1--1--1,,1|(2246,-2645)|
+10,18,Elec Output to Allocate Without RPS,761,-2709,79,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,19,1,18,0,0,0,0,0,64,0,-1--1--1,,1|(761,-2651)|
+1,20,18,2,0,0,0,0,0,64,0,-1--1--1,,1|(1258,-2709)|
+10,21,Electricity Sector Pollutant Emissions,2801,32,68,24,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+1,22,2,23,0,0,0,0,0,64,0,-1--1--1,,1|(1999,-2709)|
+10,23,New Allocated Output,2246,-2709,51,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,24,Fuel Cost per Unit Output,-718,-1608,52,24,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,25,Electricity Fuel Cost per Unit Energy,-718,-1745,85,24,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,26,25,24,0,0,0,0,0,64,0,-1--1--1,,1|(-718,-1683)|
+10,27,Electricity Fuel Pollutant Emissions Intensity per MWh,2554,-505,88,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,28,Electricity Fuel Pollutant Emissions Intensities This Year,2326,-505,83,33,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,29,28,27,0,0,0,0,0,64,0,-1--1--1,,1|(2430,-505)|
+10,30,CCaMC Variable OM Cost per Unit Output,-1011,-1328,92,24,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+1,31,30,235,0,0,0,0,0,64,0,-1--1--1,,1|(-1011,-1385)|
+12,32,0,6905,-384,373,235,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Electricity_CO2e_Emissions
-10,33,Total Electricity Demand,-2504,-2912,68,24,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,34,Electricity Generation by Type,2980,-728,72,24,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-10,35,Annualized Fixed Costs per Unit Output,-1136,-1535,79,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,36,35,235,0,0,0,0,0,64,0,-1--1--1,,1|(-988,-1535)|
-10,37,Construction Cost per Unit Capacity before Construction Subsidies,-2216,-1535,96,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,38,37,591,0,0,0,0,0,64,0,-1--1--1,,1|(-2067,-1535)|
-10,39,Electricity Sector Emissions from Fuels Used to Power CCS,2979,88,73,28,8,131,0,16,0,0,0,0,-1--1--1,255-0-0,|12|I|0-0-0,0,0,0,0,0,0
-1,40,39,21,0,0,0,0,0,64,0,-1--1--1,,1|(2979,28)|
-10,41,Fuel Used for CCS by Electricity Sector,2979,217,83,24,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,42,Electricity Fuel Pollutant Emissions Intensities This Year,3223,88,88,32,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,43,41,39,0,0,0,0,0,64,0,-1--1--1,,1|(2979,162)|
-1,44,42,39,0,0,0,0,0,64,0,-1--1--1,,1|(3100,88)|
-10,45,This Year Pollutants Sequestered by Electricity Sector,3223,-43,87,36,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,46,45,21,0,0,0,0,0,64,0,-1--1--1,,1|(3098,-43)|
-10,47,Heat Rate by Electricity Fuel,2732,-435,53,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,48,47,27,0,0,0,0,0,64,0,-1--1--1,,1|(2732,-497)|
-1,49,27,512,0,0,0,0,0,64,0,-1--1--1,,1|(2859,-580)|
-1,50,24,235,0,0,0,0,0,64,0,-1--1--1,,1|(-675,-1614)|
-12,51,0,2695,-695,165,59,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,33,Total Electricity Demand,-2682,-2837,68,24,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,34,Electricity Generation by Type,2802,-653,72,24,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+10,35,Annualized Fixed Costs per Unit Output,-1314,-1460,79,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,36,35,235,0,0,0,0,0,64,0,-1--1--1,,1|(-1166,-1460)|
+10,37,Construction Cost per Unit Capacity before Construction Subsidies,-2394,-1460,96,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,38,37,591,0,0,0,0,0,64,0,-1--1--1,,1|(-2245,-1460)|
+10,39,Electricity Sector Emissions from Fuels Used to Power CCS,2801,163,73,28,8,131,0,16,0,0,0,0,-1--1--1,255-0-0,|12|I|0-0-0,0,0,0,0,0,0
+1,40,39,21,0,0,0,0,0,64,0,-1--1--1,,1|(2801,102)|
+10,41,Fuel Used for CCS by Electricity Sector,2801,292,83,24,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,42,Electricity Fuel Pollutant Emissions Intensities This Year,3045,163,88,32,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,43,41,39,0,0,0,0,0,64,0,-1--1--1,,1|(2801,236)|
+1,44,42,39,0,0,0,0,0,64,0,-1--1--1,,1|(2922,163)|
+10,45,This Year Pollutants Sequestered by Electricity Sector,3045,32,87,36,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,46,45,21,0,0,0,0,0,64,0,-1--1--1,,1|(2920,32)|
+10,47,Heat Rate by Electricity Fuel,2554,-360,53,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,48,47,27,0,0,0,0,0,64,0,-1--1--1,,1|(2554,-422)|
+1,49,27,512,0,0,0,0,0,64,0,-1--1--1,,1|(2681,-505)|
+1,50,24,235,0,0,0,0,0,64,0,-1--1--1,,1|(-853,-1539)|
+12,51,0,2517,-620,165,59,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 Fuel efficiency improvements for CCS due to R&D are accounted for on the CCS page, so we do not need to modify these intensities via R&D on this page (as we do when calculating the emissions intensity of the fuels burned to generate electricity).
-10,52,Last Year Electricity Generation Capacity,4344,-1683,80,32,3,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,53,PMCCS Policy Mandated Capacity Construction Schedule,-501,-3119,83,31,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,54,BCRbQ BAU Capacity Retirements before Quantization,4543,-1199,72,28,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-12,55,48,4704,-1683,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,56,58,55,4,0,0,22,0,0,0,-1--1--1,,1|(4622,-1683)|
-1,57,58,52,100,0,0,22,0,0,0,-1--1--1,,1|(4479,-1683)|
-11,58,48,4543,-1683,8,9,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,59,Retiring Generation Capacity by Quality Level,4543,-1643,72,31,40,131,0,0,-1,0,0,0,0,0,0,0,0,0
-12,60,48,4016,-1688,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-10,61,Potential Electricity Output by Type,695,-304,68,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,62,Flexibility Points from Peakers,5396,-1571,55,19,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,63,Last Year Electricity Generation Capacity,5396,-1687,80,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,64,BPHC BAU Pumped Hydro Capacity,6171,-1611,80,24,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,65,FPC Flexibility Points Provided per Unit Peaker Capacity,5163,-1571,72,27,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,66,65,62,0,0,0,0,0,64,0,-1--1--1,,1|(5281,-1571)|
-10,67,FPC Flexibility Points Provided per Unit Pumped Hydro,6404,-1727,76,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,68,67,113,0,0,0,0,0,64,0,-1--1--1,,1|(6404,-1674)|
-10,69,Potential Electricity Output by Type,1540,-832,76,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,70,Electricity Dispatched by Least Cost,2012,-578,69,19,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,71,69,172,0,0,0,0,0,64,0,-1--1--1,,1|(1651,-832)|
-10,72,Dispatch Cost per Unit Electricity Output,616,-1459,84,24,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-12,73,0,1767,-952,344,23,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,52,Last Year Electricity Generation Capacity,4166,-1608,80,32,3,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,53,PMCCS Policy Mandated Capacity Construction Schedule,-679,-3044,83,31,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,54,BCRbQ BAU Capacity Retirements before Quantization,4365,-1124,72,28,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+12,55,48,4526,-1608,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,56,58,55,4,0,0,22,0,0,0,-1--1--1,,1|(4444,-1608)|
+1,57,58,52,100,0,0,22,0,0,0,-1--1--1,,1|(4301,-1608)|
+11,58,48,4365,-1608,8,9,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,59,Retiring Generation Capacity by Quality Level,4365,-1568,72,31,40,131,0,0,-1,0,0,0,0,0,0,0,0,0
+12,60,48,3838,-1613,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,61,Potential Electricity Output by Type,517,-229,68,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,62,Flexibility Points from Peakers,5218,-1496,55,19,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,63,Last Year Electricity Generation Capacity,5218,-1612,80,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,64,BPHC BAU Pumped Hydro Capacity,5993,-1536,80,24,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,65,FPC Flexibility Points Provided per Unit Peaker Capacity,4985,-1496,72,27,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,66,65,62,0,0,0,0,0,64,0,-1--1--1,,1|(5103,-1496)|
+10,67,FPC Flexibility Points Provided per Unit Pumped Hydro,6226,-1652,76,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,68,67,113,0,0,0,0,0,64,0,-1--1--1,,1|(6226,-1599)|
+10,69,Potential Electricity Output by Type,1362,-757,76,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,70,Electricity Dispatched by Least Cost,1834,-503,69,19,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,71,69,172,0,0,0,0,0,64,0,-1--1--1,,1|(1473,-757)|
+10,72,Dispatch Cost per Unit Electricity Output,438,-1384,84,24,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+12,73,0,1589,-877,344,23,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Least-Cost Dispatch Mechanism
-10,74,CCaMC Variable OM Cost per Unit Output,304,-1336,83,23,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,75,74,237,0,0,0,0,0,64,0,-1--1--1,,1|(304,-1386)|
-10,76,Subsidy per Unit Electricity Output,616,-1548,60,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,77,Fuel Cost per Unit Output,48,-1459,72,24,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,78,76,72,0,0,0,0,0,64,0,-1--1--1,,1|(616,-1513)|
-10,79,DPbES Dispatch Priority by Electricity Source,180,-828,92,24,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,80,GDPbES Guaranteed Dispatch Percentage by Electricity Source,180,-555,75,28,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,81,Guaranteed Electricity Dispatched by Priority,952,-692,71,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,82,Demand Remaining to Satisfy After Priority Level,1196,-692,87,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,83,80,417,0,0,0,0,0,64,0,-1--1--1,,1|(313,-555)|
-10,84,Guaranteed Dispatch Quantity by Priority,695,-692,67,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,85,79,416,0,0,0,0,0,64,0,-1--1--1,,1|(328,-828)|
-1,86,84,81,0,0,0,0,0,64,0,-1--1--1,,1|(814,-692)|
-1,87,81,82,1,0,0,0,0,64,0,-1--1--1,,1|(1088,-700)|
-1,88,82,81,1,0,0,0,0,64,0,-1--1--1,,1|(1087,-687)|
-1,89,82,91,0,0,0,0,0,64,0,-1--1--1,,1|(1366,-691)|
-12,90,0,692,-952,623,23,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,74,CCaMC Variable OM Cost per Unit Output,126,-1261,83,23,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,75,74,237,0,0,0,0,0,64,0,-1--1--1,,1|(126,-1311)|
+10,76,Subsidy per Unit Electricity Output,438,-1473,60,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,77,Fuel Cost per Unit Output,-130,-1384,72,24,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,78,76,72,0,0,0,0,0,64,0,-1--1--1,,1|(438,-1438)|
+10,79,DPbES Dispatch Priority by Electricity Source,2,-753,92,24,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,80,GDPbES Guaranteed Dispatch Percentage by Electricity Source,2,-480,75,28,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,81,Guaranteed Electricity Dispatched by Priority,774,-617,71,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,82,Demand Remaining to Satisfy After Priority Level,1018,-617,87,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,83,80,417,0,0,0,0,0,64,0,-1--1--1,,1|(135,-480)|
+10,84,Guaranteed Dispatch Quantity by Priority,517,-617,67,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,85,79,416,0,0,0,0,0,64,0,-1--1--1,,1|(149,-753)|
+1,86,84,81,0,0,0,0,0,64,0,-1--1--1,,1|(636,-617)|
+1,87,81,82,1,0,0,0,0,64,0,-1--1--1,,1|(910,-625)|
+1,88,82,81,1,0,0,0,0,64,0,-1--1--1,,1|(909,-612)|
+1,89,82,91,0,0,0,0,0,64,0,-1--1--1,,1|(1188,-616)|
+12,90,0,514,-877,623,23,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Guaranteed Dispatch Mechanism
-10,91,Demand to Satisfy After Guaranteed Dispatch,1540,-691,77,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,92,Guaranteed Electricity Dispatched by Priority,2980,-855,76,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,93,Heat Rate by Electricity Fuel,-292,-1683,60,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,94,93,24,0,0,0,0,0,64,0,-1--1--1,,1|(-413,-1683)|
-1,95,92,34,0,0,0,0,0,64,0,-1--1--1,,1|(2980,-801)|
-1,96,34,512,0,0,0,0,0,64,0,-1--1--1,,1|(2980,-663)|
-12,97,0,2871,-952,464,25,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,91,Demand to Satisfy After Guaranteed Dispatch,1362,-616,77,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,92,Guaranteed Electricity Dispatched by Priority,2802,-780,76,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,93,Heat Rate by Electricity Fuel,-470,-1608,60,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,94,93,24,0,0,0,0,0,64,0,-1--1--1,,1|(-591,-1608)|
+1,95,92,34,0,0,0,0,0,64,0,-1--1--1,,1|(2802,-726)|
+1,96,34,512,0,0,0,0,0,64,0,-1--1--1,,1|(2802,-588)|
+12,97,0,2693,-877,464,25,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Total Generation and Emissions
-10,98,Elec Demand Including TnD Losses,-2504,-2784,81,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,99,Retiring Generation Capacity by Quality Level,-1069,-2648,76,31,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,100,Retiring Expected Electricity Output,-1288,-2648,57,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,101,99,100,0,0,0,0,0,64,0,-1--1--1,,1|(-1181,-2648)|
-1,102,33,98,0,0,0,0,0,64,0,-1--1--1,,1|(-2504,-2855)|
-10,103,BTaDLP BAU Transmission and Distribution Loss Percentage,-2241,-2648,93,28,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-1,104,103,272,0,0,0,0,0,64,0,-1--1--1,,1|(-2384,-2648)|
-10,105,Elec Output to Allocate After Mandated Construction,-237,-2784,109,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,106,53,122,0,0,0,0,0,64,0,-1--1--1,,1|(-501,-3055)|
-1,107,105,18,0,0,0,0,0,64,0,-1--1--1,,1|(359,-2784)|
-12,108,0,-1389,-1912,1219,25,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,98,Elec Demand Including TnD Losses,-2682,-2709,81,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,99,Retiring Generation Capacity by Quality Level,-1247,-2573,76,31,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,100,Retiring Expected Electricity Output,-1466,-2573,57,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,101,99,100,0,0,0,0,0,64,0,-1--1--1,,1|(-1359,-2573)|
+1,102,33,98,0,0,0,0,0,64,0,-1--1--1,,1|(-2682,-2780)|
+10,103,BTaDLP BAU Transmission and Distribution Loss Percentage,-2419,-2573,93,28,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+1,104,103,272,0,0,0,0,0,64,0,-1--1--1,,1|(-2562,-2573)|
+10,105,Elec Output to Allocate After Mandated Construction,-415,-2709,109,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,106,53,122,0,0,0,0,0,64,0,-1--1--1,,1|(-679,-2980)|
+1,107,105,18,0,0,0,0,0,64,0,-1--1--1,,1|(181,-2709)|
+12,108,0,-1567,-1837,1219,25,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Calculating Annualized Cost per Unit Output for New Capacity
-12,109,0,5331,-1835,288,52,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+12,109,0,5153,-1760,288,52,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 A "flexibility point" is a quantity of flexibility on the grid (provided by any combination of dispatchable generation, storage, and demand response) that enables the grid to support BOTH one MW of wind and one MW of solar.  We allow each flexibility point to support both generation types because wind and solar tend to be in need of support/backup at different times of the day and so can use the same flexibility resources.
-10,110,FPC Flexibility Points Provided per Unit Demand Response Capacity,6663,-1380,89,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,111,Flexibility Points from Demand Response,6663,-1243,80,24,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,112,110,111,0,0,0,0,0,64,0,-1--1--1,,1|(6663,-1316)|
-10,113,Flexibility Points from Pumped Hydro,6404,-1611,80,24,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,114,Total Flexibility Points Provided,7620,-1228,57,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,115,114,259,0,0,0,0,0,64,0,-1--1--1,,1|(7725,-1228)|
-10,116,Max New Output Buildable after Mandated Cap Construction,-1224,-552,88,31,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,117,Max New Output Buildable after Mandated Cap Construction,939,-2260,92,29,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,118,117,14,0,0,0,0,0,64,0,-1--1--1,,1|(939,-2325)|
-12,119,0,-1852,-952,756,23,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,110,FPC Flexibility Points Provided per Unit Demand Response Capacity,6485,-1305,89,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,111,Flexibility Points from Demand Response,6485,-1168,80,24,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,112,110,111,0,0,0,0,0,64,0,-1--1--1,,1|(6485,-1241)|
+10,113,Flexibility Points from Pumped Hydro,6226,-1536,80,24,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,114,Total Flexibility Points Provided,7442,-1153,57,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,115,114,259,0,0,0,0,0,64,0,-1--1--1,,1|(7547,-1153)|
+10,116,Max New Output Buildable after Mandated Cap Construction,-1402,-477,88,31,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,117,Max New Output Buildable after Mandated Cap Construction,761,-2185,92,29,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,118,117,14,0,0,0,0,0,64,0,-1--1--1,,1|(761,-2250)|
+12,119,0,-2030,-877,756,23,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Calculating Maximum Buildable Output
-10,120,New Allocated Capacity,2700,-2784,51,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,121,23,120,0,0,0,0,0,64,0,-1--1--1,,1|(2555,-2784)|
-10,122,New Policy Mandated Capacity,-501,-2984,72,24,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,123,120,424,0,0,0,0,0,64,0,-1--1--1,,1|(2816,-2784)|
-10,124,New Policy Mandated Capacity,2952,-2667,76,24,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,125,124,424,0,0,0,0,0,64,0,-1--1--1,,1|(2952,-2716)|
-12,126,0,-1773,-3264,808,27,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,120,New Allocated Capacity,2522,-2709,51,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,121,23,120,0,0,0,0,0,64,0,-1--1--1,,1|(2377,-2709)|
+10,122,New Policy Mandated Capacity,-679,-2909,72,24,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,123,120,424,0,0,0,0,0,64,0,-1--1--1,,1|(2638,-2709)|
+10,124,New Policy Mandated Capacity,2774,-2592,76,24,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,125,124,424,0,0,0,0,0,64,0,-1--1--1,,1|(2774,-2641)|
+12,126,0,-1951,-3189,808,27,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Determining Energy Need
-10,127,New Policy Mandated Capacity,-1224,-263,76,24,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,128,Max New Capacity Buildable after Mandated Cap Construction,-1224,-400,92,31,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,129,127,128,0,0,0,0,0,64,0,-1--1--1,,1|(-1224,-321)|
-1,130,128,116,0,0,0,0,0,64,0,-1--1--1,,1|(-1224,-469)|
-10,131,Capacity Retired Early,3583,-1568,61,24,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-12,132,0,1960,-1912,736,28,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,127,New Policy Mandated Capacity,-1402,-188,76,24,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,128,Max New Capacity Buildable after Mandated Cap Construction,-1402,-325,92,31,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,129,127,128,0,0,0,0,0,64,0,-1--1--1,,1|(-1402,-246)|
+1,130,128,116,0,0,0,0,0,64,0,-1--1--1,,1|(-1402,-394)|
+10,131,Capacity Retired Early,3405,-1493,61,24,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+12,132,0,1782,-1837,736,28,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Potential Capacity Retired Early for Economic Reasons
-12,133,0,4419,-1912,477,28,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,133,0,4241,-1837,477,28,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Tracking Capital Stock
-10,134,Expected Capacity Factor x Hours per Year,-1288,-2527,79,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,135,Hours per Year,-1069,-2527,64,20,8,131,0,4,-1,0,0,0,-1--1--1,192-255-192,|12|I|128-128-128,0,0,0,0,0,0
-1,136,135,134,0,0,0,0,0,64,0,-1--1--1,,1|(-1164,-2527)|
-1,137,134,100,0,0,0,0,0,64,0,-1--1--1,,1|(-1288,-2580)|
-10,138,Last Year Expected Electricity Output,-1529,-2527,64,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,139,New Expected Output Needed This Year,-1529,-2784,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,140,139,105,0,0,0,0,0,64,0,-1--1--1,,1|(-908,-2784)|
-10,141,Expected Capacity Factor x Hours per Year,-237,-3119,84,19,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,142,141,225,0,0,0,0,0,64,0,-1--1--1,,1|(-237,-3061)|
-10,143,Expected Capacity Factor x Hours per Year,2700,-2667,84,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,144,143,120,0,0,0,0,0,64,0,-1--1--1,,1|(2700,-2718)|
-10,145,FPCbS Flexibility Points Consumed by Source,-2053,-2275,80,17,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,146,Last Year Electricity Generation Capacity,-369,-840,80,24,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,147,61,84,0,0,0,0,0,64,0,-1--1--1,,1|(695,-493)|
-10,148,Expected Capacity Factor x Hours per Year,-1224,-691,84,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,149,148,116,0,0,0,0,0,64,0,-1--1--1,,1|(-1224,-634)|
-12,150,0,300,-896,231,28,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,134,Expected Capacity Factor x Hours per Year,-1466,-2452,79,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,135,Hours per Year,-1247,-2452,64,20,8,131,0,4,-1,0,0,0,-1--1--1,192-255-192,|12|I|128-128-128,0,0,0,0,0,0
+1,136,135,134,0,0,0,0,0,64,0,-1--1--1,,1|(-1342,-2452)|
+1,137,134,100,0,0,0,0,0,64,0,-1--1--1,,1|(-1466,-2505)|
+10,138,Last Year Expected Electricity Output,-1707,-2452,64,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,139,New Expected Output Needed This Year,-1707,-2709,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,140,139,105,0,0,0,0,0,64,0,-1--1--1,,1|(-1086,-2709)|
+10,141,Expected Capacity Factor x Hours per Year,-415,-3044,84,19,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,142,141,225,0,0,0,0,0,64,0,-1--1--1,,1|(-415,-2986)|
+10,143,Expected Capacity Factor x Hours per Year,2522,-2592,84,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,144,143,120,0,0,0,0,0,64,0,-1--1--1,,1|(2522,-2643)|
+10,145,FPCbS Flexibility Points Consumed by Source,-2231,-2200,80,17,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,146,Last Year Electricity Generation Capacity,-547,-765,80,24,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,147,61,84,0,0,0,0,0,64,0,-1--1--1,,1|(517,-418)|
+10,148,Expected Capacity Factor x Hours per Year,-1402,-616,84,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,149,148,116,0,0,0,0,0,64,0,-1--1--1,,1|(-1402,-559)|
+12,150,0,122,-821,231,28,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 The guaranteed dispatch mechanism may be used to simulate any dispatch policy with a set priority order, such as environmental dispatch, or China's system that dispatches some fossil and nuclear plants first.
-10,151,Electricity Dispatch Priority Numerical Definitions,695,-828,68,31,8,3,0,4,0,0,0,0,-1--1--1,192-255-192,|12||0-0-0,0,0,0,0,0,0
-1,152,151,84,0,0,0,0,0,64,0,-1--1--1,,1|(695,-761)|
-10,153,Expected Capacity Factor x Hours per Year,-1136,-1403,84,19,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,154,10,194,0,0,0,0,0,64,0,-1--1--1,,1|(-1668,-1758)|
-10,155,One Year,4427,-1584,48,12,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,156,155,59,0,1,0,0,0,64,0,-1--1--1,,1|(4459,-1600)|
-10,157,One Year,-1288,-2728,48,12,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,158,157,100,0,1,0,0,0,64,0,-1--1--1,,1|(-1288,-2698)|
-10,159,Additional Potential Output Needed to Meet RPS,672,-2684,76,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,160,Potential RPS Qualifying Electricity Output,436,-2684,59,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,161,160,159,0,0,0,0,0,64,0,-1--1--1,,1|(539,-2684)|
-1,162,159,1,0,0,0,0,0,64,0,-1--1--1,,1|(796,-2684)|
-12,163,0,843,-2864,248,51,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,151,Electricity Dispatch Priority Numerical Definitions,517,-753,68,31,8,3,0,4,0,0,0,0,-1--1--1,192-255-192,|12||0-0-0,0,0,0,0,0,0
+1,152,151,84,0,0,0,0,0,64,0,-1--1--1,,1|(517,-686)|
+10,153,Expected Capacity Factor x Hours per Year,-1314,-1328,84,19,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,154,10,194,0,0,0,0,0,64,0,-1--1--1,,1|(-1846,-1683)|
+10,155,One Year,4249,-1509,48,12,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,156,155,59,0,1,0,0,0,64,0,-1--1--1,,1|(4281,-1525)|
+10,157,One Year,-1466,-2653,48,12,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,158,157,100,0,1,0,0,0,64,0,-1--1--1,,1|(-1466,-2623)|
+10,159,Additional Potential Output Needed to Meet RPS,494,-2609,76,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,160,Potential RPS Qualifying Electricity Output,258,-2609,59,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,161,160,159,0,0,0,0,0,64,0,-1--1--1,,1|(360,-2609)|
+1,162,159,1,0,0,0,0,0,64,0,-1--1--1,,1|(618,-2609)|
+12,163,0,665,-2789,248,51,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 The RPS ensures enough potential electricity output from RPS-qualifying sources is available.  The RPS does not explicitly affect dispatch, because the contract-based dispatch ought to take priority (and if high enough, is allowed to violate the RPS), and thereafter, the renewables ought to be dispatched first under least cost dispatch anyway, due to their low marginal cost 
-12,164,0,-560,-2716,212,36,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+12,164,0,-738,-2641,212,36,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 Policy-mandated new capacity is not subject to the build limits, but any capacity built under this policy does subtract from the amount that can be built apart from this policy (to a minimum of zero).
-1,165,52,59,0,0,0,0,0,64,0,-1--1--1,,1|(4440,-1663)|
-10,166,Retiring Generation Capacity,4543,-1463,61,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,167,166,59,0,0,0,0,0,64,0,-1--1--1,,1|(4543,-1540)|
-1,168,146,224,0,0,0,0,0,64,0,-1--1--1,,1|(-369,-784)|
-12,169,0,931,-852,145,40,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+1,165,52,59,0,0,0,0,0,64,0,-1--1--1,,1|(4262,-1588)|
+10,166,Retiring Generation Capacity,4365,-1388,61,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,167,166,59,0,0,0,0,0,64,0,-1--1--1,,1|(4365,-1465)|
+1,168,146,224,0,0,0,0,0,64,0,-1--1--1,,1|(-547,-709)|
+12,169,0,753,-777,145,40,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 We assume that quality level has no effect on whether a plant is dispatched under guaranteed dispatch, so each quality level is dispatched in propotion to its commonality.
-1,170,153,35,0,0,0,0,0,64,0,-1--1--1,,1|(-1136,-1459)|
-10,171,Guaranteed Electricity Dispatched by Priority,2012,-832,76,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,172,Potential Electricity Output by Type after Guaranteed Dispatch,1768,-832,68,27,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,173,171,172,0,0,0,0,0,64,0,-1--1--1,,1|(1893,-832)|
-1,174,77,237,0,0,0,0,0,64,0,-1--1--1,,1|(162,-1459)|
-12,175,0,6311,-651,369,200,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+1,170,153,35,0,0,0,0,0,64,0,-1--1--1,,1|(-1314,-1384)|
+10,171,Guaranteed Electricity Dispatched by Priority,1834,-757,76,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,172,Potential Electricity Output by Type after Guaranteed Dispatch,1590,-757,68,27,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,173,171,172,0,0,0,0,0,64,0,-1--1--1,,1|(1715,-757)|
+1,174,77,237,0,0,0,0,0,64,0,-1--1--1,,1|(-17,-1384)|
+12,175,0,6133,-576,369,200,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Electricity_Output_by_Source
-12,176,0,6311,-235,369,200,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,176,0,6133,-160,369,200,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Electricity_Output_Change_due_to_Policies
-12,177,0,5551,-651,369,200,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,177,0,5373,-576,369,200,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Electricity_Generation_Capacity_by_Type
-12,178,0,5551,-235,369,200,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,178,0,5373,-160,369,200,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Electricity_Generation_Capacity_Change_due_to_Policies
-10,179,DRC BAU Demand Response Capacity,6171,-1243,73,24,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,180,DRC Potential Additional Demand Response Capacity,6404,-1131,104,24,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,181,This Year Demand Response Capacity,6404,-1243,72,24,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,182,179,181,0,0,0,0,0,64,0,-1--1--1,,1|(6281,-1243)|
-1,183,180,181,0,0,0,0,0,64,0,-1--1--1,,1|(6404,-1180)|
-1,184,181,111,0,0,0,0,0,64,0,-1--1--1,,1|(6522,-1243)|
-10,185,GBSC BAU Grid Battery Storage Capacity,5163,-1184,81,19,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,186,Flexibility Points from Battery Storage,5655,-1184,69,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,187,64,113,0,0,0,0,0,64,0,-1--1--1,,1|(6280,-1611)|
-10,188,FPC Flexibility Points Provided per Unit Battery Capacity,5655,-1291,76,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,189,188,186,0,0,0,0,0,64,0,-1--1--1,,1|(5655,-1240)|
-10,190,Elec Demand Including TnD Losses,4295,-859,88,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,191,Unmet Electricity Demand,4295,-732,64,24,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-1,192,190,191,0,0,0,0,0,64,0,-1--1--1,,1|(4295,-802)|
-10,193,Fraction of Flexibility Points Utilized Last Year,-1788,-2275,79,19,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-10,194,Generation Capacity Lifetime,-1668,-1683,64,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,195,194,4,0,0,0,0,0,64,0,-1--1--1,,1|(-1668,-1616)|
-10,196,DR Discount Rate,-1668,-1403,64,17,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,197,196,4,0,0,0,0,0,64,0,-1--1--1,,1|(-1668,-1458)|
-10,198,One Year,-1332,-1471,48,12,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,199,198,4,0,1,0,0,0,64,0,-1--1--1,,1|(-1473,-1497)|
-1,200,145,193,0,0,0,0,0,64,0,-1--1--1,,1|(-1927,-2275)|
-1,201,98,397,0,0,0,0,0,64,0,-1--1--1,,1|(-2240,-2784)|
-1,202,100,220,0,0,0,0,0,64,0,-1--1--1,,1|(-1399,-2648)|
-10,203,Electricity Generation Capacity,-113,-271,76,24,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-1,204,138,220,0,0,0,0,0,64,0,-1--1--1,,1|(-1529,-2580)|
-10,205,Retiring Generation Capacity by Quality Level,-113,-715,65,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,206,205,224,0,0,0,0,0,64,0,-1--1--1,,1|(-228,-715)|
-10,207,One Year,-192,-715,48,12,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,208,Effective Heat Rate for Renewable Electricity,4051,-60,84,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,209,Renewable Electricity Generation Converted to Primary Energy,4051,80,85,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0,0,0,0,0,0,0
-1,210,208,209,0,0,0,0,0,64,0,-1--1--1,,1|(4051,1)|
-1,211,729,3,0,0,0,0,0,64,0,-1--1--1,,1|(-540,-1459)|
-1,212,214,52,4,0,0,22,0,0,0,-1--1--1,,1|(4207,-1688)|
-1,213,214,60,100,0,0,22,0,0,0,-1--1--1,,1|(4080,-1688)|
-11,214,68682,4143,-1688,8,9,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,215,New Generation Capacity,4143,-1659,65,24,40,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,216,New Generation Capacity,6811,-2771,59,24,8,3,0,4,-1,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,217,New Generation Capacity,-113,-568,65,24,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,218,New Elec Output Allocated Under RPS,1696,-2532,80,23,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,219,218,15,0,0,0,0,0,64,0,-1--1--1,,1|(1805,-2532)|
-10,220,Surviving Expected Electricity Output,-1529,-2648,61,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,221,220,139,0,0,0,0,0,64,0,-1--1--1,,1|(-1529,-2709)|
-10,222,Max New Output Buildable after Mandated Cap Construction,1933,-2387,92,32,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,223,222,15,0,0,0,0,0,64,0,-1--1--1,,1|(1933,-2456)|
-10,224,Surviving Electricity Generation Capacity,-369,-715,76,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,225,New Potential Output from Policy Mandated Capacity,-237,-2984,96,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-12,226,0,-516,-3264,411,27,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,179,DRC BAU Demand Response Capacity,5993,-1168,73,24,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,180,DRC Potential Additional Demand Response Capacity,6226,-1056,104,24,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,181,This Year Demand Response Capacity,6226,-1168,72,24,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,182,179,181,0,0,0,0,0,64,0,-1--1--1,,1|(6103,-1168)|
+1,183,180,181,0,0,0,0,0,64,0,-1--1--1,,1|(6226,-1105)|
+1,184,181,111,0,0,0,0,0,64,0,-1--1--1,,1|(6344,-1168)|
+10,185,GBSC BAU Grid Battery Storage Capacity,4985,-1109,81,19,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,186,Flexibility Points from Battery Storage,5477,-1109,69,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,187,64,113,0,0,0,0,0,64,0,-1--1--1,,1|(6102,-1536)|
+10,188,FPC Flexibility Points Provided per Unit Battery Capacity,5477,-1216,76,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,189,188,186,0,0,0,0,0,64,0,-1--1--1,,1|(5477,-1165)|
+10,190,Elec Demand Including TnD Losses,4117,-784,88,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,191,Unmet Electricity Demand,4117,-657,64,24,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+1,192,190,191,0,0,0,0,0,64,0,-1--1--1,,1|(4117,-727)|
+10,193,Fraction of Flexibility Points Utilized Last Year,-1966,-2200,79,19,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+10,194,Generation Capacity Lifetime,-1846,-1608,64,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,195,194,4,0,0,0,0,0,64,0,-1--1--1,,1|(-1846,-1541)|
+10,196,DR Discount Rate,-1846,-1328,64,17,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,197,196,4,0,0,0,0,0,64,0,-1--1--1,,1|(-1846,-1383)|
+10,198,One Year,-1510,-1396,48,12,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,199,198,4,0,1,0,0,0,64,0,-1--1--1,,1|(-1651,-1422)|
+1,200,145,193,0,0,0,0,0,64,0,-1--1--1,,1|(-2105,-2200)|
+1,201,98,397,0,0,0,0,0,64,0,-1--1--1,,1|(-2418,-2709)|
+1,202,100,220,0,0,0,0,0,64,0,-1--1--1,,1|(-1577,-2573)|
+10,203,Electricity Generation Capacity,-291,-196,76,24,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+1,204,138,220,0,0,0,0,0,64,0,-1--1--1,,1|(-1707,-2505)|
+10,205,Retiring Generation Capacity by Quality Level,-291,-640,65,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,206,205,224,0,0,0,0,0,64,0,-1--1--1,,1|(-406,-640)|
+10,207,One Year,-370,-640,48,12,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,208,Effective Heat Rate for Renewable Electricity,3873,15,84,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,209,Renewable Electricity Generation Converted to Primary Energy,3873,155,85,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0,0,0,0,0,0,0
+1,210,208,209,0,0,0,0,0,64,0,-1--1--1,,1|(3873,76)|
+1,211,729,3,0,0,0,0,0,64,0,-1--1--1,,1|(-718,-1384)|
+1,212,214,52,4,0,0,22,0,0,0,-1--1--1,,1|(4029,-1613)|
+1,213,214,60,100,0,0,22,0,0,0,-1--1--1,,1|(3902,-1613)|
+11,214,68682,3965,-1613,8,9,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,215,New Generation Capacity,3965,-1584,65,24,40,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,216,New Generation Capacity,6633,-2696,59,24,8,3,0,4,-1,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,217,New Generation Capacity,-291,-493,65,24,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,218,New Elec Output Allocated Under RPS,1518,-2457,80,23,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,219,218,15,0,0,0,0,0,64,0,-1--1--1,,1|(1627,-2457)|
+10,220,Surviving Expected Electricity Output,-1707,-2573,61,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,221,220,139,0,0,0,0,0,64,0,-1--1--1,,1|(-1707,-2634)|
+10,222,Max New Output Buildable after Mandated Cap Construction,1755,-2312,92,32,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,223,222,15,0,0,0,0,0,64,0,-1--1--1,,1|(1755,-2381)|
+10,224,Surviving Electricity Generation Capacity,-547,-640,76,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,225,New Potential Output from Policy Mandated Capacity,-415,-2909,96,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,226,0,-694,-3189,411,27,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Applying Mandated Capacity Construction Policy
-12,227,0,792,-3264,812,27,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,227,0,614,-3189,812,27,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Applying Renewable Portfolio Standard (RPS)
-12,228,0,1908,-3264,248,27,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,228,0,1730,-3189,248,27,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Allocating Post-RPS Energy Need
-1,229,225,105,0,0,0,0,0,64,0,-1--1--1,,1|(-237,-2891)|
-10,230,RQSD BAU RPS Qualifying Source Definitions,-9,-2684,60,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,231,New Potential Output from Policy Mandated Capacity,212,-2684,71,32,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,232,231,160,0,0,0,0,0,64,0,-1--1--1,,1|(323,-2684)|
-1,233,207,224,0,1,0,0,0,64,0,-1--1--1,,1|(-259,-715)|
-1,234,134,138,0,0,0,0,0,64,0,-1--1--1,,1|(-1409,-2527)|
-10,235,Cost per Unit New Elec Output Before Generation Subsidies,-833,-1535,73,28,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,236,235,3,0,0,0,0,0,64,0,-1--1--1,,1|(-691,-1535)|
-10,237,Dispatch Cost per Unit Electricity Output before Subsidies,304,-1459,87,31,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,238,237,72,0,0,0,0,0,64,0,-1--1--1,,1|(455,-1459)|
-10,239,Percentage Electricity Generation by Source,3768,217,75,19,8,3,0,20,0,0,0,0,-1--1--1,255-192-128,|12|I|0-0-0,0,0,0,0,0,0
-10,240,MPCbS Max Potential Capacity by Source,-1753,-691,84,24,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,241,Max Additional Potential Capacity by Source,-1753,-552,89,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,242,240,241,0,0,0,0,0,64,0,-1--1--1,,1|(-1753,-628)|
-1,243,241,499,0,0,0,0,0,64,0,-1--1--1,,1|(-1753,-480)|
-10,244,BPMCCS BAU Policy Mandated Capacity Construction Schedule,-501,-2872,83,31,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-1,245,244,122,0,0,0,0,0,64,0,-1--1--1,,1|(-501,-2924)|
-10,246,Subsidy for Elec Production by Fuel This Year,-292,-1403,68,33,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-1,247,246,3,0,0,0,0,0,64,0,-1--1--1,,1|(-417,-1470)|
-10,248,Fraction of Additional Demand Response Potential Achieved This Year,6404,-1380,101,31,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-1,249,248,181,0,0,0,0,0,64,0,-1--1--1,,1|(6404,-1315)|
-10,250,Annual Additional Capacity Retired due to Early Retirement Policy This Year,3583,-1684,97,31,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-1,251,250,131,0,0,0,0,0,64,0,-1--1--1,,1|(3583,-1630)|
-10,252,Boolean Use Non BAU Guaranteed Dispatch Settings This Year,476,-692,81,32,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-1,253,252,416,0,0,0,0,0,64,0,-1--1--1,,1|(476,-759)|
-10,254,RnD Electricity Capital Cost Perc Reduction This Year,-2216,-1683,97,19,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-1,255,254,37,0,0,0,0,0,64,0,-1--1--1,,1|(-2216,-1620)|
-10,256,RnD Electricity Fuel Use Perc Reduction This Year,2504,-435,80,31,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-1,257,256,47,0,0,0,0,0,64,0,-1--1--1,,1|(2624,-435)|
-10,258,FPC BAU Transmission Connectivity Coefficient,8087,-1312,80,19,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,259,Usable Flexibility Points,7848,-1228,60,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,260,Surviving Electricity Generation Capacity,-2045,-691,76,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,261,260,241,0,0,0,0,0,128,0,-1--1--1,,1|(-1909,-626)|
-10,262,Usable Flexibility Points,-1788,-2391,64,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,263,262,193,0,0,0,0,0,128,0,-1--1--1,,1|(-1788,-2339)|
-10,264,Percentage Increase in Transmission Capacity vs BAU This Year,8087,-1428,77,28,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-12,265,0,5755,-3264,652,27,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+1,229,225,105,0,0,0,0,0,64,0,-1--1--1,,1|(-415,-2816)|
+10,230,RQSD BAU RPS Qualifying Source Definitions,-187,-2609,60,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,231,New Potential Output from Policy Mandated Capacity,34,-2609,71,32,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,232,231,160,0,0,0,0,0,64,0,-1--1--1,,1|(145,-2609)|
+1,233,207,224,0,1,0,0,0,64,0,-1--1--1,,1|(-437,-640)|
+1,234,134,138,0,0,0,0,0,64,0,-1--1--1,,1|(-1587,-2452)|
+10,235,Cost per Unit New Elec Output Before Generation Subsidies,-1011,-1460,73,28,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,236,235,3,0,0,0,0,0,64,0,-1--1--1,,1|(-869,-1460)|
+10,237,Dispatch Cost per Unit Electricity Output before Subsidies,126,-1384,87,31,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,238,237,72,0,0,0,0,0,64,0,-1--1--1,,1|(276,-1384)|
+10,239,Percentage Electricity Generation by Source,3590,292,75,19,8,3,0,20,0,0,0,0,-1--1--1,255-192-128,|12|I|0-0-0,0,0,0,0,0,0
+10,240,MPCbS Max Potential Capacity by Source,-1931,-616,84,24,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,241,Max Additional Potential Capacity by Source,-1931,-477,89,24,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,242,240,241,0,0,0,0,0,64,0,-1--1--1,,1|(-1931,-553)|
+1,243,241,499,0,0,0,0,0,64,0,-1--1--1,,1|(-1931,-405)|
+10,244,BPMCCS BAU Policy Mandated Capacity Construction Schedule,-679,-2797,83,31,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+1,245,244,122,0,0,0,0,0,64,0,-1--1--1,,1|(-679,-2849)|
+10,246,Subsidy for Elec Production by Fuel This Year,-470,-1328,68,33,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+1,247,246,3,0,0,0,0,0,64,0,-1--1--1,,1|(-595,-1395)|
+10,248,Fraction of Additional Demand Response Potential Achieved This Year,6226,-1305,101,31,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+1,249,248,181,0,0,0,0,0,64,0,-1--1--1,,1|(6226,-1240)|
+10,250,Annual Additional Capacity Retired due to Early Retirement Policy This Year,3405,-1609,97,31,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+1,251,250,131,0,0,0,0,0,64,0,-1--1--1,,1|(3405,-1555)|
+10,252,Boolean Use Non BAU Guaranteed Dispatch Settings This Year,298,-617,81,32,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+1,253,252,416,0,0,0,0,0,64,0,-1--1--1,,1|(298,-684)|
+10,254,RnD Electricity Capital Cost Perc Reduction This Year,-2394,-1608,97,19,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+1,255,254,37,0,0,0,0,0,64,0,-1--1--1,,1|(-2394,-1545)|
+10,256,RnD Electricity Fuel Use Perc Reduction This Year,2326,-360,80,31,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+1,257,256,47,0,0,0,0,0,64,0,-1--1--1,,1|(2446,-360)|
+10,258,FPC BAU Transmission Connectivity Coefficient,7909,-1237,80,19,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,259,Usable Flexibility Points,7670,-1153,60,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,260,Surviving Electricity Generation Capacity,-2223,-616,76,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,261,260,241,0,0,0,0,0,128,0,-1--1--1,,1|(-2087,-551)|
+10,262,Usable Flexibility Points,-1966,-2316,64,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,263,262,193,0,0,0,0,0,128,0,-1--1--1,,1|(-1966,-2264)|
+10,264,Percentage Increase in Transmission Capacity vs BAU This Year,7909,-1353,77,28,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+12,265,0,5577,-3189,652,27,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Calculating New Peaker Capacity
-10,266,Subsidy for Elec Production by Fuel This Year,616,-1336,99,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,267,266,72,0,0,0,0,0,128,0,-1--1--1,,1|(616,-1388)|
-10,268,RPS Qualifying Percentage of Elec Demand to Seek This Year,672,-2399,88,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,269,268,159,0,0,0,0,0,128,0,-1--1--1,,1|(672,-2533)|
-10,270,Surviving Expected Electricity Output,436,-2544,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,271,Percentage TnD Losses Avoided This Year,-2504,-2527,81,19,8,2,0,5,0,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-10,272,Transmission and Distribution Loss Percentage,-2504,-2648,55,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,273,271,272,0,0,0,0,0,128,0,-1--1--1,,1|(-2504,-2576)|
-1,274,272,98,0,0,0,0,0,128,0,-1--1--1,,1|(-2504,-2711)|
-10,275,Percentage Reduction in Plant Downtime This Year,-1069,-2391,89,19,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-10,276,Expected Capacity Factors before Flexibility Constraints,-1069,-2275,91,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,277,275,276,0,0,0,0,0,128,0,-1--1--1,,1|(-1069,-2340)|
-1,278,276,314,0,0,0,0,0,128,0,-1--1--1,,1|(-1186,-2275)|
-1,279,270,160,0,0,0,0,0,128,0,-1--1--1,,1|(436,-2601)|
-10,280,RPS Qualifying Share of Elec Demand after Net Imports,436,-2399,72,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,281,270,280,0,0,0,0,0,128,0,-1--1--1,,1|(436,-2483)|
-1,282,280,268,0,0,0,0,0,128,0,-1--1--1,,1|(539,-2399)|
-10,283,Renewable Portfolio Std Percentage,-9,-2265,85,28,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-10,284,RPS Percentage by Year,436,-2132,53,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,285,283,607,0,0,0,0,0,128,0,-1--1--1,,1|(103,-2197)|
-10,286,Slope of Line Approaching Future RPS Percentages by Year,436,-2265,84,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,287,284,286,0,0,0,0,0,128,0,-1--1--1,,1|(436,-2186)|
-1,288,280,286,0,0,0,0,0,128,0,-1--1--1,,1|(436,-2339)|
-10,289,Numerical Future Year Definitions,212,-2265,60,24,8,131,0,4,0,0,0,0,-1--1--1,192-255-192,|12||0-0-0,0,0,0,0,0,0
-1,290,289,286,0,0,0,0,0,128,0,-1--1--1,,1|(305,-2265)|
-10,291,Time,491,-2190,29,11,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,292,291,286,0,1,0,0,0,64,0,-1--1--1,,1|(475,-2212)|
-1,293,286,268,0,0,0,0,0,128,0,-1--1--1,,1|(549,-2328)|
-12,294,0,212,-3068,219,41,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,266,Subsidy for Elec Production by Fuel This Year,438,-1261,99,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,267,266,72,0,0,0,0,0,128,0,-1--1--1,,1|(438,-1313)|
+10,268,RPS Qualifying Percentage of Elec Demand to Seek This Year,494,-2324,88,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,269,268,159,0,0,0,0,0,128,0,-1--1--1,,1|(494,-2458)|
+10,270,Surviving Expected Electricity Output,258,-2469,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,271,Percentage TnD Losses Avoided This Year,-2682,-2452,81,19,8,2,0,5,0,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+10,272,Transmission and Distribution Loss Percentage,-2682,-2573,55,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,273,271,272,0,0,0,0,0,128,0,-1--1--1,,1|(-2682,-2501)|
+1,274,272,98,0,0,0,0,0,128,0,-1--1--1,,1|(-2682,-2636)|
+10,275,Percentage Reduction in Plant Downtime This Year,-1247,-2316,89,19,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+10,276,Expected Capacity Factors before Flexibility Constraints,-1247,-2200,91,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,277,275,276,0,0,0,0,0,128,0,-1--1--1,,1|(-1247,-2265)|
+1,278,276,314,0,0,0,0,0,128,0,-1--1--1,,1|(-1364,-2200)|
+1,279,270,160,0,0,0,0,0,128,0,-1--1--1,,1|(258,-2526)|
+10,280,RPS Qualifying Share of Elec Demand after Net Imports,258,-2324,72,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,281,270,280,0,0,0,0,0,128,0,-1--1--1,,1|(258,-2408)|
+1,282,280,268,0,0,0,0,0,128,0,-1--1--1,,1|(361,-2324)|
+10,283,Renewable Portfolio Std Percentage,-187,-2190,85,28,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+10,284,RPS Percentage by Year,258,-2057,53,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,285,283,607,0,0,0,0,0,128,0,-1--1--1,,1|(-76,-2122)|
+10,286,Slope of Line Approaching Future RPS Percentages by Year,258,-2190,84,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,287,284,286,0,0,0,0,0,128,0,-1--1--1,,1|(258,-2111)|
+1,288,280,286,0,0,0,0,0,128,0,-1--1--1,,1|(258,-2264)|
+10,289,Numerical Future Year Definitions,34,-2190,60,24,8,131,0,4,0,0,0,0,-1--1--1,192-255-192,|12||0-0-0,0,0,0,0,0,0
+1,290,289,286,0,0,0,0,0,128,0,-1--1--1,,1|(127,-2190)|
+10,291,Time,313,-2115,29,11,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,292,291,286,0,1,0,0,0,64,0,-1--1--1,,1|(296,-2137)|
+1,293,286,268,0,0,0,0,0,128,0,-1--1--1,,1|(370,-2253)|
+12,294,0,34,-2993,219,41,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 Electricity suppliers approach whichever future-year RPS target produces the highest slope in the current year, so as to minimize the slope of increases in future years.  (This method produces the lowest maximum slope, minimizing the shock to electricity producers.)
-12,295,0,212,-2980,245,40,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+12,295,0,34,-2905,245,40,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 If all such slopes are negative (i.e. all future RPS targets are below the surviving RPS-qualifying percentage), the minimum RPS-qualifying percentage sought will drop over time, but this will not matter, as no significant amount of RPS-qualifying resources are likely to retire during the model run.
-10,296,One Year,612,-2259,43,11,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,297,296,286,0,1,0,0,0,128,0,-1--1--1,,1|(552,-2260)|
-10,298,Difference in Cost Relative to Mean by Source,2108,-1356,53,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,299,Mean Cost per Unit Electricity Output,1839,-1215,51,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,300,299,298,0,0,0,0,0,128,0,-1--1--1,,1|(1966,-1281)|
-10,301,BAU Mean Cost per Unit Electricity Output,1839,-1764,56,25,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,302,BAU Difference in Cost Relative to Mean by Source,2108,-1623,60,27,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,303,301,302,0,0,0,0,0,128,0,-1--1--1,,1|(1964,-1697)|
-10,304,Change in Relative Cost by Source vs BAU,2108,-1503,77,19,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,305,298,304,0,0,0,0,0,128,0,-1--1--1,,1|(2108,-1427)|
-1,306,302,304,0,0,0,0,0,128,0,-1--1--1,,1|(2108,-1566)|
-10,307,ARpUIiRC Annual Retirement per Unit Increase in Relative Cost,2587,-1356,81,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,308,307,310,0,0,0,0,0,128,0,-1--1--1,,1|(2476,-1430)|
-1,309,304,310,0,0,0,0,0,128,0,-1--1--1,,1|(2223,-1503)|
-10,310,Potential Capacity Retired Early for Economic Reasons,2368,-1504,92,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,311,63,62,0,0,0,0,0,128,0,-1--1--1,,1|(5396,-1633)|
-10,312,Perc Reduction in Cap Factor due to Flexibility Point Constraints,-1529,-2275,81,32,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,313,193,312,0,0,0,0,0,128,0,-1--1--1,,1|(-1666,-2275)|
-10,314,Expected Capacity Factors,-1288,-2275,61,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,315,314,134,0,0,0,0,0,128,0,-1--1--1,,1|(-1288,-2394)|
-1,316,312,314,0,0,0,0,0,128,0,-1--1--1,,1|(-1405,-2275)|
-10,317,Last Year Electricity Generation Capacity,-1788,-2136,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,318,317,193,0,0,0,0,0,128,0,-1--1--1,,1|(-1788,-2198)|
-1,319,122,225,0,0,0,0,0,128,0,-1--1--1,,1|(-388,-2984)|
-1,320,13,128,0,0,0,0,0,128,0,-1--1--1,,1|(-1390,-400)|
-12,321,0,6612,-1911,1567,28,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,296,One Year,434,-2184,43,11,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,297,296,286,0,1,0,0,0,128,0,-1--1--1,,1|(373,-2185)|
+10,298,Difference in Cost Relative to Mean by Source,1930,-1281,53,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,299,Mean Cost per Unit Electricity Output,1661,-1140,51,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,300,299,298,0,0,0,0,0,128,0,-1--1--1,,1|(1788,-1206)|
+10,301,BAU Mean Cost per Unit Electricity Output,1661,-1689,56,25,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,302,BAU Difference in Cost Relative to Mean by Source,1930,-1548,60,27,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,303,301,302,0,0,0,0,0,128,0,-1--1--1,,1|(1786,-1622)|
+10,304,Change in Relative Cost by Source vs BAU,1930,-1428,77,19,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,305,298,304,0,0,0,0,0,128,0,-1--1--1,,1|(1930,-1352)|
+1,306,302,304,0,0,0,0,0,128,0,-1--1--1,,1|(1930,-1491)|
+10,307,ARpUIiRC Annual Retirement per Unit Increase in Relative Cost,2409,-1281,81,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,308,307,310,0,0,0,0,0,128,0,-1--1--1,,1|(2298,-1355)|
+1,309,304,310,0,0,0,0,0,128,0,-1--1--1,,1|(2045,-1428)|
+10,310,Potential Capacity Retired Early for Economic Reasons,2190,-1429,92,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,311,63,62,0,0,0,0,0,128,0,-1--1--1,,1|(5218,-1558)|
+10,312,Perc Reduction in Cap Factor due to Flexibility Point Constraints,-1707,-2200,81,32,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,313,193,312,0,0,0,0,0,128,0,-1--1--1,,1|(-1844,-2200)|
+10,314,Expected Capacity Factors,-1466,-2200,61,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,315,314,134,0,0,0,0,0,128,0,-1--1--1,,1|(-1466,-2319)|
+1,316,312,314,0,0,0,0,0,128,0,-1--1--1,,1|(-1583,-2200)|
+10,317,Last Year Electricity Generation Capacity,-1966,-2061,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,318,317,193,0,0,0,0,0,128,0,-1--1--1,,1|(-1966,-2123)|
+1,319,122,225,0,0,0,0,0,128,0,-1--1--1,,1|(-566,-2909)|
+1,320,13,128,0,0,0,0,0,128,0,-1--1--1,,1|(-1568,-325)|
+12,321,0,6434,-1836,1567,28,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Calculating Available Flexibility Points
-10,322,Expected Capacity Factors,3516,-859,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,323,Expected Capacity Factors before Flexibility Constraints,3516,-732,79,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,324,Hours per Year,3768,-859,59,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,325,Curtailed Electricity Output,3768,-732,56,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-1,326,322,325,0,0,0,0,0,128,0,-1--1--1,,1|(3635,-798)|
-1,327,324,325,0,0,0,0,0,128,0,-1--1--1,,1|(3768,-806)|
-1,328,323,325,0,0,0,0,0,128,0,-1--1--1,,1|(3646,-732)|
-12,329,0,4235,-952,808,25,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,322,Expected Capacity Factors,3338,-784,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,323,Expected Capacity Factors before Flexibility Constraints,3338,-657,79,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,324,Hours per Year,3590,-784,59,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,325,Curtailed Electricity Output,3590,-657,56,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+1,326,322,325,0,0,0,0,0,128,0,-1--1--1,,1|(3457,-723)|
+1,327,324,325,0,0,0,0,0,128,0,-1--1--1,,1|(3590,-731)|
+1,328,323,325,0,0,0,0,0,128,0,-1--1--1,,1|(3468,-657)|
+12,329,0,4057,-877,808,25,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Additional Electricity Outputs
-10,330,Electricity Generation by Type,4024,-732,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,331,330,191,0,0,0,0,0,128,0,-1--1--1,,1|(4154,-732)|
-10,332,Electricity Generation by Type,3768,-60,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,333,332,372,0,0,0,0,0,128,0,-1--1--1,,1|(3768,-1)|
-10,334,Electricity Generation Capacity,3516,-627,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,335,334,325,0,0,0,0,0,128,0,-1--1--1,,1|(3635,-676)|
-10,336,BDEQ BAU Distributed Electricity Source Capacity,-2053,-2391,91,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,337,336,193,0,0,0,0,0,128,0,-1--1--1,,1|(-1926,-2335)|
-12,338,0,-1920,-2071,249,32,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,330,Electricity Generation by Type,3846,-657,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,331,330,191,0,0,0,0,0,128,0,-1--1--1,,1|(3976,-657)|
+10,332,Electricity Generation by Type,3590,15,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,333,332,372,0,0,0,0,0,128,0,-1--1--1,,1|(3590,73)|
+10,334,Electricity Generation Capacity,3338,-552,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,335,334,325,0,0,0,0,0,128,0,-1--1--1,,1|(3457,-601)|
+10,336,BDEQ BAU Distributed Electricity Source Capacity,-2231,-2316,91,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,337,336,193,0,0,0,0,0,128,0,-1--1--1,,1|(-2104,-2260)|
+12,338,0,-2098,-1996,249,32,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 We intentionally use distributed capacities from the current year and electricity sector capacities from the prior year, because the electricity sector must respond to homeowners' installations of rooftop solar, rather than vice versa.
-10,339,Cumulative Total Distributed Solar Capacity Caused by Policies,-2053,-2136,85,27,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,340,339,193,0,0,0,0,0,128,0,-1--1--1,,1|(-1919,-2206)|
-10,341,EIaE BAU Imported Electricity,-2504,-3119,67,19,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,342,EIaE BAU Exported Electricity,-1524,-3119,67,19,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,343,Percent Change in Electricity Exports This Year,-1741,-3119,100,20,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-10,344,Percent Change in Electricity Imports This Year,-2241,-3119,97,19,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-10,345,Exported Electricity,-1741,-2984,32,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,346,Imported Electricity,-2241,-2984,32,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,347,341,346,0,0,0,0,0,128,0,-1--1--1,,1|(-2376,-3053)|
-1,348,344,346,0,0,0,0,0,128,0,-1--1--1,,1|(-2241,-3058)|
-1,349,342,345,0,0,0,0,0,128,0,-1--1--1,,1|(-1626,-3055)|
-1,350,343,345,0,0,0,0,0,128,0,-1--1--1,,1|(-1741,-3058)|
-10,351,Net Imports of Electricity,-1984,-2984,48,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,352,346,351,0,0,0,0,0,128,0,-1--1--1,,1|(-2127,-2984)|
-1,353,345,351,0,0,0,0,0,128,0,-1--1--1,,1|(-1847,-2984)|
-1,354,351,397,0,0,0,0,0,128,0,-1--1--1,,1|(-1984,-2891)|
-10,355,Flexibility Points from Pumped Hydro,7620,-1380,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,356,Flexibility Points from Peakers,7620,-1444,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,357,Flexibility Points from Battery Storage,7620,-1508,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,358,Flexibility Points from Demand Response,7620,-1572,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,359,358,114,0,0,0,0,0,128,0,-1--1--1,,1|(7620,-1409)|
-1,360,357,114,0,0,0,0,0,128,0,-1--1--1,,1|(7620,-1377)|
-1,361,356,114,0,0,0,0,0,128,0,-1--1--1,,1|(7620,-1345)|
-1,362,355,114,0,0,0,0,0,128,0,-1--1--1,,1|(7620,-1313)|
-10,363,Flexibility Points from Transmission Across Modeled Region Border,7220,-1568,80,29,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,364,Flexibility Points from Transmission Across Modeled Region Border,7620,-1636,119,21,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,365,364,114,0,0,0,0,0,128,0,-1--1--1,,1|(7620,-1440)|
-10,366,TCAMRB Transmission Capacity Across Modeled Region Border,6900,-1568,84,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,367,FPC Flexibility Points per Unit Transmission Capacity Across Modeled Region Border,7220,-1684,97,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,368,367,363,0,0,0,0,0,128,0,-1--1--1,,1|(7220,-1633)|
-1,369,366,363,0,0,0,0,0,128,0,-1--1--1,,1|(7055,-1568)|
-10,370,BDEQ BAU Electricity Output from Distributed Sources,3516,-60,108,24,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,371,Change in Output from Distributed Sources,3516,80,80,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,372,Electricity Generation by Type Including Distributed Generation,3768,80,84,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,373,371,372,0,0,0,0,0,128,0,-1--1--1,,1|(3633,80)|
-1,374,370,372,0,0,0,0,0,128,0,-1--1--1,,1|(3631,5)|
-1,375,372,209,0,0,0,0,0,128,0,-1--1--1,,1|(3902,80)|
-1,376,372,239,0,0,0,0,0,128,0,-1--1--1,,1|(3768,146)|
-10,377,FPC Curtailment Second Order Coeff,-1529,-2135,68,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,378,FPC Curtailment First Order Coeff,-1529,-2083,72,19,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,379,FPC Curtailment Zeroth Order Coeff,-1529,-2031,63,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,380,377,312,0,0,0,0,0,128,0,-1--1--1,,1|(-1529,-2191)|
-1,381,378,312,0,0,0,0,0,128,0,-1--1--1,,1|(-1529,-2165)|
-1,382,379,312,0,0,0,0,0,128,0,-1--1--1,,1|(-1529,-2139)|
-10,383,SYC Start Year Electricity Generation Capacity,4344,-1787,68,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,384,BHRbEF BAU Heat Rate by Electricity Fuel,2732,-315,76,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,385,BECF BAU Expected Capacity Factors,-1069,-2123,72,19,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-1,386,383,52,0,0,0,0,0,128,1,-1--1--1,,1|(4344,-1744)|
-1,387,385,276,0,0,0,0,0,128,0,-1--1--1,,1|(-1069,-2192)|
-1,388,384,47,0,0,0,0,0,128,0,-1--1--1,,1|(2732,-365)|
-10,389,SYC Start Year Electricity Generation Capacity,-1529,-2391,68,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,390,389,138,0,0,0,0,0,128,1,-1--1--1,,1|(-1529,-2456)|
-10,391,BHRbEF BAU Heat Rate by Electricity Fuel,4295,-60,79,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,392,391,208,0,0,0,0,0,128,0,-1--1--1,,1|(4182,-60)|
-10,393,Max Capacity Buildable This Year,4024,-407,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,394,New Generation Capacity,4295,-504,60,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,395,Net Imports of Electricity,4024,-859,53,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,396,395,191,0,0,0,0,0,128,0,-1--1--1,,1|(4147,-800)|
-10,397,Elec Demand after Net Imports,-1984,-2784,59,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,398,397,139,0,0,0,0,0,128,0,-1--1--1,,1|(-1770,-2784)|
-10,399,Elec Demand after Net Imports,1196,-828,64,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,400,399,81,0,0,0,0,0,128,0,-1--1--1,,1|(1080,-763)|
-1,401,399,82,0,0,0,0,0,128,0,-1--1--1,,1|(1196,-769)|
-10,402,One Year,3067,-512,43,11,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,403,Electricity Generation by Type,3516,-400,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,404,Achieved Capacity Factors,3768,-400,61,19,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-1,405,403,404,0,0,0,0,0,128,0,-1--1--1,,1|(3638,-400)|
-10,406,Electricity Generation Capacity,3768,-504,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,407,406,404,0,0,0,0,0,128,0,-1--1--1,,1|(3768,-459)|
-10,408,Expected Capacity Factors before Flexibility Constraints,3516,-272,79,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,409,Fraction of Expected Capacity Factors Achieved,3768,-272,87,19,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-1,410,408,409,0,0,0,0,0,128,0,-1--1--1,,1|(3631,-272)|
-1,411,404,409,0,0,0,0,0,128,0,-1--1--1,,1|(3768,-343)|
-10,412,Hours per Year,3516,-504,59,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,413,412,404,0,0,0,0,0,128,0,-1--1--1,,1|(3625,-458)|
-10,414,BDPbES BAU Dispatch Priority by Electricity Source,180,-692,76,33,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,415,BGDPbES BAU Guaranteed Dispatch Percentage by Electricity Source,180,-435,93,28,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,416,Guaranteed Dispatch Priorities for Policy Case,476,-828,79,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,417,Guaranteed Dispatch Percentages for Policy Case,476,-555,91,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,418,416,84,0,0,0,0,0,128,0,-1--1--1,,1|(579,-763)|
-1,419,417,84,0,0,0,0,0,128,0,-1--1--1,,1|(582,-621)|
-1,420,252,417,0,0,0,0,0,128,0,-1--1--1,,1|(476,-626)|
-1,421,415,417,0,0,0,0,0,128,0,-1--1--1,,1|(329,-494)|
-1,422,414,416,0,0,0,0,0,128,0,-1--1--1,,1|(337,-764)|
-10,423,PTCF Peak Time Capacity Factors,5219,-2771,57,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,424,New Generation Capacity to Meet Energy Need,2952,-2784,57,29,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,425,Peak Power Output before New Peaker Plants,5515,-2771,89,21,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,426,423,425,0,0,0,0,0,128,0,-1--1--1,,1|(5344,-2771)|
-10,427,Peak Power Demand to Be Met,6064,-2771,64,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,428,425,748,0,0,0,0,0,128,0,-1--1--1,,1|(5656,-2771)|
-10,429,New Peaker Capacity Allocated,6300,-2771,61,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,430,SYC Fraction of Peakers that Provide Flexibility Points,5163,-1687,68,27,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,431,430,62,0,0,0,0,0,128,0,-1--1--1,,1|(5280,-1628)|
-10,432,Bid Capacity Factor x Hours per Year,476,-304,71,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,433,PTCF Peak Time Capacity Factors,695,-52,61,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,434,Expected Capacity Factors,180,-52,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,435,Hours per Year,180,-304,59,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,436,Bid Capacity Factors,476,-171,44,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,437,433,436,0,0,0,0,0,128,0,-1--1--1,,1|(592,-108)|
-1,438,434,436,0,0,0,0,0,128,0,-1--1--1,,1|(324,-109)|
-1,439,435,432,0,0,0,0,0,128,0,-1--1--1,,1|(315,-304)|
-1,440,436,432,0,0,0,0,0,128,0,-1--1--1,,1|(476,-230)|
-1,441,432,61,0,0,0,0,0,128,0,-1--1--1,,1|(580,-304)|
-10,442,BDSBaPCF Boolean Do Suppliers Bid at Peak Capacity Factors,476,-52,81,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,443,442,436,0,0,0,0,0,128,0,-1--1--1,,1|(476,-109)|
-10,444,Expected Capacity Factor x Hours per Year,1196,-304,84,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,445,Minimum Guaranteed Output for Peakers,952,-304,69,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,446,444,445,0,0,0,0,0,128,0,-1--1--1,,1|(1073,-304)|
-12,447,0,950,-140,156,32,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,339,Cumulative Total Distributed Solar Capacity Caused by Policies,-2231,-2061,85,27,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,340,339,193,0,0,0,0,0,128,0,-1--1--1,,1|(-2097,-2131)|
+10,341,EIaE BAU Imported Electricity,-2682,-3044,67,19,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,342,EIaE BAU Exported Electricity,-1702,-3044,67,19,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,343,Percent Change in Electricity Exports This Year,-1919,-3044,100,20,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+10,344,Percent Change in Electricity Imports This Year,-2419,-3044,97,19,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+10,345,Exported Electricity,-1919,-2909,32,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,346,Imported Electricity,-2419,-2909,32,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,347,341,346,0,0,0,0,0,128,0,-1--1--1,,1|(-2554,-2978)|
+1,348,344,346,0,0,0,0,0,128,0,-1--1--1,,1|(-2419,-2983)|
+1,349,342,345,0,0,0,0,0,128,0,-1--1--1,,1|(-1804,-2980)|
+1,350,343,345,0,0,0,0,0,128,0,-1--1--1,,1|(-1919,-2983)|
+10,351,Net Imports of Electricity,-2162,-2909,48,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,352,346,351,0,0,0,0,0,128,0,-1--1--1,,1|(-2305,-2909)|
+1,353,345,351,0,0,0,0,0,128,0,-1--1--1,,1|(-2025,-2909)|
+1,354,351,397,0,0,0,0,0,128,0,-1--1--1,,1|(-2162,-2816)|
+10,355,Flexibility Points from Pumped Hydro,7442,-1305,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,356,Flexibility Points from Peakers,7442,-1369,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,357,Flexibility Points from Battery Storage,7442,-1433,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,358,Flexibility Points from Demand Response,7442,-1497,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,359,358,114,0,0,0,0,0,128,0,-1--1--1,,1|(7442,-1334)|
+1,360,357,114,0,0,0,0,0,128,0,-1--1--1,,1|(7442,-1302)|
+1,361,356,114,0,0,0,0,0,128,0,-1--1--1,,1|(7442,-1270)|
+1,362,355,114,0,0,0,0,0,128,0,-1--1--1,,1|(7442,-1238)|
+10,363,Flexibility Points from Transmission Across Modeled Region Border,7042,-1493,80,29,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,364,Flexibility Points from Transmission Across Modeled Region Border,7442,-1561,119,21,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,365,364,114,0,0,0,0,0,128,0,-1--1--1,,1|(7442,-1365)|
+10,366,TCAMRB Transmission Capacity Across Modeled Region Border,6722,-1493,84,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,367,FPC Flexibility Points per Unit Transmission Capacity Across Modeled Region Border,7042,-1609,97,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,368,367,363,0,0,0,0,0,128,0,-1--1--1,,1|(7042,-1558)|
+1,369,366,363,0,0,0,0,0,128,0,-1--1--1,,1|(6877,-1493)|
+10,370,BDEQ BAU Electricity Output from Distributed Sources,3338,15,108,24,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,371,Change in Output from Distributed Sources,3338,155,80,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,372,Electricity Generation by Type Including Distributed Generation,3590,155,84,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,373,371,372,0,0,0,0,0,128,0,-1--1--1,,1|(3455,155)|
+1,374,370,372,0,0,0,0,0,128,0,-1--1--1,,1|(3453,79)|
+1,375,372,209,0,0,0,0,0,128,0,-1--1--1,,1|(3724,155)|
+1,376,372,239,0,0,0,0,0,128,0,-1--1--1,,1|(3590,221)|
+10,377,FPC Curtailment Second Order Coeff,-1707,-2060,68,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,378,FPC Curtailment First Order Coeff,-1707,-2008,72,19,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,379,FPC Curtailment Zeroth Order Coeff,-1707,-1956,63,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,380,377,312,0,0,0,0,0,128,0,-1--1--1,,1|(-1707,-2116)|
+1,381,378,312,0,0,0,0,0,128,0,-1--1--1,,1|(-1707,-2090)|
+1,382,379,312,0,0,0,0,0,128,0,-1--1--1,,1|(-1707,-2064)|
+10,383,SYC Start Year Electricity Generation Capacity,4166,-1712,68,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,384,BHRbEF BAU Heat Rate by Electricity Fuel,2554,-240,76,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,385,BECF BAU Expected Capacity Factors,-1247,-2048,72,19,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+1,386,383,52,0,0,0,0,0,128,1,-1--1--1,,1|(4166,-1669)|
+1,387,385,276,0,0,0,0,0,128,0,-1--1--1,,1|(-1247,-2117)|
+1,388,384,47,0,0,0,0,0,128,0,-1--1--1,,1|(2554,-290)|
+10,389,SYC Start Year Electricity Generation Capacity,-1707,-2316,68,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,390,389,138,0,0,0,0,0,128,1,-1--1--1,,1|(-1707,-2381)|
+10,391,BHRbEF BAU Heat Rate by Electricity Fuel,4117,15,79,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,392,391,208,0,0,0,0,0,128,0,-1--1--1,,1|(4004,15)|
+10,393,Max Capacity Buildable This Year,3846,-332,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,394,New Generation Capacity,4117,-429,60,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,395,Net Imports of Electricity,3846,-784,53,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,396,395,191,0,0,0,0,0,128,0,-1--1--1,,1|(3969,-725)|
+10,397,Elec Demand after Net Imports,-2162,-2709,59,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,398,397,139,0,0,0,0,0,128,0,-1--1--1,,1|(-1948,-2709)|
+10,399,Elec Demand after Net Imports,1018,-753,64,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,400,399,81,0,0,0,0,0,128,0,-1--1--1,,1|(902,-688)|
+1,401,399,82,0,0,0,0,0,128,0,-1--1--1,,1|(1018,-694)|
+10,402,One Year,2889,-437,43,11,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,403,Electricity Generation by Type,3338,-325,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,404,Achieved Capacity Factors,3590,-325,61,19,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+1,405,403,404,0,0,0,0,0,128,0,-1--1--1,,1|(3460,-325)|
+10,406,Electricity Generation Capacity,3590,-429,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,407,406,404,0,0,0,0,0,128,0,-1--1--1,,1|(3590,-384)|
+10,408,Expected Capacity Factors before Flexibility Constraints,3338,-197,79,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,409,Fraction of Expected Capacity Factors Achieved,3590,-197,87,19,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+1,410,408,409,0,0,0,0,0,128,0,-1--1--1,,1|(3453,-197)|
+1,411,404,409,0,0,0,0,0,128,0,-1--1--1,,1|(3590,-268)|
+10,412,Hours per Year,3338,-429,59,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,413,412,404,0,0,0,0,0,128,0,-1--1--1,,1|(3447,-383)|
+10,414,BDPbES BAU Dispatch Priority by Electricity Source,2,-617,76,33,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,415,BGDPbES BAU Guaranteed Dispatch Percentage by Electricity Source,2,-360,93,28,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,416,Guaranteed Dispatch Priorities for Policy Case,298,-753,79,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,417,Guaranteed Dispatch Percentages for Policy Case,298,-480,91,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,418,416,84,0,0,0,0,0,128,0,-1--1--1,,1|(401,-688)|
+1,419,417,84,0,0,0,0,0,128,0,-1--1--1,,1|(404,-546)|
+1,420,252,417,0,0,0,0,0,128,0,-1--1--1,,1|(298,-551)|
+1,421,415,417,0,0,0,0,0,128,0,-1--1--1,,1|(149,-419)|
+1,422,414,416,0,0,0,0,0,128,0,-1--1--1,,1|(158,-689)|
+10,423,PTCF Peak Time Capacity Factors,5041,-2696,57,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,424,New Generation Capacity to Meet Energy Need,2774,-2709,57,29,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,425,Peak Power Output before New Peaker Plants,5337,-2696,89,21,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,426,423,425,0,0,0,0,0,128,0,-1--1--1,,1|(5166,-2696)|
+10,427,Peak Power Demand to Be Met,5886,-2696,64,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,428,425,748,0,0,0,0,0,128,0,-1--1--1,,1|(5478,-2696)|
+10,429,New Peaker Capacity Allocated,6122,-2696,61,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,430,SYC Fraction of Peakers that Provide Flexibility Points,4985,-1612,68,27,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,431,430,62,0,0,0,0,0,128,0,-1--1--1,,1|(5102,-1553)|
+10,432,Bid Capacity Factor x Hours per Year,298,-229,71,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,433,PTCF Peak Time Capacity Factors,517,23,61,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,434,Expected Capacity Factors,2,23,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,435,Hours per Year,2,-229,59,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,436,Bid Capacity Factors,298,-96,44,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,437,433,436,0,0,0,0,0,128,0,-1--1--1,,1|(413,-33)|
+1,438,434,436,0,0,0,0,0,128,0,-1--1--1,,1|(145,-34)|
+1,439,435,432,0,0,0,0,0,128,0,-1--1--1,,1|(137,-229)|
+1,440,436,432,0,0,0,0,0,128,0,-1--1--1,,1|(298,-155)|
+1,441,432,61,0,0,0,0,0,128,0,-1--1--1,,1|(402,-229)|
+10,442,BDSBaPCF Boolean Do Suppliers Bid at Peak Capacity Factors,298,23,81,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,443,442,436,0,0,0,0,0,128,0,-1--1--1,,1|(298,-34)|
+10,444,Expected Capacity Factor x Hours per Year,1018,-229,84,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,445,Minimum Guaranteed Output for Peakers,774,-229,69,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,446,444,445,0,0,0,0,0,128,0,-1--1--1,,1|(895,-229)|
+12,447,0,772,-65,156,32,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 A certain amount of dispatch, based on expected capacity factors, is guaranteed to peaking plant types (for grid regulation and control purposes).
-10,448,This Year Demand Response Capacity,4279,-2431,67,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,449,Peak Power Demand after Storage and DR,4891,-2772,69,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,450,448,565,0,0,0,0,0,128,0,-1--1--1,,1|(4404,-2431)|
-10,451,Electricity Generation Capacity,-1788,-2527,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,452,451,138,0,0,0,0,0,128,0,-1--1--1,,1|(-1661,-2527)|
-10,453,BPaFF Boolean Is This Plant Type a Peaker,6300,-3164,75,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,454,BPaFF Boolean Is This Plant Type a Peaker,1196,-171,80,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,455,454,445,0,0,0,0,0,128,0,-1--1--1,,1|(1080,-234)|
-10,456,Surviving Electricity Generation Capacity,5515,-3052,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,457,456,746,0,0,0,0,0,128,0,-1--1--1,,1|(5515,-2999)|
-10,458,FPC Target Maximum Fraction of Flexibility Points Used,-2296,25,72,25,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,459,Transmission Connectivity Coefficient,7848,-1312,77,21,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,460,264,744,0,0,0,0,0,128,0,-1--1--1,,1|(7976,-1428)|
-1,461,258,459,0,0,0,0,0,128,0,-1--1--1,,1|(7973,-1312)|
-1,462,459,259,0,0,0,0,0,128,0,-1--1--1,,1|(7848,-1276)|
-10,463,Usable Flexibility Points,-2536,-92,59,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,464,Surviving Electricity Generation Capacity,-2045,25,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,465,FPCbS Flexibility Points Consumed by Source,-1753,25,83,21,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,466,Flexibility Points Threshold Beyond Which to Stop Building Capacity,-2296,-92,85,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,467,463,466,0,0,0,0,0,128,0,-1--1--1,,1|(-2436,-92)|
-10,468,Remaining Flexibility Points Before Threshold,-2045,-92,77,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,469,466,468,0,0,0,0,0,128,0,-1--1--1,,1|(-2173,-92)|
-1,470,465,468,0,0,0,0,0,128,0,-1--1--1,,1|(-1894,-31)|
-1,471,464,468,0,0,0,0,0,128,0,-1--1--1,,1|(-2045,-26)|
-10,472,Maximum Capacity Buildable Under Threshold,-1753,-92,85,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,473,468,472,0,0,0,0,0,128,0,-1--1--1,,1|(-1910,-92)|
-1,474,465,472,0,0,0,0,0,128,0,-1--1--1,,1|(-1753,-27)|
-1,475,458,466,0,0,0,0,0,128,0,-1--1--1,,1|(-2296,-25)|
-1,476,472,499,0,0,0,0,0,128,0,-1--1--1,,1|(-1753,-239)|
-10,477,Max Capacity Buildable This Year,2888,-1684,68,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,478,BPaFF Boolean Is This Plant Type a Peaker,2888,-1431,80,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,479,Boolean Is This Plant Type Eligible for Replacement of Retired Plants,3131,-1431,88,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,480,478,479,0,0,0,0,0,128,0,-1--1--1,,1|(2998,-1431)|
-10,481,Maximum Capacity that May be Subject to Economic Early Retirement,3131,-1568,88,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,482,477,489,0,0,0,0,0,128,0,-1--1--1,,1|(2888,-1633)|
-1,483,479,481,0,0,0,0,0,128,0,-1--1--1,,1|(3131,-1492)|
-10,484,Last Year Electricity Generation Capacity,2587,-1623,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,485,484,310,0,0,0,0,0,128,0,-1--1--1,,1|(2483,-1566)|
-10,486,Capacity Retired Early for Economic Reasons,3363,-1568,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,487,486,131,0,0,0,0,0,128,0,-1--1--1,,1|(3471,-1568)|
-1,488,481,486,0,0,0,0,0,128,0,-1--1--1,,1|(3248,-1568)|
-10,489,Max Capacity Buildable Last Year,2888,-1568,64,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,490,489,481,0,0,0,0,0,128,0,-1--1--1,,1|(2990,-1568)|
-10,491,New Generation Capacity before Quantization,6591,-2771,53,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,492,429,491,0,0,0,0,0,64,0,-1--1--1,,1|(6442,-2771)|
-10,493,One Year,3587,-2560,43,11,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,494,493,216,0,1,0,0,0,64,0,-1--1--1,,1|(5184,-2664)|
-10,495,MPPC Minimum Power Plant Capacity,6811,-2932,72,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,496,491,216,0,0,0,0,0,128,0,-1--1--1,,1|(6691,-2771)|
-1,497,495,216,0,0,0,0,0,128,0,-1--1--1,,1|(6811,-2861)|
-10,498,Boolean Ban New Power Plants This Year,-1513,-263,80,19,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-10,499,Max Capacity Buildable This Year Before Ban,-1753,-400,77,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,500,499,13,0,0,0,0,0,128,0,-1--1--1,,1|(-1633,-400)|
-1,501,498,13,0,0,0,0,0,128,0,-1--1--1,,1|(-1513,-324)|
-10,502,RQSD RPS Qualifying Source Definitions,-9,-2469,73,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,503,Boolean Use Non BAU RPS Qualifying Resource Definitions This Year,-9,-2544,84,32,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-10,504,RPS Qualifying Sources,212,-2544,49,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,505,504,280,0,0,0,0,0,128,0,-1--1--1,,1|(311,-2480)|
-1,506,504,160,0,0,0,0,0,128,0,-1--1--1,,1|(309,-2604)|
-1,507,502,504,0,0,0,0,0,128,0,-1--1--1,,1|(98,-2505)|
-1,508,503,504,0,0,0,0,0,128,0,-1--1--1,,1|(112,-2544)|
-1,509,230,504,0,0,0,0,0,128,0,-1--1--1,,1|(104,-2613)|
-10,510,RPS Qualifying Sources,1199,-2260,56,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,511,510,14,0,0,0,0,0,128,0,-1--1--1,,1|(1079,-2323)|
-10,512,Electricity Sector Pollutant Emissions before CCS,2980,-580,68,28,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0,0,0,0,0,0,0
-1,513,512,21,0,0,0,0,0,128,0,-1--1--1,,1|(2979,-316)|
-10,514,Guaranteed Dispatch Percentages for Policy Case,-813,-2391,96,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,515,Minimum Expected Capacity Factors due to Guaranteed Dispatch Mechanism,-813,-2275,92,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,516,514,515,0,0,0,0,0,128,0,-1--1--1,,1|(-813,-2344)|
-1,517,515,276,0,0,0,0,0,128,0,-1--1--1,,1|(-934,-2275)|
-10,518,Bid Capacity Factors,-600,-2123,84,16,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,519,518,521,0,0,0,0,0,128,0,-1--1--1,,1|(-714,-2123)|
-12,520,0,-596,-2255,115,49,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,448,This Year Demand Response Capacity,4101,-2356,67,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,449,Peak Power Demand after Storage and DR,4713,-2697,69,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,450,448,565,0,0,0,0,0,128,0,-1--1--1,,1|(4226,-2356)|
+10,451,Electricity Generation Capacity,-1966,-2452,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,452,451,138,0,0,0,0,0,128,0,-1--1--1,,1|(-1839,-2452)|
+10,453,BPaFF Boolean Is This Plant Type a Peaker,6122,-3089,75,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,454,BPaFF Boolean Is This Plant Type a Peaker,1018,-96,80,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,455,454,445,0,0,0,0,0,128,0,-1--1--1,,1|(902,-159)|
+10,456,Surviving Electricity Generation Capacity,5337,-2977,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,457,456,746,0,0,0,0,0,128,0,-1--1--1,,1|(5337,-2924)|
+10,458,FPC Target Maximum Fraction of Flexibility Points Used,-2474,100,72,25,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,459,Transmission Connectivity Coefficient,7670,-1237,77,21,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,460,264,744,0,0,0,0,0,128,0,-1--1--1,,1|(7798,-1353)|
+1,461,258,459,0,0,0,0,0,128,0,-1--1--1,,1|(7795,-1237)|
+1,462,459,259,0,0,0,0,0,128,0,-1--1--1,,1|(7670,-1201)|
+10,463,Usable Flexibility Points,-2714,-17,59,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,464,Surviving Electricity Generation Capacity,-2223,100,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,465,FPCbS Flexibility Points Consumed by Source,-1931,100,83,21,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,466,Flexibility Points Threshold Beyond Which to Stop Building Capacity,-2474,-17,85,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,467,463,466,0,0,0,0,0,128,0,-1--1--1,,1|(-2614,-17)|
+10,468,Remaining Flexibility Points Before Threshold,-2223,-17,77,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,469,466,468,0,0,0,0,0,128,0,-1--1--1,,1|(-2351,-17)|
+1,470,465,468,0,0,0,0,0,128,0,-1--1--1,,1|(-2072,43)|
+1,471,464,468,0,0,0,0,0,128,0,-1--1--1,,1|(-2223,48)|
+10,472,Maximum Capacity Buildable Under Threshold,-1931,-17,85,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,473,468,472,0,0,0,0,0,128,0,-1--1--1,,1|(-2088,-17)|
+1,474,465,472,0,0,0,0,0,128,0,-1--1--1,,1|(-1931,47)|
+1,475,458,466,0,0,0,0,0,128,0,-1--1--1,,1|(-2474,50)|
+1,476,472,499,0,0,0,0,0,128,0,-1--1--1,,1|(-1931,-164)|
+10,477,Max Capacity Buildable This Year,2710,-1609,68,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,478,BPaFF Boolean Is This Plant Type a Peaker,2710,-1356,80,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,479,Boolean Is This Plant Type Eligible for Replacement of Retired Plants,2953,-1356,88,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,480,478,479,0,0,0,0,0,128,0,-1--1--1,,1|(2820,-1356)|
+10,481,Maximum Capacity that May be Subject to Economic Early Retirement,2953,-1493,88,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,482,477,489,0,0,0,0,0,128,0,-1--1--1,,1|(2710,-1558)|
+1,483,479,481,0,0,0,0,0,128,0,-1--1--1,,1|(2953,-1417)|
+10,484,Last Year Electricity Generation Capacity,2409,-1548,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,485,484,310,0,0,0,0,0,128,0,-1--1--1,,1|(2305,-1491)|
+10,486,Capacity Retired Early for Economic Reasons,3185,-1493,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,487,486,131,0,0,0,0,0,128,0,-1--1--1,,1|(3293,-1493)|
+1,488,481,486,0,0,0,0,0,128,0,-1--1--1,,1|(3070,-1493)|
+10,489,Max Capacity Buildable Last Year,2710,-1493,64,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,490,489,481,0,0,0,0,0,128,0,-1--1--1,,1|(2812,-1493)|
+10,491,New Generation Capacity before Quantization,6413,-2696,53,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,492,429,491,0,0,0,0,0,64,0,-1--1--1,,1|(6264,-2696)|
+10,493,One Year,3409,-2485,43,11,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,494,493,216,0,1,0,0,0,64,0,-1--1--1,,1|(5006,-2589)|
+10,495,MPPC Minimum Power Plant Capacity,6633,-2857,72,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,496,491,216,0,0,0,0,0,128,0,-1--1--1,,1|(6513,-2696)|
+1,497,495,216,0,0,0,0,0,128,0,-1--1--1,,1|(6633,-2786)|
+10,498,Boolean Ban New Power Plants This Year,-1691,-188,80,19,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+10,499,Max Capacity Buildable This Year Before Ban,-1931,-325,77,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,500,499,13,0,0,0,0,0,128,0,-1--1--1,,1|(-1811,-325)|
+1,501,498,13,0,0,0,0,0,128,0,-1--1--1,,1|(-1691,-249)|
+10,502,RQSD RPS Qualifying Source Definitions,-187,-2394,73,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,503,Boolean Use Non BAU RPS Qualifying Resource Definitions This Year,-187,-2469,84,32,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+10,504,RPS Qualifying Sources,34,-2469,49,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,505,504,280,0,0,0,0,0,128,0,-1--1--1,,1|(132,-2405)|
+1,506,504,160,0,0,0,0,0,128,0,-1--1--1,,1|(130,-2529)|
+1,507,502,504,0,0,0,0,0,128,0,-1--1--1,,1|(-81,-2430)|
+1,508,503,504,0,0,0,0,0,128,0,-1--1--1,,1|(-66,-2469)|
+1,509,230,504,0,0,0,0,0,128,0,-1--1--1,,1|(-76,-2538)|
+10,510,RPS Qualifying Sources,1021,-2185,56,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,511,510,14,0,0,0,0,0,128,0,-1--1--1,,1|(901,-2248)|
+10,512,Electricity Sector Pollutant Emissions before CCS,2802,-505,68,28,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0,0,0,0,0,0,0
+1,513,512,21,0,0,0,0,0,128,0,-1--1--1,,1|(2801,-241)|
+10,514,Guaranteed Dispatch Percentages for Policy Case,-991,-2316,96,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,515,Minimum Expected Capacity Factors due to Guaranteed Dispatch Mechanism,-991,-2200,92,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,516,514,515,0,0,0,0,0,128,0,-1--1--1,,1|(-991,-2269)|
+1,517,515,276,0,0,0,0,0,128,0,-1--1--1,,1|(-1112,-2200)|
+10,518,Bid Capacity Factors,-778,-2048,84,16,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,519,518,521,0,0,0,0,0,128,0,-1--1--1,,1|(-892,-2048)|
+12,520,0,-774,-2180,115,49,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 In the rare case when all electricity demand is met before all guaranteed dispatch is satisfied, some plant types will have capacity factors below this expected minimum.
-10,521,Last Year Bid Capacity Factors,-813,-2123,55,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,522,521,515,0,0,0,0,0,128,0,-1--1--1,,1|(-813,-2187)|
-10,523,BECF BAU Expected Capacity Factors,180,-171,77,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,524,523,436,0,0,0,0,0,128,1,-1--1--1,,1|(338,-171)|
-10,525,Last Year Electricity Generation by Type,1588,-1215,67,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,526,525,299,0,0,0,0,0,128,0,-1--1--1,,1|(1714,-1215)|
-10,527,SYC Start Year Electricity Generation Capacity,1588,-1492,93,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,528,527,525,0,0,0,0,0,128,1,-1--1--1,,1|(1588,-1361)|
-10,529,Last Year Change in Relative Cost by Source vs BAU,2368,-1623,67,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,530,304,529,0,0,0,0,0,128,0,-1--1--1,,1|(2221,-1555)|
-1,531,529,310,0,0,0,0,0,128,0,-1--1--1,,1|(2368,-1566)|
-10,532,Electricity Generation by Type,1344,-1215,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,533,532,525,0,0,0,0,0,128,0,-1--1--1,,1|(1459,-1215)|
-10,534,Expected Capacity Factor x Hours per Year,1344,-1356,84,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,535,534,525,0,0,0,0,3,128,1,192-192-192,|12||0-0-0,1|(1458,-1289)|
-10,536,BPaFF Boolean Does This Plant Type Provide Flexibility,5655,-1687,100,21,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,537,536,62,0,0,0,0,0,128,0,-1--1--1,,1|(5529,-1630)|
-10,538,Boolean Plant Types that May Not be Built due to Having Been Retired to Zero,-1513,-688,96,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,539,Last Year Electricity Generation Capacity,-1753,-839,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,540,Retiring Generation Capacity,-1513,-839,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,541,540,538,0,0,0,0,0,128,0,-1--1--1,,1|(-1513,-775)|
-1,542,539,538,0,0,0,0,0,128,0,-1--1--1,,1|(-1645,-771)|
-1,543,538,13,0,0,0,0,0,128,0,-1--1--1,,1|(-1513,-546)|
-10,544,SYC Start Year Electricity Generation Capacity,-1224,-839,68,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,545,544,538,0,0,0,0,0,128,0,-1--1--1,,1|(-1361,-766)|
-10,546,Electricity Sector CO2e Emissions,4295,-280,55,19,8,3,0,4,-1,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-10,547,GWP by Pollutant,4295,-188,36,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,548,547,546,0,0,0,0,0,0,0,-1--1--1,,1|(4295,-227)|
-10,549,Electricity Sector Pollutant Emissions,4024,-280,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,550,549,546,0,0,0,0,0,128,0,-1--1--1,,1|(4159,-280)|
-10,551,FPC Flexibility Points Provided per Electric Vehicle,7220,-1347,69,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,552,Vehicles,7019,-1208,40,11,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,553,Flexibility Points from Electric Vehicles,7220,-1208,69,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,554,551,553,0,0,0,0,0,128,0,-1--1--1,,1|(7220,-1280)|
-1,555,552,553,0,0,0,0,0,128,0,-1--1--1,,1|(7098,-1208)|
-10,556,Flexibility Points from Electric Vehicles,7620,-1312,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,557,556,114,0,0,0,0,0,128,0,-1--1--1,,1|(7620,-1279)|
-10,558,Flexibility Points from Electric Vehicles,4279,-2503,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,559,558,561,0,0,0,0,0,128,0,-1--1--1,,1|(4413,-2503)|
-10,560,Transmission Connectivity Coefficient,4576,-2171,92,24,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,561,FP from Electric Vehicles Usable for Peak Reduction,4576,-2503,88,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,562,560,561,0,0,0,0,0,128,0,-1--1--1,,1|(4576,-2332)|
-10,563,FP to MW Peak Demand Reduction Unit Converter,4279,-2575,83,19,8,3,0,4,0,0,0,0,-1--1--1,192-255-192,|12||0-0-0,0,0,0,0,0,0
-10,564,Battery Storage Capacity Usable for Peak Reduction,4576,-2359,88,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,565,Demand Response Capacity Usable for Peak Reduction,4576,-2431,100,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-12,566,0,4807,-2424,87,163,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,521,Last Year Bid Capacity Factors,-991,-2048,55,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,522,521,515,0,0,0,0,0,128,0,-1--1--1,,1|(-991,-2112)|
+10,523,BECF BAU Expected Capacity Factors,2,-96,77,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,524,523,436,0,0,0,0,0,128,1,-1--1--1,,1|(159,-96)|
+10,525,Last Year Electricity Generation by Type,1410,-1140,67,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,526,525,299,0,0,0,0,0,128,0,-1--1--1,,1|(1536,-1140)|
+10,527,SYC Start Year Electricity Generation Capacity,1410,-1417,93,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,528,527,525,0,0,0,0,0,128,1,-1--1--1,,1|(1410,-1286)|
+10,529,Last Year Change in Relative Cost by Source vs BAU,2190,-1548,67,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,530,304,529,0,0,0,0,0,128,0,-1--1--1,,1|(2043,-1480)|
+1,531,529,310,0,0,0,0,0,128,0,-1--1--1,,1|(2190,-1491)|
+10,532,Electricity Generation by Type,1166,-1140,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,533,532,525,0,0,0,0,0,128,0,-1--1--1,,1|(1281,-1140)|
+10,534,Expected Capacity Factor x Hours per Year,1166,-1281,84,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,535,534,525,0,0,0,0,3,128,1,192-192-192,|12||0-0-0,1|(1280,-1214)|
+10,536,BPaFF Boolean Does This Plant Type Provide Flexibility,5477,-1612,100,21,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,537,536,62,0,0,0,0,0,128,0,-1--1--1,,1|(5351,-1555)|
+10,538,Boolean Plant Types that May Not be Built due to Having Been Retired to Zero,-1691,-613,96,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,539,Last Year Electricity Generation Capacity,-1931,-764,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,540,Retiring Generation Capacity,-1691,-764,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,541,540,538,0,0,0,0,0,128,0,-1--1--1,,1|(-1691,-700)|
+1,542,539,538,0,0,0,0,0,128,0,-1--1--1,,1|(-1823,-696)|
+1,543,538,13,0,0,0,0,0,128,0,-1--1--1,,1|(-1691,-471)|
+10,544,SYC Start Year Electricity Generation Capacity,-1402,-764,68,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,545,544,538,0,0,0,0,0,128,0,-1--1--1,,1|(-1539,-691)|
+10,546,Electricity Sector CO2e Emissions,4117,-205,55,19,8,3,0,4,-1,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+10,547,GWP by Pollutant,4117,-113,36,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,548,547,546,0,0,0,0,0,0,0,-1--1--1,,1|(4117,-152)|
+10,549,Electricity Sector Pollutant Emissions,3846,-205,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,550,549,546,0,0,0,0,0,128,0,-1--1--1,,1|(3981,-205)|
+10,551,FPC Flexibility Points Provided per Electric Vehicle,7042,-1272,69,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,552,Vehicles,6841,-1133,40,11,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,553,Flexibility Points from Electric Vehicles,7042,-1133,69,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,554,551,553,0,0,0,0,0,128,0,-1--1--1,,1|(7042,-1205)|
+1,555,552,553,0,0,0,0,0,128,0,-1--1--1,,1|(6920,-1133)|
+10,556,Flexibility Points from Electric Vehicles,7442,-1237,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,557,556,114,0,0,0,0,0,128,0,-1--1--1,,1|(7442,-1204)|
+10,558,Flexibility Points from Electric Vehicles,4101,-2428,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,559,558,561,0,0,0,0,0,128,0,-1--1--1,,1|(4235,-2428)|
+10,560,Transmission Connectivity Coefficient,4398,-2096,92,24,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,561,FP from Electric Vehicles Usable for Peak Reduction,4398,-2428,88,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,562,560,561,0,0,0,0,0,128,0,-1--1--1,,1|(4398,-2257)|
+10,563,FP to MW Peak Demand Reduction Unit Converter,4101,-2500,83,19,8,3,0,4,0,0,0,0,-1--1--1,192-255-192,|12||0-0-0,0,0,0,0,0,0
+10,564,Battery Storage Capacity Usable for Peak Reduction,4398,-2284,88,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,565,Demand Response Capacity Usable for Peak Reduction,4398,-2356,100,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+12,566,0,4629,-2349,87,163,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 All support services (demand response, grid batteries, electric vehicles, and transmission capacity across the modeled region border) that can support the grid in one part of the modeled region may not be able to support the grid in a different part of the modeled region, subject to transmission constraints.  Hence, the available peak reduction services from all of these resources are limited by the transmission connectivity coefficient.
-1,567,560,565,0,0,0,0,0,128,0,-1--1--1,,1|(4576,-2296)|
-1,568,560,564,0,0,0,0,0,128,0,-1--1--1,,1|(4576,-2260)|
-10,569,Reduction in Peak Power Demand from Storage and DR,4576,-2575,101,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,570,564,569,0,0,0,0,0,128,0,-1--1--1,,1|(4576,-2459)|
-1,571,565,569,0,0,0,0,0,128,0,-1--1--1,,1|(4576,-2496)|
-1,572,561,569,0,0,0,0,0,128,0,-1--1--1,,1|(4576,-2531)|
-1,573,563,569,0,0,0,0,0,128,0,-1--1--1,,1|(4411,-2575)|
-1,574,569,449,0,0,0,0,0,128,0,-1--1--1,,1|(4727,-2670)|
-10,575,Nuclear Capacity Retirements after Lifetime Extension,4291,-1331,96,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,576,575,166,0,0,0,0,0,128,0,-1--1--1,,1|(4413,-1395)|
-12,577,0,-2093,-1796,112,45,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+1,567,560,565,0,0,0,0,0,128,0,-1--1--1,,1|(4398,-2221)|
+1,568,560,564,0,0,0,0,0,128,0,-1--1--1,,1|(4398,-2185)|
+10,569,Reduction in Peak Power Demand from Storage and DR,4398,-2500,101,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,570,564,569,0,0,0,0,0,128,0,-1--1--1,,1|(4398,-2384)|
+1,571,565,569,0,0,0,0,0,128,0,-1--1--1,,1|(4398,-2421)|
+1,572,561,569,0,0,0,0,0,128,0,-1--1--1,,1|(4398,-2456)|
+1,573,563,569,0,0,0,0,0,128,0,-1--1--1,,1|(4233,-2500)|
+1,574,569,449,0,0,0,0,0,128,0,-1--1--1,,1|(4549,-2595)|
+10,575,Nuclear Capacity Retirements after Lifetime Extension,4113,-1256,96,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,576,575,166,0,0,0,0,0,128,0,-1--1--1,,1|(4235,-1320)|
+12,577,0,-2271,-1721,112,45,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 We assume that future nuclear power plants will be granted a lifetime extension of magnitude similar to existing nuclear power plants for utility planning purposes.
-10,578,Nuclear Capacity Lifetime Extension,4291,-1463,63,19,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-1,579,578,575,0,0,0,0,0,128,0,-1--1--1,,1|(4291,-1406)|
-1,580,578,166,0,0,0,0,0,128,0,-1--1--1,,1|(4411,-1463)|
-10,581,Nuclear Capacity Lifetime Extension,-1913,-1820,63,19,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-1,582,581,194,0,0,0,0,0,128,0,-1--1--1,,1|(-1801,-1757)|
-12,583,0,4096,-1444,113,49,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,578,Nuclear Capacity Lifetime Extension,4113,-1388,63,19,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+1,579,578,575,0,0,0,0,0,128,0,-1--1--1,,1|(4113,-1331)|
+1,580,578,166,0,0,0,0,0,128,0,-1--1--1,,1|(4233,-1388)|
+10,581,Nuclear Capacity Lifetime Extension,-2091,-1745,63,19,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+1,582,581,194,0,0,0,0,0,128,0,-1--1--1,,1|(-1979,-1682)|
+12,583,0,3918,-1369,113,49,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 This policy intentionally does not use a policy implementation schedule.  DELAY FIXED only reads the first year's value, so a schedule would have no effect here.
-10,584,Imported Electricity,2504,88,49,24,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,585,BIEfIE Boolean Include Emissions from Imported Electricity,2732,88,85,28,8,2,0,21,-1,0,0,0,128-128-128,128-192-0,|12|I|128-128-128,0,0,0,0,0,0
-10,586,Pollutant Emissions from Imported Electricity,2504,-43,80,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,587,584,586,0,0,0,0,0,128,0,-1--1--1,,1|(2504,27)|
-10,588,BAU Electricity Fuel Pollutant Emissions Intensity per MWh,2504,-184,77,32,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,589,588,586,0,0,0,0,0,128,0,-1--1--1,,1|(2504,-114)|
-12,590,0,2728,-167,97,61,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,584,Imported Electricity,2326,163,49,24,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,585,BIEfIE Boolean Include Emissions from Imported Electricity,2554,163,85,28,8,2,0,21,-1,0,0,0,128-128-128,128-192-0,|12|I|128-128-128,0,0,0,0,0,0
+10,586,Pollutant Emissions from Imported Electricity,2326,32,80,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,587,584,586,0,0,0,0,0,128,0,-1--1--1,,1|(2326,102)|
+10,588,BAU Electricity Fuel Pollutant Emissions Intensity per MWh,2326,-109,77,32,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,589,588,586,0,0,0,0,0,128,0,-1--1--1,,1|(2326,-39)|
+12,590,0,2550,-92,97,61,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 Imported electricity is assumed to use the same pollutant emissions intensities per MWh as in-region power plants of the same type and of the preexisting retiring quality tier.
-10,591,Construction Cost per Unit Capacity after Construction Subsidies,-1913,-1535,87,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,592,723,591,0,0,0,0,0,128,0,-1--1--1,,1|(-1913,-1458)|
-1,593,591,4,0,0,0,0,0,128,0,-1--1--1,,1|(-1797,-1535)|
-10,594,FoTCAMRBtPF Fraction of Transmission Capacity Across Modeled Region Border that Provides Flexibility,6900,-1684,132,31,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,595,594,363,0,0,0,0,0,128,0,-1--1--1,,1|(7055,-1627)|
-10,596,TCAMRB Transmission Capacity Across Modeled Region Border,4279,-2287,116,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,597,Transmission Capacity Across Modeled Region Border Usable for Peak Reduction,4576,-2287,137,21,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,598,596,597,0,0,0,0,0,128,0,-1--1--1,,1|(4410,-2287)|
-1,599,560,597,0,0,0,0,0,128,0,-1--1--1,,1|(4576,-2223)|
-1,600,597,569,0,0,0,0,0,128,0,-1--1--1,,1|(4576,-2424)|
-10,601,FoPITY Fraction of Policy Implemented This Year,-9,-2132,75,29,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,602,Policy Schedule Sequence Numbers,-9,-2031,72,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,603,Policy Implementation Schedule Selector,212,-2031,75,19,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-1,604,601,607,0,0,0,0,0,128,0,-1--1--1,,1|(92,-2132)|
-1,605,602,607,0,0,0,0,0,128,0,-1--1--1,,1|(96,-2078)|
-1,606,603,607,0,0,0,0,0,128,0,-1--1--1,,1|(212,-2074)|
-10,607,RPS Percentage by Year from Policy Setting,212,-2132,80,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,608,607,284,0,0,0,0,0,128,0,-1--1--1,,1|(331,-2132)|
-10,609,FPC Curtailment Third Order Coeff,-1529,-2183,59,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,610,609,312,0,0,0,0,0,128,0,-1--1--1,,1|(-1529,-2215)|
-10,611,Grid Battery Storage Capacity,5396,-1184,56,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-10,612,Fraction of Additional Grid Battery Storage Potential Achieved This Year,5396,-1044,91,28,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-1,613,611,186,0,0,0,0,0,128,0,-1--1--1,,1|(5512,-1184)|
-10,614,Grid Battery Storage Capacity,4279,-2359,60,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,615,614,564,0,0,0,0,0,128,0,-1--1--1,,1|(4406,-2359)|
-10,616,Do Producers Have Foresight to Future Additional RPS Values,212,-2399,73,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,617,283,616,0,0,0,0,0,128,0,-1--1--1,,1|(96,-2328)|
-10,618,Selected Policy Implementation Schedule,-9,-2399,92,20,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,619,618,616,0,0,0,0,0,128,0,-1--1--1,,1|(104,-2399)|
-1,620,616,286,0,0,0,0,0,128,0,-1--1--1,,1|(317,-2336)|
-10,621,Elec Demand after Net Imports,584,-2544,64,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,622,621,159,0,0,0,0,0,128,0,-1--1--1,,1|(619,-2602)|
-1,623,621,280,0,0,0,0,0,128,0,-1--1--1,,1|(521,-2481)|
-12,624,0,212,-2864,279,68,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,591,Construction Cost per Unit Capacity after Construction Subsidies,-2091,-1460,87,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,592,723,591,0,0,0,0,0,128,0,-1--1--1,,1|(-2091,-1383)|
+1,593,591,4,0,0,0,0,0,128,0,-1--1--1,,1|(-1975,-1460)|
+10,594,FoTCAMRBtPF Fraction of Transmission Capacity Across Modeled Region Border that Provides Flexibility,6722,-1609,132,31,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,595,594,363,0,0,0,0,0,128,0,-1--1--1,,1|(6877,-1552)|
+10,596,TCAMRB Transmission Capacity Across Modeled Region Border,4101,-2212,116,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,597,Transmission Capacity Across Modeled Region Border Usable for Peak Reduction,4398,-2212,137,21,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,598,596,597,0,0,0,0,0,128,0,-1--1--1,,1|(4232,-2212)|
+1,599,560,597,0,0,0,0,0,128,0,-1--1--1,,1|(4398,-2148)|
+1,600,597,569,0,0,0,0,0,128,0,-1--1--1,,1|(4398,-2349)|
+10,601,FoPITY Fraction of Policy Implemented This Year,-187,-2057,75,29,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,602,Policy Schedule Sequence Numbers,-187,-1956,72,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,603,Policy Implementation Schedule Selector,34,-1956,75,19,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+1,604,601,607,0,0,0,0,0,128,0,-1--1--1,,1|(-86,-2057)|
+1,605,602,607,0,0,0,0,0,128,0,-1--1--1,,1|(-84,-2003)|
+1,606,603,607,0,0,0,0,0,128,0,-1--1--1,,1|(34,-1999)|
+10,607,RPS Percentage by Year from Policy Setting,34,-2057,80,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,608,607,284,0,0,0,0,0,128,0,-1--1--1,,1|(152,-2057)|
+10,609,FPC Curtailment Third Order Coeff,-1707,-2108,59,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,610,609,312,0,0,0,0,0,128,0,-1--1--1,,1|(-1707,-2140)|
+10,611,Grid Battery Storage Capacity,5218,-1109,56,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+10,612,Fraction of Additional Grid Battery Storage Potential Achieved This Year,5218,-969,91,28,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+1,613,611,186,0,0,0,0,0,128,0,-1--1--1,,1|(5334,-1109)|
+10,614,Grid Battery Storage Capacity,4101,-2284,60,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,615,614,564,0,0,0,0,0,128,0,-1--1--1,,1|(4228,-2284)|
+10,616,Do Producers Have Foresight to Future Additional RPS Values,34,-2324,73,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,617,283,616,0,0,0,0,0,128,0,-1--1--1,,1|(-83,-2253)|
+10,618,Selected Policy Implementation Schedule,-187,-2324,92,20,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,619,618,616,0,0,0,0,0,128,0,-1--1--1,,1|(-74,-2324)|
+1,620,616,286,0,0,0,0,0,128,0,-1--1--1,,1|(138,-2261)|
+10,621,Elec Demand after Net Imports,406,-2469,64,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,622,621,159,0,0,0,0,0,128,0,-1--1--1,,1|(441,-2527)|
+1,623,621,280,0,0,0,0,0,128,0,-1--1--1,,1|(342,-2406)|
+12,624,0,34,-2789,279,68,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 When determining the share of demand that can be met from surviving RPS-qualifying sources, we use the surviving sources' expected electricity output, which is based on their expected capacity factors.  We can't use their actual output this year because dispatch calculations are handled later in the calculation flow.  If the model thinks the RPS is satisfied but is not dispatching enough RPS-qualifying sources to meet the RPS, either adjust the expected capacity factors of RPS-qualifying sources, or adjust the dispatch settings (such as eliminating guaranteed dispatch for fossil plants that may crowd out RE).
-12,625,0,-1260,-1312,228,53,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+12,625,0,-1438,-1237,228,53,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 Decommissioning costs for power plants are calculated (see the Electricity Supply - Cash Flow tab), but they are intentionally excluded from the calculation that determines what plant types to build, reflecting the fact that real-world utilities disregard these decades-distant, end-of-life costs when choosing what new plant types to build.
-10,626,Boolean Use Non BAU Mandated Capacity Construction Schedule,-789,-2984,120,21,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-1,627,626,122,0,0,0,0,0,128,0,-1--1--1,,1|(-628,-2984)|
-10,628,MPPC Minimum Power Plant Capacity,4764,-1564,76,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,629,628,166,0,0,0,0,0,128,0,-1--1--1,,1|(4659,-1516)|
-12,630,0,1548,-1855,321,28,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,626,Boolean Use Non BAU Mandated Capacity Construction Schedule,-967,-2909,120,21,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+1,627,626,122,0,0,0,0,0,128,0,-1--1--1,,1|(-806,-2909)|
+10,628,MPPC Minimum Power Plant Capacity,4586,-1489,76,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,629,628,166,0,0,0,0,0,128,0,-1--1--1,,1|(4481,-1441)|
+12,630,0,1370,-1780,321,28,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 We calculate potential capacity retirements based on whether the dispatch cost of those plant types rises relative to the mean, relative to the BAU case.  This causes retirements of technologies like coal or natural gas as the mean cost of production declines, as more renewables come onto the system.
-10,631,Potential Capacity Retired Early for Economic Reasons,3363,-1684,67,27,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,632,631,486,0,0,0,0,0,128,0,-1--1--1,,1|(3363,-1629)|
-12,633,0,3288,-1912,528,28,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,631,Potential Capacity Retired Early for Economic Reasons,3185,-1609,67,27,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,632,631,486,0,0,0,0,0,128,0,-1--1--1,,1|(3185,-1554)|
+12,633,0,3110,-1837,528,28,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Calculating Max and Actual Capacity Retired Early
-10,634,Capacity Retired Early,4764,-1463,59,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,635,634,166,0,0,0,0,0,128,0,-1--1--1,,1|(4661,-1463)|
-12,636,0,3411,-1415,176,51,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,634,Capacity Retired Early,4586,-1388,59,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,635,634,166,0,0,0,0,0,128,0,-1--1--1,,1|(4483,-1388)|
+12,636,0,3233,-1340,176,51,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 In any given year, we do not allow the model to retire in total (across plant types) more capacity than it could build in total (across plant types, excluding plant types that are more expensive to dispatch relative to the mean plant under the policy package than in BAU).
-12,637,0,516,-1912,584,25,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,637,0,338,-1837,584,25,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Fuel, Variable OM, and Fixed OM Costs per Unit Output
-10,638,CCaMC Annual Fixed OM Cost per Unit Capacity,304,-1672,99,25,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,639,Expected Capacity Factor x Hours per Year,616,-1775,84,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,640,Annualized Fixed OM Costs per Unit Output,616,-1672,71,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,641,638,640,0,0,0,0,0,128,0,-1--1--1,,1|(467,-1672)|
-1,642,639,640,0,0,0,0,0,128,0,-1--1--1,,1|(616,-1730)|
-10,643,Dispatch Cost per Unit Electricity Output,1768,-171,80,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,644,Fuel Variable OM and Fixed OM Costs per Unit Electricity Output,923,-1575,75,29,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,645,72,644,0,0,0,0,0,128,0,-1--1--1,,1|(756,-1512)|
-1,646,640,644,0,0,0,0,0,128,0,-1--1--1,,1|(755,-1627)|
-12,647,0,316,-1763,179,39,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,638,CCaMC Annual Fixed OM Cost per Unit Capacity,126,-1597,99,25,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,639,Expected Capacity Factor x Hours per Year,438,-1700,84,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,640,Annualized Fixed OM Costs per Unit Output,438,-1597,71,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,641,638,640,0,0,0,0,0,128,0,-1--1--1,,1|(289,-1597)|
+1,642,639,640,0,0,0,0,0,128,0,-1--1--1,,1|(438,-1655)|
+10,643,Dispatch Cost per Unit Electricity Output,1590,-96,80,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,644,Fuel Variable OM and Fixed OM Costs per Unit Electricity Output,745,-1500,75,29,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,645,72,644,0,0,0,0,0,128,0,-1--1--1,,1|(578,-1437)|
+1,646,640,644,0,0,0,0,0,128,0,-1--1--1,,1|(577,-1552)|
+12,647,0,138,-1688,179,39,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 Dispatch costs (fuel + variable O&M) are used to decide which plants to dispatch.  We also consider fixed O&M when deciding which plants to retire early.
-10,648,Fuel Variable OM and Fixed OM Costs per Unit Electricity Output,1839,-1356,80,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,649,BAU Fuel Variable OM and Fixed OM Costs per Unit Electricity Output,1839,-1623,87,27,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,650,648,299,0,0,0,0,0,128,0,-1--1--1,,1|(1839,-1292)|
-1,651,648,298,0,0,0,0,0,128,0,-1--1--1,,1|(1980,-1356)|
-1,652,649,301,0,0,0,0,0,128,0,-1--1--1,,1|(1839,-1687)|
-1,653,649,302,0,0,0,0,0,128,0,-1--1--1,,1|(1980,-1623)|
-12,654,0,2267,-1235,184,79,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,648,Fuel Variable OM and Fixed OM Costs per Unit Electricity Output,1661,-1281,80,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,649,BAU Fuel Variable OM and Fixed OM Costs per Unit Electricity Output,1661,-1548,87,27,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,650,648,299,0,0,0,0,0,128,0,-1--1--1,,1|(1661,-1217)|
+1,651,648,298,0,0,0,0,0,128,0,-1--1--1,,1|(1802,-1281)|
+1,652,649,301,0,0,0,0,0,128,0,-1--1--1,,1|(1661,-1612)|
+1,653,649,302,0,0,0,0,0,128,0,-1--1--1,,1|(1802,-1548)|
+12,654,0,2089,-1160,184,79,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 We disallow early economic retirement of technologies whose cost is below the average in the current year, even if they are farther below the mean price in the BAU case than they are in the policy case.  (This prevents a situation where the mean declines because lots of cheap renewables go on the grid, causing cheap sources like solar or wind to retire because they are becoming less-cheap relative to the mean in the policy case than they were in the BAU case.)
-10,655,WUbPPT Water Withdrawals by Power Plant Type,4615,-787,73,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,656,WUbPPT Water Consumption by Power Plant Type,4616,-539,75,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,657,Electricity Generation by Type,4884,-664,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,658,Water Withdrawn by Power Plants,4884,-787,68,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-10,659,Water Consumed by Power Plants,4884,-539,67,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-1,660,656,659,0,0,0,0,0,128,0,-1--1--1,,1|(4747,-539)|
-1,661,655,658,0,0,0,0,0,128,0,-1--1--1,,1|(4745,-787)|
-1,662,657,658,0,0,0,0,0,128,0,-1--1--1,,1|(4884,-718)|
-1,663,657,659,0,0,0,0,0,128,0,-1--1--1,,1|(4884,-608)|
-10,664,Demand Responsive Electricity Capacity for Electrolyzers,6171,-1131,80,28,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,665,664,181,0,0,0,0,0,128,0,-1--1--1,,1|(6285,-1185)|
-10,666,Electricity Generation by Type,4616,-215,76,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,667,Heat Rate by Electricity Fuel,4884,-327,60,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,668,Electricity Fuel Use,4884,-215,53,24,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-1,669,666,668,0,0,0,0,0,64,0,-1--1--1,,1|(4754,-215)|
-1,670,667,668,0,0,0,0,0,64,0,-1--1--1,,1|(4884,-278)|
-10,671,Fuel Used for CCS by Electricity Sector,4884,-95,88,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,672,671,668,0,0,0,0,0,64,0,-1--1--1,,1|(4884,-148)|
-10,673,BAU Expected Capacity Factor x Hours per Year,1344,-1623,84,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,674,BAU Electricity Generation by Type,1344,-1764,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,675,BAU Last Year Electricity Generation by Type,1588,-1764,63,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,676,674,675,0,0,0,0,0,128,0,-1--1--1,,1|(1461,-1764)|
-1,677,673,675,0,0,0,0,0,128,1,-1--1--1,,1|(1451,-1685)|
-1,678,527,675,0,0,0,0,0,128,1,-1--1--1,,1|(1588,-1616)|
-1,679,675,301,0,0,0,0,0,128,0,-1--1--1,,1|(1710,-1764)|
-10,680,Difference in Cost Relative to Mean by Source,3131,-1304,92,24,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,681,680,479,0,0,0,0,0,128,0,-1--1--1,,1|(3131,-1358)|
-10,682,SYC Start Year Electricity Generation Capacity,4295,80,68,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,683,682,208,0,0,0,0,0,128,0,-1--1--1,,1|(4175,12)|
-12,684,0,-516,-952,487,24,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,655,WUbPPT Water Withdrawals by Power Plant Type,4437,-712,73,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,656,WUbPPT Water Consumption by Power Plant Type,4438,-464,75,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,657,Electricity Generation by Type,4706,-589,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,658,Water Withdrawn by Power Plants,4706,-712,68,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+10,659,Water Consumed by Power Plants,4706,-464,67,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+1,660,656,659,0,0,0,0,0,128,0,-1--1--1,,1|(4569,-464)|
+1,661,655,658,0,0,0,0,0,128,0,-1--1--1,,1|(4567,-712)|
+1,662,657,658,0,0,0,0,0,128,0,-1--1--1,,1|(4706,-643)|
+1,663,657,659,0,0,0,0,0,128,0,-1--1--1,,1|(4706,-533)|
+10,664,Demand Responsive Electricity Capacity for Electrolyzers,5993,-1056,80,28,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,665,664,181,0,0,0,0,0,128,0,-1--1--1,,1|(6107,-1110)|
+10,666,Electricity Generation by Type,4438,-140,76,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,667,Heat Rate by Electricity Fuel,4706,-252,60,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,668,Electricity Fuel Use,4706,-140,53,24,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+1,669,666,668,0,0,0,0,0,64,0,-1--1--1,,1|(4576,-140)|
+1,670,667,668,0,0,0,0,0,64,0,-1--1--1,,1|(4706,-203)|
+10,671,Fuel Used for CCS by Electricity Sector,4706,-20,88,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,672,671,668,0,0,0,0,0,64,0,-1--1--1,,1|(4706,-73)|
+10,673,BAU Expected Capacity Factor x Hours per Year,1166,-1548,84,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,674,BAU Electricity Generation by Type,1166,-1689,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,675,BAU Last Year Electricity Generation by Type,1410,-1689,63,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,676,674,675,0,0,0,0,0,128,0,-1--1--1,,1|(1283,-1689)|
+1,677,673,675,0,0,0,0,0,128,1,-1--1--1,,1|(1273,-1610)|
+1,678,527,675,0,0,0,0,0,128,1,-1--1--1,,1|(1410,-1541)|
+1,679,675,301,0,0,0,0,0,128,0,-1--1--1,,1|(1532,-1689)|
+10,680,Difference in Cost Relative to Mean by Source,2953,-1229,92,24,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,681,680,479,0,0,0,0,0,128,0,-1--1--1,,1|(2953,-1283)|
+10,682,SYC Start Year Electricity Generation Capacity,4117,155,68,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,683,682,208,0,0,0,0,0,128,0,-1--1--1,,1|(3997,86)|
+12,684,0,-694,-877,487,24,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Fuel Type Shifting/Retrofitting
-10,685,Electricity Generation Capacity,695,-171,72,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,686,685,445,0,0,0,0,0,128,0,-1--1--1,,1|(816,-234)|
-1,687,685,61,0,0,0,0,0,128,0,-1--1--1,,1|(695,-228)|
-10,688,EoPPFTSwFP Elasticity of Power Plant Fuel Type Shifting wrt Fuel Price,-369,-111,100,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,689,Electricity Generation Capacity before Fuel Type Shifting,-369,-568,81,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,690,217,689,0,0,0,0,0,128,0,-1--1--1,,1|(-226,-568)|
-1,691,224,689,0,0,0,0,0,128,0,-1--1--1,,1|(-369,-652)|
-1,692,207,689,0,1,0,0,0,128,0,-1--1--1,,1|(-263,-656)|
-1,693,689,203,0,0,0,0,0,128,0,-1--1--1,,1|(-242,-421)|
-10,694,Electricity Generation Capacity Shifted,-369,-271,68,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,695,689,694,0,0,0,0,0,128,0,-1--1--1,,1|(-369,-420)|
-1,696,694,203,0,0,0,0,0,128,0,-1--1--1,,1|(-252,-271)|
-10,697,Electricity Generation Capacity Shifted,4143,-1787,73,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,698,697,52,0,0,0,0,0,128,0,-1--1--1,,1|(4224,-1744)|
-1,699,155,52,0,1,0,0,0,128,0,-1--1--1,,1|(4398,-1618)|
-10,700,Dispatch Cost per Unit Electricity Output,-616,-715,80,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,701,BAU Dispatch Cost per Unit Electricity Output,-905,-408,84,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,702,Relative Dispatch Cost per Unit Electricity Output of Each Pair of Plant Types,-616,-568,100,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,703,700,702,0,0,0,0,0,128,0,-1--1--1,,1|(-616,-653)|
-10,704,BAU Relative Dispatch Cost per Unit Electricity Output of Each Pair of Plant Types,-905,-568,97,32,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,705,701,704,0,0,0,0,0,128,0,-1--1--1,,1|(-905,-474)|
-10,706,Change in Relative Dispatch Cost per Unit Electricity Output of Each Pair of Plant Types,-616,-408,104,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,707,704,706,0,0,0,0,0,128,0,-1--1--1,,1|(-764,-489)|
-1,708,702,706,0,0,0,0,0,128,0,-1--1--1,,1|(-616,-495)|
-10,709,Change in Relative Dispatch Cost for Each Pair of Plant Types as Percentage of BAU Dispatch Cost,-905,-271,112,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,710,706,709,0,0,0,0,0,128,0,-1--1--1,,1|(-751,-343)|
-1,711,701,709,0,0,0,0,0,128,0,-1--1--1,,1|(-905,-352)|
-10,712,Perc Shifts in Power Plant Fuel Use,-616,-271,65,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,713,688,712,0,0,0,0,0,128,0,-1--1--1,,1|(-493,-191)|
-1,714,709,712,0,0,0,0,0,128,0,-1--1--1,,1|(-744,-271)|
-1,715,712,694,0,0,0,0,0,128,0,-1--1--1,,1|(-501,-271)|
-10,716,QSfE Quantization Size for Energy,-1984,-2668,68,17,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,717,MWh per BTU,-1984,-2591,60,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,718,717,397,0,0,0,0,0,128,0,-1--1--1,,1|(-1984,-2676)|
-1,719,716,397,0,0,0,0,0,128,0,-1--1--1,,1|(-1984,-2718)|
-10,720,Perc Subsidy for Elec Capacity Construction This Year,-2216,-1264,75,31,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-10,721,Percent Reduction in BAU Subsidies This Year,-1668,-1264,87,19,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-10,722,BS BAU Subsidy per Unit Electricity Capacity Built,-1913,-1264,84,19,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,723,Subsidy per Unit Electricity Capacity Built,-1913,-1404,80,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,724,722,723,0,0,0,0,0,128,0,-1--1--1,,1|(-1913,-1327)|
-1,725,721,723,0,0,0,0,0,128,0,-1--1--1,,1|(-1783,-1330)|
-1,726,720,723,0,0,0,0,0,128,0,-1--1--1,,1|(-2057,-1337)|
-1,727,37,723,0,0,0,0,0,128,0,-1--1--1,,1|(-2060,-1467)|
-12,728,0,-1913,-1211,104,28,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,685,Electricity Generation Capacity,517,-96,72,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,686,685,445,0,0,0,0,0,128,0,-1--1--1,,1|(638,-159)|
+1,687,685,61,0,0,0,0,0,128,0,-1--1--1,,1|(517,-153)|
+10,688,EoPPFTSwFP Elasticity of Power Plant Fuel Type Shifting wrt Fuel Price,-547,-36,100,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,689,Electricity Generation Capacity before Fuel Type Shifting,-547,-493,81,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,690,217,689,0,0,0,0,0,128,0,-1--1--1,,1|(-404,-493)|
+1,691,224,689,0,0,0,0,0,128,0,-1--1--1,,1|(-547,-577)|
+1,692,207,689,0,1,0,0,0,128,0,-1--1--1,,1|(-441,-581)|
+1,693,689,203,0,0,0,0,0,128,0,-1--1--1,,1|(-420,-346)|
+10,694,Electricity Generation Capacity Shifted,-547,-196,68,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,695,689,694,0,0,0,0,0,128,0,-1--1--1,,1|(-547,-345)|
+1,696,694,203,0,0,0,0,0,128,0,-1--1--1,,1|(-430,-196)|
+10,697,Electricity Generation Capacity Shifted,3965,-1712,73,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,698,697,52,0,0,0,0,0,128,0,-1--1--1,,1|(4046,-1669)|
+1,699,155,52,0,1,0,0,0,128,0,-1--1--1,,1|(4220,-1543)|
+10,700,Dispatch Cost per Unit Electricity Output,-794,-640,80,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,701,BAU Dispatch Cost per Unit Electricity Output,-1083,-333,84,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,702,Relative Dispatch Cost per Unit Electricity Output of Each Pair of Plant Types,-794,-493,100,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,703,700,702,0,0,0,0,0,128,0,-1--1--1,,1|(-794,-578)|
+10,704,BAU Relative Dispatch Cost per Unit Electricity Output of Each Pair of Plant Types,-1083,-493,97,32,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,705,701,704,0,0,0,0,0,128,0,-1--1--1,,1|(-1083,-399)|
+10,706,Change in Relative Dispatch Cost per Unit Electricity Output of Each Pair of Plant Types,-794,-333,104,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,707,704,706,0,0,0,0,0,128,0,-1--1--1,,1|(-942,-414)|
+1,708,702,706,0,0,0,0,0,128,0,-1--1--1,,1|(-794,-420)|
+10,709,Change in Relative Dispatch Cost for Each Pair of Plant Types as Percentage of BAU Dispatch Cost,-1083,-196,112,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,710,706,709,0,0,0,0,0,128,0,-1--1--1,,1|(-929,-268)|
+1,711,701,709,0,0,0,0,0,128,0,-1--1--1,,1|(-1083,-277)|
+10,712,Perc Shifts in Power Plant Fuel Use,-794,-196,65,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,713,688,712,0,0,0,0,0,128,0,-1--1--1,,1|(-671,-116)|
+1,714,709,712,0,0,0,0,0,128,0,-1--1--1,,1|(-922,-196)|
+1,715,712,694,0,0,0,0,0,128,0,-1--1--1,,1|(-679,-196)|
+10,716,QSfE Quantization Size for Energy,-2162,-2593,68,17,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,717,MWh per BTU,-2162,-2516,60,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,718,717,397,0,0,0,0,0,128,0,-1--1--1,,1|(-2162,-2601)|
+1,719,716,397,0,0,0,0,0,128,0,-1--1--1,,1|(-2162,-2643)|
+10,720,Perc Subsidy for Elec Capacity Construction This Year,-2394,-1189,75,31,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+10,721,Percent Reduction in BAU Subsidies This Year,-1846,-1189,87,19,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+10,722,BS BAU Subsidy per Unit Electricity Capacity Built,-2091,-1189,84,19,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,723,Subsidy per Unit Electricity Capacity Built,-2091,-1329,80,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,724,722,723,0,0,0,0,0,128,0,-1--1--1,,1|(-2091,-1252)|
+1,725,721,723,0,0,0,0,0,128,0,-1--1--1,,1|(-1961,-1255)|
+1,726,720,723,0,0,0,0,0,128,0,-1--1--1,,1|(-2235,-1262)|
+1,727,37,723,0,0,0,0,0,128,0,-1--1--1,,1|(-2238,-1392)|
+12,728,0,-2091,-1136,104,28,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 The BAU Subsidies variable is found in the "fuels" section of InputData, not the "elec" section.
-10,729,Subsidy per Unit Electricity Output,-540,-1403,56,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,730,BS BAU Subsidy per Unit Electricity Output,-540,-1264,71,19,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12|I|0-0-0,0,0,0,0,0,0
-1,731,730,729,0,0,0,0,0,64,0,-1--1--1,,1|(-540,-1326)|
-10,732,Percent Reduction in BAU Subsidies This Year,-833,-1264,87,19,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-1,733,732,729,0,0,0,0,0,128,0,-1--1--1,,1|(-692,-1330)|
-12,734,0,-540,-1211,104,28,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,729,Subsidy per Unit Electricity Output,-718,-1328,56,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,730,BS BAU Subsidy per Unit Electricity Output,-718,-1189,71,19,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12|I|0-0-0,0,0,0,0,0,0
+1,731,730,729,0,0,0,0,0,64,0,-1--1--1,,1|(-718,-1251)|
+10,732,Percent Reduction in BAU Subsidies This Year,-1011,-1189,87,19,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+1,733,732,729,0,0,0,0,0,128,0,-1--1--1,,1|(-870,-1255)|
+12,734,0,-718,-1136,104,28,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 The BAU Subsidies variable is found in the "fuels" section of InputData, not the "elec" section.
-10,735,Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment,-1984,-3119,96,27,8,130,0,5,-1,0,0,0,128-128-128,128-192-0,|12||128-128-128,0,0,0,0,0,0
-1,736,735,351,0,0,0,0,0,128,0,-1--1--1,,1|(-1984,-3054)|
-10,737,Max New Peaker Capacity Buildable,6300,-3052,60,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,738,453,737,0,0,0,0,0,128,0,-1--1--1,,1|(6300,-3115)|
-10,739,Max Capacity Buildable This Year,6064,-3052,68,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,740,739,737,0,0,0,0,0,128,0,-1--1--1,,1|(6179,-3052)|
-1,741,427,429,0,0,0,0,0,128,0,-1--1--1,,1|(6176,-2771)|
-10,742,EoTCCwTC Elasticity of TCC wrt Transmission Capacity,7848,-1543,77,29,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-1,743,742,744,0,0,0,0,0,128,0,-1--1--1,,1|(7848,-1492)|
-10,744,Percentage Change in Transmission Connectivity Coefficient,7848,-1428,81,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,745,744,459,0,0,0,0,0,128,0,-1--1--1,,1|(7848,-1373)|
-10,746,Capacity before New Peaker Plants,5515,-2932,69,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,747,746,425,0,0,0,0,0,128,0,-1--1--1,,1|(5515,-2859)|
-10,748,Peak Power Demand to Be Met by Season,5800,-2771,77,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,749,748,427,0,0,0,0,0,128,0,-1--1--1,,1|(5931,-2771)|
-10,750,New Generation Capacity to Meet Energy Need,5219,-2932,80,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,751,750,746,0,0,0,0,0,128,0,-1--1--1,,1|(5365,-2932)|
-12,752,0,2672,-3264,368,27,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,735,Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment,-2162,-3044,96,27,8,130,0,5,-1,0,0,0,128-128-128,128-192-0,|12||128-128-128,0,0,0,0,0,0
+1,736,735,351,0,0,0,0,0,128,0,-1--1--1,,1|(-2162,-2979)|
+10,737,Max New Peaker Capacity Buildable,6122,-2977,60,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,738,453,737,0,0,0,0,0,128,0,-1--1--1,,1|(6122,-3040)|
+10,739,Max Capacity Buildable This Year,5886,-2977,68,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,740,739,737,0,0,0,0,0,128,0,-1--1--1,,1|(6001,-2977)|
+1,741,427,429,0,0,0,0,0,128,0,-1--1--1,,1|(5998,-2696)|
+10,742,EoTCCwTC Elasticity of TCC wrt Transmission Capacity,7670,-1468,77,29,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+1,743,742,744,0,0,0,0,0,128,0,-1--1--1,,1|(7670,-1417)|
+10,744,Percentage Change in Transmission Connectivity Coefficient,7670,-1353,81,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,745,744,459,0,0,0,0,0,128,0,-1--1--1,,1|(7670,-1298)|
+10,746,Capacity before New Peaker Plants,5337,-2857,69,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,747,746,425,0,0,0,0,0,128,0,-1--1--1,,1|(5337,-2784)|
+10,748,Peak Power Demand to Be Met by Season,5622,-2696,77,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,749,748,427,0,0,0,0,0,128,0,-1--1--1,,1|(5753,-2696)|
+10,750,New Generation Capacity to Meet Energy Need,5041,-2857,80,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,751,750,746,0,0,0,0,0,128,0,-1--1--1,,1|(5187,-2857)|
+12,752,0,2494,-3189,368,27,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 New Capacity Before Peakers
-12,753,0,4095,-3264,923,27,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,753,0,3917,-3189,923,27,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Finding Peak Power Need
-10,754,Transportation Sector Electricity Demand,3279,-2556,76,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,755,Buildings Sector Net Electricity Demand,3279,-2332,71,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,756,Industrial Sector Electricity Demand,3279,-3056,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,757,Hydrogen Sector Electricity Demand,3279,-2963,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,758,Geoengineering Sector Electricity Demand,3279,-2771,77,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,759,District Heat Electricity Demand,3279,-2868,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,760,ELF Equipment Load Factors for Vehicles,3807,-2655,69,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,761,ELF Equipment Load Factors for Building Components,3807,-2444,69,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,762,ELF Equipment Load Factors by Sector,3807,-3156,69,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,763,Geoengineering Peak Hour Electricity Demand by Season,3807,-2771,101,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,764,Industry Peak Hour Electricity Demand by Season,3807,-3056,100,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,765,Hydrogen Sector Peak Hour Electricity Demand by Season,3807,-2963,100,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,766,District Heat Peak Hour Electricity Demand by Season,3807,-2868,96,21,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,767,Transportation Peak Hour Electricity Demand by Season,3807,-2556,97,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,768,Buildings Peak Hour Electricity Demand by Season,3807,-2332,95,21,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,769,761,768,0,0,0,0,0,128,0,-1--1--1,,1|(3807,-2391)|
-1,770,760,767,0,0,0,0,0,128,0,-1--1--1,,1|(3807,-2614)|
-1,771,762,763,0,0,0,0,0,128,0,-1--1--1,,1|(3807,-2972)|
-1,772,762,764,0,0,0,0,0,128,0,-1--1--1,,1|(3807,-3115)|
-1,773,762,765,0,0,0,0,0,128,0,-1--1--1,,1|(3807,-3068)|
-1,774,762,766,0,0,0,0,0,128,0,-1--1--1,,1|(3807,-3020)|
-10,775,Peak Hour Electricity Demand by Season,4279,-2771,68,19,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,776,764,775,0,0,0,0,0,128,0,-1--1--1,,1|(4040,-2914)|
-1,777,765,775,0,0,0,0,0,128,0,-1--1--1,,1|(4041,-2867)|
-1,778,766,775,0,0,0,0,0,128,0,-1--1--1,,1|(4050,-2817)|
-1,779,763,775,0,0,0,0,0,128,0,-1--1--1,,1|(4052,-2771)|
-1,780,767,775,0,0,0,0,0,128,0,-1--1--1,,1|(4040,-2662)|
-1,781,768,775,0,0,0,0,0,128,0,-1--1--1,,1|(4038,-2547)|
-10,782,RM Reserve Margin,4576,-2876,41,19,8,3,0,4,-1,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,783,Peak Hour Electricity Demand after Reserve Margin,4576,-2772,95,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,784,775,783,0,0,0,0,0,128,0,-1--1--1,,1|(4407,-2771)|
-1,785,782,783,0,0,0,0,0,128,0,-1--1--1,,1|(4576,-2833)|
-10,786,Peak Power Demand after Storage and DR,5800,-2927,73,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,787,786,748,0,0,0,0,0,128,0,-1--1--1,,1|(5800,-2856)|
-1,788,783,449,0,0,0,0,0,128,0,-1--1--1,,1|(4739,-2772)|
-10,789,New Generation Capacity to Meet Energy Need,6591,-3052,80,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,790,789,737,0,0,0,0,0,128,0,-1--1--1,,1|(6442,-3052)|
-1,791,789,491,0,0,0,0,0,128,0,-1--1--1,,1|(6591,-2918)|
-12,792,0,6684,-3264,232,27,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,754,Transportation Sector Electricity Demand,3101,-2481,76,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,755,Buildings Sector Net Electricity Demand,3101,-2257,71,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,756,Industrial Sector Electricity Demand,3101,-2981,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,757,Hydrogen Sector Electricity Demand,3101,-2888,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,758,Geoengineering Sector Electricity Demand,3101,-2696,77,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,759,District Heat Electricity Demand,3101,-2793,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,760,ELF Equipment Load Factors for Vehicles,3629,-2580,69,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,761,ELF Equipment Load Factors for Building Components,3629,-2369,69,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,762,ELF Equipment Load Factors by Sector,3629,-3081,69,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,763,Geoengineering Peak Hour Electricity Demand by Season,3629,-2696,101,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,764,Industry Peak Hour Electricity Demand by Season,3629,-2981,100,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,765,Hydrogen Sector Peak Hour Electricity Demand by Season,3629,-2888,100,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,766,District Heat Peak Hour Electricity Demand by Season,3629,-2793,96,21,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,767,Transportation Peak Hour Electricity Demand by Season,3629,-2481,97,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,768,Buildings Peak Hour Electricity Demand by Season,3629,-2257,95,21,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,769,761,768,0,0,0,0,0,128,0,-1--1--1,,1|(3629,-2316)|
+1,770,760,767,0,0,0,0,0,128,0,-1--1--1,,1|(3629,-2539)|
+1,771,762,763,0,0,0,0,0,128,0,-1--1--1,,1|(3629,-2897)|
+1,772,762,764,0,0,0,0,0,128,0,-1--1--1,,1|(3629,-3040)|
+1,773,762,765,0,0,0,0,0,128,0,-1--1--1,,1|(3629,-2993)|
+1,774,762,766,0,0,0,0,0,128,0,-1--1--1,,1|(3629,-2945)|
+10,775,Peak Hour Electricity Demand by Season,4101,-2696,68,19,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,776,764,775,0,0,0,0,0,128,0,-1--1--1,,1|(3862,-2839)|
+1,777,765,775,0,0,0,0,0,128,0,-1--1--1,,1|(3863,-2792)|
+1,778,766,775,0,0,0,0,0,128,0,-1--1--1,,1|(3872,-2742)|
+1,779,763,775,0,0,0,0,0,128,0,-1--1--1,,1|(3874,-2696)|
+1,780,767,775,0,0,0,0,0,128,0,-1--1--1,,1|(3862,-2587)|
+1,781,768,775,0,0,0,0,0,128,0,-1--1--1,,1|(3860,-2472)|
+10,782,RM Reserve Margin,4398,-2801,41,19,8,3,0,4,-1,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,783,Peak Hour Electricity Demand after Reserve Margin,4398,-2697,95,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,784,775,783,0,0,0,0,0,128,0,-1--1--1,,1|(4229,-2696)|
+1,785,782,783,0,0,0,0,0,128,0,-1--1--1,,1|(4398,-2758)|
+10,786,Peak Power Demand after Storage and DR,5622,-2852,73,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,787,786,748,0,0,0,0,0,128,0,-1--1--1,,1|(5622,-2781)|
+1,788,783,449,0,0,0,0,0,128,0,-1--1--1,,1|(4561,-2697)|
+10,789,New Generation Capacity to Meet Energy Need,6413,-2977,80,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,790,789,737,0,0,0,0,0,128,0,-1--1--1,,1|(6264,-2977)|
+1,791,789,491,0,0,0,0,0,128,0,-1--1--1,,1|(6413,-2843)|
+12,792,0,6506,-3189,232,27,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Summing New Capacity
-10,793,Hours per Year,3532,-3156,59,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,794,Industry Average Hourly Electricity Demand,3532,-3056,88,25,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,795,Hydrogen Sector Average Hourly Electricity Demand,3532,-2963,88,21,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,796,District Heat Average Hourly Electricity Demand,3532,-2868,89,21,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,797,Geoengineering Average Hourly Electricity Demand,3532,-2771,91,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,798,Transportation Average Hourly Electricity Demand,3532,-2556,84,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,799,Buildings Average Hourly Electricity Demand,3532,-2332,84,21,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,800,794,764,0,0,0,0,0,128,0,-1--1--1,,1|(3656,-3056)|
-1,801,795,765,0,0,0,0,0,128,0,-1--1--1,,1|(3656,-2963)|
-1,802,796,766,0,0,0,0,0,128,0,-1--1--1,,1|(3659,-2868)|
-1,803,797,763,0,0,0,0,0,128,0,-1--1--1,,1|(3657,-2771)|
-1,804,798,767,0,0,0,0,0,128,0,-1--1--1,,1|(3656,-2556)|
-1,805,799,768,0,0,0,0,0,128,0,-1--1--1,,1|(3657,-2332)|
-1,806,793,794,0,0,0,0,0,128,0,-1--1--1,,1|(3532,-3120)|
-1,807,793,795,0,0,0,0,0,128,0,-1--1--1,,1|(3532,-3071)|
-1,808,793,796,0,0,0,0,0,128,0,-1--1--1,,1|(3532,-3024)|
-1,809,793,797,0,0,0,0,0,128,0,-1--1--1,,1|(3532,-2976)|
-1,810,793,798,0,0,0,0,0,128,0,-1--1--1,,1|(3532,-2869)|
-1,811,793,799,0,0,0,0,0,128,0,-1--1--1,,1|(3532,-2756)|
-10,812,BPHC BAU Pumped Hydro Capacity,5215,-3040,76,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,813,812,746,0,0,0,0,0,128,0,-1--1--1,,1|(5357,-2988)|
-1,814,755,799,0,0,0,0,0,128,0,-1--1--1,,1|(3392,-2332)|
-1,815,754,798,0,0,0,0,0,128,0,-1--1--1,,1|(3394,-2556)|
-1,816,758,797,0,0,0,0,0,128,0,-1--1--1,,1|(3391,-2771)|
-1,817,759,796,0,0,0,0,0,128,0,-1--1--1,,1|(3386,-2868)|
-1,818,757,795,0,0,0,0,0,128,0,-1--1--1,,1|(3387,-2963)|
-1,819,756,794,0,0,0,0,0,128,0,-1--1--1,,1|(3387,-3056)|
-10,820,This Year Solar and Wind Hard Costs as Fraction of First Year Hard Costs,-1956,-1683,93,32,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-10,821,CCaMC BAU Soft Costs per Unit Capacity,-2493,-1535,77,19,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,822,First Year Hard Costs per Unit Capacity,-2496,-1404,71,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,823,821,822,0,0,0,0,0,128,1,-1--1--1,,1|(-2493,-1476)|
-1,824,11,822,0,0,0,0,0,128,1,-1--1--1,,1|(-2347,-1404)|
-10,825,Percent Reduction in Soft Costs of Capacity Construction This Year,-2493,-1820,88,28,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-10,826,Soft Costs per Unit Capacity,-2493,-1683,64,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,827,825,826,0,0,0,0,0,128,0,-1--1--1,,1|(-2493,-1754)|
-1,828,821,826,0,0,0,0,0,128,0,-1--1--1,,1|(-2493,-1602)|
-1,829,826,37,0,0,0,0,0,128,0,-1--1--1,,1|(-2369,-1616)|
-1,830,822,37,0,0,0,0,0,128,0,-1--1--1,,1|(-2371,-1462)|
-1,831,820,37,0,0,0,0,0,128,0,-1--1--1,,1|(-2082,-1610)|
-10,832,FSCaFoCC Fuel Shifting Cost as Fraction of Construction Cost,-616,-111,85,28,8,2,0,3,-1,0,0,0,128-128-128,255-128-192,|12||128-128-128,0,0,0,0,0,0
-1,833,832,712,0,0,0,0,0,128,0,-1--1--1,,1|(-616,-188)|
-12,834,0,-752,0,255,57,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+10,793,Hours per Year,3354,-3081,59,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,794,Industry Average Hourly Electricity Demand,3354,-2981,88,25,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,795,Hydrogen Sector Average Hourly Electricity Demand,3354,-2888,88,21,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,796,District Heat Average Hourly Electricity Demand,3354,-2793,89,21,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,797,Geoengineering Average Hourly Electricity Demand,3354,-2696,91,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,798,Transportation Average Hourly Electricity Demand,3354,-2481,84,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,799,Buildings Average Hourly Electricity Demand,3354,-2257,84,21,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,800,794,764,0,0,0,0,0,128,0,-1--1--1,,1|(3478,-2981)|
+1,801,795,765,0,0,0,0,0,128,0,-1--1--1,,1|(3478,-2888)|
+1,802,796,766,0,0,0,0,0,128,0,-1--1--1,,1|(3481,-2793)|
+1,803,797,763,0,0,0,0,0,128,0,-1--1--1,,1|(3479,-2696)|
+1,804,798,767,0,0,0,0,0,128,0,-1--1--1,,1|(3478,-2481)|
+1,805,799,768,0,0,0,0,0,128,0,-1--1--1,,1|(3479,-2257)|
+1,806,793,794,0,0,0,0,0,128,0,-1--1--1,,1|(3354,-3045)|
+1,807,793,795,0,0,0,0,0,128,0,-1--1--1,,1|(3354,-2996)|
+1,808,793,796,0,0,0,0,0,128,0,-1--1--1,,1|(3354,-2949)|
+1,809,793,797,0,0,0,0,0,128,0,-1--1--1,,1|(3354,-2901)|
+1,810,793,798,0,0,0,0,0,128,0,-1--1--1,,1|(3354,-2794)|
+1,811,793,799,0,0,0,0,0,128,0,-1--1--1,,1|(3354,-2681)|
+10,812,BPHC BAU Pumped Hydro Capacity,5037,-2965,76,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,813,812,746,0,0,0,0,0,128,0,-1--1--1,,1|(5179,-2913)|
+1,814,755,799,0,0,0,0,0,128,0,-1--1--1,,1|(3214,-2257)|
+1,815,754,798,0,0,0,0,0,128,0,-1--1--1,,1|(3216,-2481)|
+1,816,758,797,0,0,0,0,0,128,0,-1--1--1,,1|(3213,-2696)|
+1,817,759,796,0,0,0,0,0,128,0,-1--1--1,,1|(3208,-2793)|
+1,818,757,795,0,0,0,0,0,128,0,-1--1--1,,1|(3209,-2888)|
+1,819,756,794,0,0,0,0,0,128,0,-1--1--1,,1|(3209,-2981)|
+10,820,This Year Solar and Wind Hard Costs as Fraction of First Year Hard Costs,-2134,-1608,93,32,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+10,821,CCaMC BAU Soft Costs per Unit Capacity,-2671,-1460,77,19,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,822,First Year Hard Costs per Unit Capacity,-2674,-1329,71,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,823,821,822,0,0,0,0,0,128,1,-1--1--1,,1|(-2671,-1401)|
+1,824,11,822,0,0,0,0,0,128,1,-1--1--1,,1|(-2525,-1329)|
+10,825,Percent Reduction in Soft Costs of Capacity Construction This Year,-2671,-1745,88,28,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+10,826,Soft Costs per Unit Capacity,-2671,-1608,64,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,827,825,826,0,0,0,0,0,128,0,-1--1--1,,1|(-2671,-1679)|
+1,828,821,826,0,0,0,0,0,128,0,-1--1--1,,1|(-2671,-1527)|
+1,829,826,37,0,0,0,0,0,128,0,-1--1--1,,1|(-2547,-1541)|
+1,830,822,37,0,0,0,0,0,128,0,-1--1--1,,1|(-2549,-1387)|
+1,831,820,37,0,0,0,0,0,128,0,-1--1--1,,1|(-2260,-1535)|
+10,832,FSCaFoCC Fuel Shifting Cost as Fraction of Construction Cost,-794,-36,85,28,8,2,0,3,-1,0,0,0,128-128-128,255-128-192,|12||128-128-128,0,0,0,0,0,0
+1,833,832,712,0,0,0,0,0,128,0,-1--1--1,,1|(-794,-113)|
+12,834,0,-930,75,255,57,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 If the fuel shift involves no capital cost (i.e. it's a drop-in fuel replacement, not a retrofit), we only compare the dispatch costs.  If it is a retrofit, we also check to ensure the plant type being retrofitted TO is not uneconomic, because it would be unlikely for a utility to secure financing and retrofit a plant to a type that's going to lose money (even if the loss rate is slower than the pre-retrofit loss rate).  Instead of paying for the retrofit, they'd likely build a plant type that will not lose money.
-10,835,Is Plant Type Subject to Economic Early Retirement,2368,-1356,88,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
-1,836,304,835,0,0,0,0,0,128,0,-1--1--1,,1|(2231,-1432)|
-1,837,298,835,0,0,0,0,0,128,0,-1--1--1,,1|(2213,-1356)|
-1,838,835,310,0,0,0,0,0,128,0,-1--1--1,,1|(2368,-1423)|
-10,839,Is Plant Type Subject to Economic Early Retirement,-905,-111,91,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,840,839,712,0,0,0,0,0,128,0,-1--1--1,,1|(-766,-187)|
-10,841,GBSC Potential Additional Grid Battery Storage Capacity,5396,-1291,77,28,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-1,842,185,611,0,0,0,0,0,128,0,-1--1--1,,1|(5285,-1184)|
-1,843,841,611,0,0,0,0,0,128,0,-1--1--1,,1|(5396,-1240)|
-1,844,612,611,0,0,0,0,0,128,0,-1--1--1,,1|(5396,-1111)|
-10,845,Exported Electricity,3223,-728,76,13,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,846,BIEfEE Boolean Include Emissions from Exported Electricity,3108,-315,83,28,8,2,0,5,-1,0,0,0,128-128-128,128-192-0,|12||128-128-128,0,0,0,0,0,0
-10,847,Percentage of Generated Electricity that is Exported,3223,-583,83,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,848,34,847,0,0,0,0,0,128,0,-1--1--1,,1|(3099,-656)|
-1,849,845,847,0,0,0,0,0,128,0,-1--1--1,,1|(3223,-665)|
-10,850,Perc Change in In Scope Emissions due to Electricity Exports,3223,-184,73,33,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,851,847,850,0,0,0,0,0,128,0,-1--1--1,,1|(3223,-397)|
-1,852,846,850,0,0,0,0,0,128,0,-1--1--1,,1|(3158,-257)|
-1,853,850,21,0,0,0,0,0,128,0,-1--1--1,,1|(3099,-112)|
-10,854,Absolute Change in In Scope Emissions due to Electricity Imports,2732,-43,76,29,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0,0,0,0,0,0,0
-1,855,586,854,0,0,0,0,0,128,0,-1--1--1,,1|(2613,-43)|
-1,856,585,854,0,0,0,0,0,128,0,-1--1--1,,1|(2732,30)|
-1,857,854,21,0,0,0,0,0,128,0,-1--1--1,,1|(2852,-43)|
-1,858,821,37,0,0,0,0,0,128,0,-1--1--1,,1|(-2371,-1535)|
-10,859,Boolean Use Non BAU Capacity Retirement Schedule This Year,4764,-1199,88,28,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
-10,860,CRbQ Capacity Retirements before Quantization,4764,-1331,60,28,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-10,861,Capacity Retirements before Quantization from Selected Schedule,4543,-1331,75,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,862,861,575,0,0,0,0,0,128,0,-1--1--1,,1|(4434,-1331)|
-1,863,54,861,0,0,0,0,0,128,0,-1--1--1,,1|(4543,-1258)|
-1,864,860,861,0,0,0,0,0,128,0,-1--1--1,,1|(4668,-1331)|
-1,865,859,861,0,0,0,0,0,128,0,-1--1--1,,1|(4659,-1261)|
-1,866,861,166,0,0,0,0,0,128,0,-1--1--1,,1|(4543,-1394)|
-10,867,ETLE Electricity Technology Logit Exponent,1199,-2544,56,28,8,3,0,4,-1,0,0,0,-1--1--1,255-128-192,|12||128-128-128,0,0,0,0,0,0
-10,868,ETS Electricity Technology Shareweights,1199,-2399,48,28,8,3,0,4,-1,0,0,0,-1--1--1,192-128-192,|12||128-128-128,0,0,0,0,0,0
-10,869,RPS Electricity Technology Shareweights after Buildable Output Constraints,939,-2544,91,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,870,159,869,0,0,0,0,0,128,0,-1--1--1,,1|(800,-2616)|
-1,871,868,869,0,0,0,0,0,128,0,-1--1--1,,1|(1077,-2466)|
-1,872,14,869,0,0,0,0,0,128,0,-1--1--1,,1|(939,-2462)|
-1,873,869,1,0,0,0,0,0,128,0,-1--1--1,,1|(939,-2610)|
-1,874,867,1,0,0,0,0,0,128,0,-1--1--1,,1|(1070,-2613)|
-10,875,Cost per Unit New Elec Output,1199,-2684,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,876,875,1,0,0,0,0,0,128,0,-1--1--1,,1|(1082,-2684)|
-10,877,Electricity Technology Shareweights after Capacity Constraints and RPS,1933,-2667,89,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,878,15,877,0,0,0,0,0,128,0,-1--1--1,,1|(1933,-2590)|
-1,879,877,2,0,0,0,0,0,64,0,-1--1--1,,1|(1933,-2720)|
-10,880,ETLE Electricity Technology Logit Exponent,6300,-2629,63,28,8,130,0,3,-1,0,0,0,128-128-128,255-0-0,|12||128-128-128,0,0,0,0,0,0
-10,881,ETS Electricity Technology Shareweights,6064,-2927,53,28,8,2,0,3,-1,0,0,0,128-128-128,255-0-0,|12||128-128-128,0,0,0,0,0,0
-10,882,Cost per Unit New Elec Output,6064,-2641,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,883,Electricity Technology Shareweights for Peaker Capacity,6300,-2927,80,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,884,427,883,0,0,0,0,0,128,0,-1--1--1,,1|(6168,-2840)|
-1,885,737,883,0,0,0,0,0,128,0,-1--1--1,,1|(6300,-3001)|
-1,886,881,883,0,0,0,0,0,128,0,-1--1--1,,1|(6161,-2927)|
-1,887,880,429,0,0,0,0,0,128,0,-1--1--1,,1|(6300,-2697)|
-1,888,882,429,0,0,0,0,0,128,0,-1--1--1,,1|(6175,-2702)|
-1,889,883,429,0,0,0,0,0,64,0,-1--1--1,,1|(6300,-2851)|
-10,890,Electricity Allocation Unit Correction,775,-2747,68,19,8,3,1,4,0,0,0,0,-1--1--1,192-255-192,|12||0-0-0,0,0,0,0,0,0
-1,891,890,1,0,1,0,0,0,128,0,-1--1--1,,1|(844,-2719)|
-10,892,Electricity Allocation Unit Correction,2109,-2849,72,19,8,2,1,3,-1,0,0,0,128-128-128,255-0-0,|12||128-128-128,0,0,0,0,0,0
-1,893,892,2,0,1,0,0,0,128,0,-1--1--1,,1|(2034,-2820)|
-10,894,Electricity Allocation Unit Correction,6404,-2836,72,19,8,2,1,3,-1,0,0,0,128-128-128,255-0-0,|12||128-128-128,0,0,0,0,0,0
-1,895,894,429,0,1,0,0,0,128,0,-1--1--1,,1|(6357,-2807)|
-10,896,ETLE Electricity Technology Logit Exponent,1933,-2897,59,32,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,897,896,2,0,0,0,0,0,128,0,-1--1--1,,1|(1933,-2843)|
-10,898,ETS Electricity Technology Shareweights,2164,-2667,53,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,899,898,877,0,0,0,0,0,128,0,-1--1--1,,1|(2073,-2667)|
-10,900,Cost per Unit New Elec Output,1696,-2897,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,901,900,2,0,0,0,0,0,128,0,-1--1--1,,1|(1802,-2846)|
-1,902,18,877,0,0,0,0,0,128,0,-1--1--1,,1|(1424,-2726)|
-10,903,BRPSPTY BAU Renewable Portfolio Std Percentage This Year,662,-2132,81,28,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-1,904,903,284,0,0,0,0,0,128,0,-1--1--1,,1|(542,-2132)|
-1,905,903,286,0,0,0,0,0,128,0,-1--1--1,,1|(557,-2194)|
-10,906,INITIAL TIME,212,-2328,60,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,907,906,289,0,1,0,0,0,128,0,-1--1--1,,1|(212,-2310)|
-10,908,One Year,296,-2192,43,11,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,909,908,607,0,1,0,0,0,64,0,-1--1--1,,1|(266,-2170)|
-1,910,289,607,0,0,0,0,0,128,0,-1--1--1,,1|(212,-2203)|
-10,911,Quantization Size for Electricity,4295,-623,66,19,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
-10,912,MWh per BTU,4024,-546,58,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,913,912,911,0,0,0,0,0,0,0,-1--1--1,,1|(4138,-578)|
-10,914,QSfE Quantization Size for Energy,4024,-623,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-1,915,914,911,0,0,0,0,0,0,0,-1--1--1,,1|(4152,-623)|
-1,916,911,191,0,0,0,0,0,128,0,-1--1--1,,1|(4295,-668)|
-10,917,Fraction of Buildable Capacity Actually Built,4295,-407,73,19,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
-1,918,394,917,0,0,0,0,0,128,0,-1--1--1,,1|(4295,-462)|
-1,919,393,917,0,0,0,0,0,128,0,-1--1--1,,1|(4150,-407)|
-10,920,One Year,4146,-468,43,11,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
-1,921,920,917,0,1,0,0,0,64,0,-1--1--1,,1|(4203,-444)|
-10,922,Electricity Dispatched by Least Cost,2747,-855,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-1,923,922,34,0,0,0,0,0,128,0,-1--1--1,,1|(2851,-797)|
-10,924,This Year Demand Response Capacity,1196,-589,67,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,925,Hours per Year,1354,-589,36,25,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,926,This Year Reduction in Peaker Output from Demand Response,1196,-495,93,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,927,924,926,0,0,0,0,0,128,0,-1--1--1,,1|(1196,-553)|
-1,928,925,926,0,0,0,0,0,128,0,-1--1--1,,1|(1286,-549)|
-10,929,DRCF Demand Response Capacity Factor,1196,-414,62,28,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
-1,930,929,926,0,0,0,0,0,128,0,-1--1--1,,1|(1196,-447)|
-10,931,Minimum Guaranteed Output for Peakers After Demand Response,952,-494,93,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,932,445,931,0,0,0,0,0,128,0,-1--1--1,,1|(952,-387)|
-1,933,931,84,0,0,0,0,0,128,0,-1--1--1,,1|(823,-593)|
-1,934,926,931,0,0,0,0,0,128,0,-1--1--1,,1|(1080,-494)|
-10,935,Potential Electricity Output moved to Vector for Allocation,1768,-691,102,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,936,172,935,0,0,0,0,0,128,0,-1--1--1,,1|(1768,-765)|
-10,937,Dispatch Cost per Unit Electricity Output before Subsidies,2012,-171,78,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,938,Dispatch Cost per Unit Output moved to Vector for Allocation,1768,-304,90,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,939,643,938,0,0,0,0,0,128,0,-1--1--1,,1|(1768,-226)|
-10,940,Dispatch Cost per Unit Output before Subsidies moved to Vector for Allocation,2012,-304,97,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,941,937,940,0,0,0,0,0,128,0,-1--1--1,,1|(2012,-230)|
-10,942,NSDoDC Normalized Std Dev of Dispatch Costs,1540,-171,85,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,943,Normalized Std Dev of Dispatch Costs moved to Vector for Allocation,1540,-304,81,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,944,942,943,0,0,0,0,0,128,0,-1--1--1,,1|(1540,-226)|
-10,945,Least Cost Dispatch Priority Profile,1768,-442,65,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,946,943,945,0,0,0,0,0,128,0,-1--1--1,,1|(1655,-373)|
-1,947,938,945,0,0,0,0,0,128,0,-1--1--1,,1|(1768,-370)|
-1,948,940,945,0,0,0,0,0,128,0,-1--1--1,,1|(1888,-374)|
-10,949,Electricity Priority Profile Unit Correction Factor,2012,-442,79,19,8,3,0,4,0,0,0,0,-1--1--1,192-255-192,|12||0-0-0,0,0,0,0,0,0
-1,950,949,945,0,0,0,0,0,128,0,-1--1--1,,1|(1890,-442)|
-10,951,Electricity Dispatched by Least Cost in One Vector,1768,-578,82,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,952,935,951,0,0,0,0,0,128,0,-1--1--1,,1|(1768,-641)|
-1,953,945,951,0,0,0,0,0,128,0,-1--1--1,,1|(1768,-503)|
-1,954,91,951,0,0,0,0,0,128,0,-1--1--1,,1|(1647,-637)|
-1,955,951,70,0,0,0,0,0,128,0,-1--1--1,,1|(1889,-578)|
-10,956,HELF Hourly Equipment Load Factors,160,624,80,23,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,957,Transportation Sector Electricity Demand,261,-2284,92,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,958,Buildings Sector Net Electricity Demand,261,-2211,83,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,959,Industrial Sector Electricity Demand,261,-2138,84,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,960,Hydrogen Sector Electricity Demand,261,-2066,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,961,Geoengineering Sector Electricity Demand,261,-1911,77,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,962,District Heat Electricity Demand,261,-1991,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,963,Transportation Sector Electricity Demand,368,139,92,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,964,Buildings Sector Net Electricity Demand,368,213,83,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,965,Industrial Sector Electricity Demand,368,291,84,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,966,Hydrogen Sector Electricity Demand,368,368,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,967,Geoengineering Sector Electricity Demand,368,512,77,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,968,District Heat Electricity Demand,368,440,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,969,Total Electricity Demand by Hour,368,624,56,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,970,956,969,0,0,0,0,0,128,0,-1--1--1,,1|(269,624)|
-1,971,967,969,0,0,0,0,0,128,0,-1--1--1,,1|(368,561)|
-1,972,968,969,0,0,0,0,0,128,0,-1--1--1,,1|(368,525)|
-1,973,966,969,0,0,0,0,0,128,0,-1--1--1,,1|(368,489)|
-1,974,965,969,0,0,0,0,0,128,0,-1--1--1,,1|(368,453)|
-1,975,964,969,0,0,0,0,0,128,0,-1--1--1,,1|(368,412)|
-1,976,963,969,0,0,0,0,0,128,0,-1--1--1,,1|(368,375)|
-10,977,Least Cost Dispatch Priority Profile,1395,512,70,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,978,HECF Hourly Electricity Capacity Factors for Wind and Solar,368,967,80,29,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,979,HECF Hourly Electricity Capacity Factors for Hydro,368,1041,89,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,980,HECF Hourly Electricity Capacity Factors for Other Plant Types,368,1115,86,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,981,Hourly Electricity Capacity Factors by Plant Type,368,863,63,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,982,980,981,0,0,0,0,0,128,0,-1--1--1,,1|(368,996)|
-1,983,979,981,0,0,0,0,0,128,0,-1--1--1,,1|(368,964)|
-1,984,978,981,0,0,0,0,0,128,0,-1--1--1,,1|(368,922)|
-10,985,Electricity Generation Capacity,615,967,70,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,986,Available Capacity by Hour,615,863,60,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,987,981,986,0,0,0,0,0,128,0,-1--1--1,,1|(486,863)|
-1,988,985,986,0,0,0,0,0,128,0,-1--1--1,,1|(615,922)|
-10,989,Spare Capacity After Meeting Demand by Hour,615,753,83,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,990,986,989,0,0,0,0,0,128,0,-1--1--1,,1|(615,815)|
-1,991,969,989,0,0,0,0,0,128,0,-1--1--1,,1|(484,685)|
-10,992,Daily Rank of Hours by Spare Capacity,872,753,66,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,993,989,992,0,0,0,0,0,128,0,-1--1--1,,1|(745,753)|
-10,994,Grid Battery Storage Capacity,1129,967,60,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
-10,995,GBSC Grid Battery Daily Storage Duration,872,863,73,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
-10,996,Daily Quantity of Electricity Charged and Discharged by Grid Batteries,1129,863,89,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,997,994,996,0,0,0,0,0,128,0,-1--1--1,,1|(1129,926)|
-1,998,995,996,0,0,0,0,0,128,0,-1--1--1,,1|(985,863)|
-10,999,Change in Electricity Demand due to Grid Battery Charging and Discharging,1129,753,94,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,1000,996,999,0,0,0,0,0,128,0,-1--1--1,,1|(1129,815)|
-1,1001,992,999,0,0,0,0,0,128,0,-1--1--1,,1|(979,753)|
-1,1002,995,999,0,0,0,0,0,128,0,-1--1--1,,1|(983,815)|
-10,1003,Total Electricity Demand After Grid Battery Effects by Hour,1129,624,79,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-1,1004,999,1003,0,0,0,0,0,128,0,-1--1--1,,1|(1129,695)|
-10,1005,Available Capacity by Hour,1395,863,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
-10,1006,Available Capacity by Hour with Collapsed Quality Subscript,1395,753,89,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,1007,1005,1006,0,0,0,0,0,128,0,-1--1--1,,1|(1395,819)|
-1,1008,969,1003,0,0,0,0,0,128,0,-1--1--1,,1|(730,624)|
-10,1009,Electricity Dispatched by Least Cost by Hour,1395,624,79,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,1010,1003,1009,0,0,0,0,0,128,0,-1--1--1,,1|(1255,624)|
-1,1011,1006,1009,0,0,0,0,0,128,0,-1--1--1,,1|(1395,691)|
-1,1012,977,1009,0,0,0,0,0,128,0,-1--1--1,,1|(1395,561)|
+10,835,Is Plant Type Subject to Economic Early Retirement,2190,-1281,88,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|12||0-0-0,0,0,0,0,0,0
+1,836,304,835,0,0,0,0,0,128,0,-1--1--1,,1|(2053,-1357)|
+1,837,298,835,0,0,0,0,0,128,0,-1--1--1,,1|(2035,-1281)|
+1,838,835,310,0,0,0,0,0,128,0,-1--1--1,,1|(2190,-1348)|
+10,839,Is Plant Type Subject to Economic Early Retirement,-1083,-36,91,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,840,839,712,0,0,0,0,0,128,0,-1--1--1,,1|(-944,-112)|
+10,841,GBSC Potential Additional Grid Battery Storage Capacity,5218,-1216,77,28,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+1,842,185,611,0,0,0,0,0,128,0,-1--1--1,,1|(5107,-1109)|
+1,843,841,611,0,0,0,0,0,128,0,-1--1--1,,1|(5218,-1165)|
+1,844,612,611,0,0,0,0,0,128,0,-1--1--1,,1|(5218,-1036)|
+10,845,Exported Electricity,3045,-653,76,13,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,846,BIEfEE Boolean Include Emissions from Exported Electricity,2930,-240,83,28,8,2,0,5,-1,0,0,0,128-128-128,128-192-0,|12||128-128-128,0,0,0,0,0,0
+10,847,Percentage of Generated Electricity that is Exported,3045,-508,83,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,848,34,847,0,0,0,0,0,128,0,-1--1--1,,1|(2921,-581)|
+1,849,845,847,0,0,0,0,0,128,0,-1--1--1,,1|(3045,-590)|
+10,850,Perc Change in In Scope Emissions due to Electricity Exports,3045,-109,73,33,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,851,847,850,0,0,0,0,0,128,0,-1--1--1,,1|(3045,-322)|
+1,852,846,850,0,0,0,0,0,128,0,-1--1--1,,1|(2980,-182)|
+1,853,850,21,0,0,0,0,0,128,0,-1--1--1,,1|(2921,-37)|
+10,854,Absolute Change in In Scope Emissions due to Electricity Imports,2554,32,76,29,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0,0,0,0,0,0,0
+1,855,586,854,0,0,0,0,0,128,0,-1--1--1,,1|(2435,32)|
+1,856,585,854,0,0,0,0,0,128,0,-1--1--1,,1|(2554,105)|
+1,857,854,21,0,0,0,0,0,128,0,-1--1--1,,1|(2674,32)|
+1,858,821,37,0,0,0,0,0,128,0,-1--1--1,,1|(-2549,-1460)|
+10,859,Boolean Use Non BAU Capacity Retirement Schedule This Year,4586,-1124,88,28,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|12||128-128-128,0,0,0,0,0,0
+10,860,CRbQ Capacity Retirements before Quantization,4586,-1256,60,28,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+10,861,Capacity Retirements before Quantization from Selected Schedule,4365,-1256,75,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,862,861,575,0,0,0,0,0,128,0,-1--1--1,,1|(4256,-1256)|
+1,863,54,861,0,0,0,0,0,128,0,-1--1--1,,1|(4365,-1183)|
+1,864,860,861,0,0,0,0,0,128,0,-1--1--1,,1|(4490,-1256)|
+1,865,859,861,0,0,0,0,0,128,0,-1--1--1,,1|(4481,-1186)|
+1,866,861,166,0,0,0,0,0,128,0,-1--1--1,,1|(4365,-1319)|
+10,867,ETLE Electricity Technology Logit Exponent,1021,-2469,56,28,8,3,0,4,-1,0,0,0,-1--1--1,255-128-192,|12||128-128-128,0,0,0,0,0,0
+10,868,ETS Electricity Technology Shareweights,1021,-2324,48,28,8,3,0,4,-1,0,0,0,-1--1--1,192-128-192,|12||128-128-128,0,0,0,0,0,0
+10,869,RPS Electricity Technology Shareweights after Buildable Output Constraints,761,-2469,91,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,870,159,869,0,0,0,0,0,128,0,-1--1--1,,1|(622,-2541)|
+1,871,868,869,0,0,0,0,0,128,0,-1--1--1,,1|(899,-2391)|
+1,872,14,869,0,0,0,0,0,128,0,-1--1--1,,1|(761,-2387)|
+1,873,869,1,0,0,0,0,0,128,0,-1--1--1,,1|(761,-2535)|
+1,874,867,1,0,0,0,0,0,128,0,-1--1--1,,1|(892,-2538)|
+10,875,Cost per Unit New Elec Output,1021,-2609,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,876,875,1,0,0,0,0,0,128,0,-1--1--1,,1|(904,-2609)|
+10,877,Electricity Technology Shareweights after Capacity Constraints and RPS,1755,-2592,89,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,878,15,877,0,0,0,0,0,128,0,-1--1--1,,1|(1755,-2515)|
+1,879,877,2,0,0,0,0,0,64,0,-1--1--1,,1|(1755,-2645)|
+10,880,ETLE Electricity Technology Logit Exponent,6122,-2554,63,28,8,130,0,3,-1,0,0,0,128-128-128,255-0-0,|12||128-128-128,0,0,0,0,0,0
+10,881,ETS Electricity Technology Shareweights,5886,-2852,53,28,8,2,0,3,-1,0,0,0,128-128-128,255-0-0,|12||128-128-128,0,0,0,0,0,0
+10,882,Cost per Unit New Elec Output,5886,-2566,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,883,Electricity Technology Shareweights for Peaker Capacity,6122,-2852,80,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,884,427,883,0,0,0,0,0,128,0,-1--1--1,,1|(5990,-2765)|
+1,885,737,883,0,0,0,0,0,128,0,-1--1--1,,1|(6122,-2926)|
+1,886,881,883,0,0,0,0,0,128,0,-1--1--1,,1|(5983,-2852)|
+1,887,880,429,0,0,0,0,0,128,0,-1--1--1,,1|(6122,-2622)|
+1,888,882,429,0,0,0,0,0,128,0,-1--1--1,,1|(5997,-2627)|
+1,889,883,429,0,0,0,0,0,64,0,-1--1--1,,1|(6122,-2776)|
+10,890,Electricity Allocation Unit Correction,597,-2672,68,19,8,3,1,4,0,0,0,0,-1--1--1,192-255-192,|12||0-0-0,0,0,0,0,0,0
+1,891,890,1,0,1,0,0,0,128,0,-1--1--1,,1|(666,-2644)|
+10,892,Electricity Allocation Unit Correction,1931,-2774,72,19,8,2,1,3,-1,0,0,0,128-128-128,255-0-0,|12||128-128-128,0,0,0,0,0,0
+1,893,892,2,0,1,0,0,0,128,0,-1--1--1,,1|(1856,-2745)|
+10,894,Electricity Allocation Unit Correction,6226,-2761,72,19,8,2,1,3,-1,0,0,0,128-128-128,255-0-0,|12||128-128-128,0,0,0,0,0,0
+1,895,894,429,0,1,0,0,0,128,0,-1--1--1,,1|(6179,-2732)|
+10,896,ETLE Electricity Technology Logit Exponent,1755,-2822,59,32,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,897,896,2,0,0,0,0,0,128,0,-1--1--1,,1|(1755,-2768)|
+10,898,ETS Electricity Technology Shareweights,1986,-2592,53,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,899,898,877,0,0,0,0,0,128,0,-1--1--1,,1|(1895,-2592)|
+10,900,Cost per Unit New Elec Output,1518,-2822,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,901,900,2,0,0,0,0,0,128,0,-1--1--1,,1|(1624,-2771)|
+1,902,18,877,0,0,0,0,0,128,0,-1--1--1,,1|(1246,-2651)|
+10,903,BRPSPTY BAU Renewable Portfolio Std Percentage This Year,484,-2057,81,28,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+1,904,903,284,0,0,0,0,0,128,0,-1--1--1,,1|(364,-2057)|
+1,905,903,286,0,0,0,0,0,128,0,-1--1--1,,1|(378,-2119)|
+10,906,INITIAL TIME,34,-2253,60,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,907,906,289,0,1,0,0,0,128,0,-1--1--1,,1|(34,-2235)|
+10,908,One Year,118,-2117,43,11,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,909,908,607,0,1,0,0,0,64,0,-1--1--1,,1|(87,-2095)|
+1,910,289,607,0,0,0,0,0,128,0,-1--1--1,,1|(34,-2128)|
+10,911,Quantization Size for Electricity,4117,-548,66,19,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,912,MWh per BTU,3846,-471,58,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,913,912,911,0,0,0,0,0,0,0,-1--1--1,,1|(3960,-503)|
+10,914,QSfE Quantization Size for Energy,3846,-548,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,915,914,911,0,0,0,0,0,0,0,-1--1--1,,1|(3974,-548)|
+1,916,911,191,0,0,0,0,0,128,0,-1--1--1,,1|(4117,-593)|
+10,917,Fraction of Buildable Capacity Actually Built,4117,-332,73,19,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|12||0-0-0,0,0,0,0,0,0
+1,918,394,917,0,0,0,0,0,128,0,-1--1--1,,1|(4117,-387)|
+1,919,393,917,0,0,0,0,0,128,0,-1--1--1,,1|(3972,-332)|
+10,920,One Year,3968,-393,43,11,8,2,1,19,-1,0,0,0,128-128-128,0-0-0,|12|I|128-128-128,0,0,0,0,0,0
+1,921,920,917,0,1,0,0,0,64,0,-1--1--1,,1|(4025,-369)|
+10,922,Electricity Dispatched by Least Cost,2569,-780,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+1,923,922,34,0,0,0,0,0,128,0,-1--1--1,,1|(2673,-722)|
+10,924,This Year Demand Response Capacity,1018,-514,67,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,925,Hours per Year,1176,-514,36,25,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,926,This Year Reduction in Peaker Output from Demand Response,1018,-420,93,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,927,924,926,0,0,0,0,0,128,0,-1--1--1,,1|(1018,-478)|
+1,928,925,926,0,0,0,0,0,128,0,-1--1--1,,1|(1108,-474)|
+10,929,DRCF Demand Response Capacity Factor,1018,-339,62,28,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|12||0-0-0,0,0,0,0,0,0
+1,930,929,926,0,0,0,0,0,128,0,-1--1--1,,1|(1018,-372)|
+10,931,Minimum Guaranteed Output for Peakers After Demand Response,774,-419,93,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,932,445,931,0,0,0,0,0,128,0,-1--1--1,,1|(774,-312)|
+1,933,931,84,0,0,0,0,0,128,0,-1--1--1,,1|(645,-518)|
+1,934,926,931,0,0,0,0,0,128,0,-1--1--1,,1|(902,-419)|
+10,935,Potential Electricity Output moved to Vector for Allocation,1590,-616,102,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,936,172,935,0,0,0,0,0,128,0,-1--1--1,,1|(1590,-690)|
+10,937,Dispatch Cost per Unit Electricity Output before Subsidies,1834,-96,78,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,938,Dispatch Cost per Unit Output moved to Vector for Allocation,1590,-229,90,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,939,643,938,0,0,0,0,0,128,0,-1--1--1,,1|(1590,-151)|
+10,940,Dispatch Cost per Unit Output before Subsidies moved to Vector for Allocation,1834,-229,97,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,941,937,940,0,0,0,0,0,128,0,-1--1--1,,1|(1834,-155)|
+10,942,NSDoDC Normalized Std Dev of Dispatch Costs,1362,-96,85,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,943,Normalized Std Dev of Dispatch Costs moved to Vector for Allocation,1362,-229,81,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,944,942,943,0,0,0,0,0,128,0,-1--1--1,,1|(1362,-151)|
+10,945,Least Cost Dispatch Priority Profile,1590,-367,65,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,946,943,945,0,0,0,0,0,128,0,-1--1--1,,1|(1477,-298)|
+1,947,938,945,0,0,0,0,0,128,0,-1--1--1,,1|(1590,-295)|
+1,948,940,945,0,0,0,0,0,128,0,-1--1--1,,1|(1710,-299)|
+10,949,Electricity Priority Profile Unit Correction Factor,1834,-367,79,19,8,3,0,4,0,0,0,0,-1--1--1,192-255-192,|12||0-0-0,0,0,0,0,0,0
+1,950,949,945,0,0,0,0,0,128,0,-1--1--1,,1|(1712,-367)|
+10,951,Electricity Dispatched by Least Cost in One Vector,1590,-503,82,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,952,935,951,0,0,0,0,0,128,0,-1--1--1,,1|(1590,-566)|
+1,953,945,951,0,0,0,0,0,128,0,-1--1--1,,1|(1590,-428)|
+1,954,91,951,0,0,0,0,0,128,0,-1--1--1,,1|(1469,-562)|
+1,955,951,70,0,0,0,0,0,128,0,-1--1--1,,1|(1711,-503)|
+10,956,HELF Hourly Equipment Load Factors,-18,699,80,23,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,957,Transportation Sector Electricity Demand,190,214,92,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,958,Buildings Sector Net Electricity Demand,190,288,83,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,959,Industrial Sector Electricity Demand,190,366,84,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,960,Hydrogen Sector Electricity Demand,190,443,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,961,Geoengineering Sector Electricity Demand,190,587,77,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,962,District Heat Electricity Demand,190,515,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,963,Total Electricity Demand by Hour,190,699,56,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,964,956,963,0,0,0,0,0,128,0,-1--1--1,,1|(91,699)|
+1,965,961,963,0,0,0,0,0,128,0,-1--1--1,,1|(190,636)|
+1,966,962,963,0,0,0,0,0,128,0,-1--1--1,,1|(190,600)|
+1,967,960,963,0,0,0,0,0,128,0,-1--1--1,,1|(190,564)|
+1,968,959,963,0,0,0,0,0,128,0,-1--1--1,,1|(190,528)|
+1,969,958,963,0,0,0,0,0,128,0,-1--1--1,,1|(190,487)|
+1,970,957,963,0,0,0,0,0,128,0,-1--1--1,,1|(190,450)|
+10,971,Least Cost Dispatch Priority Profile,1296,825,70,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,972,HECF Hourly Electricity Capacity Factors for Wind and Solar,1011,207,80,29,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,973,HECF Hourly Electricity Capacity Factors for Hydro,1011,281,89,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,974,HECF Hourly Electricity Capacity Factors for Other Plant Types,1011,355,86,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,975,Hourly Electricity Capacity Factors by Plant Type,1011,443,63,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,976,974,975,0,0,0,0,0,128,0,-1--1--1,,1|(1011,391)|
+1,977,973,975,0,0,0,0,0,128,0,-1--1--1,,1|(1011,350)|
+1,978,972,975,0,0,0,0,0,128,0,-1--1--1,,1|(1011,318)|
+10,979,Electricity Generation Capacity,737,317,70,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,980,Available Capacity by Hour,737,443,60,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,981,975,980,0,0,0,0,0,128,0,-1--1--1,,1|(879,443)|
+1,982,979,980,0,0,0,0,0,128,0,-1--1--1,,1|(737,373)|
+10,983,Spare Capacity After Meeting Demand,461,825,68,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,984,Daily Rank of Hours by Spare Capacity,737,825,66,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,985,Grid Battery Storage Capacity,1011,1041,60,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|12||128-128-128,0,0,0,0,0,0
+10,986,GBSC Grid Battery Daily Storage Duration,737,937,73,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|12||0-0-0,0,0,0,0,0,0
+10,987,Daily Quantity of Electricity Charged and Discharged by Grid Batteries,1011,937,89,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,988,985,987,0,0,0,0,0,128,0,-1--1--1,,1|(1011,1000)|
+1,989,986,987,0,0,0,0,0,128,0,-1--1--1,,1|(859,937)|
+10,990,Change in Electricity Demand due to Grid Battery Charging and Discharging,1011,825,94,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,991,987,990,0,0,0,0,0,128,0,-1--1--1,,1|(1011,888)|
+1,992,984,990,0,0,0,0,0,128,0,-1--1--1,,1|(853,825)|
+1,993,986,990,0,0,0,0,0,128,0,-1--1--1,,1|(856,888)|
+10,994,Unmet Electricity Demand After Grid Battery Effects,1011,699,83,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,995,990,994,0,0,0,0,0,128,0,-1--1--1,,1|(1011,764)|
+10,996,Available Capacity by Hour with Collapsed Quality Subscript,1296,587,89,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,997,Electricity Dispatched by Least Cost by Hour,1296,699,79,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,998,994,997,0,0,0,0,0,128,0,-1--1--1,,1|(1148,699)|
+1,999,996,997,0,0,0,0,0,128,0,-1--1--1,,1|(1296,640)|
+1,1000,971,997,0,0,0,0,0,128,0,-1--1--1,,1|(1296,769)|
+10,1001,Guaranteed Dispatch Percentages for Policy Case,461,319,70,29,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128,0,0,0,0,0,0
+10,1002,Electricity Dispatched via Guaranteed Dispatch,461,587,80,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|0||0-0-0,0,0,0,0,0,0
+10,1005,Available Capacity After Guaranteed Dispatch,737,587,79,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,1006,1002,1005,0,0,0,0,0,128,0,-1--1--1,,1|(592,587)|
+1,1007,980,1005,0,0,0,0,0,128,0,-1--1--1,,1|(737,508)|
+10,1008,Unmet Demand After Guarangeed Dispatch,461,699,69,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,1009,1002,1008,0,0,0,0,0,128,0,-1--1--1,,1|(461,636)|
+1,1010,1008,983,0,0,0,0,0,128,0,-1--1--1,,1|(461,755)|
+1,1011,963,1008,0,0,0,0,0,128,0,-1--1--1,,1|(312,699)|
+1,1013,1008,994,0,0,0,0,0,128,0,-1--1--1,,1|(722,699)|
+1,1014,1005,996,0,0,0,0,0,128,0,-1--1--1,,1|(1004,587)|
+10,1015,Available Capacity After Guaranteed Dispatch,461,937,91,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128,0,0,0,0,0,0
+1,1016,1015,983,0,0,0,0,0,128,0,-1--1--1,,1|(461,887)|
+1,1017,983,984,0,0,0,0,0,128,0,-1--1--1,,1|(593,825)|
+10,1018,Guaranteed Dispatch Amount before Constraints,461,443,67,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,1019,1001,1018,0,0,0,0,0,128,0,-1--1--1,,1|(461,374)|
+1,1020,980,1018,0,0,0,0,0,128,0,-1--1--1,,1|(609,443)|
+1,1021,1018,1002,0,0,0,0,0,128,0,-1--1--1,,1|(461,512)|
+1,1022,963,1002,0,0,0,0,0,64,0,-1--1--1,,1|(318,645)|
+10,1023,Summed Guaranteed Dispatch Amount before Constraints,600,519,68,27,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,1024,1018,1023,0,0,0,0,0,128,0,-1--1--1,,1|(524,478)|
+1,1025,1023,1002,0,0,0,0,0,128,0,-1--1--1,,1|(528,553)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Electricity Supply - BAU
@@ -42975,7 +43050,7 @@ Revenue changes for fuel-supplying cash flow entities should be the same after a
 :L<%^E!@
 1:MostRecentRun.vdfx
 4:Time
-5:Least Cost Dispatch Priority Profile[Power Plant Type by Quality,Priority Profile]
+5:Summed Guaranteed Dispatch Amount before Constraints[Day,Hour]
 6:Acute bronchitis
 6:age 16to19
 6:age 20to24
@@ -45287,6 +45362,216 @@ Revenue changes for fuel-supplying cash flow entities should be the same after a
 6:union
 6:Upper respiratory symptoms
 6:urban residential
+6:Vintage1891
+6:Vintage1892
+6:Vintage1893
+6:Vintage1894
+6:Vintage1895
+6:Vintage1896
+6:Vintage1897
+6:Vintage1898
+6:Vintage1899
+6:Vintage1900
+6:Vintage1901
+6:Vintage1902
+6:Vintage1903
+6:Vintage1904
+6:Vintage1905
+6:Vintage1906
+6:Vintage1907
+6:Vintage1908
+6:Vintage1909
+6:Vintage1910
+6:Vintage1911
+6:Vintage1912
+6:Vintage1913
+6:Vintage1914
+6:Vintage1915
+6:Vintage1916
+6:Vintage1917
+6:Vintage1918
+6:Vintage1919
+6:Vintage1920
+6:Vintage1921
+6:Vintage1922
+6:Vintage1923
+6:Vintage1924
+6:Vintage1925
+6:Vintage1926
+6:Vintage1927
+6:Vintage1928
+6:Vintage1929
+6:Vintage1930
+6:Vintage1931
+6:Vintage1932
+6:Vintage1933
+6:Vintage1934
+6:Vintage1935
+6:Vintage1936
+6:Vintage1937
+6:Vintage1938
+6:Vintage1939
+6:Vintage1940
+6:Vintage1941
+6:Vintage1942
+6:Vintage1943
+6:Vintage1944
+6:Vintage1945
+6:Vintage1946
+6:Vintage1947
+6:Vintage1948
+6:Vintage1949
+6:Vintage1950
+6:Vintage1951
+6:Vintage1952
+6:Vintage1953
+6:Vintage1954
+6:Vintage1955
+6:Vintage1956
+6:Vintage1957
+6:Vintage1958
+6:Vintage1959
+6:Vintage1960
+6:Vintage1961
+6:Vintage1962
+6:Vintage1963
+6:Vintage1964
+6:Vintage1965
+6:Vintage1966
+6:Vintage1967
+6:Vintage1968
+6:Vintage1969
+6:Vintage1970
+6:Vintage1971
+6:Vintage1972
+6:Vintage1973
+6:Vintage1974
+6:Vintage1975
+6:Vintage1976
+6:Vintage1977
+6:Vintage1978
+6:Vintage1979
+6:Vintage1980
+6:Vintage1981
+6:Vintage1982
+6:Vintage1983
+6:Vintage1984
+6:Vintage1985
+6:Vintage1986
+6:Vintage1987
+6:Vintage1988
+6:Vintage1989
+6:Vintage1990
+6:Vintage1991
+6:Vintage1992
+6:Vintage1993
+6:Vintage1994
+6:Vintage1995
+6:Vintage1996
+6:Vintage1997
+6:Vintage1998
+6:Vintage1999
+6:Vintage2000
+6:Vintage2001
+6:Vintage2002
+6:Vintage2003
+6:Vintage2004
+6:Vintage2005
+6:Vintage2006
+6:Vintage2007
+6:Vintage2008
+6:Vintage2009
+6:Vintage2010
+6:Vintage2011
+6:Vintage2012
+6:Vintage2013
+6:Vintage2014
+6:Vintage2015
+6:Vintage2016
+6:Vintage2017
+6:Vintage2018
+6:Vintage2019
+6:Vintage2020
+6:Vintage2021
+6:Vintage2022
+6:Vintage2023
+6:Vintage2024
+6:Vintage2025
+6:Vintage2026
+6:Vintage2027
+6:Vintage2028
+6:Vintage2029
+6:Vintage2030
+6:Vintage2031
+6:Vintage2032
+6:Vintage2033
+6:Vintage2034
+6:Vintage2035
+6:Vintage2036
+6:Vintage2037
+6:Vintage2038
+6:Vintage2039
+6:Vintage2040
+6:Vintage2041
+6:Vintage2042
+6:Vintage2043
+6:Vintage2044
+6:Vintage2045
+6:Vintage2046
+6:Vintage2047
+6:Vintage2048
+6:Vintage2049
+6:Vintage2050
+6:Vintage2051
+6:Vintage2052
+6:Vintage2053
+6:Vintage2054
+6:Vintage2055
+6:Vintage2056
+6:Vintage2057
+6:Vintage2058
+6:Vintage2059
+6:Vintage2060
+6:Vintage2061
+6:Vintage2062
+6:Vintage2063
+6:Vintage2064
+6:Vintage2065
+6:Vintage2066
+6:Vintage2067
+6:Vintage2068
+6:Vintage2069
+6:Vintage2070
+6:Vintage2071
+6:Vintage2072
+6:Vintage2073
+6:Vintage2074
+6:Vintage2075
+6:Vintage2076
+6:Vintage2077
+6:Vintage2078
+6:Vintage2079
+6:Vintage2080
+6:Vintage2081
+6:Vintage2082
+6:Vintage2083
+6:Vintage2084
+6:Vintage2085
+6:Vintage2086
+6:Vintage2087
+6:Vintage2088
+6:Vintage2089
+6:Vintage2090
+6:Vintage2091
+6:Vintage2092
+6:Vintage2093
+6:Vintage2094
+6:Vintage2095
+6:Vintage2096
+6:Vintage2097
+6:Vintage2098
+6:Vintage2099
+6:Vintage2100
 6:VOC
 6:waste management methane capture
 6:waste management methane destruction
@@ -45378,7 +45663,7 @@ Revenue changes for fuel-supplying cash flow entities should be the same after a
 6:Year2099
 6:Year2100
 9:MostRecentRun
-19:70,0
+19:110,7
 24:2020
 25:2050
 26:2050
