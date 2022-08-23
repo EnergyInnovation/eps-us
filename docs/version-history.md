@@ -4,6 +4,13 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **3.4.0.1 - August 23, 2022**
+
+* Data
+  * Recalibrated EV sales shares for freight LDVs and HDVs
+  * Updated BAU CCS amounts in industry based on Rhodium research
+  * Corresponding updates to NDC scenario
+
 ### **3.4.0 - July 28, 2022**
 
 * New Policies
