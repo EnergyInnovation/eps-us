@@ -1,0 +1,514 @@
+{UTF-8}
+Delta[pass1]=
+	(
+	  VMAX(Dispatch Costs[Electricity Source!])
+	  -VMIN(Dispatch Costs[Electricity Source!])
+	)
+	/ 2 ~~|
+Delta[current pass]=
+	IF THEN ELSE(
+	  Number of Jumps in Same Direction by Pass[current pass] <= 2,
+	
+	  Delta[preceeding pass]
+	  / 2,
+	
+	  IF THEN ELSE(
+	    Number of Jumps in Same Direction by Pass[current pass] <= 4,
+	
+	    Delta[preceeding pass],
+	
+	    Delta[preceeding pass]
+	    * 1.5
+	  )
+	)
+	~	
+	~		|
+
+Absolute Value of Offset Dispatch Cost Rescale to Curve Width 0[Electricity Source,Allocation Pass\
+		]=
+	ABS(Offset Dispatch Cost Rescaled to Standard Normal Curve Width 0[Electricity Source\
+		,Allocation Pass])
+	~	
+	~		|
+
+Difference between Allocated and Demanded 0[Allocation Pass]=
+	Total Amount Allocated 0[Allocation Pass]
+	- Electricity Demand
+	~	
+	~		|
+
+Allocated Dispatched Amounts 0[Electricity Source,Allocation Pass]=
+	Shares of Potential Dispatch Under This Dispatch Cost 0[Electricity Source,Allocation Pass\
+		]
+	* Available Output by Plant Type[Electricity Source]
+	~	
+	~		|
+
+Number of Jumps in Same Direction by Pass[pass1]=
+	0 ~~|
+Number of Jumps in Same Direction by Pass[current pass]=
+	IF THEN ELSE(
+	  Difference between Allocated and Demanded 0[preceeding pass]
+	  / ABS(Difference between Allocated and Demanded 0[preceeding pass])
+	  =
+	  Difference between Allocated and Demanded 0[current pass]
+	  / ABS(Difference between Allocated and Demanded 0[current pass]),
+	
+	  Number of Jumps in Same Direction by Pass[preceeding pass] + 1,
+	
+	  0
+	)
+	~	
+	~		|
+
+Offset Dispatch Cost Rescaled to Standard Normal Curve Width 0[Electricity Source,Allocation Pass\
+		]=
+	Dispatch Cost to Test Offset from Zero 0[Electricity Source,Allocation Pass]
+	/ Dispatch Cost Standard Deviations[Electricity Source]
+	~	
+	~		|
+
+Dispatch Cost to Test by Pass[pass1]=
+	(
+	  VMAX(Dispatch Costs[Electricity Source!])
+	  + VMIN(Dispatch Costs[Electricity Source!])
+	)
+	/ 2 ~~|
+Dispatch Cost to Test by Pass[current pass]=
+	IF THEN ELSE(
+	  Difference between Allocated and Demanded 0[preceeding pass] > 0,
+	
+	  Dispatch Cost to Test by Pass[preceeding pass]
+	  - Delta[preceeding pass],
+	
+	  Dispatch Cost to Test by Pass[preceeding pass]
+	  + Delta[preceeding pass]
+	)
+	~	
+	~		|
+
+Total Amount Allocated 0[Allocation Pass]=
+	SUM(Allocated Dispatched Amounts 0[Electricity Source!,Allocation Pass])
+	~	
+	~		|
+
+Dispatch Cost to Test Offset from Zero 0[Electricity Source,Allocation Pass]=
+	Dispatch Cost to Test by Pass[Allocation Pass]
+	- Dispatch Costs[Electricity Source]
+	~	
+	~		|
+
+z 0[Electricity Source,Allocation Pass]=
+	Absolute Value of Offset Dispatch Cost Rescale to Curve Width 0[Electricity Source,Allocation Pass\
+		]
+	~	
+	~		|
+
+Share of Standard Normal Curve Under this Dispatch Cost 0[Electricity Source,Allocation Pass\
+		]=
+	1 -
+	(
+	  EXP((-z 0[Electricity Source,Allocation Pass]^2 / 2))
+	  /
+	  (44/79 + 8/5 * z 0[Electricity Source,Allocation Pass] + 5/6 * SQRT(z 0[Electricity Source\
+		,Allocation Pass]^2 + 3))
+	)
+	~	
+	~	Using CDF equation #21 from Yerukala and Boiroju, International Journal of \
+		Scientific & Engineering Research, Volume 6, Issue 4 (April 2015) at \
+		https://www.ijser.org/researchpaper/Approximations-to-Standard-Normal-Distr\
+		ibution-Function.pdf
+	|
+
+Shares of Potential Dispatch Under This Dispatch Cost 0[Electricity Source,Allocation Pass\
+		]=
+	IF THEN ELSE(
+	  Dispatch Cost to Test Offset from Zero 0[Electricity Source,Allocation Pass] < 0,
+	
+	  1 - Share of Standard Normal Curve Under this Dispatch Cost 0[Electricity Source,Allocation Pass\
+		],
+	
+	  Share of Standard Normal Curve Under this Dispatch Cost 0[Electricity Source,Allocation Pass\
+		]
+	)
+	~	
+	~		|
+
+Share of Standard Normal Curve Under this Dispatch Cost via Severo[Electricity Source\
+		]=
+	1 -
+	(1/SQRT(2 * 3.14159)) * EXP(-z[Electricity Source]^2 / 2)
+	* (
+	      0.319382 * t[Electricity Source]
+	    - 0.356564 * t[Electricity Source]^2
+	    + 1.78148 * t[Electricity Source]^3
+	    - 1.82126 * t[Electricity Source]^4
+	    + 1.33027 * t[Electricity Source]^5
+	  )
+	~	
+	~	Zelen & Severo (1964) in Handbook Of Mathematical Functions, Abramowitz \
+		and Stegun, 26.2.17
+	|
+
+t[Electricity Source]=
+	1 /
+	(1 + 0.231642 * z[Electricity Source])
+	~	
+	~	Zelen & Severo (1964) in Handbook Of Mathematical Functions, Abramowitz \
+		and Stegun, 26.2.17
+	|
+
+Absolute Value of Offset Dispatch Cost Rescale to Curve Width[Electricity Source]=
+	ABS(Offset Dispatch Cost Rescaled to Standard Normal Curve Width[Electricity Source]\
+		)
+	~	
+	~		|
+
+Allocated Dispatched Amounts[Electricity Source]=
+	Shares of Potential Dispatch Under This Dispatch Cost[Electricity Source]
+	* Available Output by Plant Type[Electricity Source]
+	~	
+	~		|
+
+Allocation Pass:
+	(pass1-pass25)
+	~	
+	~		|
+
+Available Output by Plant Type[Electricity Source]=
+	600, {solar}
+	400, {wind}
+	550, {coal}
+	350  {natural gas}
+	~	
+	~		|
+
+current pass:
+	(pass2-pass25)
+	~	
+	~		|
+
+Difference between Allocated and Demanded=
+	Total Amount Allocated
+	- Electricity Demand
+	~	
+	~		|
+
+Dispatch Cost Priority Profile[Electricity Source,ptype]=
+	3 {ptype: normal distribution} ~~|
+Dispatch Cost Priority Profile[Electricity Source,ppriority]=
+	-20, {solar}
+	-15, {wind}
+	-30, {coal}
+	-25  {natural gas}
+	
+	{ppriority: the center point of the normal distribution} ~~|
+Dispatch Cost Priority Profile[Electricity Source,pwidth]=
+	6, {solar}
+	7, {wind}
+	5, {coal}
+	8  {natural gas}
+	
+	{pwidth: the standard deviation of the normal distribution}
+	
+	{We do not allow width to go below 1.  It causes allocation failures if width gets too low (likely below zero).}\
+		 ~~|
+Dispatch Cost Priority Profile[Electricity Source,pextra]=
+	0 {pextra: this value is ignored when using normal distribution curve type}
+	~	
+	~		|
+
+Dispatch Cost Standard Deviations[Electricity Source]=
+	Dispatch Cost Priority Profile[Electricity Source,pwidth]
+	~	
+	~		|
+
+Dispatch Cost to Test=
+	23.633
+	~	 [0,50]
+	~		|
+
+Dispatch Cost to Test Offset from Zero[Electricity Source]=
+	Dispatch Cost to Test
+	- Dispatch Costs[Electricity Source]
+	~	
+	~		|
+
+Dispatch Costs[Electricity Source]=
+	-Dispatch Cost Priority Profile[Electricity Source,ppriority]
+	~	
+	~		|
+
+Dispatch via ALLOCATE AVAILABLE[Electricity Source]=
+	ALLOCATE AVAILABLE(
+	  Available Output by Plant Type[Electricity Source],
+	  Dispatch Cost Priority Profile[Electricity Source,ptype],
+	  Electricity Demand
+	)
+	~	
+	~		|
+
+Electricity Demand=
+	1000
+	~	
+	~		|
+
+Electricity Source:
+	solar,
+	wind,
+	coal,
+	natural gas
+	~	
+	~		|
+
+Offset Dispatch Cost Rescaled to Standard Normal Curve Width[Electricity Source]=
+	Dispatch Cost to Test Offset from Zero[Electricity Source]
+	/ Dispatch Cost Standard Deviations[Electricity Source]
+	~	
+	~		|
+
+preceeding pass:
+	(pass1-pass24)->current pass
+	~	
+	~		|
+
+Priority Profile:
+	ptype,
+	ppriority,
+	pwidth,
+	pextra
+	~	
+	~		|
+
+Share of Standard Normal Curve Under this Dispatch Cost[Electricity Source]=
+	1 -
+	(
+	  EXP((-z[Electricity Source]^2 / 2))
+	  /
+	  (44/79 + 8/5 * z[Electricity Source] + 5/6 * SQRT(z[Electricity Source]^2 + 3))
+	)
+	~	
+	~	Using CDF equation #21 from Yerukala and Boiroju, International Journal of \
+		Scientific & Engineering Research, Volume 6, Issue 4 (April 2015) at \
+		https://www.ijser.org/researchpaper/Approximations-to-Standard-Normal-Distr\
+		ibution-Function.pdf
+	|
+
+Shares of Potential Dispatch Under This Dispatch Cost[Electricity Source]=
+	IF THEN ELSE(
+	  Dispatch Cost to Test Offset from Zero[Electricity Source] < 0,
+	
+	  1 - Share of Standard Normal Curve Under this Dispatch Cost[Electricity Source],
+	
+	  Share of Standard Normal Curve Under this Dispatch Cost[Electricity Source]
+	)
+	~	
+	~		|
+
+Total Amount Allocated=
+	SUM(Allocated Dispatched Amounts[Electricity Source!])
+	~	
+	~		|
+
+z[Electricity Source]=
+	Absolute Value of Offset Dispatch Cost Rescale to Curve Width[Electricity Source]
+	~	
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 1
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,120,0
+10,1,Dispatch Cost Priority Profile,693,-269,46,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,2,Electricity Demand,892,-402,59,11,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,3,Available Output by Plant Type,892,-128,64,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4,Dispatch via ALLOCATE AVAILABLE,892,-269,46,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,5,2,4,0,0,0,0,0,128,0,-1--1--1,,1|(892,-351)|
+1,6,1,4,0,0,0,0,0,128,0,-1--1--1,,1|(785,-269)|
+1,7,3,4,0,0,0,0,0,128,0,-1--1--1,,1|(892,-187)|
+10,8,Dispatch Cost Priority Profile,1361,-298,51,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,12,Dispatch Costs,1546,-234,48,11,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,13,8,12,0,0,0,0,0,128,0,-1--1--1,,1|(1456,-266)|
+10,14,Dispatch Cost Standard Deviations,1540,-340,65,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,15,8,14,0,0,0,0,0,128,0,-1--1--1,,1|(1436,-316)|
+10,16,Dispatch Cost to Test,371,413,54,19,8,131,0,4,0,0,0,0,-1--1--1,192-255-192,|12||0-0-0,0,0,0,0,0,0
+10,17,Dispatch Costs,370,519,57,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,18,Dispatch Cost to Test Offset from Zero,598,412,70,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,19,16,18,0,0,0,0,0,128,0,-1--1--1,,1|(469,412)|
+1,20,17,18,0,0,0,0,0,128,0,-1--1--1,,1|(468,472)|
+10,21,Offset Dispatch Cost Rescaled to Standard Normal Curve Width,847,424,75,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,22,Dispatch Cost Standard Deviations,849,528,69,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,23,22,21,0,0,0,0,0,128,0,-1--1--1,,1|(848,488)|
+1,24,18,21,0,0,0,0,0,128,0,-1--1--1,,1|(713,417)|
+10,25,Share of Standard Normal Curve Under this Dispatch Cost,1491,424,84,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,26,z,1313,424,5,11,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,27,Available Output by Plant Type,1989,538,69,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,28,Allocated Dispatched Amounts,1989,423,67,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|0||0-0-0,0,0,0,0,0,0
+1,29,27,28,0,0,0,0,0,128,0,-1--1--1,,1|(1989,487)|
+10,35,Shares of Potential Dispatch Under This Dispatch Cost,1749,425,66,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,36,Dispatch Cost to Test Offset from Zero,1745,292,74,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,37,36,35,0,0,0,0,0,128,0,-1--1--1,,1|(1746,347)|
+1,38,35,28,0,0,0,0,0,128,0,-1--1--1,,1|(1861,424)|
+10,39,Total Amount Allocated,2194,424,44,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,40,28,39,0,0,0,0,0,128,0,-1--1--1,,1|(2096,423)|
+10,41,Electricity Demand,2409,542,36,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,42,Difference between Allocated and Demanded,2409,428,81,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,43,41,42,0,0,0,0,0,128,0,-1--1--1,,1|(2409,492)|
+1,44,39,42,0,0,0,0,0,128,0,-1--1--1,,1|(2276,424)|
+12,45,0,651,259,334,116,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+Difference
+10,46,Share of Standard Normal Curve Under this Dispatch Cost via Severo,1505,298,84,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,47,t,1314,289,10,11,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,48,Absolute Value of Offset Dispatch Cost Rescale to Curve Width,1105,418,81,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,49,21,48,0,0,0,0,0,128,0,-1--1--1,,1|(966,421)|
+1,50,48,26,0,0,0,0,0,128,0,-1--1--1,,1|(1240,421)|
+1,51,26,25,0,0,0,0,0,128,0,-1--1--1,,1|(1355,424)|
+1,52,25,35,0,0,0,0,0,128,0,-1--1--1,,1|(1622,424)|
+1,53,26,47,0,0,0,0,0,128,0,-1--1--1,,1|(1313,363)|
+1,54,26,46,0,0,0,0,0,128,0,-1--1--1,,1|(1384,377)|
+1,55,47,46,0,0,0,0,0,128,0,-1--1--1,,1|(1365,291)|
+12,56,0,1425,229,173,28,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+Severo's formula is more accurate, but it is more complex and also has more runtime impact (about 1 extra second per 20 million iterations on my laptop)
+10,57,Dispatch Cost to Test by Pass,375,852,54,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,58,17,57,0,0,0,0,0,128,0,-1--1--1,,1|(371,674)|
+10,59,Offset Dispatch Cost Rescaled to Standard Normal Curve Width 0,845,855,77,27,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,60,22,59,0,0,0,0,0,128,0,-1--1--1,,1|(847,680)|
+10,61,Dispatch Cost to Test Offset from Zero 0,599,850,70,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,62,57,61,0,0,0,0,0,128,0,-1--1--1,,1|(472,851)|
+1,63,17,61,0,0,0,0,0,128,0,-1--1--1,,1|(477,674)|
+1,64,61,59,0,0,0,0,0,128,0,-1--1--1,,1|(711,851)|
+10,65,Absolute Value of Offset Dispatch Cost Rescale to Curve Width 0,1103,854,81,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,66,59,65,0,0,0,0,0,128,0,-1--1--1,,1|(965,854)|
+10,67,z 0,1310,861,11,11,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,68,65,67,0,0,0,0,0,128,0,-1--1--1,,1|(1234,857)|
+10,69,Share of Standard Normal Curve Under this Dispatch Cost 0,1478,860,84,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,70,67,69,0,0,0,0,0,128,0,-1--1--1,,1|(1350,860)|
+10,71,Shares of Potential Dispatch Under This Dispatch Cost 0,1744,858,66,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,72,69,71,0,0,0,0,0,128,0,-1--1--1,,1|(1613,859)|
+10,73,Dispatch Cost to Test Offset from Zero 0,1749,980,74,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,74,73,71,0,0,0,0,0,128,0,-1--1--1,,1|(1747,930)|
+10,75,Allocated Dispatched Amounts 0,1985,860,69,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|0||0-0-0,0,0,0,0,0,0
+1,76,71,75,0,0,0,0,0,128,0,-1--1--1,,1|(1856,858)|
+1,77,27,75,0,0,0,0,0,128,0,-1--1--1,,1|(1987,692)|
+10,78,Total Amount Allocated 0,2194,864,44,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,79,75,78,0,0,0,0,0,128,0,-1--1--1,,1|(2095,861)|
+10,80,Difference between Allocated and Demanded 0,2405,860,72,26,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,81,41,80,0,0,0,0,0,128,0,-1--1--1,,1|(2407,690)|
+1,82,78,80,0,0,0,0,0,128,0,-1--1--1,,1|(2278,862)|
+10,83,Delta,381,1118,18,11,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,84,Dispatch Costs,380,1223,57,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,85,84,83,0,0,0,0,0,128,0,-1--1--1,,1|(380,1177)|
+10,86,Difference between Allocated and Demanded 0,608,983,67,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,87,86,57,0,0,0,0,0,128,0,-1--1--1,,1|(489,916)|
+1,88,83,57,0,0,0,0,0,128,0,-1--1--1,,1|(378,995)|
+10,89,Number of Jumps in Same Direction by Pass,599,1122,76,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,90,86,89,0,0,0,0,0,128,0,-1--1--1,,1|(604,1050)|
+1,91,89,83,0,0,0,0,0,128,0,-1--1--1,,1|(467,1119)|
+12,92,0,804,-514,284,25,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+Allocate Available Method
+12,93,0,1423,87,1130,27,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+Math-based method (manually test dispatch costs to converge on answer)
+12,94,0,1418,705,1130,27,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+Math-based method with automatic convergence over 25 allocation passes
+12,95,0,1428,466,169,12,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|0||0-0-0,0,0,0,0,0,0
+We choose to use Yerukala and Boiroju's formula
+///---\\\
+:GRAPH Difference
+:TITLE Difference
+:SCALE
+:VAR Difference between Allocated and Demanded
+:L<%^E!@
+1:current.vdfx
+4:Time
+5:Share of Standard Normal Curve Under this Dispatch Cost 0[Electricity Source,Allocation Pass]
+6:coal
+6:natural gas
+6:pass1
+6:pass10
+6:pass11
+6:pass12
+6:pass13
+6:pass14
+6:pass15
+6:pass16
+6:pass17
+6:pass18
+6:pass19
+6:pass2
+6:pass20
+6:pass21
+6:pass22
+6:pass23
+6:pass24
+6:pass25
+6:pass3
+6:pass4
+6:pass5
+6:pass6
+6:pass7
+6:pass8
+6:pass9
+6:pextra
+6:ppriority
+6:ptype
+6:pwidth
+6:solar
+6:wind
+9:current
+19:120,0
+24:0
+25:1
+26:1
+15:0,0,0,0,0,0
+27:0,
+34:0,
+42:1
+72:0
+73:0
+35:Date
+36:YYYY-MM-DD
+37:2000
+38:1
+39:1
+40:2
+41:0
+95:0
+96:0
+97:0
+77:0
+78:0
+93:0
+94:0
+92:0
+91:0
+90:0
+87:0
+75:
+43:
