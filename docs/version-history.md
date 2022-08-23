@@ -7,8 +7,9 @@ This page tracks updates that have been made with each version of the Energy Pol
 ### **3.4.0.1 - August 23, 2022**
 
 * Data
-  * Recalibrate EV sales shares for freight LDVs and HDVs
-  * Update BAU CCS amounts in industry based on Rhodium research
+  * Recalibrated EV sales shares for freight LDVs and HDVs
+  * Updated BAU CCS amounts in industry based on Rhodium research
+  * Corresponding updates to NDC scenario
 
 ### **3.4.0 - July 28, 2022**
 
