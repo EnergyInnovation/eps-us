@@ -8,6 +8,7 @@ This page tracks updates that have been made with each version of the Energy Pol
   * Fix omission of power plant decommissioning revenues from supplying nonenergy ISIC codes
   * Extend payment of expenditures for decommissioning retired power plants over multiple years
   * Change depreciation time on electricity sector capital expenditures from 3 to 28 years
+  * Fix units in web app graph "Share of Generation from Clean Sources"
 
 ### **3.4.0.1 - August 23, 2022**
 
