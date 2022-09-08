@@ -4,6 +4,9 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **3.4.1 - TBD**
+  * Fix omission of power plant decommissioning revenues from supplying nonenergy ISIC codes
+
 ### **3.4.0.1 - August 23, 2022**
 
 * Data
