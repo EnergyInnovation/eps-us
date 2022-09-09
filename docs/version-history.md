@@ -5,6 +5,10 @@ title:  "Version History"
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
 ### **3.4.1 - TBD**
+
+* New Features
+  * Added a simple representation of financing of capital expenditures in the electricity sector to improve accuracy of GDP and job impacts.
+* Bug Fixes
   * Fix omission of power plant decommissioning revenues from supplying nonenergy ISIC codes
   * Extend payment of expenditures for decommissioning retired power plants over multiple years
   * Change depreciation time on electricity sector capital expenditures from 3 to 28 years
