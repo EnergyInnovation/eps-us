@@ -4,6 +4,26 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **3.4.1 - September 12, 2022**
+
+* New Features
+  * Added a simple representation of financing of capital expenditures in the electricity sector to improve accuracy of GDP and job impacts.
+* Bug Fixes
+  * Fix omission of power plant decommissioning revenues from supplying nonenergy ISIC codes
+  * Extend payment of expenditures for decommissioning retired power plants over 3 years
+  * Separate NGPS industry expenses for production of natural gas vs. production of petroleum fuels when calculating fuel price feedbacks
+  * Avoid rounding error in logit functions
+  * Fix units in web app graph "Share of Generation from Clean Sources"
+  * Prevent instability in district heat price feedback when district heat use approaches zero
+  * Prevent rounding error from causing small negative emissions from fossil power plants with CCS
+
+### **3.4.0.1 - August 23, 2022**
+
+* Data
+  * Recalibrated EV sales shares for freight LDVs and HDVs
+  * Updated BAU CCS amounts in industry based on Rhodium research
+  * Corresponding updates to NDC scenario
+
 ### **3.4.0 - July 28, 2022**
 
 * New Policies
