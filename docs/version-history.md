@@ -4,6 +4,12 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **3.4.2 - TBD, 2022**
+
+* Bug fixes
+  * Adjusted elec/CoESC to account for future projected inflation
+  * Correction to repayment amounts for electricity sector capital financing
+
 ### **3.4.1 - September 12, 2022**
 
 * New Features
