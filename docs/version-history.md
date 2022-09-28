@@ -4,6 +4,15 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **3.4.2 - September 28, 2022**
+
+* Data Updates
+  * Use EIA power plant lifetime data in elec/BGCL
+* Bug fixes
+  * Adjusted elec/CoESC to account for future projected inflation
+  * Correction to repayment amounts for electricity sector capital financing
+  * Fixes to methodology in elec/ARpUIiRC
+
 ### **3.4.1 - September 12, 2022**
 
 * New Features
