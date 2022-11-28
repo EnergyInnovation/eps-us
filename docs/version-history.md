@@ -4,7 +4,7 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
-### **3.4.3 - TBD, 2022**
+### **3.4.3 - November 28, 2022**
 
 * Accuracy Improvements
   * BAU output for fuel-supplying ISIC codes is now based on fuel sales and price data from elsewhere in the model rather than taken as input data from I/O data sources, helping to ensure consistency of fuel revenue estimates across different parts of the model
