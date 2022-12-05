@@ -4,6 +4,16 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+
+### **3.4.4 - December 6, 2022**
+
+* New Features
+  * The EV Minimum and Hydrogen Vehicle Minimum policies have been replaced with a single Zero-Emissions Vehicle (ZEV) standard policy.  Which vehicle technologies qualify as ZEVs can be customized in trans/BVTQaZ and trans/VTQaZ for a policy scenario that differs. The EPS selects between qualifying vehicle technologies via economic factors.  The new ZEV standard policy only applies to road vehicles, not aicraft, rail, or ships.
+  * BAU ZEV standards may be specified separately for up to 60 subregions (such as U.S. states within the national-scale U.S. model), and the EPS will increase ZEV sales to meet BAU ZEV standards or user-specified ZEV standards only in subregions where the standard is not already being met.  This improves accuracy relative to using national, sales-weighted averages.
+* Data Updates
+  * Updated trans/TTLE to use values directly from PNNL's GCAM model. The main difference is to increase the EPS sensitivity to costs for new passenger LDVs.
+  * Updated the social cost of carbon to use the latest estimtes from the EPA, released in November 2022.
+  
 ### **3.4.3 - November 28, 2022**
 
 * Accuracy Improvements
@@ -37,7 +47,7 @@ This page tracks updates that have been made with each version of the Energy Pol
 
 ### **3.4.0.1 - August 23, 2022**
 
-* Data
+* Data Updates
   * Recalibrated EV sales shares for freight LDVs and HDVs
   * Updated BAU CCS amounts in industry based on Rhodium research
   * Corresponding updates to NDC scenario
@@ -78,7 +88,7 @@ This page tracks updates that have been made with each version of the Energy Pol
 * Bug Fixes
   * Fix to share of demand response capacity costs by cash flow entity
   * Revert to using ALLOCATE AVAILABLE() for electricity dispatch (as in EPS 3.3.0) rather than a logit function
-* Data
+* Data Updates
   * Updated to the Energy Information Administration's Annual Energy Outlook 2022. We chose to use the Low Economic Growth side case because it more closely aligns with economic projections from the Congressional Budget Office.
   * Updated to use the National Renewable Energy Laboratory's Annual Technology Baseline 2022
   * Updated BAU to reflect components of the U.S. Infrastructure Investment and Jobs Act
