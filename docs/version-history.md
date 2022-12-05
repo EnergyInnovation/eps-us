@@ -4,13 +4,7 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
-### **3.4.4 - TBD, 2022**
-
-* New Features
-  * The EV Minimum and Hydrogen Vehicle Minimum policies have been replaced with a single Zero-Emissions Vehicle (ZEV) standard policy.  Which vehicle technologies qualify as ZEVs can be customized in trans/VTQaZ. The EPS selects between qualifying vehicle technologies via economic factors.  The new ZEV standard policy only applies to road vehicles, not aicraft, rail, or ships.
-  * BAU ZEV standards may be specified separately for up to 60 subregions (such as U.S. states within the national-scale U.S. model), and the EPS will increase ZEV sales to meet BAU ZEV standards or user-specified ZEV standards only in subregions where the standard is not already being met.  This improves accuracy relative to using national, sales-weighted averages.
-
-### **3.4.3 - TBD, 2022**
+### **3.4.3 - November 28, 2022**
 
 * Accuracy Improvements
   * BAU output for fuel-supplying ISIC codes is now based on fuel sales and price data from elsewhere in the model rather than taken as input data from I/O data sources, helping to ensure consistency of fuel revenue estimates across different parts of the model
