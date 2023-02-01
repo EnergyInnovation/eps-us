@@ -4,6 +4,11 @@ title:  "Version History"
 ---
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
+### **3.4.3.1 - February 1, 2023**
+
+* Bug fixes
+  * Correction to calculations for both BAU and policy-driven amounts of CCS
+
 ### **3.4.3 - November 28, 2022**
 
 * Accuracy Improvements
