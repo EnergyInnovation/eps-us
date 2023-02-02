@@ -5,6 +5,12 @@ title:  "Version History"
 This page tracks updates that have been made with each version of the Energy Policy Simulator.
 
 
+### **3.4.5 - February 2, 2023**
+* Bug fix
+  * Corrections to the amount of CCS applied in policy scenarios
+* Data Updates
+  * Updates to average vehicle lifetimes to align with historical vehicle sales data
+
 ### **3.4.4 - December 6, 2022**
 
 * New Features
