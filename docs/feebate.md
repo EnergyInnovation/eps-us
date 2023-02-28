@@ -1,7 +1,0 @@
----
-layout: page
-title:  "Feebate"
----
-Feebates are a series of fees or taxes on inefficient vehicles, which generate revenue used for rebates or subsidies for fuel-efficient vehicles.  Generally, a neutral fuel efficiency level is selected at which there is no tax or rebate.  Vehicles that are less efficient than this neutral level are taxed in proportion to how much less efficient they are relative to the neutral level.  Similarly, vehicles that are more efficient receive increasingly greater rebates or subsidies proportional to how much more efficient they are relative to the neutral level.
-
-Feebates can reduce GHG emissions by incenting customers to purchase more efficient vehicles and improving the fuel-efficiency of the new vehicle fleet.  A feebate can be designed to achieve effects similar to those caused by a [fuel-economy standard](fuel-economy-standard.html), but feebates allow vehicle manufacturers more flexibility to sell less efficient vehicles at a higher cost while providing more of an incentive for manufacturers to push forward with the most efficient designs that will earn them subsidies.  This policy design sets clear goals and lets the market work out the best solution.  Similarly, when the neutral fuel efficiency level (i.e., when the feebate is equal to zero) is based on the average fuel economy of the fleet, feebates can provide an incentive for continuous improvement at every incremental increase in fuel-economy.
