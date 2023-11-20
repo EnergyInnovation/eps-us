@@ -273,6 +273,12 @@ Additional Percent Subsidy per Unit Grid Battery Capacity Deployed This Year=
 	~	Dmnl
 	~		|
 
+Additional Retail Electricity Costs per Unit Electricity Produced[Sectors]= INITIAL(
+	Start Year Electricity Prices by Sector[Sectors]-Start Year Electricity Supplier Expenditures after Subsidies per Unit Electricity Produced\
+		)
+	~	$/BTU
+	~		|
+
 Additional Subsidy for Elec CCS[Electricity Source]=
 	0,	{hard coal}
 	0,	{natural gas steam turbine}
@@ -1933,22 +1939,26 @@ BAU Buildings Fuel Carbon Tax Amount per Unit Energy[Building Fuel,commercial]=
 	~		|
 
 BAU Buildings Fuel Cost per Unit Energy[Building Fuel,urban residential]=
-	MAX(BFPaT BAU Pretax Fuel Price by Sector[building fuel within all fuels,residential buildings sector\
-		]
+	MAX(BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[building fuel within all fuels\
+		,residential buildings sector]
 	  + BAU Buildings Fuel Total Tax or Subsidy Amount per Unit Energy[Building Fuel,urban residential\
 		],
 	0
 	) ~~|
 BAU Buildings Fuel Cost per Unit Energy[Building Fuel,rural residential]=
-	BFPaT BAU Pretax Fuel Price by Sector[building fuel within all fuels,residential buildings sector\
-		]
-	+ BAU Buildings Fuel Total Tax or Subsidy Amount per Unit Energy[Building Fuel,rural residential\
-		] ~~|
+	MAX(BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[building fuel within all fuels\
+		,residential buildings sector]
+	  + BAU Buildings Fuel Total Tax or Subsidy Amount per Unit Energy[Building Fuel,rural residential\
+		],
+	0
+	) ~~|
 BAU Buildings Fuel Cost per Unit Energy[Building Fuel,commercial]=
-	BFPaT BAU Pretax Fuel Price by Sector[building fuel within all fuels,commercial buildings sector\
-		]
-	+ BAU Buildings Fuel Total Tax or Subsidy Amount per Unit Energy[Building Fuel,commercial\
-		]
+	MAX(BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[building fuel within all fuels\
+		,commercial buildings sector]
+	  + BAU Buildings Fuel Total Tax or Subsidy Amount per Unit Energy[Building Fuel,commercial\
+		],
+	0
+	)
 	~	$/BTU
 	~		|
 
@@ -3390,8 +3400,8 @@ BAU District Heat and Hydrogen Fuel Carbon Tax Amount per Unit Energy[Industrial
 	|
 
 BAU District Heat and Hydrogen Fuel Cost per Unit Energy[Industrial Fuel]=
-	MAX(BFPaT BAU Pretax Fuel Price by Sector[industrial fuel within all fuels,district heat and hydrogen sector\
-		]
+	MAX(BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[industrial fuel within all fuels\
+		,district heat and hydrogen sector]
 	  + BAU District Heat and Hydrogen Fuel Total Tax or Subsidy Amount per Unit Energy[\
 		Industrial Fuel],
 	0
@@ -3683,8 +3693,8 @@ BAU Electricity Fuel Carbon Tax Amount per Unit Energy[Electricity Source]=
 	~		|
 
 BAU Electricity Fuel Cost per Unit Energy[Electricity Source]=
-	MAX(BFPaT BAU Pretax Fuel Price by Sector[electricity source within all fuels,electricity sector\
-		]
+	MAX(BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[electricity source within all fuels\
+		,electricity sector]
 	    * (1 + FSPbPPT Fuel Surcharge Percentage by Power Plant Type[Electricity Source]\
 		)
 	
@@ -4880,10 +4890,11 @@ BAU Industrial Fuel Carbon Tax Amount per Unit Energy[Industry Category,Industri
 	~		|
 
 BAU Industrial Fuel Cost per Unit Energy[Industrial Fuel]=
-	MAX(BFPaT BAU Pretax Fuel Price by Sector[industrial fuel within all fuels,industry sector\
-		]
+	MAX(BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[industrial fuel within all fuels\
+		,industry sector]
 	  + BAU Industrial Fuel Total Tax or Subsidy Amount per Unit Energy[cement and other nonmetallic minerals 239\
-		,Industrial Fuel],
+		,Industrial Fuel
+	],
 	0
 	)
 	~	$/BTU
@@ -5251,6 +5262,13 @@ BAU Last Year Electricity Generation Capacity by Vintage[Electricity Source,Vint
 BAU Last Year Electricity Peak Load=
 	DELAY FIXED(BAU Peak Electricity Load, 1 , SYPEL Start Year Peak Electricity Load )
 	~	MW
+	~		|
+
+BAU Last Year Electricity Supplier Expenditures after Subsidies per Unit Electricity Produced\
+		=
+	DELAY FIXED(BAU Electricity Supplier Expenditures after Subsidies per Unit Electricity Produced\
+		, 1 , 0 )
+	~	$/BTU
 	~		|
 
 BAU Last Year Energy Market Revenue per Unit Capacity[Electricity Source]= DELAY FIXED\
@@ -6865,9 +6883,23 @@ BAU Predicted Energy Market Revenue per Unit Output for Plants Built This Year[E
 	~		|
 
 BAU Pretax Fuel Cost per Unit Energy by Sector with Sensitivity Analysis Adjustment[All Fuels\
-		,Sectors]=
+		,Sectors] :EXCEPT: [electricity,Sectors]=
 	BFPaT BAU Pretax Fuel Price by Sector[All Fuels,Sectors]
-	* Fuel Price Multiplier for Sensitivity Analysis Runs[All Fuels]
+	* Fuel Price Multiplier for Sensitivity Analysis Runs[All Fuels] ~~|
+BAU Pretax Fuel Cost per Unit Energy by Sector with Sensitivity Analysis Adjustment[electricity\
+		,Sectors]=
+	This Year Pretax Electricity Price by Sector[Sectors]
+	* Fuel Price Multiplier for Sensitivity Analysis Runs[electricity]
+	~	$/BTU
+	~		|
+
+BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[All Fuels,Sectors\
+		] :EXCEPT: [electricity,Sectors]
+=
+	BFPaT BAU Pretax Fuel Price by Sector[All Fuels,Sectors] ~~|
+BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[electricity,Sectors\
+		]=
+	BAU This Year Pretax Electricity Price by Sector[Sectors]
 	~	$/BTU
 	~		|
 
@@ -8294,6 +8326,24 @@ BAU This Year Pollutants Sequestered by Industry Sector[Industry Category,Pollut
 	~	g pollutant
 	~		|
 
+BAU This Year Pretax Electricity Price by Sector[Sectors]=
+	MAX(0,
+	
+	 IF THEN ELSE(
+	  
+	  Time=INITIAL TIME,
+	  
+	  Start Year Electricity Prices by Sector[Sectors],
+	
+	  BAU Last Year Electricity Supplier Expenditures after Subsidies per Unit Electricity Produced
+	  +Last Year Additional Retail Electricity Costs per Unit Electricity Produced[Sectors\
+		]
+	  
+	 )
+	)
+	~	$/BTU
+	~		|
+
 BAU This Year Process Pollutants Sequestered by Industry Sector[Industry Category,Pollutant\
 		] :EXCEPT: [Industry Category,CO2]=
 	0 ~~|
@@ -9067,46 +9117,55 @@ BAU Transportation Fuel Carbon Tax Amount per Unit Energy[Vehicle Type,Transport
 	~		|
 
 BAU Transportation Fuel Cost per Unit Energy[electricity tf]=
-	MAX(BFPaT BAU Pretax Fuel Price by Sector[electricity,transportation sector]
+	MAX(BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[electricity\
+		,transportation sector]
 	  + BAU Transportation Fuel Total Tax or Subsidy Amount per Unit Energy[LDVs,electricity tf\
 		],
 	0
 	) ~~|
 BAU Transportation Fuel Cost per Unit Energy[natural gas tf]=
-	BFPaT BAU Pretax Fuel Price by Sector[natural gas,transportation sector]
+	BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[natural gas,\
+		transportation sector]
 	+ BAU Transportation Fuel Total Tax or Subsidy Amount per Unit Energy[HDVs,natural gas tf\
 		] ~~|
 BAU Transportation Fuel Cost per Unit Energy[petroleum gasoline tf]=
-	BFPaT BAU Pretax Fuel Price by Sector[petroleum gasoline,transportation sector]
+	BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[petroleum gasoline\
+		,transportation sector]
 	+ BAU Transportation Fuel Total Tax or Subsidy Amount per Unit Energy[LDVs,petroleum gasoline tf\
 		] ~~|
 BAU Transportation Fuel Cost per Unit Energy[petroleum diesel tf]=
-	BFPaT BAU Pretax Fuel Price by Sector[petroleum diesel,transportation sector]
+	BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[petroleum diesel\
+		,transportation sector]
 	+ BAU Transportation Fuel Total Tax or Subsidy Amount per Unit Energy[HDVs,petroleum diesel tf\
 		] ~~|
 BAU Transportation Fuel Cost per Unit Energy[biofuel gasoline tf]=
-	BFPaT BAU Pretax Fuel Price by Sector[biofuel gasoline,transportation sector]
+	BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[biofuel gasoline\
+		,transportation sector]
 	+ BAU Transportation Fuel Total Tax or Subsidy Amount per Unit Energy[LDVs,biofuel gasoline tf\
 		] ~~|
 BAU Transportation Fuel Cost per Unit Energy[biofuel diesel tf]=
-	BFPaT BAU Pretax Fuel Price by Sector[biofuel diesel,transportation sector]
+	BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[biofuel diesel\
+		,transportation sector]
 	+ BAU Transportation Fuel Total Tax or Subsidy Amount per Unit Energy[HDVs,biofuel diesel tf\
 		] ~~|
 BAU Transportation Fuel Cost per Unit Energy[jet fuel tf]=
-	BFPaT BAU Pretax Fuel Price by Sector[jet fuel or kerosene,transportation sector]
+	BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[jet fuel or kerosene\
+		,transportation sector]
 	+ BAU Transportation Fuel Total Tax or Subsidy Amount per Unit Energy[aircraft,jet fuel tf\
 		] ~~|
 BAU Transportation Fuel Cost per Unit Energy[heavy or residual fuel oil tf]=
-	BFPaT BAU Pretax Fuel Price by Sector[heavy or residual fuel oil,transportation sector\
-		]
+	BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[heavy or residual fuel oil\
+		,transportation sector]
 	+ BAU Transportation Fuel Total Tax or Subsidy Amount per Unit Energy[ships,heavy or residual fuel oil tf\
 		] ~~|
 BAU Transportation Fuel Cost per Unit Energy[LPG propane or butane tf]=
-	BFPaT BAU Pretax Fuel Price by Sector[LPG propane or butane,transportation sector]
+	BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[LPG propane or butane\
+		,transportation sector]
 	+ BAU Transportation Fuel Total Tax or Subsidy Amount per Unit Energy[LDVs,LPG propane or butane tf\
 		] ~~|
 BAU Transportation Fuel Cost per Unit Energy[hydrogen tf]=
-	BFPaT BAU Pretax Fuel Price by Sector[hydrogen,transportation sector]
+	BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[hydrogen,transportation sector\
+		]
 	+ BAU Transportation Fuel Total Tax or Subsidy Amount per Unit Energy[LDVs,hydrogen tf\
 		]
 	~	$/BTU
@@ -14311,7 +14370,7 @@ Change in Annualized Fixed Costs per Unit Retrofitted Capacity[lignite w CCS es]
 	~	$/MW
 	~		|
 
-Change in Baseline Energy Costs[All Fuels]=
+Change in Baseline Energy Costs[All Fuels] :EXCEPT: [electricity]=
 	IF THEN ELSE(
 	  BAEPAbCiPC Boolean Are Energy Prices Affected by Changes in Production Costs[All Fuels\
 		] > 0,
@@ -14321,7 +14380,9 @@ Change in Baseline Energy Costs[All Fuels]=
 	
 	  Last Year Change in Energy Supplier Cost per Unit Electricity[All Fuels]
 	  * Toggle Whether Policies Affect Energy Prices This Year[All Fuels]
-	)
+	) ~~|
+Change in Baseline Energy Costs[electricity]=
+	0
 	~	$/BTU
 	~		|
 
@@ -21891,13 +21952,21 @@ Fuel Production Cap[All Fuels]=
 	~	BTU
 	~		|
 
-Fuel Tax or Subsidy by Sector[All Fuels,Sectors]=
+Fuel Tax or Subsidy by Sector[All Fuels,Sectors] :EXCEPT:    [electricity,Sectors]=
 	MAX(BFPaT BAU Fuel Tax by Sector[All Fuels,Sectors]
 	
 	  + BFPaT BAU Pretax Fuel Price by Sector[All Fuels,Sectors]
 	    * Additional Fuel Tax or Subsidy Rate by Fuel This Year[All Fuels],
 	
 	BFPaT BAU Pretax Fuel Price by Sector[All Fuels,Sectors] * -1
+	) ~~|
+Fuel Tax or Subsidy by Sector[electricity,Sectors]=
+	MAX(BFPaT BAU Fuel Tax by Sector[electricity,Sectors]
+	
+	  + This Year Pretax Electricity Price by Sector[Sectors]
+	    * Additional Fuel Tax or Subsidy Rate by Fuel This Year[electricity],
+	
+	This Year Pretax Electricity Price by Sector[Sectors]* -1
 	)
 	~	$/BTU
 	~		|
@@ -25106,7 +25175,8 @@ Initial BAU Weighted Average Pretax Fuel Price by Fuel[All Fuels]= INITIAL(
 	
 	  SUM(
 	    BAU Total Energy Use by Sector[Sectors!,All Fuels]
-	    * BFPaT BAU Pretax Fuel Price by Sector[All Fuels,Sectors!]
+	    * BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[All Fuels\
+		,Sectors!]
 	  )
 	  + BAU Fuel Production Imports and Exports[All Fuels,exports]
 	    * IMFPbFT International Market Fuel Price by Fuel Type[All Fuels],
@@ -25298,6 +25368,12 @@ Last Year Achieved Capacity Factors[Electricity Source]=
 	Start Year Expected Capacity Factors[Electricity Source]
 	)
 	~	Dmnl
+	~		|
+
+Last Year Additional Retail Electricity Costs per Unit Electricity Produced[Sectors]=\
+		 DELAY FIXED (
+	Additional Retail Electricity Costs per Unit Electricity Produced[Sectors], 1 , 0)
+	~	$/BTU
 	~		|
 
 Last Year Annual Recurring Costs per Unit Electricity Output[Electricity Source]=
@@ -25601,6 +25677,12 @@ Last Year Electricity Peak Load=
 	SYPEL Start Year Peak Electricity Load
 	)
 	~	MW
+	~		|
+
+Last Year Electricity Supplier Expenditures after Subsidies per Unit Electricity Produced\
+		= DELAY FIXED (
+	Electricity Supplier Expenditures after Subsidies per Unit Electricity Produced,1,0)
+	~	$/BTU
 	~		|
 
 Last Year Energy Market Revenue per Unit Capacity[Electricity Source]= DELAY FIXED (
@@ -36014,6 +36096,17 @@ Start Year Electricity Generation Capacity Summed Across Vintages[Electricity So
 	~	MW
 	~		|
 
+Start Year Electricity Prices by Sector[Sectors]=
+	INITIAL(BFPaT BAU Pretax Fuel Price by Sector[electricity,Sectors])
+	~	$/BTU
+	~		|
+
+Start Year Electricity Supplier Expenditures after Subsidies per Unit Electricity Produced\
+		= INITIAL(
+	BAU Electricity Supplier Expenditures after Subsidies per Unit Electricity Produced)
+	~	$/BTU
+	~		|
+
 Start Year EV Battery Capacity Deployed=
 	SUM(SYBCbVT Start Year Battery Capacity by Vehicle Type[Cargo Type!,Vehicle Type!,Vehicle Technology\
 		!]
@@ -37717,6 +37810,24 @@ This Year Pollutants Sequestered by Industry Sector[Industry Category,Pollutant,
 	This Year Process Pollutants Sequestered by Industry Sector[Industry Category,Pollutant\
 		]
 	~	g pollutant
+	~		|
+
+This Year Pretax Electricity Price by Sector[Sectors]=
+	MAX(0,
+	  
+	 IF THEN ELSE(
+	  
+	  Time=INITIAL TIME,
+	  
+	  Start Year Electricity Prices by Sector[Sectors],
+	
+	  Last Year Electricity Supplier Expenditures after Subsidies per Unit Electricity Produced
+	  +Last Year Additional Retail Electricity Costs per Unit Electricity Produced[Sectors\
+		]
+	  
+	 )
+	)
+	~	$/BTU
 	~		|
 
 This Year Process Pollutants Sequestered by Industry Sector[Industry Category,Pollutant\
@@ -40056,7 +40167,8 @@ Weighted Average Pretax Fuel Price by Fuel[All Fuels]=
 	
 	  SUM(
 	    Total Energy Use by Sector[Sectors!,All Fuels]
-	    * BFPaT BAU Pretax Fuel Price by Sector[All Fuels,Sectors!]
+	    * BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[All Fuels\
+		,Sectors!]
 	  )
 	  + Fuel Exports[All Fuels]
 	    * IMFPbFT International Market Fuel Price by Fuel Type[All Fuels],
@@ -46930,7 +47042,7 @@ This needs to be corrected to only reflect hydrogen from BAU pathways
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Electricity Supply - Cash Flow
-$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,55,0
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,95,0
 12,1,0,-779,-3336,456,36,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 This page calculates changes in cash flows due to spending by the electricity sector, including on constructing new generation, buying fuel, OM, building transmission, etc.  It also calculates changes in electricity prices, for use on the "Fuels" sheet.  This sheet does not calculate cash flow impacts of changes in electricity sales, because those are handled on the cash flow pages of the various electricity-demanding sectors.
 10,2,Electricity Sector Change in Fuel Industry Cash Flow before Subsidies and Electricity Exports,-655,-2912,112,28,8,131,0,20,0,0,0,0,-1--1--1,255-192-128,||I|0-0-0,0,0,0,0,0,0
@@ -47697,10 +47809,10 @@ Here we calculate the changes in delivered electriicty costs. These costs includ
 10,733,SYTaDC Start Year Distribution Capital Costs,4829,287,88,22,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
 1,734,732,563,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,735,733,563,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,738,SYTaDC Start Year Distribution Capital Costs,4829,1352,86,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,739,SYTaDC Start Year Transmission Capital Costs,4829,1428,71,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,740,738,564,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,741,739,564,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,736,SYTaDC Start Year Distribution Capital Costs,4829,1352,86,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,737,SYTaDC Start Year Transmission Capital Costs,4829,1428,71,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,738,736,564,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,739,737,564,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Buildings - Main
@@ -50326,152 +50438,152 @@ We assume no geoengineering is done in the BAU case, so we only calculate policy
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Fuels
-$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,110,0
-10,1,BAU Buildings Fuel Cost per Unit Energy,2042,-3237,84,24,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
-10,2,BAU Electricity Fuel Cost per Unit Energy,2042,-3324,84,24,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
-10,3,BAU Industrial Fuel Cost per Unit Energy,2042,-3145,84,24,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
-10,4,Electricity Fuel Pollutant Emissions Intensities This Year,-1597,-4049,111,25,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,5,Buildings Fuel Pollutant Emissions Intensities This Year,-925,-4240,108,24,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,6,Industrial Fuel Pollutant Emissions Intensities This Year,-925,-4049,112,24,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,7,BAU Transportation Fuel Cost per Unit Energy,2042,-3404,100,27,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
-10,8,Transportation Fuel Cost per Unit Energy,1482,-3404,84,24,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
-10,9,Electricity Fuel Cost per Unit Energy,1482,-3324,80,24,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
-10,10,Buildings Fuel Cost per Unit Energy,1482,-3237,75,24,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
-10,11,Industrial Fuel Cost per Unit Energy,1482,-3145,76,24,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
-10,12,PEI Transportation Fuel Pollutant Emissions Intensities,-1929,-4240,120,24,8,131,0,20,0,0,0,0,-1--1--1,255-128-192,||I|0-0-0,0,0,0,0,0,0
-10,13,Grams per Metric Ton CO2e,-368,-3816,64,24,8,3,0,4,0,0,0,0,-1--1--1,192-255-192,|||0-0-0,0,0,0,0,0,0
-10,14,GWP by Pollutant,-85,-4372,76,16,8,131,0,16,-1,0,0,0,-1--1--1,255-128-192,||I|117-101-108,0,0,0,0,0,0
-10,15,BS BAU Subsidy for Thermal Fuels per Energy Unit Produced,695,-3188,77,27,8,131,0,20,0,0,0,0,-1--1--1,192-128-192,||I|0-0-0,0,0,0,0,0,0
-10,16,Added Thermal Fuel Cost per Unit Energy from Ending Subsidies,475,-3293,77,27,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,80,0
+10,1,BAU Buildings Fuel Cost per Unit Energy,3503,861,84,24,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,2,BAU Electricity Fuel Cost per Unit Energy,3503,774,84,24,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,3,BAU Industrial Fuel Cost per Unit Energy,3503,953,84,24,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,4,Electricity Fuel Pollutant Emissions Intensities This Year,-136,49,111,25,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,5,Buildings Fuel Pollutant Emissions Intensities This Year,536,-142,108,24,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,6,Industrial Fuel Pollutant Emissions Intensities This Year,536,49,112,24,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,7,BAU Transportation Fuel Cost per Unit Energy,3503,694,100,27,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,8,Transportation Fuel Cost per Unit Energy,2943,694,84,24,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,9,Electricity Fuel Cost per Unit Energy,2943,774,80,24,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,10,Buildings Fuel Cost per Unit Energy,2943,861,75,24,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,11,Industrial Fuel Cost per Unit Energy,2943,953,76,24,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,12,PEI Transportation Fuel Pollutant Emissions Intensities,-468,-142,120,24,8,131,0,20,0,0,0,0,-1--1--1,255-128-192,||I|0-0-0,0,0,0,0,0,0
+10,13,Grams per Metric Ton CO2e,1093,282,64,24,8,3,0,4,0,0,0,0,-1--1--1,192-255-192,|||0-0-0,0,0,0,0,0,0
+10,14,GWP by Pollutant,1376,-274,76,16,8,131,0,16,-1,0,0,0,-1--1--1,255-128-192,||I|117-101-108,0,0,0,0,0,0
+10,15,BS BAU Subsidy for Thermal Fuels per Energy Unit Produced,2156,910,77,27,8,131,0,20,0,0,0,0,-1--1--1,192-128-192,||I|0-0-0,0,0,0,0,0,0
+10,16,Added Thermal Fuel Cost per Unit Energy from Ending Subsidies,1936,805,77,27,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,17,15,80,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,18,16,45,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-10,19,Change in Baseline Energy Costs,-24,-3296,60,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,20,Last Year Change in Energy Supplier Cost per Unit Electricity,-24,-3188,75,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,19,Change in Baseline Energy Costs,1437,802,60,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,20,Last Year Change in Energy Supplier Cost per Unit Electricity,1437,915,75,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,21,20,19,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-12,22,0,-24,-2868,164,40,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,22,0,1437,1230,164,40,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 We must institute a one-year delay in the calculated change in energy supplier costs to avoid circularity.  Without the one-year delay, Vensim doesn't give any errors but produces incorrect values.
-12,23,0,164,-3636,880,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,23,0,1625,462,880,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Adjusting Fuel Cost due to Policies
-12,24,0,539,-3016,163,32,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,24,0,2000,1082,163,32,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 Here we handle BAU subsidies for production of thermal fuels, which are paid to the fuel producers.  Accordingly, these affect all sectors.
 1,25,19,44,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-10,26,Percent Reduction in BAU Subsidies This Year,475,-3081,88,24,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,27,Toggle Whether Policies Affect Energy Prices This Year,204,-3293,80,28,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,26,Percent Reduction in BAU Subsidies This Year,1936,1017,88,24,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,27,Toggle Whether Policies Affect Energy Prices This Year,1665,805,80,28,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
 1,28,27,19,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-10,29,GbPbT GWP by Pollutant by Timeframe,160,-4372,84,24,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,30,BUTYGV Boolean Use Twenty Year GWP Values,-85,-4461,92,24,8,130,0,5,-1,0,0,0,128-128-128,128-192-0,|||128-128-128,0,0,0,0,0,0
+10,29,GbPbT GWP by Pollutant by Timeframe,1621,-274,84,24,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,30,BUTYGV Boolean Use Twenty Year GWP Values,1376,-363,92,24,8,130,0,5,-1,0,0,0,128-128-128,128-192-0,|||128-128-128,0,0,0,0,0,0
 1,31,30,14,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,32,29,14,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-10,33,District Heat and Hydrogen Fuel Cost per Unit Energy,1482,-3044,96,20,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
-10,34,BAU District Heat and Hydrogen Fuel Cost per Unit Energy,2042,-3044,115,19,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
-12,35,0,-1753,-4477,307,36,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+10,33,District Heat and Hydrogen Fuel Cost per Unit Energy,2943,1054,96,20,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,34,BAU District Heat and Hydrogen Fuel Cost per Unit Energy,3503,1054,115,19,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+12,35,0,-292,-379,307,36,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 Note that all of these fuels are using direct emissions intensities, not lifecycle emissions intensities.  Upstream emissions (e.g. from the manufacture or transport of various fuels) should be captured in the Industry (including Agriculture) and Transportation sectors respectively.
-10,36,Transportation Fuel Taxable CO2e Emissions Intensity,-85,-4252,96,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,36,Transportation Fuel Taxable CO2e Emissions Intensity,1376,-154,96,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,37,14,36,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,38,Electricity Fuel Taxable CO2e Emissions Intensity,-85,-4176,88,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,39,Buildings Fuel Taxable CO2e Emissions Intensity,-85,-4100,84,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,40,Industrial Fuel Taxable CO2e Emissions Intensity,-85,-4024,84,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,38,Electricity Fuel Taxable CO2e Emissions Intensity,1376,-78,88,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,39,Buildings Fuel Taxable CO2e Emissions Intensity,1376,-2,84,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,40,Industrial Fuel Taxable CO2e Emissions Intensity,1376,74,84,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,41,14,38,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,42,14,39,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,43,14,40,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,44,Pretax Fuel Cost per Unit Energy by Sector After Modeled Price Adjustments,-24,-3417,89,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,45,Pretax Fuel Cost per Unit Energy by Sector After Reduction of BAU Subsidies,475,-3417,92,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,44,Pretax Fuel Cost per Unit Energy by Sector After Modeled Price Adjustments,1437,681,89,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,45,Pretax Fuel Cost per Unit Energy by Sector After Reduction of BAU Subsidies,1936,681,92,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,46,44,45,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,47,45,389,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,48,BAU Transportation Fuel Total Tax or Subsidy Amount per Unit Energy,-996,-3465,99,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
-10,49,BAU Electricity Fuel Total Tax or Subsidy Amount per Unit Energy,-996,-3305,93,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
-10,50,BAU Buildings Fuel Total Tax or Subsidy Amount per Unit Energy,-996,-3156,93,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
-10,51,BAU Industrial Fuel Total Tax or Subsidy Amount per Unit Energy,-996,-3012,93,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
-10,52,Transportation Fuel Total Tax or Subsidy Amount per Unit Energy,-1653,-3465,93,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
-10,53,Electricity Fuel Total Tax or Subsidy Amount per Unit Energy,-1653,-3305,95,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
-10,54,Buildings Fuel Total Tax or Subsidy Amount per Unit Energy,-1653,-3156,93,28,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
-10,55,Industrial Fuel Total Tax or Subsidy Amount per Unit Energy,-1653,-3012,95,28,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
-12,56,0,-1437,-3636,625,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,48,BAU Transportation Fuel Total Tax or Subsidy Amount per Unit Energy,465,633,99,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,49,BAU Electricity Fuel Total Tax or Subsidy Amount per Unit Energy,465,793,93,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,50,BAU Buildings Fuel Total Tax or Subsidy Amount per Unit Energy,465,942,93,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,51,BAU Industrial Fuel Total Tax or Subsidy Amount per Unit Energy,465,1086,93,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,52,Transportation Fuel Total Tax or Subsidy Amount per Unit Energy,-192,633,93,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,53,Electricity Fuel Total Tax or Subsidy Amount per Unit Energy,-192,793,95,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,54,Buildings Fuel Total Tax or Subsidy Amount per Unit Energy,-192,942,93,28,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,55,Industrial Fuel Total Tax or Subsidy Amount per Unit Energy,-192,1086,95,28,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+12,56,0,24,462,625,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Totaling Carbon and Fuel Tax Amounts per Unit Energy
 1,57,26,80,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,58,Fuel Price Multiplier for Sensitivity Analysis Runs,-349,-3529,80,19,8,3,0,4,0,0,0,0,-1--1--1,192-255-192,|||0-0-0,0,0,0,0,0,0
-10,59,BAU Pretax Fuel Cost per Unit Energy by Sector with Sensitivity Analysis Adjustment,-349,-3417,104,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,58,Fuel Price Multiplier for Sensitivity Analysis Runs,1112,569,80,19,8,3,0,4,0,0,0,0,-1--1--1,192-255-192,|||0-0-0,0,0,0,0,0,0
+10,59,BAU Pretax Fuel Cost per Unit Energy by Sector with Sensitivity Analysis Adjustment,1112,681,104,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,60,59,44,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,61,58,59,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,62,0,-773,-731,519,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,62,0,688,3367,519,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Calculating Fuel Exports and Import/Export Cash Flows
-10,63,Total Primary Fuel Use,-1322,-1627,55,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,64,BAU Total Primary Fuel Use,-1322,-1523,64,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,65,Change in Total Fuel Use,-1109,-1523,55,19,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,63,Total Primary Fuel Use,139,2471,55,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,64,BAU Total Primary Fuel Use,139,2575,64,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,65,Change in Total Fuel Use,352,2575,55,19,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
 1,66,63,65,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,67,64,65,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,68,Change in Fuel Exports,-435,-1391,53,19,8,3,0,20,0,0,0,0,-1--1--1,255-192-128,||I|0-0-0,0,0,0,0,0,0
-10,69,Change in Fuel Export Revenue,-753,-378,52,19,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,70,IMFPbFT International Market Fuel Price by Fuel Type,-753,-606,105,24,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,68,Change in Fuel Exports,1026,2707,53,19,8,3,0,20,0,0,0,0,-1--1--1,255-192-128,||I|0-0-0,0,0,0,0,0,0
+10,69,Change in Fuel Export Revenue,708,3720,52,19,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,70,IMFPbFT International Market Fuel Price by Fuel Type,708,3492,105,24,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
 1,71,70,69,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,72,Change in Fuel Industry Cash Flow from Fuel Exports,-478,-606,99,21,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,72,Change in Fuel Industry Cash Flow from Fuel Exports,983,3492,99,21,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
 1,73,69,72,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,74,ETRbF Export Tax Rate by Fuel,-478,-491,64,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,74,ETRbF Export Tax Rate by Fuel,983,3607,64,19,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
 1,75,74,72,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,76,Change in Fuel Imports,-1670,-35,53,19,8,3,0,20,0,0,0,0,-1--1--1,255-192-128,||I|0-0-0,0,0,0,0,0,0
-12,77,0,-1254,-1794,159,32,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+10,76,Change in Fuel Imports,-209,4063,53,19,8,3,0,20,0,0,0,0,-1--1--1,255-192-128,||I|0-0-0,0,0,0,0,0,0
+12,77,0,207,2304,159,32,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 This only includes fuels, not electricity.  Electricity imports and exports are handled exogenously in the Electricity Sector and added in below.
-10,78,Change in Fuel Import Expenditures,-753,-98,65,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-12,79,0,-530,-70,133,48,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+10,78,Change in Fuel Import Expenditures,708,4000,65,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+12,79,0,931,4028,133,48,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 If fuel industries are selling more fuel, they get added revenue for those sales in the demand sectors.  This variable is the cost to the fuel suppliers to acquire the fuel, if they purchase it from abroad.
-10,80,Subsidy for Thermal Fuels per Energy Unit Produced,475,-3188,83,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,80,Subsidy for Thermal Fuels per Energy Unit Produced,1936,910,83,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
 1,81,15,16,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,82,80,16,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,83,Change in Fuel Export Revenue,1270,4,56,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,84,Change in Fuel Import Expenditures,1270,189,72,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,85,Change in Energy Import Expenditures including Electricity,1499,189,80,28,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,||I|0-0-0,0,0,0,0,0,0
-10,86,Change in Energy Export Revenue including Electricity,1499,4,92,19,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,||I|0-0-0,0,0,0,0,0,0
+10,83,Change in Fuel Export Revenue,2731,4102,56,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,84,Change in Fuel Import Expenditures,2731,4287,72,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,85,Change in Energy Import Expenditures including Electricity,2960,4287,80,28,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,||I|0-0-0,0,0,0,0,0,0
+10,86,Change in Energy Export Revenue including Electricity,2960,4102,92,19,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,||I|0-0-0,0,0,0,0,0,0
 1,87,83,86,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,88,84,85,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,89,Change in Amount Received from Exporting Electricity,1499,-115,112,21,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
-10,90,Change in Amount Spent on Importing Electricity,1499,301,93,24,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,89,Change in Amount Received from Exporting Electricity,2960,3983,112,21,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,90,Change in Amount Spent on Importing Electricity,2960,4399,93,24,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
 1,91,90,85,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,92,89,86,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,93,Change in Fuel Exports,842,-519,53,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,94,Change in Fuel Imports,849,-334,53,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,95,Change in Electricity Exports,1043,-638,72,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
-10,96,Change in Electricity Imports,1043,-222,69,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
-10,97,Change in Energy Exports including Electricity,1043,-519,56,28,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,98,Change in Energy Imports Including Electricity,1043,-334,56,28,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,93,Change in Fuel Exports,2303,3579,53,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,94,Change in Fuel Imports,2310,3764,53,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,95,Change in Electricity Exports,2504,3460,72,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,96,Change in Electricity Imports,2504,3876,69,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,97,Change in Energy Exports including Electricity,2504,3579,56,28,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,98,Change in Energy Imports Including Electricity,2504,3764,56,28,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
 1,99,94,98,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,100,96,98,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,101,93,97,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,102,95,97,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,103,MWh per BTU,838,-426,60,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,103,MWh per BTU,2299,3672,60,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,104,103,97,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,105,103,98,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,106,BAEPAbCiPC Boolean Are Energy Prices Affected by Changes in Production Costs,204,-3188,97,28,8,2,0,5,-1,0,0,0,128-128-128,128-192-0,|||128-128-128,0,0,0,0,0,0
+10,106,BAEPAbCiPC Boolean Are Energy Prices Affected by Changes in Production Costs,1665,910,97,28,8,2,0,5,-1,0,0,0,128-128-128,128-192-0,|||128-128-128,0,0,0,0,0,0
 1,107,106,19,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,108,0,-1385,-4533,675,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,108,0,76,-435,675,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Setting Pollutant Emissions Intensities
-10,109,PEIIR Transportation Fuel Pollutant Emissions Intensity Improvement Rate,-1597,-4352,100,28,8,131,0,20,0,0,0,0,-1--1--1,255-128-192,||I|0-0-0,0,0,0,0,0,0
-10,110,PEIIR Electricity Fuel Pollutant Emissions Intensity Improvement Rate,-1597,-3932,100,28,8,131,0,20,0,0,0,0,-1--1--1,255-128-192,||I|0-0-0,0,0,0,0,0,0
-10,111,PEIIR Buildings Fuel Pollutant Emissions Intensity Improvement Rate,-925,-4352,100,28,8,131,0,20,0,0,0,0,-1--1--1,255-128-192,||I|0-0-0,0,0,0,0,0,0
-10,112,PEIIR Industrial Fuel Pollutant Emissions Intensity Improvement Rate,-925,-3932,100,28,8,131,0,20,0,0,0,0,-1--1--1,255-128-192,||I|0-0-0,0,0,0,0,0,0
-10,113,Time,-1704,-4149,28,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,114,INITIAL TIME,-1490,-4149,60,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,115,Transportation Fuel Pollutant Emissions Intensities This Year,-1597,-4240,109,20,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,109,PEIIR Transportation Fuel Pollutant Emissions Intensity Improvement Rate,-136,-254,100,28,8,131,0,20,0,0,0,0,-1--1--1,255-128-192,||I|0-0-0,0,0,0,0,0,0
+10,110,PEIIR Electricity Fuel Pollutant Emissions Intensity Improvement Rate,-136,166,100,28,8,131,0,20,0,0,0,0,-1--1--1,255-128-192,||I|0-0-0,0,0,0,0,0,0
+10,111,PEIIR Buildings Fuel Pollutant Emissions Intensity Improvement Rate,536,-254,100,28,8,131,0,20,0,0,0,0,-1--1--1,255-128-192,||I|0-0-0,0,0,0,0,0,0
+10,112,PEIIR Industrial Fuel Pollutant Emissions Intensity Improvement Rate,536,166,100,28,8,131,0,20,0,0,0,0,-1--1--1,255-128-192,||I|0-0-0,0,0,0,0,0,0
+10,113,Time,-243,-51,28,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,114,INITIAL TIME,-29,-51,60,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,115,Transportation Fuel Pollutant Emissions Intensities This Year,-136,-142,109,20,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
 1,116,109,115,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,117,12,115,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,118,114,115,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,119,113,115,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,120,Transportation Fuel Pollutant Emissions Intensities This Year,198,-4252,108,24,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,120,Transportation Fuel Pollutant Emissions Intensities This Year,1659,-154,108,24,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,121,120,36,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,122,PEI Electricity Fuel Pollutant Emissions Intensities,-1929,-4049,104,24,8,131,0,20,0,0,0,0,-1--1--1,255-128-192,||I|0-0-0,0,0,0,0,0,0
-10,123,Electricity Fuel Pollutant Emissions Intensities This Year,198,-4176,104,21,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,122,PEI Electricity Fuel Pollutant Emissions Intensities,-468,49,104,24,8,131,0,20,0,0,0,0,-1--1--1,255-128-192,||I|0-0-0,0,0,0,0,0,0
+10,123,Electricity Fuel Pollutant Emissions Intensities This Year,1659,-78,104,21,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,124,123,38,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,125,122,4,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,126,110,4,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,127,113,4,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,128,114,4,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,129,PEI Buildings Fuel Pollutant Emissions Intensities,-1210,-4240,99,20,8,131,0,20,0,0,0,0,-1--1--1,255-128-192,||I|0-0-0,0,0,0,0,0,0
-10,130,PEI Industrial Fuel Pollutant Emissions Intensities,-1210,-4049,103,24,8,131,0,20,0,0,0,0,-1--1--1,255-128-192,||I|0-0-0,0,0,0,0,0,0
-10,131,Buildings Fuel Pollutant Emissions Intensities This Year,198,-4100,109,21,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,129,PEI Buildings Fuel Pollutant Emissions Intensities,251,-142,99,20,8,131,0,20,0,0,0,0,-1--1--1,255-128-192,||I|0-0-0,0,0,0,0,0,0
+10,130,PEI Industrial Fuel Pollutant Emissions Intensities,251,49,103,24,8,131,0,20,0,0,0,0,-1--1--1,255-128-192,||I|0-0-0,0,0,0,0,0,0
+10,131,Buildings Fuel Pollutant Emissions Intensities This Year,1659,-2,109,21,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,132,131,39,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,133,Industrial Fuel Pollutant Emissions Intensities This Year,198,-4024,108,23,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,133,Industrial Fuel Pollutant Emissions Intensities This Year,1659,74,108,23,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,134,133,40,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,135,Time,-1021,-4149,28,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,136,INITIAL TIME,-804,-4149,60,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,135,Time,440,-51,28,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,136,INITIAL TIME,657,-51,60,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,137,129,5,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,138,111,5,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,139,135,5,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -50480,203 +50592,203 @@ Setting Pollutant Emissions Intensities
 1,142,136,6,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,143,130,6,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,144,112,6,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,145,One Year,-1597,-4149,41,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,146,One Year,-925,-4149,41,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,145,One Year,-136,-51,41,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,146,One Year,536,-51,41,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,147,145,115,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,148,145,4,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,149,146,5,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,150,146,6,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,151,BENCEfCT Boolean Exempt Non CO2 Emissions from Carbon Tax,-85,-3816,117,21,8,130,0,5,-1,0,0,0,128-128-128,128-192-0,|||128-128-128,0,0,0,0,0,0
-10,152,Toggle Whether Carbon Tax Affects Non CO2 Emissions This Year,198,-3816,120,21,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,153,Does Carbon Tax Exempt Non CO2 Emissions This Year,-85,-3929,89,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,151,BENCEfCT Boolean Exempt Non CO2 Emissions from Carbon Tax,1376,282,117,21,8,130,0,5,-1,0,0,0,128-128-128,128-192-0,|||128-128-128,0,0,0,0,0,0
+10,152,Toggle Whether Carbon Tax Affects Non CO2 Emissions This Year,1659,282,120,21,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,153,Does Carbon Tax Exempt Non CO2 Emissions This Year,1376,169,89,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
 1,154,152,153,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,155,151,153,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,156,153,40,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,157,153,39,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,158,153,38,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,159,153,36,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,160,QSfE Quantization Size for Energy,1043,-426,65,19,8,2,0,3,0,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,160,QSfE Quantization Size for Energy,2504,3672,65,19,8,2,0,3,0,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 1,161,160,97,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,162,160,98,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,163,QSfCF Quantization Size for Cash Flows,1499,97,76,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,163,QSfCF Quantization Size for Cash Flows,2960,4195,76,20,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,164,163,86,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,165,163,85,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,166,QSfE Quantization Size for Energy,-1109,-1627,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,166,QSfE Quantization Size for Energy,352,2471,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,167,166,65,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,168,BAU Fuel Production Imports and Exports after GDP Adjustment,-1700,-2174,82,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,169,Fuel Imports,-1491,-35,41,11,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,170,Fuel Exports,-977,-491,41,11,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-12,171,0,981,-731,674,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,168,BAU Fuel Production Imports and Exports after GDP Adjustment,-239,1924,82,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,169,Fuel Imports,-30,4063,41,11,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,170,Fuel Exports,484,3607,41,11,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+12,171,0,2442,3367,674,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Adding Electricity Imports and Exports to Fuel Imports and Exports
-10,172,Exported Electricity,614,-638,36,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,173,Energy Exports including Electricity,614,-519,61,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,174,Energy Imports including Electricity,614,-334,61,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,175,MWh per BTU,398,-426,60,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,176,Fuel Exports,398,-519,52,11,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,177,Fuel Imports,398,-334,52,11,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,172,Exported Electricity,2075,3460,36,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,173,Energy Exports including Electricity,2075,3579,61,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,174,Energy Imports including Electricity,2075,3764,61,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,175,MWh per BTU,1859,3672,60,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,176,Fuel Exports,1859,3579,52,11,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,177,Fuel Imports,1859,3764,52,11,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,178,177,174,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,179,175,174,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,180,175,173,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,181,172,173,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,182,176,173,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,183,QSfE Quantization Size for Energy,614,-426,60,19,8,3,0,4,-1,0,0,0,-1--1--1,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,183,QSfE Quantization Size for Energy,2075,3672,60,19,8,3,0,4,-1,0,0,0,-1--1--1,255-128-192,|||128-128-128,0,0,0,0,0,0
 1,184,183,173,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,185,183,174,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,186,Amount Spent on Importing Electricity,1499,-222,69,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,187,Amount Received from Exporting Electricity,1499,-638,79,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,188,Energy Export Revenue including Electricity,1499,-519,75,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,189,Energy Import Expenditures including Electricity,1499,-334,104,24,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,190,Fuel Export Revenue,-753,-491,40,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,191,Fuel Import Expenditures,-753,21,44,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,186,Amount Spent on Importing Electricity,2960,3876,69,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,187,Amount Received from Exporting Electricity,2960,3460,79,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,188,Energy Export Revenue including Electricity,2960,3579,75,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,189,Energy Import Expenditures including Electricity,2960,3764,104,24,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,190,Fuel Export Revenue,708,3607,40,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,191,Fuel Import Expenditures,708,4119,44,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
 1,192,170,190,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,193,70,190,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,194,Fuel Export Revenue,1270,-519,43,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,195,Fuel Import Expenditures,1270,-334,48,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,196,QSfCF Quantization Size for Cash Flows,1499,-426,72,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,194,Fuel Export Revenue,2731,3579,43,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,195,Fuel Import Expenditures,2731,3764,48,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,196,QSfCF Quantization Size for Cash Flows,2960,3672,72,19,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,197,194,188,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,198,187,188,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,199,196,188,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,200,196,189,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,201,195,189,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,202,186,189,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,203,Change in Fuel Production,-1670,-491,53,19,8,3,0,20,0,0,0,0,-1--1--1,255-192-128,||I|0-0-0,0,0,0,0,0,0
-10,204,Fuel Production,-1491,-491,52,11,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-12,205,0,-1314,457,216,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,203,Change in Fuel Production,-209,3607,53,19,8,3,0,20,0,0,0,0,-1--1--1,255-192-128,||I|0-0-0,0,0,0,0,0,0
+10,204,Fuel Production,-30,3607,52,11,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+12,205,0,147,4555,216,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Allocating Changes in Expenditures
-10,206,Change in Fuel Import Expenditures,-1306,708,72,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,207,Fuel Trade and Subsidy Change in Energy Expenditures by Entity,-1306,881,103,24,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-12,208,0,-1314,511,216,28,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+10,206,Change in Fuel Import Expenditures,155,4806,72,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,207,Fuel Trade and Subsidy Change in Energy Expenditures by Entity,155,4979,103,24,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+12,208,0,147,4609,216,28,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 Importers and exporters of a given fuel type are considered part of the "X suppliers" cash flow entity for that fuel type.  (Fuel suppliers don't have to be producers.)
 1,209,206,207,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,210,Change in Fuel Export Revenue,-1306,628,56,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,210,Change in Fuel Export Revenue,155,4726,56,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,211,210,207,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,212,0,-842,457,216,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+12,212,0,619,4555,216,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Allocating Changes in Revenue
-10,213,Change in Tax Paid on Fuel Exports,-478,-378,64,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,213,Change in Tax Paid on Fuel Exports,983,3720,64,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
 1,214,74,213,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,215,69,213,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,216,Change in Fuel Industry Cash Flow from Fuel Exports,-842,628,105,23,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,217,Change in Tax Paid on Fuel Exports,-842,544,67,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,218,Change in Fuel Import Expenditures,-842,708,72,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,219,Fuel Trade and Subsidy Change in Revenue by Entity,-842,881,96,23,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,216,Change in Fuel Industry Cash Flow from Fuel Exports,619,4726,105,23,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,217,Change in Tax Paid on Fuel Exports,619,4642,67,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,218,Change in Fuel Import Expenditures,619,4806,72,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,219,Fuel Trade and Subsidy Change in Revenue by Entity,619,4979,96,23,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
 1,220,217,219,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,221,216,219,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,222,218,219,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,223,Change in Thermal Fuel Subsidies Paid,-1758,781,64,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-12,224,0,-1837,457,240,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,223,Change in Thermal Fuel Subsidies Paid,-297,4879,64,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+12,224,0,-376,4555,240,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Change in Fuel Subsidy Payments
-10,225,BS BAU Subsidy for Thermal Fuels per Energy Unit Produced,-1758,1017,84,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,226,BAU Thermal Fuel Subsidies Paid,-1758,896,61,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,227,Thermal Fuel Subsidies Paid,-1758,672,47,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,225,BS BAU Subsidy for Thermal Fuels per Energy Unit Produced,-297,5115,84,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,226,BAU Thermal Fuel Subsidies Paid,-297,4994,61,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,227,Thermal Fuel Subsidies Paid,-297,4770,47,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,228,225,226,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,229,Subsidy for Thermal Fuels per Energy Unit Produced,-1758,555,88,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,229,Subsidy for Thermal Fuels per Energy Unit Produced,-297,4653,88,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,230,229,227,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,231,227,223,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,232,226,223,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,233,Fuel Production,-1969,672,59,11,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,233,Fuel Production,-508,4770,59,11,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,234,233,227,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,235,Change in Thermal Fuel Subsidies Paid,-1306,785,67,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,236,Change in Thermal Fuel Subsidies Paid,-842,785,67,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,235,Change in Thermal Fuel Subsidies Paid,155,4883,67,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,236,Change in Thermal Fuel Subsidies Paid,619,4883,67,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,237,235,207,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,238,236,219,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,239,0,-474,38,189,47,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,239,0,987,4136,189,47,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 Sales taxes on fuel (whether imported or produced domestically) are handled in the demand sectors, so we only need an export tax on this sheet, not an import tax.  (We don't currently support import duties that are on top of and additional to sales taxes on the imported fuels.)
-10,240,Change in Hydrogen Supplier Expenditures per Unit Hydrogen Produced,-24,-2937,155,20,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,240,Change in Hydrogen Supplier Expenditures per Unit Hydrogen Produced,1437,1161,155,20,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
 1,241,240,20,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,242,Change in District Heat Supplier Expenditures per Unit Heat Produced,-24,-3008,136,21,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,242,Change in District Heat Supplier Expenditures per Unit Heat Produced,1437,1090,136,21,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
 1,243,242,20,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,244,Change in Electricity Supplier Expenditures After Subsidies per Unit Electricity Produced,-24,-3084,157,21,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,244,Change in Electricity Supplier Expenditures After Subsidies per Unit Electricity Produced,1437,1014,157,21,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
 1,245,244,20,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,246,MPIiFE Maximum Percentage Increase in Fuel Exports,-1619,-1738,68,29,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
-10,247,MPIiFI Maximum Percentage Increase in Fuel Imports,-1619,-1443,68,32,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
-10,248,MPIiFP Maximum Percentage Increase in Fuel Production,-1619,-1107,69,28,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
-10,249,PoFDCtAE Percentage of Fuel Demand Change that Alters Exports,-890,-1627,84,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,250,Percent Reduction in Fossil Fuel Exports This Year,-662,-1267,69,28,8,130,0,4,-1,0,0,0,0-0-0,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,251,Change in Fuel Exports before Cap,-890,-1523,64,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,246,MPIiFE Maximum Percentage Increase in Fuel Exports,-158,2360,68,29,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,247,MPIiFI Maximum Percentage Increase in Fuel Imports,-158,2655,68,32,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,248,MPIiFP Maximum Percentage Increase in Fuel Production,-158,2991,69,28,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,249,PoFDCtAE Percentage of Fuel Demand Change that Alters Exports,571,2471,84,28,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,250,Percent Reduction in Fossil Fuel Exports This Year,799,2831,69,28,8,130,0,4,-1,0,0,0,0-0-0,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,251,Change in Fuel Exports before Cap,571,2575,64,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,252,65,251,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,253,249,251,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,254,Change in Fuel Exports due to Changes in Fuel Use,-662,-1523,87,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,254,Change in Fuel Exports due to Changes in Fuel Use,799,2575,87,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,255,246,267,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,256,251,254,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,257,Change in Total Fuel Use,-198,-1571,55,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,258,Change in Fuel Use Remaining after Change in Exports,30,-1418,72,27,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,257,Change in Total Fuel Use,1263,2527,55,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,258,Change in Fuel Use Remaining after Change in Exports,1491,2680,72,27,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,259,257,258,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,260,0,-87,-1683,165,52,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,260,0,1374,2415,165,52,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 Reduced exports caused by the export reduction policy come out of domestic production.  Any remaining changes in fuel use (not due to the export reduction policy) are apportioned between changes in production and changes in imports.
-10,261,Change in Fuel Imports before Cap,374,-1263,64,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,262,Change in Fuel Production before Cap,374,-1571,73,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,263,Imports Exceeding Cap,614,-1263,49,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,261,Change in Fuel Imports before Cap,1835,2835,64,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,262,Change in Fuel Production before Cap,1835,2527,73,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,263,Imports Exceeding Cap,2075,2835,49,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,264,261,263,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,265,Production Exceeding Cap,614,-1571,49,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,265,Production Exceeding Cap,2075,2527,49,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,266,262,265,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,267,Maximum Absolute Increase in Fuel Exports,-1619,-1611,77,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,268,Maximum Absolute Increase in Fuel Exports,-662,-1627,84,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,267,Maximum Absolute Increase in Fuel Exports,-158,2487,77,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,268,Maximum Absolute Increase in Fuel Exports,799,2471,84,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,269,268,254,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,270,Maximum Absolute Increase in Fuel Imports,-1619,-1315,77,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,271,Maximum Absolute Increase in Fuel Production,-1619,-983,89,24,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,270,Maximum Absolute Increase in Fuel Imports,-158,2783,77,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,271,Maximum Absolute Increase in Fuel Production,-158,3115,89,24,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
 1,272,247,270,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,273,248,271,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,274,Maximum Absolute Increase in Fuel Production,614,-1678,63,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,274,Maximum Absolute Increase in Fuel Production,2075,2420,63,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,275,274,265,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,276,Maximum Absolute Increase in Fuel Imports,614,-1134,64,32,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,276,Maximum Absolute Increase in Fuel Imports,2075,2964,64,32,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,277,276,263,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,278,Change in Fuel Exports due to Export Reduction Policy,-662,-1391,73,28,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,278,Change in Fuel Exports due to Export Reduction Policy,799,2707,73,28,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
 1,279,250,278,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,280,254,278,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,281,Spare Capacity under Imports Cap,614,-1354,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,282,Spare Capacity under Production Cap,614,-1483,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,281,Spare Capacity under Imports Cap,2075,2744,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,282,Spare Capacity under Production Cap,2075,2615,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,283,274,282,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,284,262,282,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,285,261,281,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,286,276,281,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,287,Production Shifted to Imports due to Production Cap,867,-1475,63,28,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,288,Imports Shifted to Production due to Imports Cap,865,-1358,59,27,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,287,Production Shifted to Imports due to Production Cap,2328,2623,63,28,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,288,Imports Shifted to Production due to Imports Cap,2326,2740,59,27,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
 1,289,263,288,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,290,282,288,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,291,265,287,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,292,281,287,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,293,Imports Exceeding Both Caps,1099,-1263,60,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,294,Production Exceeding Both Caps,1098,-1571,69,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,293,Imports Exceeding Both Caps,2560,2835,60,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,294,Production Exceeding Both Caps,2559,2527,69,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,295,288,293,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,296,263,293,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,297,287,294,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,298,265,294,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,299,Changes in Fuel Use Exceeding Both Caps,1342,-1418,69,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,299,Changes in Fuel Use Exceeding Both Caps,2803,2680,69,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,300,294,299,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,301,293,299,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,302,Fuel Import Cap,-1620,-1231,53,11,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,303,Fuel Production Cap,-1619,-898,68,12,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,302,Fuel Import Cap,-159,2867,53,11,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,303,Fuel Production Cap,-158,3200,68,12,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
 1,304,271,303,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,305,270,302,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,306,Fuel Import Cap,1541,-1418,43,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,307,Fuel Production Cap,1714,-1418,56,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,308,Excess Changes in Fuel Use Assigned to Imports,1541,-1263,79,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,309,Excess Changes in Fuel Use Assigned to Production,1541,-1562,89,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,306,Fuel Import Cap,3002,2680,43,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,307,Fuel Production Cap,3175,2680,56,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,308,Excess Changes in Fuel Use Assigned to Imports,3002,2835,79,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,309,Excess Changes in Fuel Use Assigned to Production,3002,2536,89,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
 1,310,299,309,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,311,299,308,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,312,306,309,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,313,306,308,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,314,307,309,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,315,307,308,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,316,Change in Fuel Production before Cap,-1909,-491,80,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,317,Maximum Absolute Increase in Fuel Production,-1909,-606,64,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,318,Production Shifted to Imports due to Production Cap,-1670,-146,68,31,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,319,Imports Shifted to Production due to Imports Cap,-1670,-378,63,31,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,320,Excess Changes in Fuel Use Assigned to Production,-1670,-606,64,29,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,321,Maximum Absolute Increase in Fuel Imports,-1909,97,64,29,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,322,Change in Fuel Imports before Cap,-1909,-35,68,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,323,Excess Changes in Fuel Use Assigned to Imports,-1670,97,64,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,324,Change in Fuel Exports due to Export Reduction Policy,-1909,-378,79,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,325,Change in Fuel Exports due to Export Reduction Policy,30,-1571,72,27,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,316,Change in Fuel Production before Cap,-448,3607,80,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,317,Maximum Absolute Increase in Fuel Production,-448,3492,64,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,318,Production Shifted to Imports due to Production Cap,-209,3952,68,31,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,319,Imports Shifted to Production due to Imports Cap,-209,3720,63,31,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,320,Excess Changes in Fuel Use Assigned to Production,-209,3492,64,29,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,321,Maximum Absolute Increase in Fuel Imports,-448,4195,64,29,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,322,Change in Fuel Imports before Cap,-448,4063,68,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,323,Excess Changes in Fuel Use Assigned to Imports,-209,4195,64,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,324,Change in Fuel Exports due to Export Reduction Policy,-448,3720,79,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,325,Change in Fuel Exports due to Export Reduction Policy,1491,2527,72,27,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,326,325,258,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,327,0,-1190,-1419,163,60,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,327,0,271,2679,163,60,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 The change in total fuel use already includes the change in crude oil use from changes in production of secondary petroleum products, due to the linkage between change in NGPS fuel production (calculated on this sheet) and change in production by the NGPS industry in the Industry Sector.
-10,328,Change in Fuel Exports,-977,-378,53,19,8,2,0,3,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,328,Change in Fuel Exports,484,3720,53,19,8,2,0,3,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,329,328,170,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,330,328,69,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,331,254,68,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,332,278,68,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,333,Change in Fuel Exports,-198,-1418,53,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,333,Change in Fuel Exports,1263,2680,53,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,334,333,258,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,335,76,169,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,336,323,76,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -50689,171 +50801,171 @@ The change in total fuel use already includes the change in crude oil use from c
 1,343,316,203,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,344,324,203,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,345,319,203,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,346,Fuel Imports,-977,21,52,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,346,Fuel Imports,484,4119,52,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,347,346,191,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,348,Change in Fuel Imports,-977,-98,53,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,348,Change in Fuel Imports,484,4000,53,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,349,348,78,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,350,258,262,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,351,258,261,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,352,0,-1770,-1850,303,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,352,0,-309,2248,303,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Import, Export, & Production Caps
-12,353,0,-893,-1850,520,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,353,0,568,2248,520,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Calculating Change in Fuel Exports
-12,354,0,745,-1850,1071,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,354,0,2206,2248,1071,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Calculating Components of Changes in Fuel Production and Imports
-12,355,0,-1723,-731,352,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,355,0,-262,3367,352,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Adding Up Components of Changes in Fuel Production and Imports
-12,356,0,750,-1755,211,32,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,356,0,2211,2343,211,32,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 If production would exceed production cap and there is room under the import cap, shift some production to imports.  Vice versa if imports would exceed import cap.
-12,357,0,1399,-1666,400,28,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,357,0,2860,2432,400,28,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 If both the production and import caps are exceeded, we allocate the excess change in fuel use to production and imports, exceeding both caps proportionately to the cap sizes.
-12,358,0,374,-1758,108,36,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,358,0,1835,2340,108,36,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 We apportion change in fuel use into change in production and change in imports by the relative importance of these two modes.
-10,359,IMFPbFT International Market Fuel Price by Fuel Type,-753,-223,108,24,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,359,IMFPbFT International Market Fuel Price by Fuel Type,708,3875,108,24,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,360,359,78,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,361,359,191,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,362,0,369,-1418,132,57,8,135,0,12,-1,0,0,0,-1--1--1,255-255-128,|10||0-0-0,0,0,0,0,0,0
+12,362,0,1830,2680,132,57,8,135,0,12,-1,0,0,0,-1--1--1,255-255-128,|10||0-0-0,0,0,0,0,0,0
 We must use BAU production and imports, not policy case, for this apportionment, to avoid oscillation that occurs when apportioning reductions in production/imports, because those reductions decrease the importance of that mode, causing the other mode to receive more reduction the following year, and so on.
-10,363,Fuel Production,1840,-374,59,11,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,364,Electricity Generation by Type,2056,-610,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,365,Total District Heat Use,2056,-534,58,18,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,366,Energy Production including Energy Carriers,2056,-374,80,19,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,363,Fuel Production,3301,3724,59,11,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,364,Electricity Generation by Type,3517,3488,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,365,Total District Heat Use,3517,3564,58,18,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,366,Energy Production including Energy Carriers,3517,3724,80,19,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
 1,367,364,366,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,368,365,366,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,369,363,366,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,370,MWh per BTU,2056,-207,60,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,370,MWh per BTU,3517,3891,60,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,371,370,366,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,372,Change in Fuel Production,2277,-374,53,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,373,MWh per BTU,2485,-207,60,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,374,Change in Total Heat Use,2485,-534,55,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,375,Change in Electricity Generation by Type,2485,-610,65,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,376,BAU Electricity Generation by Type,2712,-610,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,372,Change in Fuel Production,3738,3724,53,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,373,MWh per BTU,3946,3891,60,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,374,Change in Total Heat Use,3946,3564,55,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,375,Change in Electricity Generation by Type,3946,3488,65,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,376,BAU Electricity Generation by Type,4173,3488,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,377,376,375,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-10,378,Change in Energy Production including Energy Carriers,2485,-374,65,28,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,378,Change in Energy Production including Energy Carriers,3946,3724,65,28,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
 1,379,375,378,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,380,374,378,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,381,372,378,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,382,373,378,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,383,QSfE Quantization Size for Energy,2056,-278,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,384,QSfE Quantization Size for Energy,2485,-278,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,383,QSfE Quantization Size for Energy,3517,3820,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,384,QSfE Quantization Size for Energy,3946,3820,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,385,383,366,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,386,384,378,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,387,Fuel Price Deregulation This Year,890,-3296,80,21,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,388,IMFPbFT International Market Fuel Price by Fuel Type,890,-3529,113,23,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,389,Pretax Fuel Cost per Unit Energy by Sector after Fuel Price Deregulation,890,-3417,87,28,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,387,Fuel Price Deregulation This Year,2351,802,80,21,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,388,IMFPbFT International Market Fuel Price by Fuel Type,2351,569,113,23,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,389,Pretax Fuel Cost per Unit Energy by Sector after Fuel Price Deregulation,2351,681,87,28,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
 1,390,387,389,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,391,388,389,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,392,Hydrogen Produced by Pathway,2056,-458,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,393,BAU Hydrogen Produced by Pathway,2724,-458,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,394,Change in Hydrogen Produced by Pathway,2485,-458,71,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,392,Hydrogen Produced by Pathway,3517,3640,72,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,393,BAU Hydrogen Produced by Pathway,4185,3640,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,394,Change in Hydrogen Produced by Pathway,3946,3640,71,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,395,393,394,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,396,364,375,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,397,392,394,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,398,392,366,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,399,394,378,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,400,Change in Crude Exports due to Changes in Secondary Petroleum Product Use,-890,-1003,103,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,401,Change in Total Fuel Use,-1109,-1006,55,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,400,Change in Crude Exports due to Changes in Secondary Petroleum Product Use,571,3095,103,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,401,Change in Total Fuel Use,352,3092,55,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,402,401,400,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,403,PoFDCtAE Percentage of Fuel Demand Change that Alters Exports,-890,-1126,89,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,403,PoFDCtAE Percentage of Fuel Demand Change that Alters Exports,571,2972,89,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,404,403,400,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,405,Percent Reduction in Fossil Fuel Exports This Year,-890,-890,77,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,405,Percent Reduction in Fossil Fuel Exports This Year,571,3208,77,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,406,405,400,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,407,Change in Crude Exports due to Changes in Secondary Petroleum Product Use,30,-1290,99,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,407,Change in Crude Exports due to Changes in Secondary Petroleum Product Use,1491,2808,99,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,408,407,258,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,409,0,-65,-1175,175,68,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,409,0,1396,2923,175,68,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 Changes in crude exports due to changes in secondary production should not be apportioned into changes in crude production or crude imports, because the crude that was formerly being used to make secondary products is now being exported instead.  Therefore, we subtract out any change in crude exports due to changes in secondary production.
-10,410,Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment,-1701,-2301,100,29,8,130,0,5,-1,0,0,0,128-128-128,128-192-0,|||128-128-128,0,0,0,0,0,0
-10,411,BFPIaE BAU Fuel Production Imports and Exports,-1960,-2174,75,28,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,410,Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment,-240,1797,100,29,8,130,0,5,-1,0,0,0,128-128-128,128-192-0,|||128-128-128,0,0,0,0,0,0
+10,411,BFPIaE BAU Fuel Production Imports and Exports,-499,1924,75,28,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
 1,412,411,168,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,413,410,168,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,414,Fuel Exports,-99,-474,52,11,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,415,Change in Fuel Exports,-99,-334,53,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,416,CO2 Emissions Intensity by Fuel for All Fuels,198,-3929,80,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,414,Fuel Exports,1362,3624,52,11,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,415,Change in Fuel Exports,1362,3764,53,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,416,CO2 Emissions Intensity by Fuel for All Fuels,1659,169,80,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
 1,417,120,416,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,418,133,416,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,419,123,416,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,420,CO2 Emissions Intensity by Fuel for All Fuels,111,-587,76,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,421,Embedded CO2 in Exported Fuels,111,-474,61,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,422,Change in Embedded CO2 in Exported Fuels,111,-334,76,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,420,CO2 Emissions Intensity by Fuel for All Fuels,1572,3511,76,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,421,Embedded CO2 in Exported Fuels,1572,3624,61,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,422,Change in Embedded CO2 in Exported Fuels,1572,3764,76,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
 1,423,420,421,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,424,420,422,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,425,414,421,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,426,415,422,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,427,0,31,-731,235,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,427,0,1492,3367,235,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Embedded CO2 in Exported Fuels
-10,428,BAU District Heat and Hydrogen Fuel Total Tax or Subsidy Amount per Unit Energy,-996,-2853,111,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
-10,429,District Heat and Hydrogen Fuel Total Tax or Subsidy Amount per Unit Energy,-1653,-2853,94,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
-10,430,BAU Transportation Fuel Carbon Tax Amount per Unit Energy,824,-4252,116,24,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,431,BAU Electricity Fuel Carbon Tax Amount per Unit Energy,824,-4176,101,23,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,432,BAU Buildings Fuel Carbon Tax Amount per Unit Energy,824,-4100,100,21,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,433,BAU Industrial Fuel Carbon Tax Amount per Unit Energy,824,-4024,100,24,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,434,BAU District Heat and Hydrogen Fuel Carbon Tax Amount per Unit Energy,824,-3929,136,24,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,435,BAU Transportation Fuel Other Tax or Subsidy Amount per Unit Energy,1618,-4252,101,28,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,436,BAU Electricity Fuel Other Tax or Subsidy Amount per Unit Energy,1618,-4176,93,28,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,437,BAU Buildings Fuel Other Tax or Subsidy Amount per Unit Energy,1618,-4100,93,28,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,438,BAU Industrial Fuel Other Tax or Subsidy Amount per Unit Energy,1618,-4024,93,28,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,439,BAU District Heat and Hydrogen Fuel Other Tax or Subsidy Amount per Unit Energy,1618,-3929,112,28,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,440,Transportation Fuel Carbon Tax Amount per Unit Energy,-368,-4252,104,24,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,441,Transportation Fuel Other Tax or Subsidy Amount per Unit Energy,1299,-4252,93,28,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,442,Electricity Fuel Carbon Tax Amount per Unit Energy,-368,-4176,101,21,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,443,Electricity Fuel Other Tax or Subsidy Amount per Unit Energy,1299,-4176,95,28,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,444,Buildings Fuel Other Tax or Subsidy Amount per Unit Energy,1299,-4100,95,28,8,3,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,445,Industrial Fuel Other Tax or Subsidy Amount per Unit Energy,1299,-4024,95,28,8,3,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,446,District Heat and Hydrogen Fuel Other Tax or Subsidy Amount per Unit Energy,1299,-3929,94,28,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,447,Buildings Fuel Carbon Tax Amount per Unit Energy,-368,-4100,97,21,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,448,Industrial Fuel Carbon Tax Amount per Unit Energy,-368,-4024,93,24,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,449,District Heat and Hydrogen Fuel Carbon Tax Amount per Unit Energy,-368,-3929,128,24,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,450,BCTR BAU Carbon Tax Rate,-633,-4372,56,19,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
-10,451,Additional Carbon Tax Rate This Year,-368,-4461,67,19,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,452,Carbon Tax Rate,-368,-4372,60,11,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,428,BAU District Heat and Hydrogen Fuel Total Tax or Subsidy Amount per Unit Energy,465,1245,111,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,429,District Heat and Hydrogen Fuel Total Tax or Subsidy Amount per Unit Energy,-192,1245,94,28,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,430,BAU Transportation Fuel Carbon Tax Amount per Unit Energy,2285,-154,116,24,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,431,BAU Electricity Fuel Carbon Tax Amount per Unit Energy,2285,-78,101,23,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,432,BAU Buildings Fuel Carbon Tax Amount per Unit Energy,2285,-2,100,21,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,433,BAU Industrial Fuel Carbon Tax Amount per Unit Energy,2285,74,100,24,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,434,BAU District Heat and Hydrogen Fuel Carbon Tax Amount per Unit Energy,2285,169,136,24,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,435,BAU Transportation Fuel Other Tax or Subsidy Amount per Unit Energy,4422,-152,101,28,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,436,BAU Electricity Fuel Other Tax or Subsidy Amount per Unit Energy,4422,-76,93,28,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,437,BAU Buildings Fuel Other Tax or Subsidy Amount per Unit Energy,4422,0,93,28,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,438,BAU Industrial Fuel Other Tax or Subsidy Amount per Unit Energy,4422,76,93,28,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,439,BAU District Heat and Hydrogen Fuel Other Tax or Subsidy Amount per Unit Energy,4422,171,112,28,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,440,Transportation Fuel Carbon Tax Amount per Unit Energy,1093,-154,104,24,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,441,Transportation Fuel Other Tax or Subsidy Amount per Unit Energy,4103,-152,93,28,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,442,Electricity Fuel Carbon Tax Amount per Unit Energy,1093,-78,101,21,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,443,Electricity Fuel Other Tax or Subsidy Amount per Unit Energy,4103,-76,95,28,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,444,Buildings Fuel Other Tax or Subsidy Amount per Unit Energy,4103,0,95,28,8,3,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,445,Industrial Fuel Other Tax or Subsidy Amount per Unit Energy,4103,76,95,28,8,3,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,446,District Heat and Hydrogen Fuel Other Tax or Subsidy Amount per Unit Energy,4103,171,94,28,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,447,Buildings Fuel Carbon Tax Amount per Unit Energy,1093,-2,97,21,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,448,Industrial Fuel Carbon Tax Amount per Unit Energy,1093,74,93,24,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,449,District Heat and Hydrogen Fuel Carbon Tax Amount per Unit Energy,1093,169,128,24,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,450,BCTR BAU Carbon Tax Rate,828,-274,56,19,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,451,Additional Carbon Tax Rate This Year,1093,-363,67,19,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,452,Carbon Tax Rate,1093,-274,60,11,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
 1,453,451,452,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,454,450,452,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,455,BAU Transportation Fuel Taxable CO2e Emissions Intensity,507,-4252,112,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,456,BAU Electricity Fuel Taxable CO2e Emissions Intensity,507,-4176,96,21,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,457,BAU Buildings Fuel Taxable CO2e Emissions Intensity,507,-4100,91,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,458,BAU Industrial Fuel Taxable CO2e Emissions Intensity,507,-4024,91,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,455,BAU Transportation Fuel Taxable CO2e Emissions Intensity,1968,-154,112,19,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,456,BAU Electricity Fuel Taxable CO2e Emissions Intensity,1968,-78,96,21,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,457,BAU Buildings Fuel Taxable CO2e Emissions Intensity,1968,-2,91,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,458,BAU Industrial Fuel Taxable CO2e Emissions Intensity,1968,74,91,24,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,459,120,455,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,460,123,456,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,461,131,457,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,462,133,458,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,463,GWP by Pollutant,507,-4372,67,12,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,463,GWP by Pollutant,1968,-274,67,12,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,464,463,455,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,465,463,456,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,466,463,457,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,467,463,458,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,468,BENCEfCT Boolean Exempt Non CO2 Emissions from Carbon Tax,507,-3929,119,24,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,468,BENCEfCT Boolean Exempt Non CO2 Emissions from Carbon Tax,1968,169,119,24,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,469,468,458,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,470,468,457,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,471,468,456,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,472,468,455,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,473,BAU Transportation Fuel Carbon Tax Amount per Unit Energy,-1301,-3465,84,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,473,BAU Transportation Fuel Carbon Tax Amount per Unit Energy,160,633,84,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,474,473,48,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,475,BAU Electricity Fuel Carbon Tax Amount per Unit Energy,-1301,-3305,75,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,475,BAU Electricity Fuel Carbon Tax Amount per Unit Energy,160,793,75,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,476,475,49,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,477,BAU Buildings Fuel Carbon Tax Amount per Unit Energy,-1301,-3156,73,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,477,BAU Buildings Fuel Carbon Tax Amount per Unit Energy,160,942,73,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,478,477,50,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,479,BAU Industrial Fuel Carbon Tax Amount per Unit Energy,-1301,-3012,71,32,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,479,BAU Industrial Fuel Carbon Tax Amount per Unit Energy,160,1086,71,32,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,480,479,51,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,481,BAU District Heat and Hydrogen Fuel Carbon Tax Amount per Unit Energy,-1301,-2853,88,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,481,BAU District Heat and Hydrogen Fuel Carbon Tax Amount per Unit Energy,160,1245,88,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,482,481,428,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,483,455,430,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,484,456,431,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,485,457,432,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,486,458,433,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,487,458,434,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,488,Grams per Metric Ton CO2e,824,-3816,64,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,488,Grams per Metric Ton CO2e,2285,282,64,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,489,488,434,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,490,488,433,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,491,488,432,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,492,488,431,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,493,488,430,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,494,0,178,-4533,829,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,494,0,1767,-433,957,22,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Calculating Carbon Tax Amounts per Unit Energy
-10,495,Transportation Fuel Carbon Tax Amount per Unit Energy,-1933,-3465,68,27,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,496,Electricity Fuel Carbon Tax Amount per Unit Energy,-1933,-3305,76,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,497,Buildings Fuel Carbon Tax Amount per Unit Energy,-1933,-3156,67,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,498,Industrial Fuel Carbon Tax Amount per Unit Energy,-1933,-3012,67,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,499,District Heat and Hydrogen Fuel Carbon Tax Amount per Unit Energy,-1933,-2853,92,27,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,495,Transportation Fuel Carbon Tax Amount per Unit Energy,-472,633,68,27,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,496,Electricity Fuel Carbon Tax Amount per Unit Energy,-472,793,76,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,497,Buildings Fuel Carbon Tax Amount per Unit Energy,-472,942,67,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,498,Industrial Fuel Carbon Tax Amount per Unit Energy,-472,1086,67,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,499,District Heat and Hydrogen Fuel Carbon Tax Amount per Unit Energy,-472,1245,92,27,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,500,499,429,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,501,498,55,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,502,497,54,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -50874,23 +50986,23 @@ Calculating Carbon Tax Amounts per Unit Energy
 1,517,13,449,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,518,40,449,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,519,452,449,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,520,BCTR BAU Carbon Tax Rate,824,-4372,60,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,520,BCTR BAU Carbon Tax Rate,2285,-274,60,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,521,520,430,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,522,520,431,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,523,520,432,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,524,520,433,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,525,520,434,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,526,BFPaT BAU Pretax Fuel Price by Sector,1618,-4461,66,19,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
-10,527,BFPaT BAU Fuel Tax by Sector,1618,-4372,60,19,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
-12,528,0,1440,-4533,376,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,526,BFPaT BAU Pretax Fuel Price by Sector,4422,-361,66,19,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,527,BFPaT BAU Fuel Tax by Sector,4422,-272,60,19,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+12,528,0,4135,-431,442,24,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Calculating Fuel Tax Amounts per Unit Energy
-10,529,Additional Fuel Tax or Subsidy Rate by Fuel This Year,1299,-4461,108,19,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,530,BAU Transportation Fuel Other Tax or Subsidy Amount per Unit Energy,-996,-3545,96,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,529,Additional Fuel Tax or Subsidy Rate by Fuel This Year,4103,-361,108,19,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,530,BAU Transportation Fuel Other Tax or Subsidy Amount per Unit Energy,465,553,96,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,531,530,48,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,532,BAU Electricity Fuel Other Tax or Subsidy Amount per Unit Energy,-996,-3384,91,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,533,BAU Buildings Fuel Other Tax or Subsidy Amount per Unit Energy,-996,-3228,89,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,534,BAU Industrial Fuel Other Tax or Subsidy Amount per Unit Energy,-996,-3084,89,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,535,BAU District Heat and Hydrogen Fuel Other Tax or Subsidy Amount per Unit Energy,-996,-2936,109,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,532,BAU Electricity Fuel Other Tax or Subsidy Amount per Unit Energy,465,714,91,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,533,BAU Buildings Fuel Other Tax or Subsidy Amount per Unit Energy,465,870,89,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,534,BAU Industrial Fuel Other Tax or Subsidy Amount per Unit Energy,465,1014,89,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,535,BAU District Heat and Hydrogen Fuel Other Tax or Subsidy Amount per Unit Energy,465,1162,109,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,536,532,49,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,537,533,50,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,538,534,51,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -50900,15 +51012,15 @@ Calculating Fuel Tax Amounts per Unit Energy
 1,542,527,437,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,543,527,438,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,544,527,439,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,545,Fuel Tax or Subsidy by Sector,1299,-4372,65,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,545,Fuel Tax or Subsidy by Sector,4103,-272,65,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,546,529,545,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,547,527,545,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,548,Transportation Fuel Other Tax or Subsidy Amount per Unit Energy,-1653,-3545,89,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,548,Transportation Fuel Other Tax or Subsidy Amount per Unit Energy,-192,553,89,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,549,548,52,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,550,Electricity Fuel Other Tax or Subsidy Amount per Unit Energy,-1653,-3384,90,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,551,Buildings Fuel Other Tax or Subsidy Amount per Unit Energy,-1653,-3228,93,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,552,Industrial Fuel Other Tax or Subsidy Amount per Unit Energy,-1653,-3084,93,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,553,District Heat and Hydrogen Fuel Other Tax or Subsidy Amount per Unit Energy,-1653,-2936,92,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,550,Electricity Fuel Other Tax or Subsidy Amount per Unit Energy,-192,714,90,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,551,Buildings Fuel Other Tax or Subsidy Amount per Unit Energy,-192,870,93,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,552,Industrial Fuel Other Tax or Subsidy Amount per Unit Energy,-192,1014,93,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,553,District Heat and Hydrogen Fuel Other Tax or Subsidy Amount per Unit Energy,-192,1162,92,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,554,553,429,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,555,552,55,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,556,551,54,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -50919,16 +51031,16 @@ Calculating Fuel Tax Amounts per Unit Energy
 1,561,545,445,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,562,545,446,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,563,526,545,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,564,BFPaT BAU Pretax Fuel Price by Sector,-637,-3417,70,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,564,BFPaT BAU Pretax Fuel Price by Sector,824,681,70,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,565,564,59,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,566,0,1800,-3636,692,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,566,0,3261,462,692,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 After Tax Fuel Prices
-10,567,Pretax Fuel Cost per Unit Energy by Sector after Fuel Price Deregulation,1482,-3525,87,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,568,Transportation Fuel Total Tax or Subsidy Amount per Unit Energy,1216,-3404,89,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,569,Buildings Fuel Total Tax or Subsidy Amount per Unit Energy,1216,-3237,91,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,570,Electricity Fuel Total Tax or Subsidy Amount per Unit Energy,1216,-3324,93,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,571,Industrial Fuel Total Tax or Subsidy Amount per Unit Energy,1216,-3145,91,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,572,District Heat and Hydrogen Fuel Total Tax or Subsidy Amount per Unit Energy,1216,-3044,92,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,567,Pretax Fuel Cost per Unit Energy by Sector after Fuel Price Deregulation,2943,573,87,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,568,Transportation Fuel Total Tax or Subsidy Amount per Unit Energy,2677,694,89,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,569,Buildings Fuel Total Tax or Subsidy Amount per Unit Energy,2677,861,91,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,570,Electricity Fuel Total Tax or Subsidy Amount per Unit Energy,2677,774,93,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,571,Industrial Fuel Total Tax or Subsidy Amount per Unit Energy,2677,953,91,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,572,District Heat and Hydrogen Fuel Total Tax or Subsidy Amount per Unit Energy,2677,1054,92,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,573,568,8,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,574,570,9,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,575,569,10,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -50939,93 +51051,88 @@ After Tax Fuel Prices
 1,580,567,10,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,581,567,11,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,582,567,33,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,583,BAU Transportation Fuel Total Tax or Subsidy Amount per Unit Energy,2338,-3404,94,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,584,BAU Electricity Fuel Total Tax or Subsidy Amount per Unit Energy,2338,-3324,89,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,585,BAU Buildings Fuel Total Tax or Subsidy Amount per Unit Energy,2338,-3237,89,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,586,BAU Industrial Fuel Total Tax or Subsidy Amount per Unit Energy,2338,-3145,89,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,587,BAU District Heat and Hydrogen Fuel Total Tax or Subsidy Amount per Unit Energy,2338,-3044,109,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,583,BAU Transportation Fuel Total Tax or Subsidy Amount per Unit Energy,3799,694,94,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,584,BAU Electricity Fuel Total Tax or Subsidy Amount per Unit Energy,3799,774,89,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,585,BAU Buildings Fuel Total Tax or Subsidy Amount per Unit Energy,3799,861,89,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,586,BAU Industrial Fuel Total Tax or Subsidy Amount per Unit Energy,3799,953,89,28,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,587,BAU District Heat and Hydrogen Fuel Total Tax or Subsidy Amount per Unit Energy,3799,1054,109,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,588,583,7,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,589,584,2,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,590,585,1,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,591,586,3,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,592,587,34,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,593,BFPaT BAU Pretax Fuel Price by Sector,2042,-3525,70,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,594,593,7,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,595,593,2,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,596,593,1,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,597,593,3,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,598,593,34,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,599,Industry Sector Change in Energy Expenditures by Entity,-349,-3008,113,23,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
-10,600,Fuel Production,-637,-3188,59,11,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,601,Change in Fuel Supplier Expenditures per Unit Fuel Produced,-349,-3188,77,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,602,Industry Sector Change in Nonenergy Expenditures by Entity,-349,-3084,127,24,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,593,BFPaT BAU Pretax Fuel Price by Sector,3799,573,70,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,599,Industry Sector Change in Energy Expenditures by Entity,1112,1090,113,23,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,600,Fuel Production,824,910,59,11,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,601,Change in Fuel Supplier Expenditures per Unit Fuel Produced,1112,910,77,31,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,602,Industry Sector Change in Nonenergy Expenditures by Entity,1112,1014,127,24,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
 1,603,602,601,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,604,599,601,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,605,600,601,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,606,601,20,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,607,0,-598,-3033,124,120,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,607,0,863,1065,124,120,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 This is not the cost to produce a unit of fuel.  This is the total change in costs for each fuel supplier, divided among the units of fuel that supplier produces, so that supplier can recover his/her actual costs by charging more for each unit of fuel they sell in the policy case.  This is why all changes in expenditures (including changes in expenditures due to changes in production) are included here and are divided only by the policy case fuel production, without using the BAU case fuel production.
-10,608,Total Energy Use by Sector,84,566,68,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
-10,609,BAU Total Energy Use by Sector,84,999,69,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
-10,610,Fuel Exports,-142,566,52,11,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,611,Weighted Average Pretax Fuel Price by Fuel,-142,664,81,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,608,Total Energy Use by Sector,1545,4664,68,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,609,BAU Total Energy Use by Sector,1545,5097,69,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,610,Fuel Exports,1319,4664,52,11,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,611,Weighted Average Pretax Fuel Price by Fuel,1319,4762,81,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,612,608,611,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,613,610,611,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,614,Initial BAU Weighted Average Pretax Fuel Price by Fuel,-142,880,84,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,614,Initial BAU Weighted Average Pretax Fuel Price by Fuel,1319,4978,84,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,615,609,614,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
-10,616,Percent Change in Weighted Average Pretax Fuel Price by ISIC Code,616,771,83,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-12,617,0,250,457,759,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+10,616,Percent Change in Weighted Average Pretax Fuel Price by ISIC Code,2077,4869,83,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+12,617,0,1711,4555,759,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Percent Change in Weighted Avg Fuel Prices by Producing ISIC Code
-10,618,FoPTaFbIC Fractions of Products That are Fuels by ISIC Code,861,660,88,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,619,FtPICM Fuel to Producing ISIC Code Map,320,566,60,27,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
-10,620,Weighted Average Pretax Fuel Price by Producing ISIC Code,320,666,72,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,618,FoPTaFbIC Fractions of Products That are Fuels by ISIC Code,2322,4758,88,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,619,FtPICM Fuel to Producing ISIC Code Map,1781,4664,60,27,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,620,Weighted Average Pretax Fuel Price by Producing ISIC Code,1781,4764,72,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,621,611,620,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,622,619,620,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,623,BAU Energy Production including Energy Carriers,2056,173,80,19,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,624,BAU Electricity Generation by Type,2056,-63,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,625,BAU Total District Heat Use,2056,13,60,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,626,BAU Hydrogen Produced by Pathway,2056,89,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,627,QSfE Quantization Size for Energy,2056,269,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,628,MWh per BTU,2056,340,60,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,623,BAU Energy Production including Energy Carriers,3517,4271,80,19,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,624,BAU Electricity Generation by Type,3517,4035,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,625,BAU Total District Heat Use,3517,4111,60,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,626,BAU Hydrogen Produced by Pathway,3517,4187,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,627,QSfE Quantization Size for Energy,3517,4367,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,628,MWh per BTU,3517,4438,60,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,629,627,623,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,630,628,623,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,631,626,623,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,632,625,623,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,633,624,623,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,634,Initial BAU Weighted Average Pretax Fuel Price by Producing ISIC Code,320,882,99,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,634,Initial BAU Weighted Average Pretax Fuel Price by Producing ISIC Code,1781,4980,99,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,635,614,634,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
 1,636,619,634,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
 1,637,620,616,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,638,634,616,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,639,Percent Change in Weighted Average Pretax Prices of All Products by ISIC Code,860,771,97,28,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,639,Percent Change in Weighted Average Pretax Prices of All Products by ISIC Code,2321,4869,97,28,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
 1,640,616,639,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,641,618,639,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,642,0,860,833,108,28,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,642,0,2321,4931,108,28,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 Only the effects of changes in fuel prices are included here in the change in all product prices
-12,643,0,-286,508,223,23,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,643,0,1175,4606,223,23,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 We use this price change calculation to help adjust the within-industry job intensities of the fuel producing industries in the I/O model.
-12,644,0,-1356,-2684,723,23,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,644,0,105,1414,723,23,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Balancing BAU Fuel Consumption, Production, Imports, and Exports
-10,645,BAU Total Primary Fuel Use,-1422,-2301,67,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
-12,646,0,-1715,-2608,364,42,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+10,645,BAU Total Primary Fuel Use,39,1797,67,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+12,646,0,-254,1490,364,42,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 For each fuel, BAU in-region consumption should equal BAU production plus BAU imports minus BAU exports.  BAU consumption data is summed from the various sectors, which have the data with high granularity particular to each sector.  We ensure the equation holds by calculating one of the three other terms (production, imports, or exports), with the term to be calculated specified by input data (since this can vary by fuel and by modeled region).
-12,647,0,-1425,-2370,93,28,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,647,0,36,1728,93,28,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 BAU Total Primary Fuel Use already includes the GDP adjustment, if any.
-10,648,FPIEBP Fuel Production Import Export Balancing Priorities,-1130,-2047,80,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,649,BAU Fuel Production Imports and Exports after First Priority Balancing,-1422,-2174,86,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,648,FPIEBP Fuel Production Import Export Balancing Priorities,331,2051,80,28,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,649,BAU Fuel Production Imports and Exports after First Priority Balancing,39,1924,86,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,650,648,649,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,651,645,649,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,652,Fuel Imbalance after First Priority Balancing,-1130,-2301,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,652,Fuel Imbalance after First Priority Balancing,331,1797,72,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,653,649,652,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,654,645,652,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,655,QSfE Quantization Size for Energy,-1130,-2428,70,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,655,QSfE Quantization Size for Energy,331,1670,70,19,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
 1,656,655,652,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,657,BAU Fuel Production Imports and Exports after Second Priority Balancing,-1130,-2174,96,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,657,BAU Fuel Production Imports and Exports after Second Priority Balancing,331,1924,96,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,658,652,657,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,659,649,657,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,660,648,657,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,661,Fuel Imbalance after Second Priority Balancing,-854,-2301,82,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,662,BAU Fuel Production Imports and Exports,-854,-2174,70,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,661,Fuel Imbalance after Second Priority Balancing,607,1797,82,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,662,BAU Fuel Production Imports and Exports,607,1924,70,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
 1,663,657,661,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,664,655,661,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,665,645,661,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -51033,51 +51140,51 @@ BAU Total Primary Fuel Use already includes the GDP adjustment, if any.
 1,667,657,662,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,668,648,662,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,669,168,649,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,670,BAU Fuel Production Imports and Exports,-1891,-1315,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,671,BAU Fuel Production Imports and Exports,-1891,-983,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,672,BAU Fuel Production Imports and Exports,-1891,-1611,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,670,BAU Fuel Production Imports and Exports,-430,2783,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,671,BAU Fuel Production Imports and Exports,-430,3115,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,672,BAU Fuel Production Imports and Exports,-430,2487,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,673,672,267,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,674,670,270,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,675,671,271,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,676,670,302,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,677,671,303,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,678,BAU Fuel Production Imports and Exports,374,-1678,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,678,BAU Fuel Production Imports and Exports,1835,2420,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,679,678,262,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,680,678,261,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,681,BAU Fuel Production Imports and Exports,-1491,-606,65,27,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,681,BAU Fuel Production Imports and Exports,-30,3492,65,27,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,682,681,203,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,683,681,204,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,684,BAU Fuel Production Imports and Exports,-1491,-146,61,27,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,684,BAU Fuel Production Imports and Exports,-30,3952,61,27,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,685,684,76,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,686,684,169,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,687,BAU Fuel Production Imports and Exports,-1969,896,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,687,BAU Fuel Production Imports and Exports,-508,4994,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,688,687,226,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,689,BAU Fuel Production Imports and Exports,1840,173,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,689,BAU Fuel Production Imports and Exports,3301,4271,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,690,689,623,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,691,BAU Fuel Production Imports and Exports,-890,-1391,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,691,BAU Fuel Production Imports and Exports,571,2707,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,692,691,251,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,693,691,278,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,694,BAU Fuel Production Imports and Exports,-1109,-1126,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,694,BAU Fuel Production Imports and Exports,352,2972,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,695,694,400,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,696,BAU Fuel Production Imports and Exports,-435,-1523,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,696,BAU Fuel Production Imports and Exports,1026,2575,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,697,696,68,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,698,BAU Fuel Production Imports and Exports,-1186,-491,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,698,BAU Fuel Production Imports and Exports,275,3607,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,699,698,170,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,700,BAU Fuel Production Imports and Exports,-142,999,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,700,BAU Fuel Production Imports and Exports,1319,5097,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,701,700,614,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
-10,702,Industry Sector Change in Energy Expenditures for Natural Gas Production,-349,-2937,94,28,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,702,Industry Sector Change in Energy Expenditures for Natural Gas Production,1112,1161,94,28,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
 1,703,702,601,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,704,Percent Change in Fuel Costs due to Energy Price Feedbacks,-24,-3529,77,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,704,Percent Change in Fuel Costs due to Energy Price Feedbacks,1437,569,77,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,705,44,704,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,706,59,704,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,707,0,-349,-2836,123,60,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,707,0,1112,1262,123,60,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 We separate energy expenses used to produce natural gas from energy expenses used to produce crude oil or secondary petroleum fuels so the potentially large changes in amount spent on crude oil by the refining industry don't affect natural gas prices.
-10,708,EIaE BAU Exported Electricity,614,-113,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,709,MWh per BTU,398,75,58,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,710,QSfE Quantization Size for Energy,614,75,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,711,BAU Fuel Production Imports and Exports,849,75,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,712,BAU Energy Exports including Electricity,614,-19,68,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,713,BAU Energy Imports including Electricity,614,169,68,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,708,EIaE BAU Exported Electricity,2075,3985,68,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,709,MWh per BTU,1859,4173,58,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,710,QSfE Quantization Size for Energy,2075,4173,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,711,BAU Fuel Production Imports and Exports,2310,4173,74,19,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,712,BAU Energy Exports including Electricity,2075,4079,68,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,713,BAU Energy Imports including Electricity,2075,4267,68,19,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
 1,714,709,712,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,715,709,713,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,716,710,712,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -51085,29 +51192,26 @@ We separate energy expenses used to produce natural gas from energy expenses use
 1,718,708,712,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,719,711,712,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,720,711,713,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,721,0,2281,-731,566,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,721,0,3742,3367,566,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Adding Energy Carriers to Changes in Production
-10,722,BFPaT BAU Pretax Fuel Price by Sector,-392,771,70,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,723,722,611,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,724,722,614,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
-10,725,IMFPbFT International Market Fuel Price by Fuel Type,-142,771,80,29,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,725,IMFPbFT International Market Fuel Price by Fuel Type,1319,4869,80,29,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,726,725,611,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,727,725,614,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
 1,728,608,620,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,729,609,634,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
-12,730,0,-367,932,91,97,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,730,0,2080,5059,91,97,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 Even in the BAU case, fuel prices can fluctuate greatly from year to year and grow over the model run in ways that do not translate into jobs or employee compensation changes, so we remove price effects relative to the INITIAL BAU value, rather than the current-year BAU value.
-12,731,0,1447,457,400,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+12,731,0,2908,4555,400,20,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Percent Change in BAU Fuel Production Relative to Initial Year
-12,732,0,1394,502,347,17,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,732,0,2855,4600,347,17,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 This is used to assist in calculating changes in employment and employee compensation in the I/O model.
-10,733,BAU Energy Production including Energy Carriers,1404,585,72,27,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
-10,734,Initial BAU Energy Production including Energy Carriers,1404,701,72,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,735,Change in BAU Energy Production vs Initial Year,1695,701,81,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,736,BAU Energy Imports including Electricity,1404,1041,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,737,Initial BAU Energy Imports including Electricity,1404,934,60,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,738,Change in BAU Energy Imports vs Initial Year,1695,934,75,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,739,Percent Change in BAU Energy Production and Imports vs Initial Year by ISIC Code,1695,818,108,28,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,733,BAU Energy Production including Energy Carriers,2865,4683,72,27,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,734,Initial BAU Energy Production including Energy Carriers,2865,4799,72,29,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,735,Change in BAU Energy Production vs Initial Year,3156,4799,81,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,736,BAU Energy Imports including Electricity,2865,5139,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,737,Initial BAU Energy Imports including Electricity,2865,5032,60,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,738,Change in BAU Energy Imports vs Initial Year,3156,5032,75,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,739,Percent Change in BAU Energy Production and Imports vs Initial Year by ISIC Code,3156,4916,108,28,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
 1,740,733,734,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
 1,741,733,735,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,742,734,735,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -51118,27 +51222,81 @@ This is used to assist in calculating changes in employment and employee compens
 1,747,737,738,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,748,738,739,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,749,737,739,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,750,BAU Fuel Export Revenue,-977,-606,60,19,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,750,BAU Fuel Export Revenue,484,3492,60,19,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
 1,751,70,750,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,752,698,750,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,753,FSPbPPT Fuel Surcharge Percentage by Power Plant Type,1760,-3324,73,27,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,753,FSPbPPT Fuel Surcharge Percentage by Power Plant Type,3221,774,73,27,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
 1,754,753,9,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,755,753,2,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,756,FoICStCT Fraction of Industry Category Subject to Carbon Tax,-368,-4342,92,28,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,757,FoICStCT Fraction of Industry Category Subject to Carbon Tax,-633,-4024,92,28,8,2,0,5,-1,0,0,0,128-128-128,128-192-0,|||128-128-128,0,0,0,0,0,0
+10,756,FoICStCT Fraction of Industry Category Subject to Carbon Tax,1093,-244,92,28,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,757,FoICStCT Fraction of Industry Category Subject to Carbon Tax,828,74,92,28,8,2,0,5,-1,0,0,0,128-128-128,128-192-0,|||128-128-128,0,0,0,0,0,0
 1,758,757,448,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,759,FoICStCT Fraction of Industry Category Subject to Carbon Tax,1064,-4024,92,28,8,2,0,5,-1,0,0,0,128-128-128,128-192-0,|||128-128-128,0,0,0,0,0,0
+10,759,FoICStCT Fraction of Industry Category Subject to Carbon Tax,2525,74,92,28,8,2,0,5,-1,0,0,0,128-128-128,128-192-0,|||128-128-128,0,0,0,0,0,0
 1,760,759,433,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,761,Imported Electricity,614,-222,36,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,761,Imported Electricity,2075,3876,36,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,762,761,174,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,763,BAU Imported Electricity,614,265,54,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,763,BAU Imported Electricity,2075,4363,54,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,764,763,713,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,765,Share of Fuel Production by Fuel within ISIC Code,1404,815,82,19,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
-10,766,FtPICM Fuel to Producing ISIC Code Map,1746,882,70,28,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,767,FtPICM Fuel to Producing ISIC Code Map,1213,815,70,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,765,Share of Fuel Production by Fuel within ISIC Code,2865,4913,82,19,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,766,FtPICM Fuel to Producing ISIC Code Map,3207,4980,70,28,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,767,FtPICM Fuel to Producing ISIC Code Map,2674,4913,70,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,768,767,765,0,0,0,0,0,0,0,-1--1--1,,1|(0,0)|
 1,769,765,739,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,770,733,765,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,771,Electricity Supplier Expenditures after Subsidies per Unit Electricity Produced,2900,-343,102,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,772,BAU Electricity Supplier Expenditures after Subsidies per Unit Electricity Produced,3464,-346,102,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+12,773,0,3197,-433,435,24,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Calculating Electricity Prices
+10,774,BFPaT BAU Pretax Fuel Price by Sector,3169,191,70,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,775,Last Year Electricity Supplier Expenditures after Subsidies per Unit Electricity Produced,2900,-194,102,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,776,BAU Last Year Electricity Supplier Expenditures after Subsidies per Unit Electricity Produced,3464,-242,112,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,777,Additional Retail Electricity Costs per Unit Electricity Produced,3170,-230,86,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,778,Start Year Electricity Prices by Sector,3169,54,67,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,779,774,778,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
+10,780,Start Year Electricity Supplier Expenditures after Subsidies per Unit Electricity Produced,3170,-346,102,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,781,778,777,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
+1,782,771,775,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,783,This Year Pretax Electricity Price by Sector,2899,54,60,28,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+1,784,778,783,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,785,INITIAL TIME,3916,-40,60,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,786,785,783,0,1,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,787,Time,3916,-40,26,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,788,787,783,0,1,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,789,772,780,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
+10,790,BAU This Year Pretax Electricity Price by Sector,3463,54,83,19,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+1,791,772,776,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,792,776,790,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,793,778,790,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,794,INITIAL TIME,4250,71,60,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,795,794,790,0,1,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,796,Time,4250,71,26,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,797,796,790,0,1,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,798,This Year Pretax Electricity Price by Sector,3860,-272,60,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,799,798,545,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,800,775,783,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,801,780,777,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
+10,802,Last Year Additional Retail Electricity Costs per Unit Electricity Produced,3170,-63,86,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,803,777,802,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,804,802,783,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,805,802,790,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,806,0,3186,338,177,47,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+Prices are constant in the first two years because we need to calculate the price differential in the star year but we use a one year delay electriicty price to avoid circularity, which results in the same electricity prices in the first two simulated years.
+12,807,0,1679,730,117,28,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+Electricity prices are endogenously calculated elsewhere in the model, so they are not part of this calculation
+10,808,This Year Pretax Electricity Price by Sector,1112,802,60,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,809,808,59,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,810,BAU This Year Pretax Electricity Price by Sector,3221,573,87,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,818,BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices,1038,4869,93,28,8,2,0,3,0,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,821,818,611,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,822,818,614,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
+10,823,BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices,3503,573,93,28,8,3,0,4,-1,0,0,0,-1--1--1,192-192-192,|||128-128-128,0,0,0,0,0,0
+1,824,823,7,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,825,823,2,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,826,823,1,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,827,823,3,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,828,823,34,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,831,593,823,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,832,810,823,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Endogenous Learning
@@ -55705,7 +55863,7 @@ Revenue changes for fuel-supplying cash flow entities should be the same after a
 :L<%^E!@
 1:MostRecentRun.vdfx
 4:Time
-5:SYTaDC Start Year Distribution Capital Costs
+5:BAU Pretax Fuel Price by Sector Including Endogenous Electricity Prices[All Fuels,Sectors]
 6:Acute bronchitis
 6:age 16to19
 6:age 20to24
@@ -58223,7 +58381,7 @@ Revenue changes for fuel-supplying cash flow entities should be the same after a
 6:Year2099
 6:Year2100
 9:MostRecentRun
-19:55,9
+19:130,1
 24:2021
 25:2050
 26:2050
