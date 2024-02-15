@@ -16,7 +16,7 @@ FirstYear = "2021" # The first year you wish to include in the output file (cann
 FinalYear = "2050" # The last year you wish to include in the output file (cannot be later than last simulated year)
 OutputScript = "GeneratedDataLoggingScript.cmd" # The desired filename of the Vensim command script to be generated
 OutputVarsFile = "OutputVarsFor2035JointModeling.lst" # The name of the file containing a list of variables to be included in the RunResultsFile
-SettingsFiles = [""]
+SettingsFiles = ["","Scenario_NDC"]
 	# This is the list of settings files to be tested, with .cin extensions.
 	# Include a blank entry (e.g. "") to include BAU case.
 
