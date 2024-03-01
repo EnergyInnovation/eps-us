@@ -5564,7 +5564,7 @@ PolicyElements = (
   ),
   (("geoeng direct air capture"),
     ("Schedule 1",(2021,0),(2022,0),(2050,1)),
-    ("Schedule 2",(2021,0),(2030,0),(2040,0.75),(2050,1)),
+    ("Schedule 2",(2021,0),(2030,0),(2031,1),(2040,1),(2041,0.85),(2042,0.8),(2050,0.8)),
   ),
   (("settings exogenous GDP adjustment"),
     ("Schedule 1",(2021,1),(2050,1)),
