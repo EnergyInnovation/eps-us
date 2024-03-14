@@ -823,7 +823,7 @@ PolicyElements = (
   ),
   (("elec early retirement","hard coal es"),
     ("Schedule 1",(2021,0),(2023,0),(2024,1),(2050,1)),
-    ("Schedule 2",(2021,0),(2023,1),(2030,1),(2050,1)),
+    ("Schedule 2",(2021,0),(2023,0),(2024,1),(2030,1),(2050,1)),
   ),
   (("elec early retirement","natural gas steam turbine es"),
     ("Schedule 1",(2021,0),(2023,0),(2024,1),(2050,1)),
