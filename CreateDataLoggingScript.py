@@ -15,7 +15,7 @@ ModelFile = "EPS.mdl" # The name of the Vensim model file (typically with .mdl o
 FirstYear = "2021" # The first year you wish to include in the output file (cannot be prior to first simulated year)
 FinalYear = "2050" # The last year you wish to include in the output file (cannot be later than last simulated year)
 OutputScript = "GeneratedDataLoggingScript.cmd" # The desired filename of the Vensim command script to be generated
-OutputVarsFile = "OutputVarsToExport-SY-Calibration.lst" # The name of the file containing a list of variables to be included in the RunResultsFile
+OutputVarsFile = "OutputVarsToExport.lst" # The name of the file containing a list of variables to be included in the RunResultsFile
 SettingsFiles = [""]
 	# This is the list of settings files to be tested, with .cin extensions.
 	# Include a blank entry (e.g. "") to include BAU case.
