@@ -21,7 +21,7 @@ FirstYear = 2021 # Update this based on the first simulated year of the model ru
 FinalYear = 2100 # This should be the final year supported by EPS.mdl (i.e., 2100), not the final year actually used in a given region.
 MaxSchedules = 9
 MaxSubscripts = 3
-RoundingDigits = 6
+RoundingDigits = 3
 
 
 # Policy Implementation Schedules
@@ -1574,6 +1574,9 @@ PolicyElements = (
   ),
   (("elec battery subsidy per output"),
     ("Schedule 1",(2021,0),(2023,0),(2050,1)),
+  ),
+  (("elec non BAU RACP"),
+    ("Schedule 1",(2021,0),(2023,0),(2024,1),(2050,1)),
   ),
   (("bldgs rebate","heating"),
     ("Schedule 1",(2021,0),(2023,0),(2024,1),(2050,1)),
@@ -5481,7 +5484,7 @@ PolicyElements = (
   ),
   (("land afforestation and reforestation"),
     ("Schedule 1",(2021,0),(2023,0),(2050,1)),
-    ("Schedule 2",(2021,0),(2023,0),(2024,1),(2050,1)),
+    ("Schedule 2",(2021,0),(2023,0),(2024,1),(2030,1),(2050,1)),
   ),
   (("land forest management"),
     ("Schedule 1",(2021,0),(2023,0),(2050,1)),
@@ -5878,11 +5881,10 @@ PolicyElements = (
   ),
   (("geoeng direct air capture"),
     ("Schedule 1",(2021,0),(2023,0),(2050,1)),
-    ("Schedule 2",(2021,0),(2029,0),(2030,1),(2050,1)),
   ),
   (("geoeng enhanced rock weathering"),
     ("Schedule 1",(2021,0),(2023,0),(2050,1)),
-    ("Schedule 2",(2021,0),(2029,0),(2030,1),(2050,1)),
+    ("Schedule 2",(2021,0),(2024,0),(2030,0.238),(2050,1)),
   ),
   (("settings exogenous GDP adjustment"),
     ("Schedule 1",(2021,1),(2050,1)),
@@ -6148,6 +6150,13 @@ def WriteVensimFile():
     # New line for next policy element
     f.write("\n")
 
+# define rounding
+
+def round_to_three_decimal_places(x):
+    if isinstance(x, (int, float)):
+        return round(x, 3)
+    return x
+
 # Write a .csv file formatted for use by the web app
 def WriteWebAppFile():
 
@@ -6161,17 +6170,22 @@ def WriteWebAppFile():
   for PolicyElement in PolicyElements:
   
     WritePolicyAndSubscriptNames(PolicyElement)
-
+    
     ActiveSchedule = SetActiveSchedule(PolicyElement)
 
-    # Write schedule data
-    for Year in range(FirstYear,FinalYear+1):
-      if Year-FirstYear < len(ActiveSchedule):
-        f.write(str(ActiveSchedule[Year-FirstYear][0])+",")
-        f.write(str(ActiveSchedule[Year-FirstYear][1])+",")
-      elif Year < FinalYear:
-        f.write(",,")
+# Write schedule data
+    for Year in range(FirstYear, FinalYear + 1):
+        if Year - FirstYear < len(ActiveSchedule):
+         # Round numerical components to 3 decimal places
+            first_element = round_to_three_decimal_places(ActiveSchedule[Year - FirstYear][0])
+            second_element = round_to_three_decimal_places(ActiveSchedule[Year - FirstYear][1])
+
+            f.write(str(first_element) + ",")
+            f.write(str(second_element) + ",")
+        elif Year < FinalYear:
+            f.write(",,")
     f.write(",\n")
+    
 
 def WritePolicyElementsFile():
   f.write("Policy Element Subscript\n")
