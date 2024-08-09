@@ -5884,7 +5884,7 @@ PolicyElements = (
   ),
   (("geoeng enhanced rock weathering"),
     ("Schedule 1",(2021,0),(2023,0),(2050,1)),
-    ("Schedule 2",(2021,0),(2024,0),(2030,0.238),(2050,1)),
+    ("Schedule 2",(2021,0),(2024,0),(2030,0.1),(2050,1)),
   ),
   (("settings exogenous GDP adjustment"),
     ("Schedule 1",(2021,1),(2050,1)),
