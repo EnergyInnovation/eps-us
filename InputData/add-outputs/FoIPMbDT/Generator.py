@@ -8,7 +8,7 @@ def create_csv_files():
     
     for first in first_abbr_list:
         for second in second_abbr_list:
-            filename = f"FoCaAPMbDT-{first}-{second}.csv"
+            filename = f"FoIPMbDT-{first}-{second}.csv"
             filepath = os.path.join(directory, filename)
             
             with open(filepath, mode='w', newline='') as file:
