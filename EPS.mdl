@@ -769,8 +769,8 @@ Amount Spent on Building Components[Building Type,Building Component]=
 	~	$
 	~		|
 
-Amount Spent on Buildings Fuels[Building Type,Building Component,Building Fuel]=
-	Building Components Energy Use[Building Type,Building Fuel,Building Component]
+Amount Spent on Buildings Fuels[Building Type,Building Fuel]=
+	Building Components Energy Use With Fuel Costs[Building Type,Building Fuel]
 	* Buildings Fuel Cost per Unit Energy[Building Fuel,Building Type]
 	~	$
 	~		|
@@ -1191,6 +1191,16 @@ Annual Output from Distributed Electricity Capacity[Electricity Source]=
 		,Electricity Timeslice!,Hour!,Building Type!]*SHELF Days per Electricity Timeslice[\
 		Electricity Timeslice!])
 	~	MW*hr
+	~		|
+
+Annual Output from Distributed Electricity Capacity by Building Type[Electricity Source\
+		,Building Type]=
+	Annual Output from Distributed Electricity Capacity[Electricity Source]
+	* ZIDZ(
+	    Distributed Electricity Source Capacity[Building Type,Electricity Source],
+	    SUM(Distributed Electricity Source Capacity[Building Type!,Electricity Source])
+	  )
+	~	MW*hour
 	~		|
 
 Annual Output from Diurnal Grid Batteries=
@@ -1949,8 +1959,8 @@ BAU Amount Received from Exporting Electricity=
 	~	$
 	~		|
 
-BAU Amount Spent on Buildings Fuels[Building Type,Building Component,Building Fuel]=
-	BAU Building Components Energy Use[Building Type,Building Fuel,Building Component]
+BAU Amount Spent on Buildings Fuels[Building Type,Building Fuel]=
+	BAU Building Components Energy Use With Fuel Costs[Building Type,Building Fuel]
 	* BAU Buildings Fuel Cost per Unit Energy[Building Fuel,Building Type]
 	~	$
 	~		|
@@ -1960,8 +1970,7 @@ BAU Amount Spent on Buildings Fuels Mapped to All Fuels Subscript[All Fuels] :EX
 	0 ~~|
 BAU Amount Spent on Buildings Fuels Mapped to All Fuels Subscript[building fuel within all fuels\
 		]=
-	SUM(BAU Amount Spent on Buildings Fuels[Building Type!,Building Component!,Building Fuel\
-		])
+	SUM(BAU Amount Spent on Buildings Fuels[Building Type!,Building Fuel])
 	~	$
 	~		|
 
@@ -2372,6 +2381,17 @@ BAU Annual Output from Distributed Electricity Capacity[Electricity Source]=
 	~	MW*hr
 	~		|
 
+BAU Annual Output from Distributed Electricity Capacity by Building Type[Building Type\
+		,Electricity Source]=
+	BAU Annual Output from Distributed Electricity Capacity[Electricity Source]
+	* ZIDZ(
+	    BAU Distributed Electricity Source Capacity[Building Type,Electricity Source],
+	    SUM(BAU Distributed Electricity Source Capacity[Building Type!,Electricity Source\
+		])
+	  )
+	~	MW*hour
+	~		|
+
 BAU Annual Output from Diurnal Grid Batteries=
 	BAU Annual Decrease in Demand from Load Shifting Technologies Excluding Demand Response Programs
 	* SUM(BAU Share of Maximum Annual Decrease in Demand from Diurnal Grid Batteries[last pass\
@@ -2729,6 +2749,20 @@ BAU Building Components Energy Use[commercial,Building Fuel,Building Component]=
 ])
 	* (1 + Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment[commercial buildings sector\
 		])
+	~	BTU
+	~		|
+
+BAU Building Components Energy Use With Fuel Costs[Building Type,Building Fuel] :EXCEPT:\
+		      [Building Type,electricity bf]=
+	SUM(BAU Building Components Energy Use[Building Type,Building Fuel,Building Component\
+		!]) ~~|
+BAU Building Components Energy Use With Fuel Costs[Building Type,electricity bf]=
+	SUM(BAU Building Components Energy Use[Building Type,electricity bf,Building Component\
+		!])
+	- BAU Annual Output from Distributed Electricity Capacity by Building Type[Building Type\
+		,solar PV es]/MWh per BTU
+	- BAU Annual Output from Distributed Electricity Capacity by Building Type[Building Type\
+		,onshore wind es]/MWh per BTU
 	~	BTU
 	~		|
 
@@ -11030,8 +11064,7 @@ BAU Taxes Paid on Buildings Fuels Mapped to All Fuels Subscript[All Fuels] :EXCE
 	0 ~~|
 BAU Taxes Paid on Buildings Fuels Mapped to All Fuels Subscript[building fuel within all fuels\
 		]=
-	SUM(BAU Total Tax Paid on Buildings Fuels[Building Type!,Building Component!,Building Fuel\
-		])
+	SUM(BAU Total Tax Paid on Buildings Fuels[Building Type!,Building Fuel])
 	~	$
 	~		|
 
@@ -12425,9 +12458,8 @@ BAU Total Subsidies per Unit Electricity Supplied to the Grid by Grid Batteries=
 	~	$/(MW*hr)
 	~		|
 
-BAU Total Tax Paid on Buildings Fuels[Building Type,Building Component,Building Fuel]\
-		=
-	BAU Building Components Energy Use[Building Type,Building Fuel,Building Component]
+BAU Total Tax Paid on Buildings Fuels[Building Type,Building Fuel]=
+	BAU Building Components Energy Use With Fuel Costs[Building Type,Building Fuel]
 	* BAU Buildings Fuel Total Tax or Subsidy Amount per Unit Energy[Building Fuel,Building Type\
 		]
 	~	$
@@ -16362,6 +16394,20 @@ Building Components Energy Use[commercial,Building Fuel,Building Component]=
 	~	BTU
 	~		|
 
+Building Components Energy Use With Fuel Costs[Building Type,Building Fuel] :EXCEPT:     \
+		[Building Type,electricity bf]=
+	SUM(Building Components Energy Use[Building Type,Building Fuel,Building Component!])\
+		 ~~|
+Building Components Energy Use With Fuel Costs[Building Type,electricity bf]=
+	SUM(Building Components Energy Use[Building Type,electricity bf,Building Component!]\
+		)
+	- Annual Output from Distributed Electricity Capacity by Building Type[solar PV es,Building Type\
+		]/MWh per BTU
+	- Annual Output from Distributed Electricity Capacity by Building Type[onshore wind es\
+		,Building Type]/MWh per BTU
+	~	BTU
+	~		|
+
 Building Fuel:
 	electricity bf,
 	hard coal bf,
@@ -16494,8 +16540,7 @@ Buildings Sector Carbon Tax Revenue=
 
 Buildings Sector Change in Energy Expenditures by Entity[Cash Flow Entity]=
 	SUM(
-	  Change in Amount Spent on Buildings Fuels[Building Type!,Building Component!,Building Fuel\
-		!]
+	  Change in Amount Spent on Buildings Fuels[Building Type!,Building Fuel!]
 	  * Fraction of Buildings Owned by Entity after Allocation to Energy Supplier Entities\
 		[Cash Flow Entity,Building Type!]
 	)
@@ -16534,10 +16579,8 @@ Buildings Sector Change in Fuel Industry Cash Flow[Building Fuel]=
 
 Buildings Sector Change in Fuel Industry Cash Flow before Subsidies and Rebates[Building Fuel\
 		]=
-	SUM(Change in Amount Spent on Buildings Fuels[Building Type!,Building Component!,Building Fuel\
-		])
-	- SUM(Change in Buildings Fuel Taxes Paid[Building Type!,Building Component!,Building Fuel\
-		])
+	SUM(Change in Amount Spent on Buildings Fuels[Building Type!,Building Fuel])
+	- SUM(Change in Buildings Fuel Taxes Paid[Building Type!,Building Fuel])
 	~	$
 	~		|
 
@@ -16622,8 +16665,7 @@ Buildings Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC Code]=
 	~		|
 
 Buildings Sector Change in Revenue by Entity[government]=
-	SUM(Change in Buildings Fuel Taxes Paid[Building Type!,Building Component!,Building Fuel\
-		!])
+	SUM(Change in Buildings Fuel Taxes Paid[Building Type!,Building Fuel!])
 	+ Change in Revenue from Buildings Sector Subsidies and Rebates by Entity[government\
 		] ~~|
 Buildings Sector Change in Revenue by Entity[nonenergy industries]=
@@ -16714,8 +16756,7 @@ Buildings Subtotal Change in Capital Expenditures=
 	~		|
 
 Buildings Subtotal Change in Tax Revenues=
-	SUM(Change in Buildings Fuel Taxes Paid[Building Type!,Building Component!,Building Fuel\
-		!])
+	SUM(Change in Buildings Fuel Taxes Paid[Building Type!,Building Fuel!])
 	~	$
 	~		|
 
@@ -18323,11 +18364,9 @@ Change in Amount Spent on Building Components by Recipient ISIC Code[ISIC Code]=
 	~	$
 	~		|
 
-Change in Amount Spent on Buildings Fuels[Building Type,Building Component,Building Fuel\
-		]=
-	Amount Spent on Buildings Fuels[Building Type,Building Component,Building Fuel]
-	- BAU Amount Spent on Buildings Fuels[Building Type,Building Component,Building Fuel\
-		]
+Change in Amount Spent on Buildings Fuels[Building Type,Building Fuel]=
+	Amount Spent on Buildings Fuels[Building Type,Building Fuel]
+	- BAU Amount Spent on Buildings Fuels[Building Type,Building Fuel]
 	~	$
 	~		|
 
@@ -18594,10 +18633,9 @@ Change in Budget Deficit=
 	~	$/Year
 	~		|
 
-Change in Buildings Fuel Taxes Paid[Building Type,Building Component,Building Fuel]=
-	Total Tax Paid on Buildings Fuels[Building Type,Building Component,Building Fuel]
-	- BAU Total Tax Paid on Buildings Fuels[Building Type,Building Component,Building Fuel\
-		]
+Change in Buildings Fuel Taxes Paid[Building Type,Building Fuel]=
+	Total Tax Paid on Buildings Fuels[Building Type,Building Fuel]
+	- BAU Total Tax Paid on Buildings Fuels[Building Type,Building Fuel]
 	~	$
 	~		|
 
@@ -46604,8 +46642,7 @@ Total Change in Energy Market Revenue for CCUS Retrofits[CCUS Electricity Source
 
 Total Change in Fuel Expenditures=
 	QUANTUM(
-	  SUM(Change in Amount Spent on Buildings Fuels[Building Type!,Building Component!,Building Fuel\
-		!])
+	  SUM(Change in Amount Spent on Buildings Fuels[Building Type!,Building Fuel!])
 	  + SUM(Change in Amount Spent on District Heating Fuels[Industrial Fuel!])
 	  + SUM(Change in Amount Spent on Hydrogen Sector Fuels[Industrial Fuel!])
 	  + SUM(Change in Amount Spent on Electricity Fuels[Electricity Source!])
@@ -47385,8 +47422,8 @@ Total Subsidies per Unit Electricity Supplied to the Grid by Grid Batteries=
 	~	$/(MW*hr)
 	~		|
 
-Total Tax Paid on Buildings Fuels[Building Type,Building Component,Building Fuel]=
-	Building Components Energy Use[Building Type,Building Fuel,Building Component]
+Total Tax Paid on Buildings Fuels[Building Type,Building Fuel]=
+	Building Components Energy Use With Fuel Costs[Building Type,Building Fuel]
 	* Buildings Fuel Total Tax or Subsidy Amount per Unit Energy[Building Fuel,Building Type\
 		]
 	~	$
@@ -60169,233 +60206,253 @@ Since input BCEU data may not be perfectly in sync with input lifetime (CL) data
 V300  Do not put anything below this section - it will be ignored
 *Buildings - Cash Flow
 $192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,85,0
-10,1,Amount Spent on Building Components,1256,-424,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,2,Amount Spent on Buildings Fuels,-329,-547,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,3,BAU Buildings Fuel Cost per Unit Energy,-329,-227,75,30,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
-10,4,BAU Amount Spent on Buildings Fuels,-329,-335,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1,Amount Spent on Building Components,1786,424,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,2,Amount Spent on Buildings Fuels,201,301,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,3,BAU Buildings Fuel Cost per Unit Energy,201,812,75,30,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,4,BAU Amount Spent on Buildings Fuels,201,704,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,5,3,4,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-10,6,Buildings Sector Change in Fuel Industry Cash Flow before Subsidies and Rebates,-109,-435,75,30,8,131,0,20,0,0,0,0,-1--1--1,255-192-128,||I|0-0-0,0,0,0,0,0,0
-10,7,FoBObE Fraction of Buildings Owned by Entity,-329,1168,75,30,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,8,Total Tax Paid on Buildings Fuels,98,-547,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,9,BAU Total Tax Paid on Buildings Fuels,98,-335,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,10,Change in Buildings Fuel Taxes Paid,98,-435,75,30,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,6,Buildings Sector Change in Fuel Industry Cash Flow before Subsidies and Rebates,416,506,75,30,8,131,0,20,0,0,0,0,-1--1--1,255-192-128,||I|0-0-0,0,0,0,0,0,0
+10,7,FoBObE Fraction of Buildings Owned by Entity,201,2016,75,30,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,8,Total Tax Paid on Buildings Fuels,628,301,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,9,BAU Total Tax Paid on Buildings Fuels,628,704,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,10,Change in Buildings Fuel Taxes Paid,628,506,75,30,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
 1,11,9,10,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,12,8,10,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,13,10,6,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-10,14,Change in Amount Spent on Building Components,1256,-315,75,30,8,3,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,15,Change in Amount Spent on Buildings Fuels,-329,-435,75,30,8,3,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
-10,16,Buildings Fuel Cost per Unit Energy,-329,-659,75,30,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,14,Change in Amount Spent on Building Components,1786,533,75,30,8,3,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,15,Change in Amount Spent on Buildings Fuels,201,506,75,30,8,3,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,16,Buildings Fuel Cost per Unit Energy,201,185,75,30,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
 1,17,16,2,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-10,18,EoCPwEU Elasticity of Component Price wrt Energy Use,1256,-544,75,30,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,19,Percent Change in Components Energy Use,964,-544,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,18,EoCPwEU Elasticity of Component Price wrt Energy Use,1786,304,75,30,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,19,Percent Change in Components Energy Use,1494,304,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,20,19,1,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-10,21,BASoBC BAU Amount Spent on Building Components,1256,-204,75,30,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,21,BASoBC BAU Amount Spent on Building Components,1786,644,75,30,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
 1,22,18,1,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-12,23,0,-136,-744,335,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+12,23,0,394,104,335,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Change in Fuel Costs and Taxes
-12,24,0,1079,-744,779,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+12,24,0,1609,104,779,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Change in Building Component Costs and Taxes
-10,25,New Components Potential Energy Use after Fuel Shifting,964,-656,75,30,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,25,New Components Potential Energy Use after Fuel Shifting,1494,192,75,30,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,26,25,19,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-10,27,RnD Building Capital Cost Perc Reduction This Year,964,-424,75,30,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,27,RnD Building Capital Cost Perc Reduction This Year,1494,424,75,30,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
 1,28,27,1,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-10,29,Building Components Energy Use,-109,-547,75,30,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-1,30,29,2,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,31,Buildings Fuel Total Tax or Subsidy Amount per Unit Energy,98,-659,75,30,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
-10,32,BAU Buildings Fuel Total Tax or Subsidy Amount per Unit Energy,98,-227,75,30,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,29,Building Components Energy Use,416,185,75,30,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,31,Buildings Fuel Total Tax or Subsidy Amount per Unit Energy,628,185,75,30,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,32,BAU Buildings Fuel Total Tax or Subsidy Amount per Unit Energy,628,812,75,30,8,130,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
 1,33,31,8,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,34,29,8,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,35,32,9,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,36,0,364,56,837,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+12,36,0,894,904,837,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Change in Distributed Solar Costs and Subsidy
-10,37,CpUDSC Cost per Unit Distributed Solar Capacity,-117,137,75,30,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
-10,38,Subsidy Paid on Distributed Solar Capacity,840,269,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,39,Buildings Sector Change in Nonenergy Industry Revenue by ISIC Code,1072,1233,75,30,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,37,CpUDSC Cost per Unit Distributed Solar Capacity,413,985,75,30,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,38,Subsidy Paid on Distributed Solar Capacity,1370,1117,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,39,Buildings Sector Change in Nonenergy Industry Revenue by ISIC Code,1602,2081,75,30,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
 1,40,2,15,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,41,4,15,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,42,15,6,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,43,1,14,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,44,21,14,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,45,BAU This Year Increase in Distributed Electricity Source Capacity,407,643,75,30,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,46,First Year Cost per Unit Distributed Solar Capacity,-117,230,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,45,BAU This Year Increase in Distributed Electricity Source Capacity,937,1491,75,30,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,46,First Year Cost per Unit Distributed Solar Capacity,413,1078,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,47,37,46,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
-10,48,Cost per Unit Distributed Solar Capacity,140,324,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,49,BAU Cost per Unit Distributed Solar Capacity,140,543,75,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,50,BAU Amount Spent on Distributed Solar Capacity,407,543,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,48,Cost per Unit Distributed Solar Capacity,670,1172,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,49,BAU Cost per Unit Distributed Solar Capacity,670,1391,75,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,50,BAU Amount Spent on Distributed Solar Capacity,937,1391,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,51,48,53,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,52,45,50,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,53,Amount Spent on Distributed Solar Capacity,407,324,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,53,Amount Spent on Distributed Solar Capacity,937,1172,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,54,49,50,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,55,Cost per Unit Distributed Solar Capacity,650,269,75,30,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,55,Cost per Unit Distributed Solar Capacity,1180,1117,75,30,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,56,55,38,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,57,Change in Amount Spent on Distributed Solar Capacity,407,440,75,30,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|192-192-192,0,0,0,0,0,0
+10,57,Change in Amount Spent on Distributed Solar Capacity,937,1288,75,30,8,131,0,20,0,0,0,0,-1--1--1,192-192-192,||I|192-192-192,0,0,0,0,0,0
 1,58,50,57,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,59,53,57,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,60,Amount Spent on Retrofitting Buildings,964,-315,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,61,One Year,572,-255,75,30,8,130,1,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
-10,62,This Year Change in Distributed Electricity Source Capacity,407,230,75,30,8,130,0,7,0,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,60,Amount Spent on Retrofitting Buildings,1494,533,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,61,One Year,1102,593,75,30,8,130,1,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,62,This Year Change in Distributed Electricity Source Capacity,937,1078,75,30,8,130,0,7,0,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,63,62,53,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,64,This Year Change in Distributed Electricity Source Capacity,840,160,75,30,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,64,This Year Change in Distributed Electricity Source Capacity,1370,1008,75,30,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,65,64,38,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,66,BAU Building Components Energy Use,-109,-335,75,30,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-1,67,66,9,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,68,66,4,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,69,Percent Reduction in All Existing Buildings Energy Use due to Retrofitting Preexisting Buildings,422,-544,75,30,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,70,Last Year Reduction in All Existing Buildings Energy Use due to Retrofitting Preexisting Buildings,692,-424,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,71,Energy Use Reduction from Buildings Retrofit This Year,692,-315,75,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,66,BAU Building Components Energy Use,416,812,75,30,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,69,Percent Reduction in All Existing Buildings Energy Use due to Retrofitting Preexisting Buildings,952,304,75,30,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,70,Last Year Reduction in All Existing Buildings Energy Use due to Retrofitting Preexisting Buildings,1222,424,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,71,Energy Use Reduction from Buildings Retrofit This Year,1222,533,75,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,72,70,71,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,73,BRESaC Retrofitting Cost per Unit Energy Saved,692,-204,75,30,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,73,BRESaC Retrofitting Cost per Unit Energy Saved,1222,644,75,30,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
 1,74,73,60,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,75,71,60,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,76,21,1,1,0,0,0,0,128,0,-1--1--1,,1|(1166,-312)|
-10,77,Hypothetical BAU New Components Energy Use after Fuel Shifting,692,-544,75,30,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,76,21,1,1,0,0,0,0,128,0,-1--1--1,,1|(1696,536)|
+10,77,Hypothetical BAU New Components Energy Use after Fuel Shifting,1222,304,75,30,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,78,77,19,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,79,0,62,766,520,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+12,79,0,592,1614,520,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Allocating Changes in Expenditures
-10,80,Buildings Sector Change in Energy Expenditures by Entity,-86,1266,75,30,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,81,Buildings Sector Change in Nonenergy Expenditures by Entity,422,1266,75,30,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,82,Change in Amount Spent on Buildings Fuels,-86,1168,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,83,Change in Amount Spent on Building Components,422,941,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,84,Change in Amount Spent on Distributed Solar Capacity,422,1013,75,30,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,80,Buildings Sector Change in Energy Expenditures by Entity,444,2114,75,30,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,81,Buildings Sector Change in Nonenergy Expenditures by Entity,952,2114,75,30,8,131,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,82,Change in Amount Spent on Buildings Fuels,444,2016,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,83,Change in Amount Spent on Building Components,952,1789,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,84,Change in Amount Spent on Distributed Solar Capacity,952,1861,75,30,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,85,84,81,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,86,83,81,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,87,82,80,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,88,0,1183,766,521,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+12,88,0,1713,1614,521,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Allocating Changes in Revenue
-10,89,Buildings Sector Change in Revenue by Entity,1326,1233,75,30,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,90,Buildings Sector Change in Fuel Industry Cash Flow before Subsidies and Rebates,1575,1089,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,91,Change in Buildings Fuel Taxes Paid,1326,1089,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,89,Buildings Sector Change in Revenue by Entity,1856,2081,75,30,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,90,Buildings Sector Change in Fuel Industry Cash Flow before Subsidies and Rebates,2105,1937,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,91,Change in Buildings Fuel Taxes Paid,1856,1937,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,92,90,89,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,93,39,89,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,94,Change in Revenue from Buildings Sector Subsidies and Rebates by Entity,1326,1361,75,30,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,94,Change in Revenue from Buildings Sector Subsidies and Rebates by Entity,1856,2209,75,30,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
 1,95,94,89,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,96,94,39,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,97,Buildings Sector Change in Nonenergy Industry Expenditures by ISIC Code,175,1476,75,30,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
+10,97,Buildings Sector Change in Nonenergy Industry Expenditures by ISIC Code,705,2324,75,30,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,||I|0-0-0,0,0,0,0,0,0
 1,98,80,97,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,99,81,97,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,100,60,1,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,101,Change in Amount Spent on Building Components,807,965,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,102,Change in Amount Spent on Distributed Solar Capacity,807,1089,75,30,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,101,Change in Amount Spent on Building Components,1337,1813,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,102,Change in Amount Spent on Distributed Solar Capacity,1337,1937,75,30,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,103,91,89,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,104,0,1650,59,392,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+12,104,0,2180,907,392,24,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Calculating Efficient Component Rebate Payments
-10,105,Fraction New Components by Quality Level,1387,293,75,30,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-12,106,0,1527,126,264,33,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+10,105,Fraction New Components by Quality Level,1917,1141,75,30,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+12,106,0,2057,974,264,33,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 All rebate-qualifying components receive the rebate, not just the ones where the purchase decision was altered due to the rebate policy, to capture the "free riders" who get the rebate but would have bought the efficient component anyway.
-10,107,Amount Spent on Building Components,1675,202,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,108,Amount Spent on Rebate Qualifying Components,1675,293,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,107,Amount Spent on Building Components,2205,1050,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,108,Amount Spent on Rebate Qualifying Components,2205,1141,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,109,107,108,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,110,105,108,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,111,Boolean Rebate Program for Efficient Components This Year,1387,398,75,30,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,112,RPbBCT Rebate Percentage by Building Component Type,1935,398,75,30,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,113,Building Component Rebate Amount Paid,1675,398,75,30,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,111,Boolean Rebate Program for Efficient Components This Year,1917,1246,75,30,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,112,RPbBCT Rebate Percentage by Building Component Type,2465,1246,75,30,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,113,Building Component Rebate Amount Paid,2205,1246,75,30,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
 1,114,108,113,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,115,112,113,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,116,111,113,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,117,Building Component Rebate Amount Paid by Entity,422,858,75,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,118,Building Component Rebate Amount Paid,175,941,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,119,Building Components Energy Use,175,858,75,30,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,117,Building Component Rebate Amount Paid by Entity,952,1706,75,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,118,Building Component Rebate Amount Paid,705,1789,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,119,Building Components Energy Use,705,1706,75,30,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,120,119,117,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,121,118,117,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,122,Building Component Rebate Amount Paid,1572,1456,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,122,Building Component Rebate Amount Paid,2102,2304,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,123,117,81,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,124,122,94,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,125,0,1079,837,416,44,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,125,0,1609,1685,416,44,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 The portion of non-energy industries' revenue going to labor (e.g. payments to their workers), to taxes (e.g. sales taxes on their products and corporate and worker income taxes), and to foreign entities (e.g. if the non-energy goods were purchased from abroad rather than from a domestic company) are separated out after the change in nonenergy industry revenue has been totaled across sectors.  Taxes on fuel/energy and special policy lever-driven taxes (and subsidies) are handled here.
-10,126,SoBCaICbIC Share of Buildings Capital and Installation Costs by ISIC Code,1072,965,75,30,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,127,Change in Amount Spent on Building Components by Recipient ISIC Code,1072,1089,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,126,SoBCaICbIC Share of Buildings Capital and Installation Costs by ISIC Code,1602,1813,75,30,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,127,Change in Amount Spent on Building Components by Recipient ISIC Code,1602,1937,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,128,101,127,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,129,126,127,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,130,127,39,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,131,CpUDSC Soft Costs per Unit Distributed Solar Capacity,140,440,75,30,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
-10,132,This Year Solar and Wind Hard Costs as Fraction of Last Year Hard Costs,140,230,75,30,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
-10,133,BAU This Year Solar and Wind Hard Costs as Fraction of Last Year Hard Costs,140,643,75,30,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,131,CpUDSC Soft Costs per Unit Distributed Solar Capacity,670,1288,75,30,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,132,This Year Solar and Wind Hard Costs as Fraction of Last Year Hard Costs,670,1078,75,30,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,133,BAU This Year Solar and Wind Hard Costs as Fraction of Last Year Hard Costs,670,1491,75,30,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
 1,134,132,48,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,135,131,49,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,136,133,49,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,137,First Year Soft Costs per Unit Distributed Solar Capacity,-117,440,75,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,137,First Year Soft Costs per Unit Distributed Solar Capacity,413,1288,75,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,138,131,137,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
 1,139,131,48,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,140,First Year Cost per Unit Distributed Solar Capacity,-117,643,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,141,Additional Perc Subsidy for Distributed Solar PV Capacity This Year,1062,160,75,30,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,140,First Year Cost per Unit Distributed Solar Capacity,413,1491,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,141,Additional Perc Subsidy for Distributed Solar PV Capacity This Year,1592,1008,75,30,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
 1,142,141,38,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,143,New Components Potential Energy Use after Fuel Shifting,1774,-204,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,144,New Components Potential Energy Use after Price Efficiency Feedbacks,1504,-79,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,145,Changes in New Components Energy Use due to Fuel Shifting,1504,-204,75,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,143,New Components Potential Energy Use after Fuel Shifting,2304,644,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,144,New Components Potential Energy Use after Price Efficiency Feedbacks,2034,769,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,145,Changes in New Components Energy Use due to Fuel Shifting,2034,644,75,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,146,144,145,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,147,143,145,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,148,RBFF Recipient Buildings Fuel Fractions,1774,-315,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,149,New Component Energy Use Shifted to Electricity,1504,-315,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,148,RBFF Recipient Buildings Fuel Fractions,2304,533,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,149,New Component Energy Use Shifted to Electricity,2034,533,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,150,148,149,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,151,145,149,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,152,ICpUEfEBE Incremental Cost per Unit Energy for Electrified Building Equipment,1774,-424,75,30,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
-10,153,Incremental Amount Spent to Buy Electrified Building Components,1504,-424,75,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,152,ICpUEfEBE Incremental Cost per Unit Energy for Electrified Building Equipment,2304,424,75,30,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,153,Incremental Amount Spent to Buy Electrified Building Components,2034,424,75,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,154,149,153,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,155,152,153,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,156,153,1,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,157,SoDSCbRIC Share of Distriuted Solar Costs by Recipient ISIC Code,807,1361,75,30,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,158,Change in Amount Spent on Distributed Solar Capacity by Recipient ISIC Code,807,1233,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,157,SoDSCbRIC Share of Distriuted Solar Costs by Recipient ISIC Code,1337,2209,75,30,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,158,Change in Amount Spent on Distributed Solar Capacity by Recipient ISIC Code,1337,2081,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,159,102,158,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,160,157,158,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,161,158,39,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,162,SoBRCBbG Share of Building Retrofit Costs Borne by Government,964,-95,75,30,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,162,SoBRCBbG Share of Building Retrofit Costs Borne by Government,1494,753,75,30,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
 1,163,27,60,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,164,Subsidy Paid for Retrofitting Buildings,964,-204,75,30,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,164,Subsidy Paid for Retrofitting Buildings,1494,644,75,30,8,131,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
 1,165,162,164,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,166,Subsidy Paid for Retrofitting Buildings,1587,1249,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,167,Subsidy Paid for Retrofitting Buildings,422,1168,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,166,Subsidy Paid for Retrofitting Buildings,2117,2097,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,167,Subsidy Paid for Retrofitting Buildings,952,2016,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,168,167,81,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,169,60,164,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,170,166,94,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,171,Amount Spent on Industry Fuels,-329,1476,75,30,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
-10,172,Percent of Nonenergy Industry Electricity and Natural Gas Spending by ISIC Code,-86,1476,75,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,171,Amount Spent on Industry Fuels,201,2324,75,30,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,172,Percent of Nonenergy Industry Electricity and Natural Gas Spending by ISIC Code,444,2324,75,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,173,171,172,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,174,172,97,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,175,Percent of Nonenergy Industry Electricity and Natural Gas Spending by ISIC Code,1072,1361,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,175,Percent of Nonenergy Industry Electricity and Natural Gas Spending by ISIC Code,1602,2209,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,176,175,39,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,177,Share of Output by Energy Supplier Cash Flow Entity,-329,1374,75,30,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
-10,178,Fraction of Buildings Owned by Entity after Allocation to Energy Supplier Entities,-329,1266,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,177,Share of Output by Energy Supplier Cash Flow Entity,201,2222,75,30,8,2,0,19,-1,0,0,0,128-128-128,0-0-0,||I|128-128-128,0,0,0,0,0,0
+10,178,Fraction of Buildings Owned by Entity after Allocation to Energy Supplier Entities,201,2114,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,179,177,178,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,180,7,178,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,181,178,80,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,182,Fraction of Buildings Owned by Entity after Allocation to Energy Supplier Entities,175,1266,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,182,Fraction of Buildings Owned by Entity after Allocation to Energy Supplier Entities,705,2114,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,183,182,81,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,184,Fraction of Buildings Owned by Entity after Allocation to Energy Supplier Entities,1326,1506,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,184,Fraction of Buildings Owned by Entity after Allocation to Energy Supplier Entities,1856,2354,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,185,184,94,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,186,Components Energy Use after Macroeconomic Feedbacks,422,-315,75,30,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,187,Reduction in All Existing Buildings Energy Use due to Retrofitting Preexisting Buildings,422,-424,75,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,186,Components Energy Use after Macroeconomic Feedbacks,952,533,75,30,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,187,Reduction in All Existing Buildings Energy Use due to Retrofitting Preexisting Buildings,952,424,75,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,188,69,187,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,189,186,187,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,190,187,70,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,191,187,71,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,192,BPSfDSPC BAU Perc Subsidy for Distributed Solar PV Capacity,840,379,75,30,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,192,BPSfDSPC BAU Perc Subsidy for Distributed Solar PV Capacity,1370,1227,75,30,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
 1,193,192,38,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,194,BAU This Year Increase in Distributed Electricity Source Capacity,840,584,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,195,BAU Subsidy Paid on Distributed Solar Capacity,840,489,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,196,Change in Subsidy Paid on Distributed Solar Capacity,1063,379,75,30,8,3,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
+10,194,BAU This Year Increase in Distributed Electricity Source Capacity,1370,1432,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,195,BAU Subsidy Paid on Distributed Solar Capacity,1370,1337,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,196,Change in Subsidy Paid on Distributed Solar Capacity,1593,1227,75,30,8,3,0,20,0,0,0,0,-1--1--1,192-192-192,||I|0-0-0,0,0,0,0,0,0
 1,197,194,195,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,198,192,195,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,199,38,196,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,200,195,196,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,201,Change in Subsidy Paid on Distributed Solar Capacity,422,1089,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,201,Change in Subsidy Paid on Distributed Solar Capacity,952,1937,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,202,201,81,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,203,Change in Subsidy Paid on Distributed Solar Capacity,1587,1361,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,203,Change in Subsidy Paid on Distributed Solar Capacity,2117,2209,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,204,203,94,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,205,Last Year Cost per Unit Distributed Solar Capacity,-117,324,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,205,Last Year Cost per Unit Distributed Solar Capacity,413,1172,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,206,46,205,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
 1,207,48,205,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,208,205,48,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,209,Last Year Soft Costs per Unit Distributed Solar Capacity,-342,440,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,209,Last Year Soft Costs per Unit Distributed Solar Capacity,188,1288,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,210,137,209,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
 1,211,131,209,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,212,209,48,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,213,209,49,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,214,BAU Last Year Cost per Unit Distributed Solar Capacity,-117,543,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,214,BAU Last Year Cost per Unit Distributed Solar Capacity,413,1391,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,215,140,214,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
 1,216,214,49,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,217,49,214,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,218,BAU Cost per Unit Distributed Solar Capacity,650,489,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,218,BAU Cost per Unit Distributed Solar Capacity,1180,1337,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,219,218,195,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,220,Annual Output from Distributed Electricity Capacity,201,395,68,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,221,Distributed Electricity Source Capacity,628,395,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,222,BAU Annual Output from Distributed Electricity Capacity,201,598,87,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,223,BAU Distributed Electricity Source Capacity,628,598,59,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,224,BAU Annual Output from Distributed Electricity Capacity by Building Type,416,598,98,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,225,Annual Output from Distributed Electricity Capacity by Building Type,416,395,84,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,226,220,225,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,227,221,225,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,228,Building Components Energy Use With Fuel Costs,416,301,70,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,229,BAU Building Components Energy Use With Fuel Costs,416,704,91,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,230,225,228,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,231,29,228,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,232,228,2,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,233,228,8,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,234,222,224,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,235,223,224,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,236,224,229,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,237,66,229,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,238,229,4,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,239,229,9,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,240,MWh per BTU,416,742,58,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,241,240,229,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,242,MWh per BTU,416,348,58,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,243,242,228,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Industry - Main
@@ -68398,7 +68455,7 @@ Revenue changes for fuel-supplying cash flow entities should be the same after a
 :L<%^E!@
 1:NoSettings.vdfx
 4:Time
-5:Retiring Generation Capacity[Electricity Source]
+5:Total Change in Fuel Expenditures
 6:a1
 6:Acute bronchitis
 6:age 16to19
@@ -71299,7 +71356,7 @@ Revenue changes for fuel-supplying cash flow entities should be the same after a
 6:Work loss days
 6:Year2021
 9:NoSettings
-19:76,9
+19:85,12
 24:2021
 25:2050
 26:2050
