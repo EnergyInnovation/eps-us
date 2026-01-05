@@ -10,14 +10,14 @@
 # 2 = copy a schedule to a new schedule number, unless there is an existing schedule using that number
 # 3 = copy a schedule to a new schedule number, overwriting any existing schedule using that number
 
-EditMode = 2
+EditMode = 1
 
 
 # Schedule Selection
 # ------------------
 
 # Enter the number of the schedule you wish to delete or copy
-ExistingScheduleNumber = 7
+ExistingScheduleNumber = 3
 
 # Enter the number you wish to use for the new, duplicate schedule (only relevant when copying a schedule)
 NewScheduleNumber = 8
