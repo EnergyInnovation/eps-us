@@ -6039,6 +6039,7 @@ PolicyElements = (
   ),
   (("indst CCS","iron and steel 241","process emissions"),
     ("Schedule 1",(2024,0),(2025,0),(2050,1)),
+    ("Schedule 2",(2024,0),(2030,0),(2050,1)),
   ),
   (("indst CCS","other metals 242","energy related emissions"),
     ("Schedule 1",(2024,0),(2025,0),(2050,1)),
