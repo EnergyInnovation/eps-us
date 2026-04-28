@@ -8,7 +8,7 @@ import numpy as np
 # =========================
 # Paths / filenames
 # =========================
-BASE_DIR = r"C:\Users\MeganMahajan\Documents\eps-us\InputData\trans\TTS"
+BASE_DIR = r"C:\Users\RobbieOrvis\Models\US\Models\eps-us\InputData\trans\TTS"
 
 INPUT_FILE = os.path.join(BASE_DIR, "calibration_parameters.csv")
 TEMPLATE_FILE = os.path.join(BASE_DIR, "format.csv")
@@ -192,7 +192,7 @@ def write_flat(weights: pd.DataFrame) -> None:
     # keep extra cols if present
     extra = [c for c in weights.columns if c not in cols]
     weights[cols + extra].to_csv(OUT_FLAT, index=False)
-    print(f"\n✅ Wrote shareweights to:\n{OUT_FLAT}")
+    print(f"\nOK: Wrote shareweights to:\n{OUT_FLAT}")
 
 
 # -------------------------
@@ -254,8 +254,8 @@ def fill_template(weights: pd.DataFrame) -> None:
         writer = csv.writer(f)
         writer.writerows(output_rows)
 
-    print(f"\n✅ Wrote formatted output to:\n{OUT_TEMPLATE}")
-    print(f"✅ Filled {filled_nonzero} nonzero year-cells (zeros written as 0).")
+    print(f"\nOK: Wrote formatted output to:\n{OUT_TEMPLATE}")
+    print(f"OK: Filled {filled_nonzero} nonzero year-cells (zeros written as 0).")
 
 
 # -------------------------
