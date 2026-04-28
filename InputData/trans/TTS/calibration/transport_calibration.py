@@ -8,7 +8,7 @@ import numpy as np
 # =========================
 # Paths / filenames
 # =========================
-BASE_DIR = r"C:\Users\RobbieOrvis\Models\US\Models\eps-us\InputData\trans\TTS"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 INPUT_FILE = os.path.join(BASE_DIR, "calibration_parameters.csv")
 TEMPLATE_FILE = os.path.join(BASE_DIR, "format.csv")
