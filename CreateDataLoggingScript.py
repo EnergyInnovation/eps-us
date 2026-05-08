@@ -6,13 +6,15 @@
 # The Vensim command script runs simulations based on a list of .cin
 # settings files and logs the output to separate, tab-separated files.
 
+import os
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # File Names
 # ----------
 # Rather than including input and output file names in the code below, we assign all the file
 # names to variables in this section.  This allows the names to be easily changed if desired.
 ModelFile = "EPS.mdl" # The name of the Vensim model file (typically with .mdl or .vpm extension)
-FirstYear = "2021" # The first year you wish to include in the output file (cannot be prior to first simulated year)
+FirstYear = "2025" # The first year you wish to include in the output file (cannot be prior to first simulated year)
 FinalYear = "2050" # The last year you wish to include in the output file (cannot be later than last simulated year)
 OutputScript = "GeneratedDataLoggingScript.cmd" # The desired filename of the Vensim command script to be generated
 OutputVarsFile = "OutputVarsToExport.lst" # The name of the file containing a list of variables to be included in the RunResultsFile
