@@ -1655,25 +1655,33 @@ Battery Energy Balance of System Cost per Unit Capacity=
 Battery Energy Cost per Unit Capacity=
 	IF THEN ELSE(
 	   BCpUC Battery Energy Cost per Unit Capacity > 0,
-	
-	   BCpUC Battery Energy Cost per Unit Capacity,
-	
+
+	   (BCpUC Battery Energy Cost per Unit Capacity
+	    - Battery Energy Balance of System Cost per Unit Capacity)
+	   * (1 + Tariff Cost Multiplier on Grid Batteries This Year)
+	   + Battery Energy Balance of System Cost per Unit Capacity,
+
 	  IF THEN ELSE(
 	    Battery Energy Cost per Unit Capacity with One Year Delay > 0,
 	      (Battery Energy Cost per Unit Capacity with One Year Delay
 	       - Battery Energy Balance of System Cost per Unit Capacity)
 	      * This Year Battery Cost as Fraction of Last Year Battery Cost
+	      * (1 + Tariff Cost Multiplier on Grid Batteries This Year)
 	      + Battery Energy Balance of System Cost per Unit Capacity,
-	
-	      (Last Year Battery Energy Cost per Unit Capacity
+
+	      ((Last Year Battery Energy Cost per Unit Capacity
 	       - Battery Energy Balance of System Cost per Unit Capacity)
+	       / (1 + Last Year Tariff Cost Multiplier on Grid Batteries))
 	      * This Year Battery Cost as Fraction of Last Year Battery Cost
+	      * (1 + Tariff Cost Multiplier on Grid Batteries This Year)
 	      + Battery Energy Balance of System Cost per Unit Capacity
 	   )
 	)
 	~	$/(MW*hr)
 	~	Only the cost of the battery itself, not the balance of system, is \
-		affected by endogenous learning.
+		affected by endogenous learning. Tariff applies to the battery hard cost \
+		(excluding BoS) and is divided out from last year's value in the recursive \
+		branch to prevent year-over-year compounding.
 	|
 
 Battery Energy Cost per Unit Capacity with One Year Delay= DELAY FIXED (
@@ -1692,24 +1700,33 @@ Battery Power Balance of System Cost per Unit Capacity=
 Battery Power Cost per Unit Capacity=
 	IF THEN ELSE(
 	   BCpUC Battery Power Cost per Unit Capacity > 0,
-	
-	   BCpUC Battery Power Cost per Unit Capacity,
-	
+
+	   (BCpUC Battery Power Cost per Unit Capacity
+	    - Battery Power Balance of System Cost per Unit Capacity)
+	   * (1 + Tariff Cost Multiplier on Grid Batteries This Year)
+	   + Battery Power Balance of System Cost per Unit Capacity,
+
 	  IF THEN ELSE(
 	    Battery Power Cost per Unit Capacity with One Year Delay > 0,
 	      (Battery Power Cost per Unit Capacity with One Year Delay
 	       - Battery Power Balance of System Cost per Unit Capacity)
 	      * This Year Battery Cost as Fraction of Last Year Battery Cost
+	      * (1 + Tariff Cost Multiplier on Grid Batteries This Year)
 	      + Battery Power Balance of System Cost per Unit Capacity,
-	
-	      (Last Year Battery Power Cost per Unit Capacity
+
+	      ((Last Year Battery Power Cost per Unit Capacity
 	       - Battery Power Balance of System Cost per Unit Capacity)
+	       / (1 + Last Year Tariff Cost Multiplier on Grid Batteries))
 	      * This Year Battery Cost as Fraction of Last Year Battery Cost
+	      * (1 + Tariff Cost Multiplier on Grid Batteries This Year)
 	      + Battery Power Balance of System Cost per Unit Capacity
 	   )
 	)
 	~	$/MW
-	~		|
+	~	Tariff applies to the battery hard cost (excluding BoS) and is divided \
+		out from last year's value in the recursive branch to prevent year-over-year \
+		compounding.
+	|
 
 Battery Power Cost per Unit Capacity with One Year Delay=
 	DELAY FIXED(
@@ -4505,6 +4522,7 @@ BAU Distributed Electricity Source Capacity[Building Type,solar PV es]=
 
 BAU Distribution Construction Costs=
 	BAU Change in Peak Load*DCCpUIiPL Distribution Construction Cost per Unit Increase in Peak Load
+	* (1 + Tariff Cost Multiplier on Distribution This Year)
 	~	$
 	~		|
 
@@ -9267,6 +9285,8 @@ BAU New Vehicle Price after Endogenous Vehicle Learning[Vehicle Type,Cargo Type,
 		]
 	  + NBPoNVP Non Battery Portion of New Vehicle Price[Vehicle Type,Cargo Type,Vehicle Technology\
 		]
+	    * (1 + Tariff Cost Multiplier on Vehicle Non Battery This Year[Vehicle Type,Cargo Type,Vehicle Technology\
+		])
 	~	$/vehicle
 	~		|
 
@@ -12086,6 +12106,8 @@ BAU This Year Battery Portion of Vehicle Price[Cargo Type,Vehicle Type,Vehicle T
 	* This Year Battery Capacity by Vehicle Type[Cargo Type,Vehicle Type,Vehicle Technology\
 		]
 	* BPM Battery Pack Markup[Vehicle Type,Cargo Type]
+	* (1 + Tariff Cost Multiplier on EV Batteries This Year[Vehicle Type,Cargo Type,Vehicle Technology\
+		])
 	~	$/vehicle
 	~		|
 
@@ -13363,6 +13385,7 @@ BAU Total Vehicle Battery Production Subsidy Amount Paid[Vehicle Type,Cargo Type
 BAU Transmission Construction Costs=
 	SUM(BAU New Generation Capacity Excluding Retrofit Capacity[Electricity Source!])
 	* TCCpUNEC Transmission Construction Cost per Unit New Electricity Capacity
+	* (1 + Tariff Cost Multiplier on Transmission This Year)
 	~	$
 	~		|
 
@@ -22417,17 +22440,19 @@ solar PV es
 ],[offshore wind es],[hard coal w CCS es],[natural gas combined cycle w CCS es],[biomass w CCS es\
 		],[lignite w CCS es]=
 	CCaMC BAU Construction Cost per Unit Capacity[Electricity Source]
+	* (1 + Tariff Cost Multiplier on Electricity Capacity This Year[Electricity Source])
 	* (1 - RnD Electricity Capital Cost Perc Reduction This Year[Electricity Source]) ~~|
 Construction Cost per Unit Capacity before Construction Subsidies[onshore wind es]=
 	IF THEN ELSE(
 	  CCaMC BAU Construction Cost per Unit Capacity[onshore wind es] > 0,
-	
+
 	  (CCaMC BAU Construction Cost per Unit Capacity[onshore wind es] - CCaMC BAU Soft Costs per Unit Capacity\
 		[onshore wind es
 	])
+	  * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[onshore wind es])
 	  * (1 - RnD Electricity Capital Cost Perc Reduction This Year[onshore wind es])
 	  + Soft Costs per Unit Capacity[onshore wind es],
-	
+
 	  IF THEN ELSE(
 	    CCaMC BAU Construction Cost per Unit Capacity With One Year Delay[onshore wind es\
 		] > 0,
@@ -22436,13 +22461,16 @@ Construction Cost per Unit Capacity before Construction Subsidies[onshore wind e
 	[onshore wind es])
 	      * This Year Solar and Wind Hard Costs as Fraction of Last Year Hard Costs[onshore wind es\
 		]
+	      * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[onshore wind es])
 	      * (1 - RnD Electricity Capital Cost Perc Reduction This Year[onshore wind es])
 	      + Soft Costs per Unit Capacity[onshore wind es],
-	
-	      (Last Year Construction Cost per Unit Capacity before Construction Subsidies[onshore wind es\
+
+	      ((Last Year Construction Cost per Unit Capacity before Construction Subsidies[onshore wind es\
 		] - BAU Last Year Soft Costs per Unit Capacity[onshore wind es])
+	       / (1 + Last Year Tariff Cost Multiplier on Electricity Capacity[onshore wind es]))
 	      * This Year Solar and Wind Hard Costs as Fraction of Last Year Hard Costs[onshore wind es\
 		]
+	      * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[onshore wind es])
 	      * (1 - RnD Electricity Capital Cost Perc Reduction This Year[onshore wind es])
 	      + Soft Costs per Unit Capacity[onshore wind es]
 	   )
@@ -22450,13 +22478,14 @@ Construction Cost per Unit Capacity before Construction Subsidies[onshore wind e
 Construction Cost per Unit Capacity before Construction Subsidies[solar PV es]=
 	IF THEN ELSE(
 	  CCaMC BAU Construction Cost per Unit Capacity[solar PV es] > 0,
-	
+
 	  (CCaMC BAU Construction Cost per Unit Capacity[solar PV es] - CCaMC BAU Soft Costs per Unit Capacity\
 		[solar PV es
 	])
+	  * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[solar PV es])
 	  * (1 - RnD Electricity Capital Cost Perc Reduction This Year[solar PV es])
 	  + Soft Costs per Unit Capacity[solar PV es],
-	
+
 	  IF THEN ELSE(
 	    CCaMC BAU Construction Cost per Unit Capacity With One Year Delay[solar PV es] >\
 		 0,
@@ -22465,13 +22494,16 @@ Construction Cost per Unit Capacity before Construction Subsidies[solar PV es]=
 	[solar PV es])
 	      * This Year Solar and Wind Hard Costs as Fraction of Last Year Hard Costs[solar PV es\
 		]
+	      * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[solar PV es])
 	      * (1 - RnD Electricity Capital Cost Perc Reduction This Year[solar PV es])
 	      + Soft Costs per Unit Capacity[solar PV es],
-	
-	      (Last Year Construction Cost per Unit Capacity before Construction Subsidies[solar PV es\
+
+	      ((Last Year Construction Cost per Unit Capacity before Construction Subsidies[solar PV es\
 		] - BAU Last Year Soft Costs per Unit Capacity[solar PV es])
+	       / (1 + Last Year Tariff Cost Multiplier on Electricity Capacity[solar PV es]))
 	      * This Year Solar and Wind Hard Costs as Fraction of Last Year Hard Costs[solar PV es\
 		]
+	      * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[solar PV es])
 	      * (1 - RnD Electricity Capital Cost Perc Reduction This Year[solar PV es])
 	      + Soft Costs per Unit Capacity[solar PV es]
 	   )
@@ -22479,13 +22511,14 @@ Construction Cost per Unit Capacity before Construction Subsidies[solar PV es]=
 Construction Cost per Unit Capacity before Construction Subsidies[offshore wind es]=
 	IF THEN ELSE(
 	  CCaMC BAU Construction Cost per Unit Capacity[offshore wind es] > 0,
-	
+
 	  (CCaMC BAU Construction Cost per Unit Capacity[offshore wind es] - CCaMC BAU Soft Costs per Unit Capacity\
 		[offshore wind es
 	])
+	  * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[offshore wind es])
 	  * (1 - RnD Electricity Capital Cost Perc Reduction This Year[offshore wind es])
 	  + Soft Costs per Unit Capacity[offshore wind es],
-	
+
 	  IF THEN ELSE(
 	    CCaMC BAU Construction Cost per Unit Capacity With One Year Delay[offshore wind es\
 		] > 0,
@@ -22493,14 +22526,17 @@ Construction Cost per Unit Capacity before Construction Subsidies[offshore wind 
 		] - BAU Last Year Soft Costs per Unit Capacity[offshore wind es])
 	      * This Year Solar and Wind Hard Costs as Fraction of Last Year Hard Costs[offshore wind es\
 		]
+	      * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[offshore wind es])
 	      * (1 - RnD Electricity Capital Cost Perc Reduction This Year[offshore wind es]\
 		)
 	      + Soft Costs per Unit Capacity[offshore wind es],
-	
-	      (Last Year Construction Cost per Unit Capacity before Construction Subsidies[offshore wind es\
+
+	      ((Last Year Construction Cost per Unit Capacity before Construction Subsidies[offshore wind es\
 		] - BAU Last Year Soft Costs per Unit Capacity[offshore wind es])
+	       / (1 + Last Year Tariff Cost Multiplier on Electricity Capacity[offshore wind es]))
 	      * This Year Solar and Wind Hard Costs as Fraction of Last Year Hard Costs[offshore wind es\
 		]
+	      * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[offshore wind es])
 	      * (1 - RnD Electricity Capital Cost Perc Reduction This Year[offshore wind es]\
 		)
 	      + Soft Costs per Unit Capacity[offshore wind es]
@@ -22510,25 +22546,29 @@ Construction Cost per Unit Capacity before Construction Subsidies[hard coal w CC
 		=
 	IF THEN ELSE(
 	  CCaMC BAU Construction Cost per Unit Capacity[hard coal w CCS es] > 0,
-	
+
 	  (CCaMC BAU Construction Cost per Unit Capacity[hard coal w CCS es] - CCaMC BAU Soft Costs per Unit Capacity\
 		[hard coal w CCS es])
+	  * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[hard coal w CCS es])
 	  * (1 - RnD Electricity Capital Cost Perc Reduction This Year[hard coal w CCS es])
 	  + Soft Costs per Unit Capacity[hard coal w CCS es],
-	
+
 	  IF THEN ELSE(
 	    CCaMC BAU Construction Cost per Unit Capacity With One Year Delay[hard coal w CCS es\
 		] > 0,
 	      (CCaMC BAU Construction Cost per Unit Capacity With One Year Delay[hard coal w CCS es\
 		] - BAU Last Year Soft Costs per Unit Capacity[hard coal w CCS es])
 	      * This Year CCS Cost as Fraction of Last Year CCS Cost
+	      * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[hard coal w CCS es])
 	      * (1 - RnD Electricity Capital Cost Perc Reduction This Year[hard coal w CCS es\
 		])
 	      + Soft Costs per Unit Capacity[hard coal w CCS es],
-	
-	      (Last Year Construction Cost per Unit Capacity before Construction Subsidies[hard coal w CCS es\
+
+	      ((Last Year Construction Cost per Unit Capacity before Construction Subsidies[hard coal w CCS es\
 		] - BAU Last Year Soft Costs per Unit Capacity[hard coal w CCS es])
+	       / (1 + Last Year Tariff Cost Multiplier on Electricity Capacity[hard coal w CCS es]))
 	      * This Year CCS Cost as Fraction of Last Year CCS Cost
+	      * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[hard coal w CCS es])
 	      * (1 - RnD Electricity Capital Cost Perc Reduction This Year[hard coal w CCS es\
 		])
 	      + Soft Costs per Unit Capacity[hard coal w CCS es]
@@ -22539,13 +22579,15 @@ Construction Cost per Unit Capacity before Construction Subsidies[natural gas co
 	IF THEN ELSE(
 	  CCaMC BAU Construction Cost per Unit Capacity[natural gas combined cycle w CCS es]\
 		 > 0,
-	
+
 	  (CCaMC BAU Construction Cost per Unit Capacity[natural gas combined cycle w CCS es\
 		] - CCaMC BAU Soft Costs per Unit Capacity[natural gas combined cycle w CCS es])
+	  * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[natural gas combined cycle w CCS es\
+		])
 	  * (1 - RnD Electricity Capital Cost Perc Reduction This Year[natural gas combined cycle w CCS es\
 		])
 	  + Soft Costs per Unit Capacity[natural gas combined cycle w CCS es],
-	
+
 	  IF THEN ELSE(
 	    CCaMC BAU Construction Cost per Unit Capacity With One Year Delay[natural gas combined cycle w CCS es\
 		] > 0,
@@ -22553,14 +22595,20 @@ Construction Cost per Unit Capacity before Construction Subsidies[natural gas co
 		] - BAU Last Year Soft Costs per Unit Capacity
 	[natural gas combined cycle w CCS es])
 	      * This Year CCS Cost as Fraction of Last Year CCS Cost
+	      * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[natural gas combined cycle w CCS es\
+		])
 	      * (1 - RnD Electricity Capital Cost Perc Reduction This Year[natural gas combined cycle w CCS es\
 		])
 	      + Soft Costs per Unit Capacity[natural gas combined cycle w CCS es],
-	
-	      (Last Year Construction Cost per Unit Capacity before Construction Subsidies[natural gas combined cycle w CCS es\
+
+	      ((Last Year Construction Cost per Unit Capacity before Construction Subsidies[natural gas combined cycle w CCS es\
 		] - BAU Last Year Soft Costs per Unit Capacity[natural gas combined cycle w CCS es]\
 		)
+	       / (1 + Last Year Tariff Cost Multiplier on Electricity Capacity[natural gas combined cycle w CCS es\
+		]))
 	      * This Year CCS Cost as Fraction of Last Year CCS Cost
+	      * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[natural gas combined cycle w CCS es\
+		])
 	      * (1 - RnD Electricity Capital Cost Perc Reduction This Year[natural gas combined cycle w CCS es\
 		])
 	      + Soft Costs per Unit Capacity[natural gas combined cycle w CCS es]
@@ -22569,12 +22617,13 @@ Construction Cost per Unit Capacity before Construction Subsidies[natural gas co
 Construction Cost per Unit Capacity before Construction Subsidies[biomass w CCS es]=
 	IF THEN ELSE(
 	  CCaMC BAU Construction Cost per Unit Capacity[biomass w CCS es] > 0,
-	
+
 	  (CCaMC BAU Construction Cost per Unit Capacity[biomass w CCS es] - CCaMC BAU Soft Costs per Unit Capacity\
 		[biomass w CCS es])
+	  * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[biomass w CCS es])
 	  * (1 - RnD Electricity Capital Cost Perc Reduction This Year[biomass w CCS es])
 	  + Soft Costs per Unit Capacity[biomass w CCS es],
-	
+
 	  IF THEN ELSE(
 	    CCaMC BAU Construction Cost per Unit Capacity With One Year Delay[biomass w CCS es\
 		] > 0,
@@ -22582,13 +22631,16 @@ Construction Cost per Unit Capacity before Construction Subsidies[biomass w CCS 
 		] - BAU Last Year Soft Costs per Unit Capacity
 	[biomass w CCS es])
 	      * This Year CCS Cost as Fraction of Last Year CCS Cost
+	      * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[biomass w CCS es])
 	      * (1 - RnD Electricity Capital Cost Perc Reduction This Year[biomass w CCS es]\
 		)
 	      + Soft Costs per Unit Capacity[biomass w CCS es],
-	
-	      (Last Year Construction Cost per Unit Capacity before Construction Subsidies[biomass w CCS es\
+
+	      ((Last Year Construction Cost per Unit Capacity before Construction Subsidies[biomass w CCS es\
 		] - BAU Last Year Soft Costs per Unit Capacity[biomass w CCS es])
+	       / (1 + Last Year Tariff Cost Multiplier on Electricity Capacity[biomass w CCS es]))
 	      * This Year CCS Cost as Fraction of Last Year CCS Cost
+	      * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[biomass w CCS es])
 	      * (1 - RnD Electricity Capital Cost Perc Reduction This Year[biomass w CCS es]\
 		)
 	      + Soft Costs per Unit Capacity[biomass w CCS es]
@@ -22597,12 +22649,13 @@ Construction Cost per Unit Capacity before Construction Subsidies[biomass w CCS 
 Construction Cost per Unit Capacity before Construction Subsidies[lignite w CCS es]=
 	IF THEN ELSE(
 	  CCaMC BAU Construction Cost per Unit Capacity[lignite w CCS es] > 0,
-	
+
 	  (CCaMC BAU Construction Cost per Unit Capacity[lignite w CCS es] - CCaMC BAU Soft Costs per Unit Capacity\
 		[lignite w CCS es])
+	  * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[lignite w CCS es])
 	  * (1 - RnD Electricity Capital Cost Perc Reduction This Year[lignite w CCS es])
 	  + Soft Costs per Unit Capacity[lignite w CCS es],
-	
+
 	  IF THEN ELSE(
 	    CCaMC BAU Construction Cost per Unit Capacity With One Year Delay[lignite w CCS es\
 		] > 0,
@@ -22610,13 +22663,16 @@ Construction Cost per Unit Capacity before Construction Subsidies[lignite w CCS 
 		] - BAU Last Year Soft Costs per Unit Capacity
 	[lignite w CCS es])
 	      * This Year CCS Cost as Fraction of Last Year CCS Cost
+	      * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[lignite w CCS es])
 	      * (1 - RnD Electricity Capital Cost Perc Reduction This Year[lignite w CCS es]\
 		)
 	      + Soft Costs per Unit Capacity[lignite w CCS es],
-	
-	      (Last Year Construction Cost per Unit Capacity before Construction Subsidies[lignite w CCS es\
+
+	      ((Last Year Construction Cost per Unit Capacity before Construction Subsidies[lignite w CCS es\
 		] - BAU Last Year Soft Costs per Unit Capacity[lignite w CCS es])
+	       / (1 + Last Year Tariff Cost Multiplier on Electricity Capacity[lignite w CCS es]))
 	      * This Year CCS Cost as Fraction of Last Year CCS Cost
+	      * (1 + Tariff Cost Multiplier on Electricity Capacity This Year[lignite w CCS es])
 	      * (1 - RnD Electricity Capital Cost Perc Reduction This Year[lignite w CCS es]\
 		)
 	      + Soft Costs per Unit Capacity[lignite w CCS es]
@@ -22628,7 +22684,10 @@ Construction Cost per Unit Capacity before Construction Subsidies[lignite w CCS 
 		construction cost in all years after the first modeled year.  If the model \
 		sees a non-zero construction cost value in CCaMC for any given year, it \
 		will use that value in that year, overriding the endogenous learning \
-		calculations.
+		calculations. Tariff (Tariff Cost Multiplier on Electricity Capacity This \
+		Year) applies to the hard cost portion (CCaMC minus soft costs) in every \
+		branch; the recursive branch (Branch 3) divides out Last Year Tariff to \
+		prevent year-over-year compounding.
 	|
 
 Consumer Preference Shadow Cost[Vehicle Type, Cargo Type, Vehicle Technology] :EXCEPT:\
@@ -24379,6 +24438,7 @@ Distributed Solar Capacity Factor x Hours per Year=
 
 Distribution Construction Costs=
 	Change in Peak Load*DCCpUIiPL Distribution Construction Cost per Unit Increase in Peak Load
+	* (1 + Tariff Cost Multiplier on Distribution This Year)
 	~	$
 	~		|
 
@@ -37964,6 +38024,8 @@ New Vehicle Price after Endogenous Vehicle Learning[Vehicle Type,Cargo Type,Vehi
 		]
 	  + NBPoNVP Non Battery Portion of New Vehicle Price[Vehicle Type,Cargo Type,Vehicle Technology\
 		]
+	    * (1 + Tariff Cost Multiplier on Vehicle Non Battery This Year[Vehicle Type,Cargo Type,Vehicle Technology\
+		])
 	~	$/vehicle
 	~		|
 
@@ -48868,6 +48930,8 @@ This Year Battery Portion of Vehicle Price[Cargo Type,Vehicle Type,Vehicle Techn
 		]
 	* This Year Battery Manufacturing Price After Subsidies[Vehicle Type,Cargo Type]
 	* BPM Battery Pack Markup[Vehicle Type,Cargo Type]
+	* (1 + Tariff Cost Multiplier on EV Batteries This Year[Vehicle Type,Cargo Type,Vehicle Technology\
+		])
 	~	$/vehicle
 	~		|
 
@@ -50945,6 +51009,7 @@ Transmission and Distribution Loss Percentage=
 Transmission Construction Costs=
 	SUM(New Generation Capacity Excluding Retrofit Capacity[Electricity Source!])
 	* TCCpUNEC Transmission Construction Cost per Unit New Electricity Capacity
+	* (1 + Tariff Cost Multiplier on Transmission This Year)
 	~	$
 	~		|
 
@@ -52765,6 +52830,451 @@ ZEV Standard by Subregion[Subregion,Vehicle Type,Cargo Type]=
 	)
 	~	Dmnl
 	~		|
+
+Additional Tariff Cost Multiplier on Distribution=
+	0
+	~	Dmnl [-0.5,1]
+	~	Policy lever: additional tariff cost multiplier on distribution \
+		infrastructure capital. Positive values add tariff; negative values \
+		reduce/remove existing tariff burden. Applied on top of BTCM D BAU \
+		value, ramped by policy implementation schedule.
+	|
+
+Additional Tariff Cost Multiplier on Electricity Capacity[Electricity Source]=
+	0,	{hard coal}
+	0,	{natural gas steam turbine}
+	0,	{natural gas combined cycle}
+	0,	{nuclear}
+	0,	{hydro}
+	0,	{onshore wind}
+	0,	{solar PV}
+	0,	{solar thermal}
+	0,	{biomass}
+	0,	{geothermal}
+	0,	{petroleum}
+	0,	{natural gas peaker}
+	0,	{lignite}
+	0,	{offshore wind}
+	0,	{crude oil}
+	0,	{heavy or residual fuel oil}
+	0,	{municipal solid waste}
+	0,	{hard coal w CCS}
+	0,	{natural gas combined cycle w CCS}
+	0,	{biomass w CCS}
+	0,	{lignite w CCS}
+	0,	{small modular reactor}
+	0,	{hydrogen combustion turbine}
+	0	{hydrogen combined cycle}
+	~	Dmnl [-0.5,1]
+	~	Policy lever: additional tariff cost multiplier on electricity generation \
+		capacity construction, by source. Positive = additional tariff; negative \
+		= reduce/remove existing tariff burden.
+	|
+
+Additional Tariff Cost Multiplier on EV Batteries[LDVs,passenger,Vehicle Technology]=
+	0,	{battery electric vehicle}
+	0,	{natural gas vehicle}
+	0,	{gasoline vehicle}
+	0,	{diesel vehicle}
+	0,	{plugin hybrid vehicle}
+	0,	{LPG vehicle}
+	0	{hydrogen vehicle}
+	~~|
+Additional Tariff Cost Multiplier on EV Batteries[LDVs,freight,Vehicle Technology]=
+	0,	{battery electric vehicle}
+	0,	{natural gas vehicle}
+	0,	{gasoline vehicle}
+	0,	{diesel vehicle}
+	0,	{plugin hybrid vehicle}
+	0,	{LPG vehicle}
+	0	{hydrogen vehicle}
+	~~|
+Additional Tariff Cost Multiplier on EV Batteries[HDVs,passenger,Vehicle Technology]=
+	0,	{battery electric vehicle}
+	0,	{natural gas vehicle}
+	0,	{gasoline vehicle}
+	0,	{diesel vehicle}
+	0,	{plugin hybrid vehicle}
+	0,	{LPG vehicle}
+	0	{hydrogen vehicle}
+	~~|
+Additional Tariff Cost Multiplier on EV Batteries[HDVs,freight,Vehicle Technology]=
+	0,	{battery electric vehicle}
+	0,	{natural gas vehicle}
+	0,	{gasoline vehicle}
+	0,	{diesel vehicle}
+	0,	{plugin hybrid vehicle}
+	0,	{LPG vehicle}
+	0	{hydrogen vehicle}
+	~~|
+Additional Tariff Cost Multiplier on EV Batteries[aircraft,Cargo Type,Vehicle Technology]=
+	0 ~~|
+Additional Tariff Cost Multiplier on EV Batteries[rail,Cargo Type,Vehicle Technology]=
+	0 ~~|
+Additional Tariff Cost Multiplier on EV Batteries[ships,Cargo Type,Vehicle Technology]=
+	0 ~~|
+Additional Tariff Cost Multiplier on EV Batteries[motorbikes,Cargo Type,Vehicle Technology]=
+	0
+	~	Dmnl [-0.5,1]
+	~	Policy lever: additional tariff cost multiplier on EV battery packs by \
+		vehicle type, cargo type, and vehicle technology. Only LDVs/HDVs x \
+		passenger/freight have schedule entries in FoPITY; aircraft/rail/ships/ \
+		motorbikes default to BAU value (typically 0) with no ramp.
+	|
+
+Additional Tariff Cost Multiplier on Grid Batteries=
+	0
+	~	Dmnl [-0.5,1]
+	~	Policy lever: additional tariff cost multiplier on grid battery storage capital.
+	|
+
+Additional Tariff Cost Multiplier on Transmission=
+	0
+	~	Dmnl [-0.5,1]
+	~	Policy lever: additional tariff cost multiplier on transmission \
+		infrastructure capital.
+	|
+
+Additional Tariff Cost Multiplier on Vehicle Non Battery[LDVs,passenger,Vehicle Technology]=
+	0,	{battery electric vehicle}
+	0,	{natural gas vehicle}
+	0,	{gasoline vehicle}
+	0,	{diesel vehicle}
+	0,	{plugin hybrid vehicle}
+	0,	{LPG vehicle}
+	0	{hydrogen vehicle}
+	~~|
+Additional Tariff Cost Multiplier on Vehicle Non Battery[LDVs,freight,Vehicle Technology]=
+	0,	{battery electric vehicle}
+	0,	{natural gas vehicle}
+	0,	{gasoline vehicle}
+	0,	{diesel vehicle}
+	0,	{plugin hybrid vehicle}
+	0,	{LPG vehicle}
+	0	{hydrogen vehicle}
+	~~|
+Additional Tariff Cost Multiplier on Vehicle Non Battery[HDVs,passenger,Vehicle Technology]=
+	0,	{battery electric vehicle}
+	0,	{natural gas vehicle}
+	0,	{gasoline vehicle}
+	0,	{diesel vehicle}
+	0,	{plugin hybrid vehicle}
+	0,	{LPG vehicle}
+	0	{hydrogen vehicle}
+	~~|
+Additional Tariff Cost Multiplier on Vehicle Non Battery[HDVs,freight,Vehicle Technology]=
+	0,	{battery electric vehicle}
+	0,	{natural gas vehicle}
+	0,	{gasoline vehicle}
+	0,	{diesel vehicle}
+	0,	{plugin hybrid vehicle}
+	0,	{LPG vehicle}
+	0	{hydrogen vehicle}
+	~~|
+Additional Tariff Cost Multiplier on Vehicle Non Battery[aircraft,Cargo Type,Vehicle Technology]=
+	0 ~~|
+Additional Tariff Cost Multiplier on Vehicle Non Battery[rail,Cargo Type,Vehicle Technology]=
+	0 ~~|
+Additional Tariff Cost Multiplier on Vehicle Non Battery[ships,Cargo Type,Vehicle Technology]=
+	0 ~~|
+Additional Tariff Cost Multiplier on Vehicle Non Battery[motorbikes,Cargo Type,Vehicle Technology]=
+	0
+	~	Dmnl [-0.5,1]
+	~	Policy lever: additional tariff cost multiplier on non-battery portion of \
+		vehicle cost (vehicle body/manufacturing). Only LDVs/HDVs x passenger/ \
+		freight have schedule entries in FoPITY; other vehicle types default to \
+		BAU value with no ramp.
+	|
+
+BTCM D BAU Tariff Cost Multiplier on Distribution:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/elec/BTCM/BTCM-D.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	Dmnl
+	~	BAU tariff cost multiplier on distribution infrastructure capital. \
+		Reflects Section 232 derivatives (transformers + grid components) and \
+		other distribution-side tariff effects already in effect. See \
+		docs/tariff-lever-input-data-plan.md for source calibration.
+	|
+
+BTCM EC BAU Tariff Cost Multiplier on Electricity Capacity[Electricity Source]:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/elec/BTCM/BTCM-EC.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	Dmnl
+	~	BAU tariff cost multiplier on electricity generation capacity construction \
+		by source. Reflects Section 301, Section 232, Section 201, and AD/CVD \
+		effects already in effect.
+	|
+
+BTCM EVB BAU Tariff Cost Multiplier on EV Batteries[LDVs,passenger,Vehicle Technology]:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/elec/BTCM/BTCM-EVB-LDVs-psgr.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+BTCM EVB BAU Tariff Cost Multiplier on EV Batteries[LDVs,freight,Vehicle Technology]:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/elec/BTCM/BTCM-EVB-LDVs-frgt.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+BTCM EVB BAU Tariff Cost Multiplier on EV Batteries[HDVs,passenger,Vehicle Technology]:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/elec/BTCM/BTCM-EVB-HDVs-psgr.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+BTCM EVB BAU Tariff Cost Multiplier on EV Batteries[HDVs,freight,Vehicle Technology]:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/elec/BTCM/BTCM-EVB-HDVs-frgt.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+BTCM EVB BAU Tariff Cost Multiplier on EV Batteries[aircraft,Cargo Type,Vehicle Technology]=
+	0 ~~|
+BTCM EVB BAU Tariff Cost Multiplier on EV Batteries[rail,Cargo Type,Vehicle Technology]=
+	0 ~~|
+BTCM EVB BAU Tariff Cost Multiplier on EV Batteries[ships,Cargo Type,Vehicle Technology]=
+	0 ~~|
+BTCM EVB BAU Tariff Cost Multiplier on EV Batteries[motorbikes,Cargo Type,Vehicle Technology]=
+	0
+	~	Dmnl
+	~	BAU tariff cost multiplier on EV battery packs. Reflects Section 301 \
+		stacking on Chinese lithium battery cells. Only LDVs/HDVs x \
+		passenger/freight are loaded from data; other vehicle types default to zero.
+	|
+
+BTCM GB BAU Tariff Cost Multiplier on Grid Batteries:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/elec/BTCM/BTCM-GB.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	Dmnl
+	~	BAU tariff cost multiplier on grid battery storage capital (standalone + \
+		hybrid storage). Reflects Section 301 on Chinese lithium battery cells.
+	|
+
+BTCM T BAU Tariff Cost Multiplier on Transmission:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/elec/BTCM/BTCM-T.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	Dmnl
+	~	BAU tariff cost multiplier on transmission infrastructure capital. \
+		Reflects Section 232 transformer / derivatives tariffs.
+	|
+
+BTCM VNB BAU Tariff Cost Multiplier on Vehicle Non Battery[LDVs,passenger,Vehicle Technology]:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/elec/BTCM/BTCM-VNB-LDVs-psgr.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+BTCM VNB BAU Tariff Cost Multiplier on Vehicle Non Battery[LDVs,freight,Vehicle Technology]:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/elec/BTCM/BTCM-VNB-LDVs-frgt.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+BTCM VNB BAU Tariff Cost Multiplier on Vehicle Non Battery[HDVs,passenger,Vehicle Technology]:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/elec/BTCM/BTCM-VNB-HDVs-psgr.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+BTCM VNB BAU Tariff Cost Multiplier on Vehicle Non Battery[HDVs,freight,Vehicle Technology]:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/elec/BTCM/BTCM-VNB-HDVs-frgt.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+BTCM VNB BAU Tariff Cost Multiplier on Vehicle Non Battery[aircraft,Cargo Type,Vehicle Technology]=
+	0 ~~|
+BTCM VNB BAU Tariff Cost Multiplier on Vehicle Non Battery[rail,Cargo Type,Vehicle Technology]=
+	0 ~~|
+BTCM VNB BAU Tariff Cost Multiplier on Vehicle Non Battery[ships,Cargo Type,Vehicle Technology]=
+	0 ~~|
+BTCM VNB BAU Tariff Cost Multiplier on Vehicle Non Battery[motorbikes,Cargo Type,Vehicle Technology]=
+	0
+	~	Dmnl
+	~	BAU tariff cost multiplier on non-battery portion of vehicle cost. \
+		Reflects Section 232 autos 25 percent tariff. Only LDVs/HDVs x \
+		passenger/freight are loaded from data; other vehicle types default to zero.
+	|
+
+Tariff Cost Multiplier on Distribution This Year=
+	BTCM D BAU Tariff Cost Multiplier on Distribution
+	+ Additional Tariff Cost Multiplier on Distribution
+	  * Selected Policy Implementation Schedule[distribution tariff X]
+	~	Dmnl
+	~	Combined BAU + policy tariff cost multiplier on distribution capital, \
+		ramped by policy implementation schedule. Inject into downstream cost \
+		calculations as (1 + this variable).
+	|
+
+Tariff Cost Multiplier on Electricity Capacity This Year[Electricity Source]=
+	BTCM EC BAU Tariff Cost Multiplier on Electricity Capacity[Electricity Source]
+	+ Additional Tariff Cost Multiplier on Electricity Capacity[Electricity Source]
+	  * VECTOR ELM MAP(
+	      Selected Policy Implementation Schedule[elec tariff X hard coal es],
+	      (Electricity Source-1)
+	    )
+	~	Dmnl
+	~	Combined BAU + policy tariff cost multiplier on electricity generation \
+		capacity construction, by source, ramped by per-source policy implementation \
+		schedule. Inject as (1 + this variable) into hard-cost portions of \
+		capacity cost calculations.
+	|
+
+Tariff Cost Multiplier on EV Batteries This Year[LDVs,passenger,Vehicle Technology]=
+	BTCM EVB BAU Tariff Cost Multiplier on EV Batteries[LDVs,passenger,Vehicle Technology]
+	+ Additional Tariff Cost Multiplier on EV Batteries[LDVs,passenger,Vehicle Technology]
+	  * VECTOR ELM MAP(
+	      Selected Policy Implementation Schedule[EV battery tariff X LDVs X passenger X battery electric vehicle],
+	      (Vehicle Technology-1)
+	    ) ~~|
+Tariff Cost Multiplier on EV Batteries This Year[LDVs,freight,Vehicle Technology]=
+	BTCM EVB BAU Tariff Cost Multiplier on EV Batteries[LDVs,freight,Vehicle Technology]
+	+ Additional Tariff Cost Multiplier on EV Batteries[LDVs,freight,Vehicle Technology]
+	  * VECTOR ELM MAP(
+	      Selected Policy Implementation Schedule[EV battery tariff X LDVs X freight X battery electric vehicle],
+	      (Vehicle Technology-1)
+	    ) ~~|
+Tariff Cost Multiplier on EV Batteries This Year[HDVs,passenger,Vehicle Technology]=
+	BTCM EVB BAU Tariff Cost Multiplier on EV Batteries[HDVs,passenger,Vehicle Technology]
+	+ Additional Tariff Cost Multiplier on EV Batteries[HDVs,passenger,Vehicle Technology]
+	  * VECTOR ELM MAP(
+	      Selected Policy Implementation Schedule[EV battery tariff X HDVs X passenger X battery electric vehicle],
+	      (Vehicle Technology-1)
+	    ) ~~|
+Tariff Cost Multiplier on EV Batteries This Year[HDVs,freight,Vehicle Technology]=
+	BTCM EVB BAU Tariff Cost Multiplier on EV Batteries[HDVs,freight,Vehicle Technology]
+	+ Additional Tariff Cost Multiplier on EV Batteries[HDVs,freight,Vehicle Technology]
+	  * VECTOR ELM MAP(
+	      Selected Policy Implementation Schedule[EV battery tariff X HDVs X freight X battery electric vehicle],
+	      (Vehicle Technology-1)
+	    ) ~~|
+Tariff Cost Multiplier on EV Batteries This Year[aircraft,Cargo Type,Vehicle Technology]=
+	BTCM EVB BAU Tariff Cost Multiplier on EV Batteries[aircraft,Cargo Type,Vehicle Technology]
+	+ Additional Tariff Cost Multiplier on EV Batteries[aircraft,Cargo Type,Vehicle Technology] ~~|
+Tariff Cost Multiplier on EV Batteries This Year[rail,Cargo Type,Vehicle Technology]=
+	BTCM EVB BAU Tariff Cost Multiplier on EV Batteries[rail,Cargo Type,Vehicle Technology]
+	+ Additional Tariff Cost Multiplier on EV Batteries[rail,Cargo Type,Vehicle Technology] ~~|
+Tariff Cost Multiplier on EV Batteries This Year[ships,Cargo Type,Vehicle Technology]=
+	BTCM EVB BAU Tariff Cost Multiplier on EV Batteries[ships,Cargo Type,Vehicle Technology]
+	+ Additional Tariff Cost Multiplier on EV Batteries[ships,Cargo Type,Vehicle Technology] ~~|
+Tariff Cost Multiplier on EV Batteries This Year[motorbikes,Cargo Type,Vehicle Technology]=
+	BTCM EVB BAU Tariff Cost Multiplier on EV Batteries[motorbikes,Cargo Type,Vehicle Technology]
+	+ Additional Tariff Cost Multiplier on EV Batteries[motorbikes,Cargo Type,Vehicle Technology]
+	~	Dmnl
+	~	Combined BAU + policy tariff cost multiplier on EV battery packs, ramped \
+		by per-VTech policy implementation schedule for LDVs/HDVs x \
+		passenger/freight. Aircraft, rail, ships, motorbikes apply BAU + Additional \
+		directly (no policy schedule entries — Additional applies immediately if set).
+	|
+
+Tariff Cost Multiplier on Grid Batteries This Year=
+	BTCM GB BAU Tariff Cost Multiplier on Grid Batteries
+	+ Additional Tariff Cost Multiplier on Grid Batteries
+	  * Selected Policy Implementation Schedule[grid battery tariff X]
+	~	Dmnl
+	~	Combined BAU + policy tariff cost multiplier on grid battery storage capital.
+	|
+
+Tariff Cost Multiplier on Transmission This Year=
+	BTCM T BAU Tariff Cost Multiplier on Transmission
+	+ Additional Tariff Cost Multiplier on Transmission
+	  * Selected Policy Implementation Schedule[transmission tariff X]
+	~	Dmnl
+	~	Combined BAU + policy tariff cost multiplier on transmission capital.
+	|
+
+Tariff Cost Multiplier on Vehicle Non Battery This Year[LDVs,passenger,Vehicle Technology]=
+	BTCM VNB BAU Tariff Cost Multiplier on Vehicle Non Battery[LDVs,passenger,Vehicle Technology]
+	+ Additional Tariff Cost Multiplier on Vehicle Non Battery[LDVs,passenger,Vehicle Technology]
+	  * VECTOR ELM MAP(
+	      Selected Policy Implementation Schedule[EV non battery tariff X LDVs X passenger X battery electric vehicle],
+	      (Vehicle Technology-1)
+	    ) ~~|
+Tariff Cost Multiplier on Vehicle Non Battery This Year[LDVs,freight,Vehicle Technology]=
+	BTCM VNB BAU Tariff Cost Multiplier on Vehicle Non Battery[LDVs,freight,Vehicle Technology]
+	+ Additional Tariff Cost Multiplier on Vehicle Non Battery[LDVs,freight,Vehicle Technology]
+	  * VECTOR ELM MAP(
+	      Selected Policy Implementation Schedule[EV non battery tariff X LDVs X freight X battery electric vehicle],
+	      (Vehicle Technology-1)
+	    ) ~~|
+Tariff Cost Multiplier on Vehicle Non Battery This Year[HDVs,passenger,Vehicle Technology]=
+	BTCM VNB BAU Tariff Cost Multiplier on Vehicle Non Battery[HDVs,passenger,Vehicle Technology]
+	+ Additional Tariff Cost Multiplier on Vehicle Non Battery[HDVs,passenger,Vehicle Technology]
+	  * VECTOR ELM MAP(
+	      Selected Policy Implementation Schedule[EV non battery tariff X HDVs X passenger X battery electric vehicle],
+	      (Vehicle Technology-1)
+	    ) ~~|
+Tariff Cost Multiplier on Vehicle Non Battery This Year[HDVs,freight,Vehicle Technology]=
+	BTCM VNB BAU Tariff Cost Multiplier on Vehicle Non Battery[HDVs,freight,Vehicle Technology]
+	+ Additional Tariff Cost Multiplier on Vehicle Non Battery[HDVs,freight,Vehicle Technology]
+	  * VECTOR ELM MAP(
+	      Selected Policy Implementation Schedule[EV non battery tariff X HDVs X freight X battery electric vehicle],
+	      (Vehicle Technology-1)
+	    ) ~~|
+Tariff Cost Multiplier on Vehicle Non Battery This Year[aircraft,Cargo Type,Vehicle Technology]=
+	BTCM VNB BAU Tariff Cost Multiplier on Vehicle Non Battery[aircraft,Cargo Type,Vehicle Technology]
+	+ Additional Tariff Cost Multiplier on Vehicle Non Battery[aircraft,Cargo Type,Vehicle Technology] ~~|
+Tariff Cost Multiplier on Vehicle Non Battery This Year[rail,Cargo Type,Vehicle Technology]=
+	BTCM VNB BAU Tariff Cost Multiplier on Vehicle Non Battery[rail,Cargo Type,Vehicle Technology]
+	+ Additional Tariff Cost Multiplier on Vehicle Non Battery[rail,Cargo Type,Vehicle Technology] ~~|
+Tariff Cost Multiplier on Vehicle Non Battery This Year[ships,Cargo Type,Vehicle Technology]=
+	BTCM VNB BAU Tariff Cost Multiplier on Vehicle Non Battery[ships,Cargo Type,Vehicle Technology]
+	+ Additional Tariff Cost Multiplier on Vehicle Non Battery[ships,Cargo Type,Vehicle Technology] ~~|
+Tariff Cost Multiplier on Vehicle Non Battery This Year[motorbikes,Cargo Type,Vehicle Technology]=
+	BTCM VNB BAU Tariff Cost Multiplier on Vehicle Non Battery[motorbikes,Cargo Type,Vehicle Technology]
+	+ Additional Tariff Cost Multiplier on Vehicle Non Battery[motorbikes,Cargo Type,Vehicle Technology]
+	~	Dmnl
+	~	Combined BAU + policy tariff cost multiplier on non-battery portion of \
+		vehicle cost, ramped by per-VTech policy implementation schedule for \
+		LDVs/HDVs x passenger/freight. Other vehicle types apply BAU + Additional \
+		directly.
+	|
+
+Last Year Tariff Cost Multiplier on Electricity Capacity[Electricity Source]= DELAY FIXED(
+	Tariff Cost Multiplier on Electricity Capacity This Year[Electricity Source],
+	1,
+	0)
+	~	Dmnl
+	~	One-year-delayed tariff multiplier on electricity capacity, used to strip \
+		out last year's tariff when the cost calculation recurses through \
+		Last Year Construction Cost per Unit Capacity. Without this division, \
+		tariff effects would compound year-over-year via endogenous learning.
+	|
+
+Last Year Tariff Cost Multiplier on Grid Batteries= DELAY FIXED(
+	Tariff Cost Multiplier on Grid Batteries This Year,
+	1,
+	0)
+	~	Dmnl
+	~	One-year-delayed tariff multiplier on grid batteries, used to strip out \
+		last year's tariff when Battery Energy/Power Cost calculations recurse \
+		through Last Year Battery Energy/Power Cost per Unit Capacity.
+	|
 
 ********************************************************
 	.Control
