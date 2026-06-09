@@ -1934,7 +1934,7 @@ PolicyElements = (
   ),
   (("bldgs distributed solar subsidy","commercial"),
     ("Schedule 1",(2025,0),(2026,0),(2050,1)),
-    ("Schedule 2",(2025,0),(2028,0),(2029,1),(2050,1)),
+    ("Schedule 2",(2025,0),(2028,0),(2031,1),(2050,1)),
   ),
   (("bldgs min fraction distributed solar"),
     ("Schedule 1",(2025,0),(2026,0),(2050,1)),
