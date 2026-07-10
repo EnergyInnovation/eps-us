@@ -34,6 +34,7 @@ Absolute Change in In Scope Emissions due to Electricity Imports[Pollutant,Elect
 	~	g pollutant
 	~		|
 
+
 Achieved Capacity Factors[Electricity Source]=
 	MAX(0,
 	 SUM(Achieved Capacity Factors by Hour[Electricity Timeslice!,Hour!,Electricity Source\
@@ -43,7 +44,8 @@ Achieved Capacity Factors[Electricity Source]=
 	 /Hours per Year
 	)
 	~	Dmnl
-	~		|
+	~		~	:SUPPLEMENTARY 
+	|
 
 Achieved Capacity Factors by Hour[Electricity Timeslice,Hour,Electricity Source]=
 	ZIDZ(Total Electricity Dispatched by Hour by Plant Type[Electricity Timeslice,Hour,Electricity Source\
@@ -984,11 +986,13 @@ Amount Spent on Transportation Fuels[Transportation Fuel,Vehicle Type,Cargo Type
 	~	$
 	~		|
 
+
 Amount Spent on Vehicle Batteries[Vehicle Type,Cargo Type,Vehicle Technology]=
 	New Vehicles[Vehicle Type,Cargo Type,Vehicle Technology] * One Year
 	* This Year Battery Capacity by Vehicle Type[Cargo Type,Vehicle Type,Vehicle Technology\
 		]
-	* This Year Battery Manufacturing Price Before Subsidies
+	* This Year Battery Manufacturing Price Before Subsidies by Vehicle Type[Vehicle Type\
+		,Cargo Type]
 	~	$
 	~		|
 
@@ -2061,6 +2065,7 @@ BAU Absolute Change in In Scope Emissions due to Electricity Imports[Pollutant,E
 	~	g pollutant
 	~		|
 
+
 BAU Achieved Capacity Factors[Electricity Source]=
 	MAX(0,
 	 SUM(BAU Achieved Capacity Factors by Hour[Electricity Timeslice!,Hour!,Electricity Source\
@@ -2070,7 +2075,8 @@ BAU Achieved Capacity Factors[Electricity Source]=
 	 /Hours per Year
 	)
 	~	Dmnl
-	~		|
+	~		~	:SUPPLEMENTARY 
+	|
 
 BAU Achieved Capacity Factors by Hour[Electricity Timeslice,Hour,Electricity Source]=
 	ZIDZ(BAU Total Electricity Dispatched by Hour by Plant Type[Electricity Timeslice,Hour\
@@ -2460,11 +2466,13 @@ BAU Amount Spent on Transportation Fuels Mapped to All Fuels Subscript[transport
 	~	$
 	~		|
 
+
 BAU Amount Spent on Vehicle Batteries[Vehicle Type,Cargo Type,Vehicle Technology]=
 	BAU New Vehicles[Vehicle Type,Cargo Type,Vehicle Technology] * One Year
 	* This Year Battery Capacity by Vehicle Type[Cargo Type,Vehicle Type,Vehicle Technology\
 		]
-	* BAU This Year Battery Manufacturing Price Before Subsidies
+	* BAU This Year Battery Manufacturing Price Before Subsidies by Vehicle Type[Vehicle Type\
+		,Cargo Type]
 	~	$
 	~		|
 
@@ -2742,6 +2750,17 @@ BAU Annual Financing Repayments for Newly Purchased Hydrogen Production Eqpt[Hyd
 	/ One Year
 	~	$/Year
 	~		|
+
+
+BAU Annual Five Year Average Electricity Dispatched by Least Cost[Electricity Source]\
+		=
+	SUM(BAU Five Year Average Electricity Dispatched by Least Cost by Hour[Electricity Timeslice\
+		!,Hour!,Electricity Source]
+	* SHELF Days per Electricity Timeslice[Electricity Timeslice!]
+	)
+	~	MW*hour
+	~		~	:SUPPLEMENTARY 
+	|
 
 BAU Annual Fixed OM Cost per Unit Capacity for Plants Built This Year[Electricity Source\
 		]=
@@ -3273,6 +3292,21 @@ BAU Building Components Energy Use Excluding Zero Cost Distributed Fuel Use[Buil
 		!])
 	- SUM(BAU Annual Output from Distributed Electricity Capacity by Building Type[Clean Dispatchable Electricity Source\
 		!,Building Type])/MWh per BTU
+	~	BTU
+	~		|
+
+
+BAU Building Components Energy Use With Fuel Costs[Building Type,Building Fuel] :EXCEPT:\
+		      [Building Type,electricity bf]=
+	SUM(BAU Building Components Energy Use[Building Type,Building Fuel,Building Component\
+		!]) ~~|
+BAU Building Components Energy Use With Fuel Costs[Building Type,electricity bf]=
+	SUM(BAU Building Components Energy Use[Building Type,electricity bf,Building Component\
+		!])
+	- BAU Annual Output from Distributed Electricity Capacity by Building Type[Building Type\
+		,solar PV es]/MWh per BTU
+	- BAU Annual Output from Distributed Electricity Capacity by Building Type[Building Type\
+		,onshore wind es]/MWh per BTU
 	~	BTU
 	~		|
 
@@ -4064,6 +4098,13 @@ BAU CCS Subsidy Amount Paid to Industry Sector[Industry Category]=
 BAU CCS Subsidy Payments per Unit Electricity Output Expiring After CCS Subsidy Duration Period\
 		[Electricity Source]= DELAY FIXED (
 	BAU CCS Subsidies Paid per Unit Electricity Output for Newly Eligible CCS Capacity[Electricity Source\
+		], BCS Duration of Subsidies for Carbon Sequestration, 0)
+	~	$
+	~		|
+
+BAU CCS Subsidy Payments per Unit Electricity Output Expiring After Subsidy Duration Period\
+		[Electricity Source]= DELAY FIXED (
+	BAU Subsidies Paid per Unit Electricity Output for Newly Eligible CCS Capacity[Electricity Source\
 		], BCS Duration of Subsidies for Carbon Sequestration, 0)
 	~	$
 	~		|
@@ -6724,13 +6765,13 @@ BAU Five Year Average Dispatch Cost per Unit Electricity Output before Subsidies
 	~	$/(MW*hour)
 	~		|
 
+
 BAU Five Year Average Dispatch or Opportunity Cost per Unit Electricity Output[Electricity Source\
 		] :EXCEPT:    [hydro es]=
 	BAU Five Year Average Dispatch Cost per Unit Electricity Output[Electricity Source] ~~|
 BAU Five Year Average Dispatch or Opportunity Cost per Unit Electricity Output[hydro es\
 		]=
 	HOC Hydro Opportunity Cost
-	-BAU Variable Subsidies per Unit Electricity Output[hydro es]
 	~	$/(MW*hr)
 	~		|
 
@@ -9751,6 +9792,16 @@ BAU Last Year Soft Costs per Unit Capacity[Electricity Source]= DELAY FIXED (
 	~	$/MW
 	~		|
 
+
+BAU Last Year Subsidies Paid per Unit Electricity Output for Newly Eligible CCS Capacity\
+		[Electricity Source]= INTEG (
+	(BAU Subsidies Paid per Unit Electricity Output for Newly Eligible CCS Capacity[Electricity Source\
+		]-BAU CCS Subsidy Payments per Unit Electricity Output Expiring After Subsidy Duration Period\
+		[Electricity Source])/One Year,
+		0)
+	~	$
+	~		|
+
 BAU Last Year Subsidies Paid per Unit Electricity Output for Newly Eligible Generation Capacity\
 		[Electricity Source]= INTEG (
 	(BAU Subsidies Paid per Unit Electricity Output for Newly Eligible Generation Capacity\
@@ -11880,15 +11931,17 @@ BAU New Vehicles Contribution to Percentage Change to Fleet Avg Fuel Economy[Veh
 	~	Dmnl
 	~		|
 
+
 BAU New Vehicles Demanded[Vehicle Type,Cargo Type]=
 	INTEGER(
 	 ZIDZ(
-	   BAU New Vehicle Distance Traveled[Vehicle Type,Cargo Type],
-	   BAADTbVT BAU Average Annual Dist Traveled by Vehicle Type[Vehicle Type,Cargo Type\
-		]
+	  BAU New Vehicle Distance Traveled[Vehicle Type,Cargo Type],
+	  BAADTbVT BAU Average Annual Dist Traveled by Vehicle Type[Vehicle Type,Cargo Type]
 	 )
 	 +0.999999
 	)
+	
+	+ ANVCV Additional New Vehicles Calibration Variable[Vehicle Type,Cargo Type]
 	~	vehicles
 	~		|
 
@@ -13092,6 +13145,24 @@ BAU Profitable Capacity as Share of Existing Capacity for Cost Effective CCUS Re
 	~	Dmnl
 	~		|
 
+
+BAU Profitable Capacity as Share of Existing Capacity for Cost Effectiveness Additions for Hybrid Power Plants without CES
+[Hybrid Electricity Source]=
+	IF THEN ELSE(
+	  BAU Incremental Revenue for Cost Effectiveness Additions for Hybrid Power Plants without CES
+	[Hybrid Electricity Source] < 1,
+	
+	  0,
+	
+	  LOOKUP INVERT(
+	    CSCCCMvSoECBtY Capacity Cost Multiplier vs Share of Existing Capacity Built This Year\
+		[summer],
+	    BAU Incremental Revenue for Cost Effectiveness Additions for Hybrid Power Plants without CES
+	[Hybrid Electricity Source]  )
+	)
+	~	Dmnl
+	~		|
+
 BAU Profitable Capacity as Share of Existing Capacity for Cost Effectiveness Additions\
 		[Electricity Source, Optimization Pass,RPS]=
 	IF THEN ELSE(
@@ -13160,22 +13231,6 @@ BAU Profitable Capacity as Share of Existing Capacity for Cost Effectiveness Add
 	~	Dmnl
 	~		|
 
-BAU Profitable Capacity as Share of Existing Capacity for Cost Effectiveness Additions for Hybrid Power Plants without CES\
-		[Hybrid Electricity Source]=
-	IF THEN ELSE(
-	  BAU Incremental Revenue for Cost Effectiveness Additions for Hybrid Power Plants without CES
-	[Hybrid Electricity Source] < 1,
-	
-	  0,
-	
-	  LOOKUP INVERT(
-	    CSCCCMvSoECBtY Capacity Cost Multiplier vs Share of Existing Capacity Built This Year\
-		[summer],
-	    BAU Incremental Revenue for Cost Effectiveness Additions for Hybrid Power Plants without CES
-	[Hybrid Electricity Source]  )
-	)
-	~	Dmnl
-	~		|
 
 BAU Profitable Capacity as Share of Existing Capacity for Cost Effectiveness Additions without CES\
 		[Electricity Source]=
@@ -14758,6 +14813,16 @@ BAU Subsidies Paid for New Grid Battery Construction=
 	~	$
 	~		|
 
+
+BAU Subsidies Paid per Unit Electricity Output for Newly Eligible CCS Capacity[Electricity Source\
+		]=
+	BAU New Generation Capacity[Electricity Source]
+	* BAU Expected Capacity Factor x Hours per Year for Plants Built This Year[Electricity Source\
+		]
+	* BAU CCS Subsidy per MWh[Electricity Source]
+	~	$
+	~		|
+
 BAU Subsidies Paid per Unit Electricity Output for Newly Eligible Generation Capacity\
 		[Electricity Source]=
 	BAU New Generation Capacity[Electricity Source]
@@ -15210,8 +15275,10 @@ BAU This Year Battery Cost as Fraction of Last Year Battery Cost=
 	~	Dmnl
 	~		|
 
-BAU This Year Battery Manufacturing Price After Subsidies=
-	BAU This Year Battery Manufacturing Price Before Subsidies
+
+BAU This Year Battery Manufacturing Price After Subsidies[Vehicle Type,Cargo Type]=
+	BAU This Year Battery Manufacturing Price Before Subsidies by Vehicle Type[Vehicle Type\
+		,Cargo Type]
 	- BAU Subsidy for Vehicle Battery Production Passed Through to Consumers
 	~	$/(kW*hr)
 	~		|
@@ -15233,11 +15300,21 @@ BAU This Year Battery Manufacturing Price Before Subsidies=
 	~	$/(kW*hr)
 	~		|
 
+
+BAU This Year Battery Manufacturing Price Before Subsidies by Vehicle Type[Vehicle Type\
+		,Cargo Type]=
+	BAU This Year Battery Manufacturing Price Before Subsidies
+	* BPPM Battery Pack Price Multiplier[Vehicle Type,Cargo Type]
+	~	$/(hr*kW)
+	~		|
+
+
 BAU This Year Battery Portion of Vehicle Price[Cargo Type,Vehicle Type,Vehicle Technology\
 		]=
-	BAU This Year Battery Manufacturing Price After Subsidies
+	BAU This Year Battery Manufacturing Price After Subsidies[Vehicle Type,Cargo Type]
 	* This Year Battery Capacity by Vehicle Type[Cargo Type,Vehicle Type,Vehicle Technology\
 		]
+	* BPM Battery Pack Markup[Vehicle Type,Cargo Type]
 	~	$/vehicle
 	~		|
 
@@ -15501,6 +15578,17 @@ BAU This Year Low Carbon Hydrogen Cost=
 		!])
 	)
 	~	$/BTU
+	~		|
+
+
+BAU This Year Ongoing CCS Subsidies Paid per Unit Electricity Output[Electricity Source\
+		]=
+	BAU Subsidies Paid per Unit Electricity Output for Newly Eligible CCS Capacity[Electricity Source\
+		]
+	
+	+BAU Last Year Subsidies Paid per Unit Electricity Output for Newly Eligible CCS Capacity\
+		[Electricity Source]
+	~	$
 	~		|
 
 BAU This Year Ongoing CES Costs=
@@ -16019,13 +16107,13 @@ BAU Total Electricity Demand in BTU=
 	~	BTU
 	~		|
 
+
 BAU Total Electricity Demand Including TnD Losses=
 	SUM(BAU Total Electricity Demand by Hour After Demand Altering Technologies[Electricity Timeslice\
 		!,Hour!]
 	* SHELF Days per Electricity Timeslice[Electricity Timeslice!])
 	~	MW*hr
-	~		~	:SUPPLEMENTARY 
-	|
+	~		|
 
 BAU Total Electricity Demand Plus Exports in BTU=
 	(BAU Total Electricity Demand + EIaE BAU Exported Electricity)
@@ -17011,6 +17099,23 @@ BAU Two Years Prior Net Loss per Unit Capacity Excluding Capacity Payment[Electr
 	1,
 	0)
 	~	$/MW
+	~		|
+
+
+BAU Unmet Electricity Demand After Elec Portfolio Std Dispatch[Electricity Timeslice,\
+		Hour]=
+	QUANTUM(
+	  MAX(
+	    0,
+	
+	    BAU Unmet Electricity Demand After Guaranteed Dispatch[Electricity Timeslice,Hour\
+		]
+	    - SUM(BAU Electricity Dispatched to Meet Elec Portfolio Stds[Electricity Timeslice\
+		,Hour,Electricity Source!])
+	  ),
+	 1
+	)
+	~	MW*hr
 	~		|
 
 BAU Unmet Electricity Demand After Guaranteed Dispatch[Electricity Timeslice,Hour]=
@@ -19953,6 +20058,16 @@ BPHC BAU Pumped Hydro Capacity:INTERPOLATE::=
 	~	MW
 	~		|
 
+
+BPM Battery Pack Markup[Vehicle Type,Cargo Type]=
+	GET DIRECT CONSTANTS(
+	   'InputData/trans/BPM/BPM.csv',
+	   ',',
+	   'B2'
+	)
+	~	Dmnl
+	~		|
+
 BPMCCS BAU Policy Mandated Capacity Construction Schedule[Electricity Source]:INTERPOLATE:\
 		:=
 	GET DIRECT DATA(
@@ -20636,6 +20751,24 @@ BPPEOUP BAU Power Plant Electricity Own Use Percentage:INTERPOLATE::=
 	~	Dmnl
 	~		|
 
+
+BPPM Battery Pack Price Multiplier[Vehicle Type,passenger]:=
+	GET DIRECT DATA(
+	   'InputData/trans/BPPM/BPPM-psgr.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+BPPM Battery Pack Price Multiplier[Vehicle Type,freight]:=
+	GET DIRECT DATA(
+	   'InputData/trans/BPPM/BPPM-frgt.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	Dmnl
+	~		|
+
 BPSfDSPC BAU Perc Subsidy for Distributed Solar PV Capacity[Building Type]:INTERPOLATE:\
 		:=
 	GET DIRECT DATA(
@@ -21204,6 +21337,21 @@ Building Components Energy Use Excluding Zero Cost Distributed Fuel Use[Building
 		)
 	- SUM(Annual Output from Distributed Electricity Capacity by Building Type[Clean Dispatchable Electricity Source\
 		!,Building Type])/MWh per BTU
+	~	BTU
+	~		|
+
+
+Building Components Energy Use With Fuel Costs[Building Type,Building Fuel] :EXCEPT:     \
+		[Building Type,electricity bf]=
+	SUM(Building Components Energy Use[Building Type,Building Fuel,Building Component!])\
+		 ~~|
+Building Components Energy Use With Fuel Costs[Building Type,electricity bf]=
+	SUM(Building Components Energy Use[Building Type,electricity bf,Building Component!]\
+		)
+	- Annual Output from Distributed Electricity Capacity by Building Type[solar PV es,Building Type\
+		]/MWh per BTU
+	- Annual Output from Distributed Electricity Capacity by Building Type[onshore wind es\
+		,Building Type]/MWh per BTU
 	~	BTU
 	~		|
 
@@ -24288,6 +24436,13 @@ Change in Domestic Value Added by ISIC Code[Target ISIC Code]=
 	~	$
 	~		|
 
+
+Change in Elec CCS Transportation and Storage Costs[Electricity Source]=
+	Electricity Sector CCS Transportation and Storage Costs[Electricity Source]
+	- BAU Electricity Sector CCS Transportation and Storage Costs[Electricity Source]
+	~	$
+	~		|
+
 Change in Electricity Demand from Demand Altering Technologies for Net Peak Load Reduction excluding Hybrid Batteries\
 		[Electricity Timeslice
 ,Hour]=
@@ -25861,9 +26016,25 @@ Change in Thermal Fuel Subsidies Paid[All Fuels]=
 	~	$
 	~		|
 
+
 Change in This Year Grid Battery Storage Capacity in MW=
 	This Year Grid Battery Storage Capacity in MW
 	- BAU This Year Grid Battery Storage Capacity in MW
+	~	MW
+	~		~	:SUPPLEMENTARY 
+	|
+
+
+Change in This Year Grid Battery Storage excluding Hybrid Batteries in MW=
+	This Year Total Grid Battery Storage Capacity excluding Hybrid Batteries in MW
+	- BAU This Year Total Grid Battery Storage Capacity excluding Hybrid Batteries in MW
+	~	MW
+	~		|
+
+
+Change in This Year Hybrid Battery Storage Capacity in MW=
+	This Year Hybrid Grid Battery Storage Capacity in MW
+	- BAU This Year Hybrid Grid Battery Storage Capacity in MW
 	~	MW
 	~		|
 
@@ -26322,6 +26493,66 @@ Check for Equality of Transportation Sector Nonenergy Industry Revenue=
 		!])
 	- Transportation Sector Change in Revenue by Entity[nonenergy industries]
 	~	$
+	~		~	:SUPPLEMENTARY 
+	|
+
+
+Check for Maximum Hourly Exports[Electricity Timeslice,Hour]=
+	IF THEN ELSE(
+	
+	  Electricity Exports by Hour[Electricity Timeslice,Hour,pass20] = MaMHEIaE Maximum Hourly Exports\
+		,
+	
+	  1,
+	
+	  0
+	)
+	~	Dmnl
+	~		~	:SUPPLEMENTARY 
+	|
+
+
+Check for Maximum Hourly Imports[Electricity Timeslice,Hour]=
+	IF THEN ELSE(
+	
+	  Electricity Imports by Hour[Electricity Timeslice,Hour,pass20] = MaMHEIaE Maximum Hourly Imports\
+		,
+	
+	  1,
+	 
+	  0
+	)
+	~	Dmnl
+	~		~	:SUPPLEMENTARY 
+	|
+
+
+Check for Minimum Hourly Exports[Electricity Timeslice,Hour]=
+	IF THEN ELSE(
+	
+	  Electricity Exports by Hour[Electricity Timeslice,Hour,pass20] = MaMHEIaE Minimum Hourly Exports\
+		,
+	
+	  1,
+	
+	  0
+	)
+	~	Dmnl
+	~		~	:SUPPLEMENTARY 
+	|
+
+
+Check for Minimum Hourly Imports[Electricity Timeslice,Hour]=
+	IF THEN ELSE(
+	
+	  Electricity Imports by Hour[Electricity Timeslice,Hour,pass20] = MaMHEIaE Minimum Hourly Imports\
+		,
+	
+	  1,
+	 
+	  0
+	)
+	~	Dmnl
 	~		~	:SUPPLEMENTARY 
 	|
 
@@ -32189,6 +32420,35 @@ First Year Total Heat Use= INITIAL(
 	Total District Heat Use)
 	~	BTU
 	~		|
+
+
+Five Year Avearge Power Plant Dispatch Parameters as Vector[Electricity Source,ptype]\
+		=
+	3 ~~|
+Five Year Avearge Power Plant Dispatch Parameters as Vector[Electricity Source,ppriority\
+		]=
+	Five Year Average Dispatch or Opportunity Cost per Unit Electricity Output[Electricity Source
+	] ~~|
+Five Year Avearge Power Plant Dispatch Parameters as Vector[Electricity Source,pwidth\
+		]=
+	MAX(
+	  ABS(MAX(NSDoDC Normalized Standard Deviation of Dispatch Costs[Electricity Source]\
+		,0.01)
+	    *(Five Year Average Dispatch or Opportunity Cost per Unit Electricity Output[Electricity Source\
+		]
+	    + Variable Subsidies per Unit Elec Output[Electricity Source])
+	  ),
+	
+	  0.01
+	) ~~|
+Five Year Avearge Power Plant Dispatch Parameters as Vector[Electricity Source,pextra\
+		]=
+	0
+	~	$/(MW*hour)
+	~	We require pwidth to be a minimum of 0.01 so that the dispatch allocations \
+		do not result in an error due to 0 dispatch costs for some power plant \
+		types
+	|
 
 Five Year Average Annual Expected Dispatch Costs by Power Plant Type[Electricity Source\
 		]=
@@ -39967,9 +40227,19 @@ Industry Sector Change in Capital and OM Spending[nonenergy industries]=
 	~	$
 	~		|
 
+
 Industry Sector Change in CCS New Capital Eqpt Cost[Industry Category]=
-	CCS New Capital Eqpt Cost by Industry[Industry Category]
-	- BAU CCS New Capital Eqpt Cost by Industry[Industry Category]
+	DEPRECIATE STRAIGHTLINE(
+	
+	  CCS New Capital Eqpt Cost by Industry[Industry Category]
+	  - BAU CCS New Capital Eqpt Cost by Industry[Industry Category],
+	 
+	  STfCCE Smoothing Time for CCS Capital Expenditures,
+	
+	  1,
+	
+	  0
+	)
 	~	$
 	~		|
 
@@ -41978,6 +42248,18 @@ Legally Required Elec Portfolio Percentage[Clean Elec Requirement]=
 	)
 	~	Dmnl
 	~		|
+
+
+Legally Required Electricity Dispatch to Satisfy Elec Portfolio Stds[Clean Elec Requirement\
+		]=
+	SUM(
+	  Electricity Dispatch Required to Satisfy Elec Portfolio Stds[Electricity Timeslice\
+		!,Hour!,Clean Elec Requirement]
+	  * SHELF Days per Electricity Timeslice[Electricity Timeslice!]
+	)
+	~	MW*hour
+	~		~	:SUPPLEMENTARY 
+	|
 
 Legally Required Electricity Dispatch to Satisfy RPS[Clean Elec Requirement]=
 	SUM(
@@ -46286,6 +46568,7 @@ New Vehicles Contribution to Percentage Change to Fleet Avg Fuel Economy[Vehicle
 	~	Dmnl
 	~		|
 
+
 New Vehicles Demanded[Vehicle Type,Cargo Type]=
 	INTEGER(
 	 ZIDZ(
@@ -46296,6 +46579,8 @@ New Vehicles Demanded[Vehicle Type,Cargo Type]=
 	 )
 	 +0.999999
 	)
+	
+	+ ANVCV Additional New Vehicles Calibration Variable[Vehicle Type,Cargo Type]
 	~	vehicles
 	~		|
 
@@ -47011,6 +47296,7 @@ Optimized RPS Credit Price=
 		across it becuase it is technically a subrange.
 	|
 
+
 Other Changes in Industry Sector Tax and Tax Rebate Revenues[Cash Flow Entity] :EXCEPT:\
 		  [government],[nonenergy industries
 ],[coal suppliers],[natural gas and petroleum suppliers]=
@@ -47019,7 +47305,11 @@ Other Changes in Industry Sector Tax and Tax Rebate Revenues[government]=
 	SUM(Change in Carbon Tax on Process Emissions by Industry[Industry Category!])
 	+ SUM(Change in Taxes Paid on Industry Fuels[Industry Category!,Industrial Fuel!]) ~~|
 Other Changes in Industry Sector Tax and Tax Rebate Revenues[nonenergy industries]=
-	SUM(Change in Carbon Tax Rebates[Industry Category!]) ~~|
+	SUM(Change in Carbon Tax Rebates[Industry Category!])
+	- Change in Carbon Tax Rebates[coal mining 05]
+	- Change in Carbon Tax Rebates[oil and gas extraction 06]
+	- Change in Carbon Tax Rebates[refined petroleum and coke 19]
+	- Change in Carbon Tax Rebates[energy pipelines and gas processing 352T353] ~~|
 Other Changes in Industry Sector Tax and Tax Rebate Revenues[coal suppliers]=
 	Change in Carbon Tax Rebates[coal mining 05] ~~|
 Other Changes in Industry Sector Tax and Tax Rebate Revenues[natural gas and petroleum suppliers\
@@ -47400,6 +47690,20 @@ Output Change in Average Household Spending on Other Fuels=
 	~	output currency unit/households
 	~		|
 
+
+Output Change in Building Electricity Expenditures per Household=
+	Change in Average Household Building Energy Expenditures[electricity bf]
+	/ OCCF Dollars per Small Output Currency Unit
+	~	output currency unit
+	~		|
+
+
+Output Change in Building Natural Gas Expenditures per Household=
+	Change in Average Household Building Energy Expenditures[natural gas bf]
+	/ OCCF Dollars per Small Output Currency Unit
+	~	output currency unit
+	~		|
+
 Output Change in Capacity for Green Hydrogen Demand[Electricity Source]=
 	Change in Capacity for Green Hydrogen Demand[Electricity Source]
 	/ MW per GW
@@ -47696,8 +48000,17 @@ Output Change in Government Cash Flow by Cash Flow Source[Govt Cash Flow Type]=
 	~		~	:SUPPLEMENTARY 
 	|
 
+
 Output Change in Grid Battery Storage Capacity=
-	Change in This Year Grid Battery Storage Capacity in MW
+	Change in This Year Grid Battery Storage excluding Hybrid Batteries in MW
+	/ MW per GW
+	~	GW
+	~		~	:SUPPLEMENTARY 
+	|
+
+
+Output Change in Hybrid Battery Storage Capacity=
+	Change in This Year Hybrid Battery Storage Capacity in MW
 	/ MW per GW
 	~	GW
 	~		~	:SUPPLEMENTARY 
@@ -47833,6 +48146,17 @@ Output Change in Nonenergy Production[energy industries within industry category
 	~		~	:SUPPLEMENTARY 
 	|
 
+
+Output Change in Other Building Energy Expenditures per Household=
+	SUM(Change in Average Household Building Energy Expenditures[Building Fuel!])
+	/ OCCF Dollars per Small Output Currency Unit
+	
+	- Output Change in Building Electricity Expenditures per Household
+	- Output Change in Building Natural Gas Expenditures per Household
+	~	output currency unit
+	~		~	:SUPPLEMENTARY 
+	|
+
 Output Change in Other Direct and Indirect Jobs=
 	SUM(Direct Plus Indirect Change in Jobs[ISIC Code!])
 	- SUM(Direct Plus Indirect Change in Jobs[Fossil and Energy Utility ISIC Code!])
@@ -47873,6 +48197,18 @@ Output Change in Other GDP Contribution=
 	)
 	/ OCCF Dollars per Large Output Currency Unit
 	~	output currency units
+	~		~	:SUPPLEMENTARY 
+	|
+
+
+Output Change in Other Transportation Energy Expenditures per Household=
+	SUM(Change in Average Household Transportation Energy Expenditures[Transportation Fuel\
+		!])
+	/ OCCF Dollars per Small Output Currency Unit
+	
+	- Output Change in Transportation Electricity Expenditures per Household
+	-Output Change in Transportation Petroleum Expenditures per Household
+	~	output currency unit
 	~		~	:SUPPLEMENTARY 
 	|
 
@@ -47946,6 +48282,27 @@ Output Change in Revenue by Entity[Cash Flow Entity]=
 	~	output currency units
 	~		~	:SUPPLEMENTARY 
 	|
+
+
+Output Change in Transportation Electricity Expenditures per Household=
+	Change in Average Household Transportation Energy Expenditures[electricity tf]
+	/ OCCF Dollars per Small Output Currency Unit
+	~	output currency unit
+	~		|
+
+
+Output Change in Transportation Petroleum Expenditures per Household=
+	(Change in Average Household Transportation Energy Expenditures[petroleum gasoline tf\
+		]
+	+ Change in Average Household Transportation Energy Expenditures[petroleum diesel tf\
+		]
+	+ Change in Average Household Transportation Energy Expenditures[biofuel gasoline tf\
+		]
+	+ Change in Average Household Transportation Energy Expenditures[biofuel diesel tf]
+	)
+	/ OCCF Dollars per Small Output Currency Unit
+	~	output currency unit
+	~		|
 
 Output Chemicals Sector Hydrogen Demand=
 	(
@@ -48045,6 +48402,15 @@ Output Construction Cost per Unit Capacity before Construction Subsidies[Electri
 		]
 	/ OCCF Dollars per Medium Output Currency Unit
 	~	output currency units/MW
+	~		~	:SUPPLEMENTARY 
+	|
+
+
+Output Cost per Unit New Elec Capacity[Electricity Source]=
+	Construction Cost per Unit Capacity after Construction Subsidies and Spur Line Construction\
+		[Electricity Source]
+	/ OCCF Dollars per Small Output Currency Unit
+	~	output currency unit/MW
 	~		~	:SUPPLEMENTARY 
 	|
 
@@ -48985,8 +49351,17 @@ Output Government Revenue Change Allocated by Mechanism[regular spending]=
 	~		~	:SUPPLEMENTARY 
 	|
 
+
 Output Grid Battery Storage Capacity=
-	This Year Grid Battery Storage Capacity in MW
+	This Year Total Grid Battery Storage Capacity excluding Hybrid Batteries in MW
+	/ MW per GW
+	~	GW
+	~		~	:SUPPLEMENTARY 
+	|
+
+
+Output Hybrid Battery Storage Capacity=
+	This Year Hybrid Grid Battery Storage Capacity in MW
 	/ MW per GW
 	~	GW
 	~		~	:SUPPLEMENTARY 
@@ -55526,13 +55901,14 @@ Required Share of Peak Demand from Clean Firm Resources=
 	~	Dmnl
 	~		|
 
+
 Required ZEV Sales Percentage by Subregion[Subregion,Cargo Type,Vehicle Type]=
 	IF THEN ELSE(
 	
 	  Boolean Use Non BAU Minimum Required ZEV Sales Percentage This Year by Subregion[Cargo Type\
 		,Vehicle Type] > 0,
 	
-	  RZSPbS BAU Required ZEV Sales Percentage by Subregion[Subregion,Vehicle Type,Cargo Type\
+	  RZSPbS Required ZEV Sales Percentage by Subregion[Subregion,Vehicle Type,Cargo Type\
 		],
 	
 	  BRZSPbS BAU Required ZEV Sales Percentage by Subregion[Subregion,Vehicle Type,Cargo Type\
@@ -56541,6 +56917,106 @@ RZSPbS BAU Required ZEV Sales Percentage by Subregion[Subregion,ships,passenger]
 	   'B2'
 	) ~~|
 RZSPbS BAU Required ZEV Sales Percentage by Subregion[Subregion,ships,freight]:INTERPOLATE:\
+		:=
+	GET DIRECT DATA(
+	   'InputData/trans/RZSPbS/RZSPbS-frgt-ships.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	Dmnl
+	~		|
+
+
+RZSPbS Required ZEV Sales Percentage by Subregion[Subregion,LDVs,passenger]:INTERPOLATE:\
+		:=
+	GET DIRECT DATA(
+	   'InputData/trans/RZSPbS/RZSPbS-psgr-ldv.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+RZSPbS Required ZEV Sales Percentage by Subregion[Subregion,HDVs,passenger]:INTERPOLATE:\
+		:=
+	GET DIRECT DATA(
+	   'InputData/trans/RZSPbS/RZSPbS-psgr-hdv.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+RZSPbS Required ZEV Sales Percentage by Subregion[Subregion,motorbikes,passenger]:INTERPOLATE:\
+		:=
+	GET DIRECT DATA(
+	   'InputData/trans/RZSPbS/RZSPbS-psgr-mtrbk.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+RZSPbS Required ZEV Sales Percentage by Subregion[Subregion,LDVs,freight]:INTERPOLATE:\
+		:=
+	GET DIRECT DATA(
+	   'InputData/trans/RZSPbS/RZSPbS-frgt-ldv.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+RZSPbS Required ZEV Sales Percentage by Subregion[Subregion,HDVs,freight]:INTERPOLATE:\
+		:=
+	GET DIRECT DATA(
+	   'InputData/trans/RZSPbS/RZSPbS-frgt-hdv.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+RZSPbS Required ZEV Sales Percentage by Subregion[Subregion,motorbikes,freight]:INTERPOLATE:\
+		:=
+	GET DIRECT DATA(
+	   'InputData/trans/RZSPbS/RZSPbS-frgt-mtrbk.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+RZSPbS Required ZEV Sales Percentage by Subregion[Subregion,aircraft,passenger]:INTERPOLATE:\
+		:=
+	GET DIRECT DATA(
+	   'InputData/trans/RZSPbS/RZSPbS-psgr-aircraft.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+RZSPbS Required ZEV Sales Percentage by Subregion[Subregion,aircraft,freight]:INTERPOLATE:\
+		:=
+	GET DIRECT DATA(
+	   'InputData/trans/RZSPbS/RZSPbS-frgt-aircraft.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+RZSPbS Required ZEV Sales Percentage by Subregion[Subregion,rail,passenger]:INTERPOLATE:\
+		:=
+	GET DIRECT DATA(
+	   'InputData/trans/RZSPbS/RZSPbS-psgr-rail.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+RZSPbS Required ZEV Sales Percentage by Subregion[Subregion,rail,freight]:INTERPOLATE:\
+		:=
+	GET DIRECT DATA(
+	   'InputData/trans/RZSPbS/RZSPbS-frgt-rail.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+RZSPbS Required ZEV Sales Percentage by Subregion[Subregion,ships,passenger]:INTERPOLATE:\
+		:=
+	GET DIRECT DATA(
+	   'InputData/trans/RZSPbS/RZSPbS-psgr-ships.csv',
+	   ',',
+	   '1',
+	   'B2'
+	) ~~|
+RZSPbS Required ZEV Sales Percentage by Subregion[Subregion,ships,freight]:INTERPOLATE:\
 		:=
 	GET DIRECT DATA(
 	   'InputData/trans/RZSPbS/RZSPbS-frgt-ships.csv',
@@ -57828,8 +58304,10 @@ Spare Capacity under Production Cap[All Fuels]=
 	~	BTU
 	~		|
 
+
 Spare Potential Output from Surviving Capacity by Hour[Electricity Timeslice,Hour]=
 	Potential Output from Surviving Capacity by Hour[Electricity Timeslice,Hour]
+	{- Total Electricity Demand by Hour before Electricity Imports and Exports[Electricity Timeslice,Hour]}
 	-Total Electricity Demand by Hour Before Demand Altering Technologies[Electricity Timeslice\
 		,Hour]
 	~	MW*hr
@@ -58245,6 +58723,16 @@ Steps Allowed in Same Direction With Declining Step Size=
 Steps Allowed in Same Direction Without Increasing Step Size=
 	2
 	~	Dmnl
+	~		|
+
+
+STfCCE Smoothing Time for CCS Capital Expenditures=
+	GET DIRECT CONSTANTS(
+	   'InputData/ccs/STfCCE/STfCCE.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Year
 	~		|
 
 STfESCE Smoothing Time for Electricity Sector Capital Expenditures=
@@ -59455,8 +59943,10 @@ This Year Battery Cost as Fraction of Last Year Battery Cost=
 	~	Dmnl
 	~		|
 
-This Year Battery Manufacturing Price After Subsidies=
-	This Year Battery Manufacturing Price Before Subsidies
+
+This Year Battery Manufacturing Price After Subsidies[Vehicle Type,Cargo Type]=
+	This Year Battery Manufacturing Price Before Subsidies by Vehicle Type[Vehicle Type,\
+		Cargo Type]
 	- Subsidy for Vehicle Battery Production Passed Through to Consumers
 	~	$/(kW*hr)
 	~		|
@@ -59478,11 +59968,21 @@ This Year Battery Manufacturing Price Before Subsidies=
 	~	$/(kW*hr)
 	~		|
 
+
+This Year Battery Manufacturing Price Before Subsidies by Vehicle Type[Vehicle Type,Cargo Type\
+		]=
+	This Year Battery Manufacturing Price Before Subsidies
+	* BPPM Battery Pack Price Multiplier[Vehicle Type,Cargo Type]
+	~	$/(kW*hr)
+	~		|
+
+
 This Year Battery Portion of Vehicle Price[Cargo Type,Vehicle Type,Vehicle Technology\
 		]=
 	This Year Battery Capacity by Vehicle Type[Cargo Type,Vehicle Type,Vehicle Technology\
 		]
-	* This Year Battery Manufacturing Price After Subsidies
+	* This Year Battery Manufacturing Price After Subsidies[Vehicle Type,Cargo Type]
+	* BPM Battery Pack Markup[Vehicle Type,Cargo Type]
 	~	$/vehicle
 	~		|
 
