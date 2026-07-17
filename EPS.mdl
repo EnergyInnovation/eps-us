@@ -4787,14 +4787,36 @@ BAU Domestic Employment by ISIC Code[ISIC Code]=
 
 BAU Domestic Energy Revenue by Producing ISIC Code[ISIC Code]=
 	SUM(
-	  BAU Fuel Industry After Tax Revenue by Fuel[All Fuels!]
+	  (BAU Fuel Industry After Tax Revenue by Fuel[All Fuels!]
+	    - BAU Fuel Export Revenue including Exported Electricity[All Fuels!])
 	  * FtPICM Fuel to Producing ISIC Code Map[All Fuels!,ISIC Code]
 	  * BAU Domestic Content Share of Consumption by ISIC Code from Exogenous Data[ISIC Code\
 		]
-	  * Share of Fuel Production by Fuel within ISIC Code[All Fuels!,ISIC Code]
+	)
+
+	+ SUM(
+	  BAU Fuel Export Revenue including Exported Electricity[All Fuels!]
+	  * FtPICM Fuel to Producing ISIC Code Map[All Fuels!,ISIC Code]
 	)
 	~	$
-	~		|
+	~	Domestic sales are weighted by the domestic content share of \
+		consumption, because only the domestically-produced share of what is \
+		consumed here is revenue for local producers.  Export revenue is NOT \
+		weighted by the domestic content share, because exports are by \
+		definition entirely domestically produced.  Each fuel's revenue is \
+		summed into its producing ISIC code via FtPICM, whose rows already \
+		sum to one across ISIC codes (e.g. natural gas splits 0.81/0.19 \
+		between oil and gas extraction and pipelines), so no further \
+		apportionment factor is needed.  (Previously the entire after-tax \
+		revenue, including export revenue, was multiplied by the domestic \
+		content share AND by Share of Fuel Production by Fuel within ISIC \
+		Code; the latter row-normalizes within the ISIC code, which turned \
+		the sum of a multi-product industry's per-fuel revenues into a \
+		production-weighted average, understating refining's revenue by \
+		roughly 2-3x vs its BEA base-year output.  Matches the treatment in \
+		Direct Change in Fuel Industry Revenue by ISIC Code, which never \
+		carried the extra factor.)
+	|
 
 BAU Domestic Jobs by Union Status[union]=
 	QUANTUM(
@@ -20853,14 +20875,62 @@ Change in Domestic Jobs by Union Status[nonunion]=
 	~	jobs
 	~		|
 
-Change in Domestic Output by ISIC Code[ISIC Code]=
+Change in Domestic Output by ISIC Code[ISIC Code] :EXCEPT: [Fossil and Energy Utility ISIC Code\
+		]=
 	ZIDZ(
 	  Change in Domestic Value Added by ISIC Code[ISIC Code],
-	
+
 	  Within Industry Value Added per Unit Output[ISIC Code]
+	) ~~|
+Change in Domestic Output by ISIC Code[Fossil and Energy Utility ISIC Code]=
+	Direct Change in Fuel Industry Revenue by ISIC Code[Fossil and Energy Utility ISIC Code\
+		]
+	* Domestic Content Share of Consumption by ISIC Code[Fossil and Energy Utility ISIC Code\
+		]
+	* FoPTaFbIC Fractions of Products That are Fuels by ISIC Code[Fossil and Energy Utility ISIC Code\
+		]
+
+	+ SUM(
+	  Change in Fuel Industry Cash Flow from Fuel Exports[All Fuels!]
+	  * FtPICM Fuel to Producing ISIC Code Map[All Fuels!,Fossil and Energy Utility ISIC Code\
+		]
+	)
+	* (1 - Domestic Content Share of Consumption by ISIC Code[Fossil and Energy Utility ISIC Code\
+		])
+	* FoPTaFbIC Fractions of Products That are Fuels by ISIC Code[Fossil and Energy Utility ISIC Code\
+		]
+
+	+ ZIDZ(
+	  Change in Domestic Value Added by ISIC Code[Fossil and Energy Utility ISIC Code]
+	  - Change in Fuel Production Mapped to ISIC Codes[Fossil and Energy Utility ISIC Code\
+		]
+	    * Within Industry Value Added per Unit Energy Production[Fossil and Energy Utility ISIC Code\
+		]
+	    * FoPTaFbIC Fractions of Products That are Fuels by ISIC Code[Fossil and Energy Utility ISIC Code\
+		],
+
+	  Within Industry Value Added per Unit Output[Fossil and Energy Utility ISIC Code]
 	)
 	~	$
-	~		|
+	~	For nonenergy industries, the change in output is reconstructed from the \
+		change in value added at the industry's BAU value-added-per-unit-output \
+		ratio.  For fossil and energy utility industries, the fuel portion of \
+		the change in output is instead the price-inclusive change in domestic \
+		fuel industry revenue (weighted by FoPTaFbIC, mirroring the BAU Output \
+		by ISIC Code by Year blend), so that these industries' revenue tracks \
+		fuel prices the same way their fuel input costs do.  The remaining \
+		(non-fuel) portion converts the residual change in value added - total \
+		minus the physical fuel-production term already counted in Direct \
+		Change in Domestic Value Added - at the value-added-per-unit-output \
+		ratio.  Value added and employment for these industries remain on the \
+		physical energy production basis.  The change in fuel export cash flow \
+		is additionally credited at (1 - domestic content share): the main \
+		revenue term is DCS-weighted (correct for domestic sales, where only \
+		the domestically-produced share accrues to local producers), but \
+		exports are entirely domestically produced, so their DCS-cut portion \
+		is restored here.  Mirrors the same domestic-vs-export split in BAU \
+		Domestic Energy Revenue by Producing ISIC Code.
+	|
 
 Change in Domestic Value Added by ISIC Code[Target ISIC Code]=
 	Direct Change in Domestic Value Added by ISIC Code[Target ISIC Code]
@@ -70748,7 +70818,6 @@ Insofar as each ISIC code's revenues are from energy products, we use changes in
 10,562,Change in CCS Subsidy Amount Paid to Hydrogen Sector,-3814,749,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,563,562,265,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,564,Share of Fuel Production by Fuel within ISIC Code,-6974,217,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,565,564,522,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,566,Percent Change in BAU Energy Production and Imports vs Initial Year by ISIC Code,-5748,15,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,567,566,538,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,568,GRA for CCS Subsidies This Year,-3412,493,75,30,8,2,0,5,-1,0,0,0,128-128-128,128-192-0,|||128-128-128,0,0,0,0,0,0
