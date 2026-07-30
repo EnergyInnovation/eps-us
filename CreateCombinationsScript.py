@@ -232,7 +232,10 @@ PotentialPolicies = (
 
 	# Industry Sector Policies
 	(False,"Fraction of Cement Measures Achieved","Cement Clinker Substitution",[0,1],"Cement Clinker Substitution"),
-	(False,"Fraction of Potential Cogeneration and Waste Heat Recovery Adopted","Cogeneration and Waste Heat Recovery",[0,1],"Cogeneration and Waste Heat Recovery"),
+	(False,"Min Fraction of Waste Heat Measure Potential Deployed","Waste Heat Recovery Measure Standard",[0,1],"Waste Heat Recovery Measure Standard"),
+	(False,"Waste Heat Measure Deployment Subsidy","Waste Heat Recovery Measure Subsidy",[0,20],"Waste Heat Recovery Measure Subsidy"),
+	(False,"Min Fraction of Process Efficiency Measure Potential Deployed","Process Efficiency Measure Standard",[0,1],"Process Efficiency Measure Standard"),
+	(False,"Process Efficiency Measure Deployment Subsidy","Process Efficiency Measure Subsidy",[0,20],"Process Efficiency Measure Subsidy"),
 	(False,"Fraction of Energy Savings from Early Facility Retirement Achieved","Early Retirement of Industrial Facilities",[0,1],"Early Retirement of Industrial Facilities"),
 	(False,"Percentage Improvement in Eqpt Efficiency Standards above BAU[cement and other carbonates]","Industry Energy Efficiency Standards - Cement Industry",[0,0.33],"Industry Energy Efficiency Standards"),
 	(False,"Percentage Improvement in Eqpt Efficiency Standards above BAU[natural gas and petroleum systems]","Industry Energy Efficiency Standards - Natural Gas and Petroleum Industry",[0,0.33],"Industry Energy Efficiency Standards"),
