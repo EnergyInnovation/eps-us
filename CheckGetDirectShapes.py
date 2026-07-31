@@ -251,11 +251,15 @@ def parse_lhs(flat_before_call):
     which per repo scan never co-occurs with GET DIRECT anyway) and return
     (name, subs_list_or_None)."""
     s = flat_before_call.strip()
-    # Strip trailing '=' and any ':' / 'INTERPOLATE' immediately before it.
-    m = re.search(r"(:INTERPOLATE:)?:?=\s*$", s)
-    if not m or not s.endswith('='):
-        return None, None
-    s = s[:m.start()].rstrip()
+    # Lookup declaration form:  Name[Subs]( GET DIRECT LOOKUPS(...) )
+    if s.endswith('('):
+        s = s[:-1].rstrip()
+    else:
+        # Strip trailing '=' and any ':' / 'INTERPOLATE' immediately before it.
+        m = re.search(r"(:INTERPOLATE:)?:?=\s*$", s)
+        if not m or not s.endswith('='):
+            return None, None
+        s = s[:m.start()].rstrip()
     bracket_m = re.search(r"^(?P<name>[^\[]+?)\s*\[(?P<subs>[^\]]*)\]\s*$", s)
     if bracket_m:
         name = bracket_m.group('name').strip()

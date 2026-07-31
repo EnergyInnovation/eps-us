@@ -1,3 +1,5 @@
+> **SUPERSEDED (2026-07-31):** the PSUS shock-ramp mechanism this plan implemented has been replaced by the payback-acceptance curve (PAC) — see `PEaWHRP_PaybackAcceptance_Plan.md`. Kept for history.
+
 # Implementation plan: shock-size ramp for measure deployment
 
 **Status: IMPLEMENTED 2026-07-28 on Dan's go-ahead, uncommitted. All three tests pass.**

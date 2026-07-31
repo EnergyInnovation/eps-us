@@ -1,5 +1,7 @@
 # Sketch update checklist — PEaWHRP measure structure (2026-07-28)
 
+> **Update 2026-07-31 (payback-acceptance change):** `MHRP Measure Hurdle Rate Premium` and `PSUS Price Signal Unlock Sensitivity` no longer exist — their Industry-Main sketch objects were removed / renamed in-file. Newly drawn on Industry-Main (by direct sketch edit, pending your visual review): `PAC Payback Acceptance Curve` (pink input, at the old PSUS spot, feeding both Tranche Economically Deployable objects) and the four `… Simple Payback Period [at BAU Prices]` variables (white, in the value columns), with rerouted arrows Value→Payback→Ceiling and cost-input→Payback. The stale LCOS→Ceiling and Value→Ceiling arrows were removed (LCOS is now reporting-only). Everything below this line predates that change; read `MHRP`/`PSUS` mentions accordingly.
+
 Derived by diffing `EPS.mdl` against `EPS.mdl.pre-peawhrp.bak` (98 added, 16 removed, 16 modified equations; 7 new subscript ranges). Suggested view placements follow existing conventions; rearrange freely.
 
 ## 0. New subscript ranges (no sketch objects needed)

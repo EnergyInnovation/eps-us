@@ -21,8 +21,12 @@ Notes:
     Vensim splits CSV rows naively on the delimiter.
   - Row order must remain industry-major in Industry Category declaration order
     with measures minor; the VECTOR ELM MAP remaps in EPS.mdl depend on it.
-  - PEaWHRP-MHRP.csv, PEaWHRP-MCL-mult.csv, PEaWHRP-MCL-share.csv and
-    PEaWHRP-SoCEMDSiaY.csv are maintained by hand, not by this script.
+  - PEaWHRP-MCL-mult.csv, PEaWHRP-MCL-share.csv, PEaWHRP-SoCEMDSiaY.csv and
+    PEaWHRP-PAC.csv (the payback acceptance curve) are maintained by hand, not
+    by this script; their methodology and citations are documented on the
+    'hand-maintained inputs' tab of the parameters workbook and in
+    PEaWHRP_PaybackAcceptance_Plan.md.  (PEaWHRP-MHRP.csv and PEaWHRP-PSUS.csv
+    are retired.)
 """
 import csv
 import os
