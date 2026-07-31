@@ -1,5 +1,7 @@
 # Merge plan: `develop_tempbands+whr` → `develop`
 
+> **AS-EXECUTED STATUS (2026-07-31 evening): COMPLETE — all gates pass.** Merge resolved in `4c116bd8`; one runtime blocker root-caused and fixed in `464c0c65`. See §7 (appended) for what the plan didn't predict. Awaiting Dan's review + push; WebAppData/docs (Phase F) still out of scope.
+
 **Written 2026-07-31, pending Dan's sign-off.** Merge-base `2c873fcf` (2026-07-16). Target: `origin/develop` at `650a7f6f` (12 commits ahead of local `develop`, which sits at the merge-base). Companion doc: `PEaWHRP_Change_Summary_for_Merge.md` (§7 merge guidance — directionally all confirmed; several counts corrected below).
 
 ---
@@ -111,3 +113,28 @@ Estimated wall-clock: ~half a day including all gate runs, most of it Phase 2c/2
 - The census agent's hunk-#21 "which naming is newer" description was internally muddled — re-verify box sets before discarding our IO view side (step 2c bakes this in).
 - Hunk #3's `This Year Change in Industry Unit Costs…` equation may reference Material Efficiency variables — its fate is a decision, not a mechanical rule.
 - The capacity-market overshoot (documented pre-existing issue) will distort any high-carbon-tax electricity results in gate 8 — judge deployment behavior, not electricity-price-linked outputs.
+
+---
+
+## 7. As-executed appendix (what actually happened, 2026-07-31)
+
+**Executed as planned:** Phases 0–2 ran essentially as written. 56/65 hunks script-resolved (one extra hunk was GUI run-state, resolved to develop's side); equation audit found all 18 risk equations clean; FoPITY auto-merge accepted (Dan's call); `Policy Element` turned out to load via `GET DIRECT SUBSCRIPT` from the CSV, making the §2e order gate structurally unfailable; all 82 VECTOR ELM MAP anchors verified. Five ghost sketch boxes (variables develop's passthrough rework deleted, still drawn in our Industry-Main view) were removed — the sketch agent initially misattributed them; they were merge artifacts.
+
+**What the plan didn't predict — the gate-4 blocker (fixed in `464c0c65`):**
+1. **A semantic conflict git cannot see.** Develop's `126ceb8d` added `Normalized Change in Industrial Capital Expenditures` referencing `New Waste Heat Recovery Equipment Capital Expenditures That Are Not Financed` — a variable this branch renamed. The union had one dangling reference. **Vensim loads such a model cleanly and hangs mute at initial-value computation** (generic "Problems encountered in the simulation", no error text anywhere, no .vdfx created; `NOINTERACTION` makes it a silent CPU-freeze). Root-caused by commit bisection in a worktree after all dialog/log probing failed. Fix: substitute `New Measure Capital Expenditures That Are Not Financed` (the successor, mirroring the branch's substitution in the level-dollar twin). *Review note for the ME owner: confirm that term is intended in the normalized per-unit-output equation.*
+2. **Embedded changes-file record.** The branch model (since `2c43ee22`) carried GUI-state line `10:IndustryCarbonTax.cin` — with the local cin present, every default headless run silently applied a $300/t industry tax. Removed. Verified the branch's committed Pac* validation runs were NOT contaminated (PacBase2 measure fractions exactly 0).
+3. 1,189 stale subscript-control selection lines (union of both parents' GUI state) stripped from the model file.
+
+**Lesson worth institutionalizing:** after any EPS merge, scan for dangling references (variables with 0 definitions but >0 references) before attempting a simulation — it is a one-minute script and would have caught the blocker instantly. Neither LOADMODEL, CheckGetDirectShapes, nor sketch lint detects this class.
+
+**Gate results (final EPS.mdl, commit `464c0c65`):**
+| Gate | Result |
+|---|---|
+| GET DIRECT shapes (1,343 calls) | 0 issues |
+| LOADMODEL / sketch lint | clean / clean |
+| Zero-policy exact-zero invariant | fractions ≡ 0, multipliers ≡ 1, cash flows ≡ 0 (exact) |
+| Zero-policy vs parents (Total CO2e 2050, g) | merged 5.187e15; branch 5.067e15 (+2.4% = Robbie's data fixes); develop 5.854e15 (−11.4% = temp-band industry recalibration). Dan to eyeball magnitudes. |
+| WHAI | [0.286, 1.0], =1 at start year |
+| Lever smoke (6 runs, READCIN) | each lever fires its own domain/industry only, incl. develop's `indst material efficiency` at its relocated FoPITY block; standards pay no subsidy; $100/t industry tax → broad deployment, 2050 CO2e −10.5% |
+
+**Artifacts left in repo root** (gitignored or untracked): `MergeZeroPol.*`, `Smoke*.{cin,tab,vdfx}`, `MergeGate*.{cmd,lst}`, `MergeSmokeVars.lst`, `SuspectVars.lst` — reusable gate battery; various `Bisect*`/`Retest*`/`InitOnly*` diagnostics deletable. Worktree `..\eps-us-develop-baseline` holds the develop baseline + the independently-fixed verification run (`RealFix.*`); safe to `git worktree remove --force` when done. Still deferred, unchanged from pre-merge: formal units check, WebAppData.xlsx, documentation repo (Phase F).
