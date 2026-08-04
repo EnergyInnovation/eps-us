@@ -64,12 +64,16 @@ Value of {WHM,PEM} Energy Savings[i,m]            = savings-weighted avg of avoi
 {WHM,PEM} Simple Payback Period at BAU Prices    = same using the BAU value
 
 {WHM,PEM} Tranche Economically Deployable[i,m,cl] =            <-- the deployment ceiling
-    MAX(0, (PAC(payback) - PAC(payback_BAU) - 1e-6) / MAX(1e-6, 1 - PAC(payback_BAU)))
+    MAX(0, (PAC(payback) - PAC(payback_BAU) - 1e-6) / MAX(1e-6, PAC(0) - PAC(payback_BAU)))
 ```
 
-Firms whose threshold accepts the BAU payback are treated as having already adopted (that adoption is embedded in base-year calibration and in the diffusion netting of the potentials); policy that shortens the payback unlocks the threshold mass in between. **At zero policy the two paybacks are identical and the ceiling is exactly 0** — the `1e-6` deadband is required because the two values compute through different paths and differ in their final bits.
+Policy that shortens the payback wins over the firms whose thresholds lie between the BAU and policy paybacks. The denominator scales that gain against the most any policy could win — `PAC(0) - PAC(payback_BAU)` — so driving the payback to zero unlocks the **full loaded potential**. **At zero policy the two paybacks are identical and the ceiling is exactly 0** — the `1e-6` deadband is required because the two values compute through different paths and differ in their final bits.
 
-`Levelized Cost of {WHM,PEM} Energy Savings` and `{WHM,PEM} Measure Capital Recovery Factor` (at `BCoISC Weighted Average Cost of Capital by Industry`) still exist but **no longer gate deployment** — they are cost-accounting/reporting only, flagged `:SUPPLEMENTARY`.
+> **Changed 2026-08-04.** The denominator was previously `1 - PAC(payback_BAU)`, which implicitly treated the firms accepting the BAU payback as having already adopted, capping the reachable share at ~80% (waste heat) / ~73% (process efficiency) of loaded potential even at an infinite carbon price. That assumption was wrong for the US, where no current policy drives baseline deployment of these measures, and it risked double-counting against Kermeli's own diffusion netting. Baseline deployment is now represented explicitly and per-geography by the BAU deployed share input (§3.5a) instead of being assumed inside the curve.
+
+`Levelized Cost of {WHM,PEM} Energy Savings` and `{WHM,PEM} Measure Capital Recovery Factor` (at `BCoISC Weighted Average Cost of Capital by Industry`) **were deleted on 2026-08-04.** They stopped gating deployment when the PAC curve landed and were kept as `:SUPPLEMENTARY` reporting, but nothing read them — each appeared only in its own definition, and the two capital recovery factors existed solely to feed the two levelized costs. Their descriptions still claimed "affects the deployment decision only", which was the opposite of the truth and a trap for this merge. Removal verified **bit-identical** across 6,725 series at $300/t. Also removed from the local diagnostic savelists and from the four views that drew them (4 objects, 14 arrows).
+
+> **If develop has diverged here:** these four names should not reappear. If the 4.1 side still references them, the reference is stale — the deployment decision now runs entirely through `{WHM,PEM} Simple Payback Period` and the PAC curve. Note the financing-side `Capital Recovery Factor for Financed Measure Equipment` (§3.9) is a **different, live** variable — don't confuse the two.
 
 ### 3.5 Deployment, stocks, retirement
 
@@ -77,11 +81,23 @@ Firms whose threshold accepts the BAU payback are treated as having already adop
 New {WHM,PEM} Deployment This Year[i,m,cl] =
   MIN( target - post-retirement level,
        retirements + MAX( SoCEMDSiaY * gap-to-ceiling , gap-to-standard ) )
-  where target = MAX(economic ceiling, standards floor)
+  where target = MIN( potential remaining after BAU deployment,
+                      MAX(economic ceiling, standards floor) )
 ```
-Retiring capacity is replaced **in full** (maintenance, not a fresh adoption decision); only genuinely new deployment is rate-limited at `SoCEMDSiaY` (0.2/yr); a binding standard deploys immediately; the outer `MIN` lets a tranche that stops being cost-effective decay by retirement instead of being replaced.
+Retiring capacity is replaced **in full** (maintenance, not a fresh adoption decision); only genuinely new deployment is rate-limited at `SoCEMDSiaY` (0.2/yr); a binding standard deploys immediately; the outer `MIN` lets a tranche that stops being cost-effective decay by retirement instead of being replaced. Both the economic and standards channels are additionally capped at the potential remaining after BAU-case deployment (§3.5a) — a no-op in the US.
 
 Stocks: `Last Year Deployed Fraction of {WHM,PEM} Potential` = `INTEG(new − retired, 0)`; visible `Deployed Fraction of {WHM,PEM} Potential` = `MIN(1, MAX(0, …))` (clamps are defensive only — documented as such). Retirement: `{WHM,PEM} Deployment Retired This Year` = `DELAY FIXED(new deployment, lifetime, 0)`.
+
+### 3.5a BAU deployment share (added 2026-08-04, inert in the US)
+
+Some geographies' baselines already drive these measures — the EU's Energy Efficiency Directive being the motivating case. Representing that in the potentials themselves would hide it from the model and make near-term acceleration impossible to show, so it is an explicit per-measure input:
+
+- **New CSV column L** on `PEaWHRP-WMD.csv` and `PEaWHRP-PMD.csv`: `BAU deployed share of potential by end year`. **Zero on every US row.**
+- Long-form reads `{WHM,PEM} BAU Deployed Share by End Year by Row` → remaps `{WHMBDS,PEMBDS} … BAU Deployed Share by End Year[Industry Category,{Waste Heat,Process Efficiency} Measure]`.
+- `{Waste Heat,Process Efficiency} Measure Potential Remaining After BAU Deployment[i,m]` = `1 - BDS * (Time - INITIAL TIME)/(FINAL TIME - INITIAL TIME)` — a linear ramp from zero in the start year to the input value in the final year, expressed in Vensim's own time bounds so it adapts to each geography's run period (US 2025–2050, China 2022–2070, etc.) with no per-region code.
+- Caps both deployment channels, as shown in §3.5.
+
+**Scope caution for whoever populates a non-US region:** this column must carry only the **non-price** share of baseline policy. Price-based baseline policy (the EU ETS) is already inside `BAU Industrial Fuel Cost per Unit Energy`, hence already inside each measure's BAU payback and already restricting the ceiling — putting it here too counts it twice. Values are also **not** obtainable from Kermeli et al. (2022): its implementation rates describe an ambitious efficiency scenario, and its reference case does not model measures individually. Use the region's own baseline projection (EU Reference Scenario / PRIMES) or a documented judgment.
 
 ### 3.6 Savings application (the hook into industry energy use)
 
@@ -224,13 +240,18 @@ All of our hook points still exist by name on `develop`, but Robbie's IO/industr
 
 ---
 
-## 8. Supporting documents in the repo
+## 8. Supporting documents — NOT in the repo
 
-| File | Contents |
-|---|---|
-| `WHR_EfficiencyMeasures_Restructure_Plan.md` | Original design plan: the CCS pattern mirrored, variable naming, calculation order, decisions log |
-| `PEaWHRP_PaybackAcceptance_Plan.md` | Payback-acceptance mechanism: design, literature anchors, peer-model precedent (FORECAST/NEMS/PRIMES), test plan |
-| `PEaWHRP_PaybackAcceptance_Proposal.md` | Why PSUS was replaced (the argument, before implementation) |
-| `PEaWHRP_MeasureType_SourceCheck.md` | Per-measure source verification and the equipment-replacement exclusion decisions |
-| `PEaWHRP_Sketch_Update_Checklist.md` | Sketch objects added/removed/modified, by view |
-| `IndustrialProcess_NewElement_Plan.md` | The temperature-band project's plan (the other half of this branch) |
+**This file is not in the repo either.** All of these are working notes living in Dan's local working copy at the repo root. They were briefly committed and removed on 2026-08-04, since this repo does not keep working docs at root — and a merge handoff in particular should not be merged into `develop` as a permanent artifact. Untracked files survive branch checkouts, so this document is present in the working directory regardless of which branch the merge runs on; if the merge happens on another machine, copy it across by hand.
+
+**Read them for history only.** Several describe mechanisms that were subsequently deleted: the shock-ramp plan and the payback-acceptance proposal both document `PSUS`, and the restructure plan documents `MHRP` and `WHRPbI`. None of those exist in the model any more. **This document is the authority on current state**; where a companion doc disagrees, it is out of date.
+
+| File | Contents | Stale? |
+|---|---|---|
+| `WHR_EfficiencyMeasures_Restructure_Plan.md` | Original design plan: the CCS pattern mirrored, variable naming, calculation order, decisions log | yes — MHRP, WHRPbI |
+| `PEaWHRP_PaybackAcceptance_Plan.md` | Payback-acceptance mechanism: design, literature anchors, peer-model precedent (FORECAST/NEMS/PRIMES), test plan | partly — pre-dates the denominator change (§3.4) |
+| `PEaWHRP_PaybackAcceptance_Proposal.md` | Why PSUS was replaced (the argument, before implementation) | yes — PSUS |
+| `PEaWHRP_ShockRamp_Implementation_Plan.md` | The PSUS shock-ramp design | yes — describes a deleted mechanism |
+| `PEaWHRP_MeasureType_SourceCheck.md` | Per-measure source verification and the equipment-replacement exclusion decisions | no |
+| `PEaWHRP_Sketch_Update_Checklist.md` | Sketch objects added/removed/modified, by view | partly — PSUS/MHRP entries |
+| `IndustrialProcess_NewElement_Plan.md` | The temperature-band project's plan (the other half of this branch) | no |
