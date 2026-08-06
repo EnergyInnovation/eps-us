@@ -12996,6 +12996,147 @@ def CheckForScheduleErrors():
   return(ErrorFound)
 
 
+# SPISFY (Precomputed Schedule Table) generation
+# -----------------------------------------------
+# In addition to FoPITY-N.csv (read via a per-call FoPITY lookup, evaluated
+# inside INITIAL() ~9x178x76 times at Vensim init), this script also emits
+# SPISFY-N.csv: the same schedule data pre-interpolated at every integer
+# year, for just the "foresight policy element" subrange (the 178 elements
+# read by Selected Policy Implementation Schedule for Future Years). Vensim
+# reads these via SPISFY Precomputed Schedule Table (GET DIRECT CONSTANTS),
+# replacing the repeated FoPITY lookup calls at init with a single table read.
+
+# Path to EPS.mdl and to FY.csv, relative to this script's directory
+# (InputData/plcy-schd/FoPITY), which is also the working directory this
+# script is run from.
+MdlPathForSPISFY = "../../../EPS.mdl"
+FYcsvPathForSPISFY = "../FY/FY.csv"
+
+# Extracts the 178 "foresight policy element" subscript names, in model
+# order, by locating the subscript family definition in EPS.mdl. Located by
+# marker text rather than a hardcoded line number, since equations and
+# subscripts shift position whenever the model is edited.
+def ExtractForesightPolicyElementNames(MdlPath):
+  with open(MdlPath, "r", encoding="utf-8", errors="replace") as f:
+    Lines = f.readlines()
+  Names = []
+  InBlock = False
+  for Line in Lines:
+    Stripped = Line.strip()
+    if not InBlock:
+      if Stripped == "foresight policy element:":
+        InBlock = True
+      continue
+    if Stripped.startswith("~"):
+      break
+    if not Stripped:
+      continue
+    Names.append(Stripped.rstrip(",").strip())
+  return Names
+
+# Reads the first and last simulated year out of InputData/plcy-schd/FY/FY.csv
+# (rows are "Year<YYYY>"), so FirstYear/FinalYear above can be checked against
+# it instead of trusting two independently-maintained hardcoded values.
+def GetYearRangeFromFYcsv(FYcsvPath):
+  with open(FYcsvPath, "r", encoding="utf-8-sig") as f:
+    Rows = [Line.strip() for Line in f if Line.strip()]
+  Years = [int(Row[-4:]) for Row in Rows[1:]]
+  return min(Years), max(Years)
+
+# Returns the Vensim-style concatenated name for a policy element: the same
+# naming rule used by WritePolicyElementsFile (an unsubscripted element gets
+# a trailing " X"; a subscripted element is joined with " X ").
+def GetPolicyElementName(PolicyElement):
+  if type(PolicyElement[0]) is str:
+    return PolicyElement[0]+" X"
+  else:
+    return " X ".join(PolicyElement[0])
+
+# Clamped linear interpolation: the same interpolation a Vensim lookup call
+# performs, clamped to the endpoint values outside the breakpoint range.
+def LookupClampedLinear(Xs, Ys, X):
+  if X <= Xs[0]:
+    return Ys[0]
+  if X >= Xs[-1]:
+    return Ys[-1]
+  for Index in range(len(Xs)-1):
+    X0, X1 = Xs[Index], Xs[Index+1]
+    if X0 <= X <= X1:
+      if X1 == X0:
+        return Ys[Index]
+      Frac = (X-X0)/(X1-X0)
+      return Ys[Index]+Frac*(Ys[Index+1]-Ys[Index])
+  return Ys[-1]
+
+# Recomputes the union of breakpoint years across every policy element's
+# active schedule, clamped to [FirstYear, FinalYear]. Mirrors the "Pass 1"
+# computation at the top of WriteVensimFile exactly, so the years line up
+# with what was written to FoPITY-<Schedule>.csv for the current Schedule.
+def ComputeBreakpointYears():
+  BreakpointYearsSet = {FirstYear, FinalYear}
+  for PolicyElement in PolicyElements:
+    for OrderedPair in SetActiveSchedule(PolicyElement):
+      if FirstYear <= OrderedPair[0] <= FinalYear:
+        BreakpointYearsSet.add(OrderedPair[0])
+  return sorted(BreakpointYearsSet)
+
+# Recomputes, for one policy element, the implementation-fraction value at
+# each year in BreakpointYears. Mirrors the per-element arithmetic in the
+# row-writing loop of WriteVensimFile (including the rounding to
+# RoundingDigits), so the values feeding SPISFY are identical to what Vensim
+# would read back out of the corresponding FoPITY-<Schedule>.csv row.
+def ComputeYearValuesAtBreakpoints(PolicyElement, BreakpointYears):
+  ActiveSchedule = SetActiveSchedule(PolicyElement)
+  YearValues = []
+  for Year in BreakpointYears:
+    PairBelow = ActiveSchedule[0]
+    PairAbove = ActiveSchedule[len(ActiveSchedule)-1]
+    for OrderedPair in ActiveSchedule:
+      if OrderedPair[0] <= Year:
+        PairBelow = OrderedPair
+      if OrderedPair[0] >= Year:
+        PairAbove = OrderedPair
+        break
+    if PairAbove == PairBelow:
+      ImplementationPerc = PairBelow[1]
+    else:
+      FractionBetweenYears = (Year-PairBelow[0])/(PairAbove[0]-PairBelow[0])
+      ImplementationPerc = PairBelow[1]+FractionBetweenYears*(PairAbove[1]-PairBelow[1])
+    ImplementationPerc = round(ImplementationPerc, RoundingDigits)
+    YearValues.append(float(ImplementationPerc))
+  return YearValues
+
+# Writes SPISFY-<Schedule>.csv: one row per foresight policy element (in
+# EPS.mdl subscript order), one column per integer year FirstYear..FinalYear.
+def WriteSPISFYFile(Schedule, BreakpointYears, ForesightPolicyElementNames):
+  ElementValues = {}
+  for PolicyElement in PolicyElements:
+    Name = GetPolicyElementName(PolicyElement)
+    ElementValues[Name] = ComputeYearValuesAtBreakpoints(PolicyElement, BreakpointYears)
+
+  BreakpointYearsFloat = [float(Year) for Year in BreakpointYears]
+
+  f = open("SPISFY-"+str(Schedule)+".csv", 'w')
+  f.write("PolicyElement,"+",".join(str(Year) for Year in range(FirstYear, FinalYear+1))+"\n")
+
+  Unmatched = []
+  for Name in ForesightPolicyElementNames:
+    if Name in ElementValues:
+      Ys = ElementValues[Name]
+      InterpValues = [LookupClampedLinear(BreakpointYearsFloat, Ys, float(Year)) for Year in range(FirstYear, FinalYear+1)]
+    else:
+      Unmatched.append(Name)
+      InterpValues = [0.0 for _ in range(FirstYear, FinalYear+1)]
+    f.write(Name+","+",".join(str(Value) for Value in InterpValues)+"\n")
+
+  f.close()
+
+  if Unmatched:
+    print("WARNING: SPISFY Schedule "+str(Schedule)+": "+str(len(Unmatched))+" foresight policy element(s) not matched to any PolicyElements entry (written as all zeros):")
+    for Name in Unmatched:
+      print("  "+repr(Name))
+
+
 # Main Program
 # ------------
 
@@ -13004,6 +13145,21 @@ if CheckForScheduleErrors() == 0:
   import os
   if os.path.exists("FoPITY-Error-Log.txt"):
     os.remove("FoPITY-Error-Log.txt")
+
+  # Sanity-check FirstYear/FinalYear (declared as Global Constants above)
+  # against InputData/plcy-schd/FY/FY.csv before using them to generate
+  # SPISFY, since that file is the model's own source of truth for the
+  # simulated year range.
+  FYFirstYear, FYFinalYear = GetYearRangeFromFYcsv(FYcsvPathForSPISFY)
+  assert FYFirstYear == FirstYear and FYFinalYear == FinalYear, (
+    "FirstYear/FinalYear ("+str(FirstYear)+"-"+str(FinalYear)+") no longer match "
+    "InputData/plcy-schd/FY/FY.csv ("+str(FYFirstYear)+"-"+str(FYFinalYear)+")"
+  )
+
+  ForesightPolicyElementNames = ExtractForesightPolicyElementNames(MdlPathForSPISFY)
+  assert len(ForesightPolicyElementNames) == 178, (
+    "Expected 178 foresight policy elements in EPS.mdl, found "+str(len(ForesightPolicyElementNames))
+  )
 
   for Schedule in range(1,MaxSchedules+1):
 
@@ -13017,11 +13173,14 @@ if CheckForScheduleErrors() == 0:
 
     # Begin writing the .csv file for the web app
     f = open("FoPITY-"+str(Schedule)+"-WebApp.csv", 'w')
-    
+
     WriteWebAppFile()
 
     # Done writing the .csv file for the web app
     f.close()
+
+    # Write the precomputed foresight-schedule table (SPISFY) for this schedule
+    WriteSPISFYFile(Schedule, ComputeBreakpointYears(), ForesightPolicyElementNames)
 
   # Write policy elements file
   f = open("FoPITY-policy-elements.csv",'w')
