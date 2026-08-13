@@ -12796,6 +12796,21 @@ PolicyElements = (
   ),
   (("GRA remaining cash flow changes","corporate taxes"),
     ("Schedule 1",(2025,1),(2050,1)),
+  ),
+  (("GRA indst financing support","regular spending"),
+    ("Schedule 1",(2025,1),(2050,1)),
+  ),
+  (("GRA indst financing support","deficit spending"),
+    ("Schedule 1",(2025,1),(2050,1)),
+  ),
+  (("GRA indst financing support","household taxes"),
+    ("Schedule 1",(2025,1),(2050,1)),
+  ),
+  (("GRA indst financing support","payroll taxes"),
+    ("Schedule 1",(2025,1),(2050,1)),
+  ),
+  (("GRA indst financing support","corporate taxes"),
+    ("Schedule 1",(2025,1),(2050,1)),
   )
 
 
