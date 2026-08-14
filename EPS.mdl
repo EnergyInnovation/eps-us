@@ -53315,20 +53315,32 @@ PERAC Mass CO2e Avoidable by Marginal Cost[other metals inspct maint retrofit,Ma
 
 Perc Change in All Components Energy Use due to Price Demand Feedbacks[Building Type,\
 		Building Fuel,Building Component]=
-	Perc Change in Components Energy Cost if Run at Potential[Building Type,Building Fuel\
-		,Building Component]
-	* EoBSDwEC Elasticity of Building Service Demand wrt Energy Cost[Building Fuel,Building Type\
+	MAX(0.01, 1 + Perc Change in Components Energy Cost if Run at Potential[Building Type\
+		,Building Fuel,Building Component])
+	^ EoBSDwEC Elasticity of Building Service Demand wrt Energy Cost[Building Fuel,Building Type\
 		]
+	- 1
 	~	Dmnl
-	~		|
+	~	Constant-elasticity (power) form, (cost ratio)^elasticity - 1, rather than \
+		the linear approximation gap*elasticity: identical for small cost changes \
+		but bounded with diminishing returns for large ones, so extreme electricity \
+		price excursions can no longer drive building service demand to or below \
+		zero.  The MAX floors the ratio so the negative exponent cannot see a zero \
+		or negative base.
+	|
 
 Perc Change in Avg Annual Dist Traveled by Vehicle Type[Vehicle Type,Cargo Type,Vehicle Technology\
 		]=
-	Perc Change in Fuel Cost per Unit Cargo Dist[Vehicle Type,Cargo Type,Vehicle Technology\
-		]
-	* EoDfVUwFC Elasticity of Demand for Vehicle Use wrt Fuel Cost[Vehicle Type]
+	MAX(0.01, 1 + Perc Change in Fuel Cost per Unit Cargo Dist[Vehicle Type,Cargo Type,\
+		Vehicle Technology])
+	^ EoDfVUwFC Elasticity of Demand for Vehicle Use wrt Fuel Cost[Vehicle Type]
+	- 1
 	~	Dmnl
-	~		|
+	~	Constant-elasticity (power) form rather than the linear approximation \
+		gap*elasticity: identical for small fuel cost changes, bounded for large \
+		ones (the rebound literature estimates log-log elasticities).  The MAX \
+		guards the base of the power against zero or negative cost ratios.
+	|
 
 Perc Change in Buildings Fuel Cost per Unit Energy[Building Type,Building Fuel]=
 	1 -
@@ -53388,11 +53400,18 @@ Perc Change in Fuel Cost per Unit Cargo Dist[Vehicle Type,Cargo Type,Vehicle Tec
 
 Perc Change in Fuel Economy due to Fuel Price Effects[Vehicle Type,Vehicle Technology\
 		,Transportation Fuel]=
-	Perc Change in Transportation Fuel Cost per Unit Energy[Transportation Fuel]
-	* EoNVFEwFC Elasticity of New Veh Fuel Economy wrt Fuel Cost[Vehicle Type,Vehicle Technology\
+	MAX(0.01, 1 + Perc Change in Transportation Fuel Cost per Unit Energy[Transportation Fuel\
+		])
+	^ EoNVFEwFC Elasticity of New Veh Fuel Economy wrt Fuel Cost[Vehicle Type,Vehicle Technology\
 		,Transportation Fuel]
+	- 1
 	~	Dmnl
-	~		|
+	~	Constant-elasticity (power) form rather than the linear approximation \
+		gap*elasticity: identical for small fuel cost changes, bounded with \
+		diminishing returns for large carbon-tax-driven ones, and the functional \
+		form log-log elasticity studies estimate.  The MAX guards the base of the \
+		power against zero or negative fuel cost ratios.
+	|
 
 Perc Change in Fuel Economy due to Fuel Price Effects Weighted by Fuel Type[Vehicle Type\
 		,Vehicle Technology]=
@@ -53441,10 +53460,11 @@ Perc Change in New Component Energy Cost per Unit Area[Building Type,Building Fu
 
 Perc Change in New Component Energy Use due to Price Efficiency Feedbacks[Building Type\
 		,Building Fuel,Building Component] :EXCEPT: [Building Type,Building Fuel,envelope]=
-	Perc Change in New Component Energy Cost per Unit Area[Building Type,Building Fuel,Building Component\
+	MAX(0.01, 1 + Perc Change in New Component Energy Cost per Unit Area[Building Type,\
+		Building Fuel,Building Component])
+	^ EoCEDwEC Elasticity of Component Energy Demand wrt Energy Cost[Building Fuel,Building Type\
 		]
-	* EoCEDwEC Elasticity of Component Energy Demand wrt Energy Cost[Building Fuel,Building Type\
-		] ~~|
+	- 1 ~~|
 Perc Change in New Component Energy Use due to Price Efficiency Feedbacks[Building Type\
 		,Building Fuel,envelope]=
 	0
@@ -54132,14 +54152,20 @@ Percent Change in Exports of Nonenergy Products[Industry Category]=
 	
 	  -1, 
 	
-	  -Portion of Change in Passthrough Expenses as Share of Nonenergy Industry Output Affecting Imports and Exports\
+	  MAX(0.01, 1 + Portion of Change in Passthrough Expenses as Share of Nonenergy Industry Output Affecting Imports and Exports\
 		[Industry Category
-	]
-	  * IESE Import Export Substitution Elasticities[Industry Category]
-	
+	])
+	  ^ (-IESE Import Export Substitution Elasticities[Industry Category])
+	  - 1
+
 	)
 	~	Dmnl
-	~		|
+	~	Constant-elasticity (power) form rather than the linear approximation \
+		gap*elasticity, consistent with the CES (Armington) framework in which \
+		import-export substitution elasticities are defined and estimated (Ahmad \
+		and Riker 2019).  The inner MAX guards the base of the power; the outer \
+		MAX(-1, ...) is retained as a redundant safety bound.
+	|
 
 Percent Change in Fleet Avg Fuel Economy[Vehicle Type,Cargo Type,Vehicle Technology]=
 	ZIDZ(
@@ -54213,11 +54239,18 @@ Percent Change in Nonenergy Industry Domestic Production due to Change in Passth
 
 Percent Change in Nonenergy Industry Product Demand due to Change in Passthrough Expenses\
 		[Industry Category]=
-	Weighted Average Percent Change in Cost of Goods by Industry Category[Industry Category\
-		]
-	* EoDfIP Elasticities of Demand for Industrial Products[Industry Category]
+	MAX(0.01, 1 + Weighted Average Percent Change in Cost of Goods by Industry Category[\
+		Industry Category])
+	^ EoDfIP Elasticities of Demand for Industrial Products[Industry Category]
+	- 1
 	~	Dmnl
-	~		|
+	~	Constant-elasticity (power) form rather than the linear approximation \
+		gap*elasticity: identical for small cost changes, bounded with diminishing \
+		returns for large ones, and the functional form the source estimates (Ho, \
+		Morgenstern and Shih 2008 derive the demand elasticities from a CES \
+		multisector model).  The MAX guards the base of the power against zero or \
+		negative cost ratios.
+	|
 
 Percent Change in Nonfuel Production due to Policies[Industry Category] :EXCEPT: [energy industries within industry category\
 		],[agriculture and forestry 01T03]=
@@ -54458,9 +54491,10 @@ Percent of Purchases of Domestically Produced Goods Shifted to Purchases of Impo
 	
 	    ),
 	
-	    Portion of Change in Passthrough Expenses as Share of Nonenergy Industry Output Affecting Imports and Exports\
-		[Industry Category]
-	    * IESE Import Export Substitution Elasticities[Industry Category]
+	    MAX(0.01, 1 + Portion of Change in Passthrough Expenses as Share of Nonenergy Industry Output Affecting Imports and Exports\
+		[Industry Category])
+	    ^ IESE Import Export Substitution Elasticities[Industry Category]
+	    - 1
 	  )
 	)
 	~	Dmnl
