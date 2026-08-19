@@ -13204,3 +13204,7 @@ if CheckForScheduleErrors() == 0:
 
   # Done writing the policy elements file
   f.close()
+# NOTE (2026-08-17): 10 'indst thermal battery PTC/ITC X <band>' elements were appended directly to
+# FoPITY-policy-elements.csv and all 18 FoPITY-N[-WebApp].csv files (values copied from the
+# 'indst clean heat PTC/ITC' rows of each file). If this generator is ever re-run, add matching
+# thermal battery groups here first or the regenerated files will drop them.
