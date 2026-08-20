@@ -3252,12 +3252,13 @@ BAU Capacity Market Price for Seasonal Clean Dispatchable Reliability by Optimiz
 
 BAU Capacity Market Price for Seasonal Dispatchable Reliability Adjusted for Availability\
 		[Electricity Source]=
-	VMAX(BAU Capacity Market Price for Seasonal Dispatchable Reliability by Optimization Pass\
-		[last pass!]*BAU Hourly Bid Electricity Capacity Factors by Plant Type
-	[Electricity Source,peak day electricity timeslice!,Hour!])
-	*BAU Reliability Credit Factor[Electricity Source]
+	SUM(BAU Capacity Market Price for Seasonal Dispatchable Reliability by Optimization Pass[last pass!])
+	* BAU Uncredited Binding Hour Bid Electricity Capacity Factors for Reliability by Plant Type[Electricity Source]
+	* BAU Existing Fleet Reliability Credit Factor with Backstop[Electricity Source]
 	~	$/(MW*day)
-	~		|
+	~	BAU counterpart of Capacity Market Price for Seasonal Dispatchable \
+		Reliability Adjusted for Availability.
+	|
 
 BAU Capacity Market Price for Seasonal Dispatchable Reliability by Optimization Pass[\
 		pass1]=
@@ -6462,6 +6463,117 @@ BAU Five Year Average Standard Deviation of Dispatch Costs[Electricity Source]=
 		unbounded Z score downstream.
 	|
 
+BAU Annual Electricity Demand Energy for Reliability Credit[Clean Elec Requirement]=
+	SUM(BAU Total Electricity Demand by Hour After Demand Altering Technologies[Electricity Timeslice!,Hour!]
+	  * SHELF Days per Electricity Timeslice[Electricity Timeslice!])
+	~	MW*hour
+	~	BAU counterpart of Annual Electricity Demand Energy for Reliability \
+		Credit.
+	|
+
+BAU Uncredited Binding Hour Bid Electricity Capacity Factors for Reliability by Plant Type[Electricity Source]=
+	SUM(
+	  BAU Binding Peak Hour for Reliability Additions[peak day electricity timeslice!,Hour!]
+	  * BAU Last Year Hourly Bid Electricity Capacity Factors by Plant Type[peak day electricity timeslice!,Hour!,Electricity Source]
+	  * ELCCAfR ELCC Adjustment for Reliability for Generation Sources[Electricity Source,peak day electricity timeslice!,Hour!]
+	)
+	~	Dmnl
+	~	BAU counterpart of Uncredited Binding Hour Bid Electricity Capacity \
+		Factors for Reliability by Plant Type.
+	|
+
+BAU Binding Hour Reliability Capability Withheld by Credit Derate=
+	SUM(
+	  BAU Electricity Generation Capacity before Reliability Additions[Electricity Source!]
+	  * (BAU Uncredited Binding Hour Bid Electricity Capacity Factors for Reliability by Plant Type[Electricity Source!]
+	     - BAU Last Year Hourly Bid Electricity Capacity Factors for Reliability in Binding Hour by Plant Type[Electricity Source!])
+	)
+	* One Hour
+	~	MW*hour
+	~	BAU counterpart of Binding Hour Reliability Capability Withheld by \
+		Credit Derate.
+	|
+
+BAU Reliability Backstop Shortfall=
+	MAX(0,
+	  SUM(BAU Net Electricity Demand Relative to Available Supply in Binding Hour by Optimization Pass[last pass!])
+	)
+	~	MW*hour
+	~	BAU counterpart of Reliability Backstop Shortfall.
+	|
+
+BAU Reliability Backstop Credit Share=
+	MIN(1,
+	  ZIDZ(
+	    BAU Reliability Backstop Shortfall,
+	    BAU Binding Hour Reliability Capability Withheld by Credit Derate
+	  )
+	)
+	~	Dmnl
+	~	BAU counterpart of Reliability Backstop Credit Share.
+	|
+
+BAU Binding Hour Reliability Shortfall after Fossil Backstop=
+	MAX(0,
+	  BAU Reliability Backstop Shortfall
+	  - BAU Binding Hour Reliability Capability Withheld by Credit Derate
+	)
+	~	MW*hour
+	~	BAU counterpart of Binding Hour Reliability Shortfall after Fossil \
+		Backstop.
+	|
+
+BAU Last Year Reliability Backstop Credit Share= DELAY FIXED (
+	BAU Reliability Backstop Credit Share,
+	1,
+	0)
+	~	Dmnl
+	~	BAU counterpart of Last Year Reliability Backstop Credit Share.
+	|
+
+BAU Existing Fleet Reliability Credit Factor with Backstop[Electricity Source]=
+	BAU Existing Fleet Reliability Credit Factor[Electricity Source]
+	+ (1 - BAU Existing Fleet Reliability Credit Factor[Electricity Source])
+	  * BAU Last Year Reliability Backstop Credit Share
+	~	Dmnl
+	~	BAU counterpart of Existing Fleet Reliability Credit Factor with \
+		Backstop.
+	|
+
+BAU Existing Fleet Reliability Credit Factor[Electricity Source]=
+	VMIN(
+	    BAU Elec Portfolio Qualifying Sources[Electricity Source,Clean Elec Requirement!]
+	    + (1 - BAU Elec Portfolio Qualifying Sources[Electricity Source,Clean Elec Requirement!])
+	    * BAU Existing Fleet Reliability Credit Ratio for Non Qualifying Sources[Clean Elec Requirement!]
+	  )
+	~	Dmnl
+	~	BAU counterpart of Existing Fleet Reliability Credit Factor.
+	|
+
+BAU Existing Fleet Reliability Credit Ratio for Non Qualifying Sources[Clean Elec Requirement]=
+	IF THEN ELSE(
+	  BAU Non Qualifying Annual Energy Serving Peak Reliability Timeslices[Clean Elec Requirement] = 0,
+
+	  1,
+
+	MIN(
+	  BAU Non Qualifying Reliability Credit Rampdown Before Full Requirement[Clean Elec Requirement],
+
+	  MIN(1,
+	    ZIDZ(
+	      (1 - BAU Legally Required Elec Portfolio Percentage[Clean Elec Requirement])
+	      * SUM(BAU Total Electricity Demand by Hour After Demand Altering Technologies[Electricity Timeslice!,Hour!]
+	        * SHELF Days per Electricity Timeslice[Electricity Timeslice!]),
+	      BAU Non Qualifying Annual Energy Serving Peak Reliability Timeslices[Clean Elec Requirement]
+	    )
+	  )
+	)
+	)
+	~	Dmnl
+	~	BAU counterpart of Existing Fleet Reliability Credit Ratio for Non \
+		Qualifying Sources.
+	|
+
 BAU Five Year Foresight Elec Portfolio Values for Reliability Check[Clean Elec Requirement\
 		]=
 	MAX(
@@ -8408,7 +8520,7 @@ BAU Last Year Hourly Bid Electricity Capacity Factors for Reliability by Plant T
 		,Hour,Electricity Source]
 	*ELCCAfR ELCC Adjustment for Reliability for Generation Sources[Electricity Source,Electricity Timeslice\
 		,Hour]
-	*BAU Reliability Credit Factor[Electricity Source]
+	*BAU Existing Fleet Reliability Credit Factor[Electricity Source]
 	~	Dmnl
 	~		|
 
@@ -10530,6 +10642,28 @@ BAU Non Qualifying Electricity Generation Last Year[Clean Elec Requirement]=
 	~	MW*hour
 	~		|
 
+BAU Non Qualifying Reliability Credit Rampdown Before Full Requirement[Clean Elec Requirement]=
+	SUM(
+	  IF THEN ELSE(
+	    Numerical Future Year Definitions[Future Year!] >= Time :AND:
+	    Numerical Future Year Definitions[Future Year!] <= Time + 4,
+
+	    MIN(1,
+	      ZIDZ(
+	        (1 - BAU Weighted Average Elec Portfolio Percentage by Year[Future Year!,Clean Elec Requirement])
+	        * BAU Annual Electricity Demand Energy for Reliability Credit[Clean Elec Requirement],
+	        BAU Non Qualifying Annual Energy Serving Peak Reliability Timeslices[Clean Elec Requirement]
+	      )
+	    ),
+
+	    0
+	  )
+	) / 5
+	~	Dmnl
+	~	BAU counterpart of Non Qualifying Reliability Credit Rampdown Before \
+		Full Requirement.
+	|
+
 BAU Non RPS Qualifying Guaranteed Dispatch Amount[Electricity Source,Electricity Timeslice\
 		,Hour,Clean Elec Requirement]=
 	BAU Expected Capacity by Hour[Electricity Source,Electricity Timeslice,Hour]
@@ -11136,17 +11270,16 @@ BAU Power Plant Least Cost Dispatch Parameters as Vector[Electricity Source,pext
 		types
 	|
 
-BAU Predicted Capacity Payment by Plant Type for Existing Plants[Electricity Source,Optimization Pass\
-		]=
-	BAU Capacity Market Price for Seasonal Dispatchable Reliability by Optimization Pass\
-		[Optimization Pass]
-	  * BAU Last Year Hourly Bid Electricity Capacity Factors for Reliability in Binding Hour by Plant Type\
-		[Electricity Source
-	]
+BAU Predicted Capacity Payment by Plant Type for Existing Plants[Electricity Source,Optimization Pass]=
+	BAU Capacity Market Price for Seasonal Dispatchable Reliability by Optimization Pass[Optimization Pass]
+	  * BAU Uncredited Binding Hour Bid Electricity Capacity Factors for Reliability by Plant Type[Electricity Source]
+	  * BAU Existing Fleet Reliability Credit Factor with Backstop[Electricity Source]
 	  * Days per Year
 	  * One Day
 	~	$/MW
-	~		|
+	~	BAU counterpart of Predicted Capacity Payment by Plant Type for \
+		Existing Plants.
+	|
 
 BAU Predicted Change in Energy Market Revenue for CCUS Retrofits[hard coal w CCS es]=
 	BAU Average Four Year Prior Total Predicted Net Energy Market Revenue per MW[hard coal w CCS es\
@@ -11699,34 +11832,16 @@ BAU Reliability Credit Factor[Electricity Source]=
 	~		|
 
 BAU Reliability Credit Ratio for Non Qualifying Sources[Clean Elec Requirement]=
-	IF THEN ELSE(
-	  BAU Non Qualifying Annual Energy Serving Peak Reliability Timeslices[Clean Elec Requirement\
-		] = 0,
-
-	  1,
-
-	  MIN(1,
-	    ZIDZ(
-	      MAX(
-	        (1 - BAU Legally Required Elec Portfolio Percentage[Clean Elec Requirement])
-	        * SUM(BAU Total Electricity Demand by Hour After Demand Altering Technologies\
-		[Electricity Timeslice!,Hour!]
-	          * SHELF Days per Electricity Timeslice[Electricity Timeslice!])
-	        - BAU Non Qualifying Electricity Generation Last Year[Clean Elec Requirement\
-		],
-
-	        (1 - BAU Five Year Foresight Elec Portfolio Values for Reliability Check[Clean Elec Requirement\
-		])
-	        * SUM(BAU Total Electricity Demand by Hour After Demand Altering Technologies\
-		[peak day electricity timeslice!,Hour!]
-	          * SHELF Days per Electricity Timeslice[peak day electricity timeslice!])),
-	      BAU Non Qualifying Annual Energy Serving Peak Reliability Timeslices[Clean Elec Requirement\
+	EXP(
+	  - ((BAU Five Year Foresight Elec Portfolio Values for Reliability Check[Clean Elec Requirement\
 		]
-	    )
-	  )
+	     / RCDCb Reliability Credit Derate Curve Scale Parameter)
+	  ^ RCDCa Reliability Credit Derate Curve Shape Parameter)
 	)
 	~	Dmnl
-	~		|
+	~	BAU counterpart of Reliability Credit Ratio for Non Qualifying Sources. \
+		See that variable for documentation.
+	|
 
 BAU Remaining CES Required Generation after Guaranteed Dispatch and RPS Dispatch=
 	MAX(0,
@@ -13763,6 +13878,7 @@ BAU Total Energy Market and Capacity Market Revenue for Seasonal Dispatchable Re
 	BAU Capacity Market Price for Seasonal Dispatchable Reliability by Optimization Pass\
 		[Optimization Pass
 	]
+	*BAU Reliability Credit Factor[Electricity Source]
 	  * BAU Last Year Hourly Bid Electricity Capacity Factors for Reliability in Binding Hour by Plant Type\
 		[Electricity Source
 	]
@@ -19089,12 +19205,18 @@ Capacity Market Price for Seasonal Clean Dispatchable Reliability by Optimizatio
 
 Capacity Market Price for Seasonal Dispatchable Reliability Adjusted for Availability\
 		[Electricity Source]=
-	VMAX(Capacity Market Price for Seasonal Dispatchable Reliability by Optimization Pass\
-		[last pass!]*Hourly Bid Electricity Capacity Factors by Plant Type
-	[peak day electricity timeslice!,Hour!,Electricity Source])
-	*Reliability Credit Factor[Electricity Source]
+	SUM(Capacity Market Price for Seasonal Dispatchable Reliability by Optimization Pass[last pass!])
+	* Uncredited Binding Hour Bid Electricity Capacity Factors for Reliability by Plant Type[Electricity Source]
+	* Existing Fleet Reliability Credit Factor with Backstop[Electricity Source]
 	~	$/(MW*day)
-	~		|
+	~	Capacity payment per MW is the settled price times the source's \
+		BINDING-HOUR contribution (bid CF x ELCC x existing-fleet credit, \
+		including any backstop restoration) - the same basis on which the \
+		adequacy check counts the source. Previously used VMAX of the bid CF \
+		across all peak-day hours, which paid solar at its best midday hour \
+		(~0.9) despite a ~0.13 binding-hour contribution, grossly overpaying \
+		non-dispatchable capacity once the VRE fleet grew large.
+	|
 
 Capacity Market Price for Seasonal Dispatchable Reliability by Optimization Pass[pass1\
 		]=
@@ -29067,6 +29189,142 @@ Five Year Average Standard Deviation of Dispatch Costs[Electricity Source]=
 		downstream.
 	|
 
+Annual Electricity Demand Energy for Reliability Credit[Clean Elec Requirement]=
+	SUM(Total Electricity Demand by Hour After Demand Altering Technologies[Electricity Timeslice!,Hour!]
+	  * SHELF Days per Electricity Timeslice[Electricity Timeslice!])
+	~	MW*hour
+	~	Annual electricity demand energy, hoisted into its own variable so the \
+		reliability credit rampdown can reference it inside a SUM over Future \
+		Year without nesting SUM range functions. Subscripted by Clean Elec \
+		Requirement only so it maps cleanly into that equation; the value is \
+		identical for RPS and CES.
+	|
+
+Uncredited Binding Hour Bid Electricity Capacity Factors for Reliability by Plant Type[Electricity Source]=
+	SUM(
+	  Binding Peak Hour for Reliability Additions[peak day electricity timeslice!,Hour!]
+	  * Last Year Hourly Bid Electricity Capacity Factors by Plant Type[peak day electricity timeslice!,Hour!,Electricity Source]
+	  * ELCCAfR ELCC Adjustment for Reliability for Generation Sources[Electricity Source,peak day electricity timeslice!,Hour!]
+	)
+	~	Dmnl
+	~	Binding-hour bid capacity factor with ELCC adjustment but WITHOUT the \
+		existing-fleet reliability credit derate. The gap between this and the \
+		credited version is the physical capability the derate withholds, which \
+		the reliability backstop can restore.
+	|
+
+Binding Hour Reliability Capability Withheld by Credit Derate=
+	SUM(
+	  Electricity Generation Capacity before Reliability Additions[Electricity Source!]
+	  * (Uncredited Binding Hour Bid Electricity Capacity Factors for Reliability by Plant Type[Electricity Source!]
+	     - Last Year Hourly Bid Electricity Capacity Factors for Reliability in Binding Hour by Plant Type[Electricity Source!])
+	)
+	* One Hour
+	~	MW*hour
+	~	Physically available binding-hour output from the existing fleet that \
+		the reliability credit derate excludes from the adequacy check. This is \
+		the pool the reliability backstop can draw on.
+	|
+
+Reliability Backstop Shortfall=
+	MAX(0,
+	  SUM(Net Electricity Demand Relative to Available Supply in Binding Hour by Optimization Pass[last pass!])
+	)
+	~	MW*hour
+	~	Binding-hour demand still unmet after the capacity market's price search \
+		and reliability additions have done what they can. Triggers the fossil \
+		reliability backstop.
+	|
+
+Reliability Backstop Credit Share=
+	MIN(1,
+	  ZIDZ(
+	    Reliability Backstop Shortfall,
+	    Binding Hour Reliability Capability Withheld by Credit Derate
+	  )
+	)
+	~	Dmnl
+	~	Fraction of the derate-withheld fossil capability that must be credited \
+		back to close the remaining reliability gap. Zero whenever the market \
+		meets the requirement on its own; approaches 1 only if nearly the whole \
+		withheld fossil fleet is needed.
+	|
+
+Binding Hour Reliability Shortfall after Fossil Backstop=
+	MAX(0,
+	  Reliability Backstop Shortfall
+	  - Binding Hour Reliability Capability Withheld by Credit Derate
+	)
+	~	MW*hour
+	~	True physical unmet reliability need: binding-hour demand not coverable \
+		even after restoring full credit to every existing non-qualifying plant. \
+		Nonzero values mean the scenario is physically infeasible given build \
+		rate limits, not an artifact of the credit derate.
+	|
+
+Last Year Reliability Backstop Credit Share= DELAY FIXED (
+	Reliability Backstop Credit Share,
+	1,
+	0)
+	~	Dmnl
+	~	One-year memory of the backstop share, used in existing-plant capacity \
+		payments and retention so plants needed as reliability backstop do not \
+		retire. Lagged one year to avoid a simultaneous loop through the \
+		retirement pass iteration; retention is a slow stock decision, so the \
+		lag is benign.
+	|
+
+Existing Fleet Reliability Credit Factor with Backstop[Electricity Source]=
+	Existing Fleet Reliability Credit Factor[Electricity Source]
+	+ (1 - Existing Fleet Reliability Credit Factor[Electricity Source])
+	  * Last Year Reliability Backstop Credit Share
+	~	Dmnl
+	~	Existing-fleet reliability credit including the fossil backstop \
+		restoration. Applied in existing-plant capacity payments and the \
+		availability-adjusted capacity price, so backstop plants keep earning \
+		enough to stay online while they are needed.
+	|
+
+Existing Fleet Reliability Credit Factor[Electricity Source]=
+	VMIN(
+	    Elec Portfolio Qualifying Sources[Electricity Source,Clean Elec Requirement!]
+	    + (1 - Elec Portfolio Qualifying Sources[Electricity Source,Clean Elec Requirement!])
+	    * Existing Fleet Reliability Credit Ratio for Non Qualifying Sources[Clean Elec Requirement!]
+	  )
+	~	Dmnl
+	~	Reliability credit applied to the EXISTING fleet in the adequacy check \
+		and in existing-plant capacity payments. Uses the physical energy-budget \
+		ratio, which binds only as the current-year requirement approaches 100%. \
+		New entrants are steered separately by Reliability Credit Factor \
+		(Weibull, foresight-driven).
+	|
+
+Existing Fleet Reliability Credit Ratio for Non Qualifying Sources[Clean Elec Requirement]=
+	IF THEN ELSE(
+	  Non Qualifying Annual Energy Serving Peak Reliability Timeslices[Clean Elec Requirement] = 0,
+
+	  1,
+
+	MIN(
+	  Non Qualifying Reliability Credit Rampdown Before Full Requirement[Clean Elec Requirement],
+
+	  MIN(1,
+	    ZIDZ(
+	      (1 - Legally Required Elec Portfolio Percentage[Clean Elec Requirement])
+	      * SUM(Total Electricity Demand by Hour After Demand Altering Technologies[Electricity Timeslice!,Hour!]
+	        * SHELF Days per Electricity Timeslice[Electricity Timeslice!]),
+	      Non Qualifying Annual Energy Serving Peak Reliability Timeslices[Clean Elec Requirement]
+	    )
+	  )
+	)
+	)
+	~	Dmnl
+	~	Share of the non-qualifying fleet's peak-period potential output that \
+		the current-year portfolio standard's remaining energy budget can cover. \
+		Equals 1 until the requirement nears 100%, so the existing fleet is \
+		never derated below its true physical capability.
+	|
+
 Five Year Foresight Elec Portfolio Values for Reliability Check[Clean Elec Requirement\
 		]=
 	MAX(
@@ -35951,7 +36209,7 @@ Last Year Hourly Bid Electricity Capacity Factors for Reliability by Plant Type[
 		,Hour,Electricity Source]
 	*ELCCAfR ELCC Adjustment for Reliability for Generation Sources[Electricity Source,Electricity Timeslice\
 		,Hour]
-	*Reliability Credit Factor[Electricity Source]
+	*Existing Fleet Reliability Credit Factor[Electricity Source]
 	~	Dmnl
 	~		|
 
@@ -40569,6 +40827,36 @@ Non Qualifying Electricity Generation Last Year[Clean Elec Requirement]=
 	)
 	~	MW*hour
 	~		|
+
+Non Qualifying Reliability Credit Rampdown Before Full Requirement[Clean Elec Requirement]=
+	SUM(
+	  IF THEN ELSE(
+	    Numerical Future Year Definitions[Future Year!] >= Time :AND:
+	    Numerical Future Year Definitions[Future Year!] <= Time + 4,
+
+	    MIN(1,
+	      ZIDZ(
+	        (1 - Weighted Average Elec Portfolio Percentage by Year[Future Year!,Clean Elec Requirement])
+	        * Annual Electricity Demand Energy for Reliability Credit[Clean Elec Requirement],
+	        Non Qualifying Annual Energy Serving Peak Reliability Timeslices[Clean Elec Requirement]
+	      )
+	    ),
+
+	    0
+	  )
+	) / 5
+	~	Dmnl
+	~	Five-year forward average of the physical energy-budget credit ratio, \
+		evaluated at each coming year's scheduled requirement (with current \
+		demand and fleet). Equals 1 while the schedule leaves headroom over the \
+		window, and glides linearly toward the endpoint ratio over the five \
+		years before the schedule enters the binding range - reaching 0 for a \
+		100% requirement and the appropriate partial credit for near-100% \
+		requirements (e.g. 99.99%). Time-based lead is deliberate: the binding \
+		band (roughly 97-100%) is narrower than one year's schedule step, so \
+		any derate driven only by the current requirement level jumps in a \
+		single year.
+	|
 
 Non RPS Qualifying Guaranteed Dispatch Amount[Electricity Source,Electricity Timeslice\
 		,Hour,Clean Elec Requirement]=
@@ -46420,17 +46708,16 @@ preceeding vintage:
 	~	
 	~		|
 
-Predicted Capacity Payment by Plant Type for Existing Plants[Electricity Source,Optimization Pass\
-		]=
-	Capacity Market Price for Seasonal Dispatchable Reliability by Optimization Pass[Optimization Pass\
-		]
-	  * Last Year Hourly Bid Electricity Capacity Factors for Reliability in Binding Hour by Plant Type\
-		[Electricity Source
-	]
+Predicted Capacity Payment by Plant Type for Existing Plants[Electricity Source,Optimization Pass]=
+	Capacity Market Price for Seasonal Dispatchable Reliability by Optimization Pass[Optimization Pass]
+	  * Uncredited Binding Hour Bid Electricity Capacity Factors for Reliability by Plant Type[Electricity Source]
+	  * Existing Fleet Reliability Credit Factor with Backstop[Electricity Source]
 	  * Days per Year
 	  * One Day
 	~	$/MW
-	~		|
+	~	Uses the with-backstop existing-fleet credit so plants retained as \
+		reliability backstop keep earning capacity revenue.
+	|
 
 Predicted Change in Energy Market Revenue for CCUS Retrofits[hard coal w CCS es]=
 	Average Four Year Prior Total Predicted Net Energy Market Revenue per MW[hard coal w CCS es\
@@ -47538,6 +47825,30 @@ Reduction in Process CO2e Left to Assign after this Marginal Cost[Industry by Pr
 	~	g CO2e
 	~		|
 
+RCDCa Reliability Credit Derate Curve Shape Parameter=
+	GET DIRECT CONSTANTS(
+	   'InputData/elec/RCDC/RCDC.csv',
+	   ',',
+	   'B2'
+	)
+	~	Dmnl
+	~	Weibull shape parameter (a) of the reliability credit derate curve for \
+		non-qualifying sources. Larger values delay the derate toward higher \
+		portfolio requirement levels and steepen the transition.
+	|
+
+RCDCb Reliability Credit Derate Curve Scale Parameter=
+	GET DIRECT CONSTANTS(
+	   'InputData/elec/RCDC/RCDC.csv',
+	   ',',
+	   'B3'
+	)
+	~	Dmnl
+	~	Weibull scale parameter (b) of the reliability credit derate curve for \
+		non-qualifying sources. The requirement level at which the credit falls \
+		to EXP(-1) = 0.37.
+	|
+
 Reliability Credit Factor[Electricity Source]=
 	VMIN(
 	    Elec Portfolio Qualifying Sources[Electricity Source,Clean Elec Requirement!]
@@ -47549,33 +47860,20 @@ Reliability Credit Factor[Electricity Source]=
 	~		|
 
 Reliability Credit Ratio for Non Qualifying Sources[Clean Elec Requirement]=
-	IF THEN ELSE(
-	  Non Qualifying Annual Energy Serving Peak Reliability Timeslices[Clean Elec Requirement\
-		] = 0,
-
-	  1,
-
-	  MIN(1,
-	    ZIDZ(
-	      MAX(
-	        (1 - Legally Required Elec Portfolio Percentage[Clean Elec Requirement])
-	        * SUM(Total Electricity Demand by Hour After Demand Altering Technologies[Electricity Timeslice\
-		!,Hour!]
-	          * SHELF Days per Electricity Timeslice[Electricity Timeslice!])
-	        - Non Qualifying Electricity Generation Last Year[Clean Elec Requirement],
-
-	        (1 - Five Year Foresight Elec Portfolio Values for Reliability Check[Clean Elec Requirement\
-		])
-	        * SUM(Total Electricity Demand by Hour After Demand Altering Technologies[peak day electricity timeslice\
-		!,Hour!]
-	          * SHELF Days per Electricity Timeslice[peak day electricity timeslice!])),
-	      Non Qualifying Annual Energy Serving Peak Reliability Timeslices[Clean Elec Requirement\
+	EXP(
+	  - ((Five Year Foresight Elec Portfolio Values for Reliability Check[Clean Elec Requirement\
 		]
-	    )
-	  )
+	     / RCDCb Reliability Credit Derate Curve Scale Parameter)
+	  ^ RCDCa Reliability Credit Derate Curve Shape Parameter)
 	)
 	~	Dmnl
-	~		|
+	~	Weibull-form derate of the reliability credit earned by non-qualifying \
+		sources, driven by the five-year-foresight portfolio requirement. Near 1 \
+		at low requirement levels, approaching 0 as the requirement approaches \
+		100%, shifting reliability additions toward qualifying clean dispatchable \
+		sources. Complement of the clean firm mechanism's Weibull requirement \
+		curve functional form.
+	|
 
 Remaining Avoidable Process Emissions after Carbon Tax[Industry by Process Emissions Policy\
 		,Marginal Abatement Cost]=
@@ -54862,7 +55160,8 @@ Total Energy Market and Capacity Market Revenue for Seasonal Dispatchable Reliab
 	+ (
 	Capacity Market Price for Seasonal Dispatchable Reliability by Optimization Pass[Optimization Pass
 	]
-	  * Last Year Hourly Bid Electricity Capacity Factors for Reliability in Binding Hour by Plant Type\
+	*Reliability Credit Factor[Electricity Source]
+	* Last Year Hourly Bid Electricity Capacity Factors for Reliability in Binding Hour by Plant Type\
 		[Electricity Source
 	]
 	  * Days per Year
