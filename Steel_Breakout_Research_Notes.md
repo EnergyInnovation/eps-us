@@ -1,5 +1,14 @@
 # Steel breakout — research notes (2026-08-20)
 
+## Addendum (evening block): primary-source verifications
+
+- **USGS MCS 2026 Iron & Steel** (read via reader proxy; PDFs 403 direct): raw steel 85.8/80.5/81.4/79.5/**82e** Mt (2021–2025e); capacity **105 Mt** (2025, down from 107); imports 24e / exports 7e Mt 2025e; apparent consumption 95e Mt; 8 integrated locations (2 companies) + 102 minimills (47 companies); **no BOF/EAF % split published** — the 70/30 is AISI-derived, verify there.
+- **USGS MCS 2026 Scrap**: consumption **57 Mt** 2025e (placeholder 63 was 2024-vintage-high); exports **13 Mt** 2025e; receipts 89%/home 11%. → MASSfS revised to 70 Mt flat.
+- **Vogl, Åhman & Nilsson 2018** (full text): 3.48 MWh/t liquid steel **includes electrolyzer AND EAF** (electrolyzer ≈ two-thirds ≈ 2.32 MWh/t; ex-electrolyzer ≈ **1.16 MWh/t**); **51 kg H2/t** exact; boundary excludes casting/rolling; no formal data table exists in the paper — the split is derived from prose. → SEIbPaF H2-DRI electricity updated to 1,160 kWh/t.
+- **EIA AEO2026 Table 30** (supplemental xlsx `suptab_30.xlsx` parsed directly — AEO2025 superseded; central case renamed "Counterfactual Baseline"): 2025→2050: total energy 1,110→1,023 TBtu (−0.33%/yr); NG 453→467; **met coal 418→255 (−1.96%/yr)**; purchased elec 238→292 (+0.83%/yr); CO2 89.0→62.7 MMT; shipments $133→180B 2012$ (+1.2%/yr); **no physical tonnage series** in Table 30. This is the module's BAU-trajectory benchmark — see 1b memo gate results.
+- **DOE Liftoff Industrial Decarb**: inaccessible this session (DNS + >10MB PDF limits); iron-steel capex figures only via unverified secondary ("BF-BOF+CCS $500–600/t vs H2DRI-EAF $550–800/t liquid steel") — pull manually.
+- **Practice flag for the team:** several 403-blocked government PDFs were read through the r.jina.ai reader proxy (third-party service relaying public-document text). Worth a house judgment on whether that's acceptable standard practice.
+
 *Condensed from three research syntheses (web-search based). **Every value here is snippet-sourced and must be verified against its primary source before entering a release input workbook.** These notes exist so the Phase 4 workbook builds can trace each DRAFT placeholder. Known fetch failures: USGS MCS PDFs (403), EIA AEO2025 Table 30 (table browser), DOE Liftoff industrial-decarb PDF, IEA Iron & Steel Roadmap, MPP strategy, GEI Steel Climate Impact 2025 — all identified as the right primary sources but not read directly; pull manually.*
 
 ## 1. US production / capacity / trade / scrap (→ BSD, SYSPbP, MASSfS)

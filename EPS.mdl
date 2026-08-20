@@ -8858,7 +8858,7 @@ BAU Industrial Energy Related Emissions Excluding Fuels to Power CCS[Industrial 
 
 BAU Industrial Energy Use by Fuel Type and Process[Industry Category,Industrial Fuel
 ,Industrial Process] :EXCEPT:                  [Industry Category,electricity if,Industrial Process\
-		]=
+		], [iron and steel 241,Industrial Fuel,industrial process end use]=
 	ZIDZ(
 	  SUM(
 	    BAU Output from Industrial Equipment Installed During Model Run[Industry Category\
@@ -8889,7 +8889,7 @@ BAU Industrial Energy Use by Fuel Type and Process[Industry Category,Industrial 
 		,Industrial Process]
 	) ~~|
 BAU Industrial Energy Use by Fuel Type and Process[Industry Category,electricity if
-,Industrial Process]=
+,Industrial Process] :EXCEPT: [iron and steel 241,electricity if,industrial process end use]=
 	SUM(
 	  BAU Output from Industrial Equipment Installed During Model Run[Industry Category,\
 		Industrial Process,Model Run Vintage
@@ -8914,7 +8914,12 @@ BAU Industrial Energy Use by Fuel Type and Process[Industry Category,electricity
 	* Start Year BAU Fuel Type Shares in Electricity Equivalent[Industry Category,Industrial Process\
 		,electricity if]
 	* Start Year Energy Intensity of Industrial Production in Electricity Equivalent[Industry Category\
-		]
+		] ~~|
+BAU Industrial Energy Use by Fuel Type and Process[iron and steel 241,Industrial Fuel\
+		,industrial process end use]=
+	BAU Steel Module Energy Use by Fuel Type[Industrial Fuel]
+	* (1 - Steel Fuel Feedstock Share[Industrial Fuel])
+	* Steel Energy Use Process Shares[Industrial Fuel,industrial process end use]
 	~	BTU
 	~	"Industrial Equipment Fuel Type Shares in Electricity Equivalent by \
 		Vintage" add to 1 for each industry category, so that variable is \
@@ -9059,7 +9064,7 @@ BAU Industrial Equipment Utilization Factor[Industry Category,Industrial Process
 
 BAU Industrial Feedstock Use after Adjustments[Industry Category,Industrial Fuel] :EXCEPT:\
 		    [energy industries within industry category
-,Industrial Fuel]=
+,Industrial Fuel], [iron and steel 241,Industrial Fuel]=
 	BIFU BAU Industrial Fuel Use as Feedstock[Industry Category,Industrial Fuel]
 	* (1 + Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment[industry sector\
 		]) ~~|
@@ -9068,7 +9073,10 @@ BAU Industrial Feedstock Use after Adjustments[energy industries within industry
 	BIFU BAU Industrial Fuel Use as Feedstock[energy industries within industry category\
 		,Industrial Fuel]
 	* (1 + Last Year BAU Percent Change in Fuel Production from Calculated Fuel Demand[energy industries within industry category\
-		])
+		]) ~~|
+BAU Industrial Feedstock Use after Adjustments[iron and steel 241,Industrial Fuel]=
+	BAU Steel Module Energy Use by Fuel Type[Industrial Fuel]
+	* Steel Fuel Feedstock Share[Industrial Fuel]
 	~	BTU
 	~		|
 
@@ -41684,7 +41692,7 @@ Industrial Equipment Energy Use by Fuel Type and Process before Process Improvem
 Industrial Equipment Energy Use by Fuel Type and Process before Waste Heat Recovery[Industry Category\
 		,Industrial Fuel,
 Industrial Process] :EXCEPT:                  [Industry Category,electricity if,Industrial Process\
-		]=
+		], [iron and steel 241,Industrial Fuel,industrial process end use]=
 	ZIDZ(
 	  SUM(
 	    Output from Industrial Equipment Installed During Model Run[Industry Category,Industrial Process\
@@ -41720,7 +41728,7 @@ Industrial Process] :EXCEPT:                  [Industry Category,electricity if,
 		,Industrial Process]
 	) ~~|
 Industrial Equipment Energy Use by Fuel Type and Process before Waste Heat Recovery[Industry Category\
-		,electricity if,Industrial Process]=
+		,electricity if,Industrial Process] :EXCEPT: [iron and steel 241,electricity if,industrial process end use]=
 	SUM(
 	  Output from Industrial Equipment Installed During Model Run[Industry Category,Industrial Process\
 		,Model Run Vintage!]
@@ -41748,7 +41756,12 @@ Industrial Equipment Energy Use by Fuel Type and Process before Waste Heat Recov
 		[Industry Category
 	,Industrial Process,electricity if]
 	* Start Year Energy Intensity of Industrial Production in Electricity Equivalent[Industry Category\
-		]
+		] ~~|
+Industrial Equipment Energy Use by Fuel Type and Process before Waste Heat Recovery[iron and steel 241\
+		,Industrial Fuel,industrial process end use]=
+	Steel Module Energy Use by Fuel Type[Industrial Fuel]
+	* (1 - Steel Fuel Feedstock Share[Industrial Fuel])
+	* Steel Energy Use Process Shares[Industrial Fuel,industrial process end use]
 	~	BTU
 	~	"Industrial Equipment Fuel Type Shares in Electricity Equivalent by \
 		Vintage" add to 1 for each industry category, so that variable is \
@@ -41961,9 +41974,13 @@ Industrial Fuel Use for Non Energy Purposes[Industry Category,Target Industrial 
 	~		|
 
 Industrial Fuel Use for Non Energy Purposes Before Feedstock Shifting[Industry Category\
-		,Industrial Fuel]=
+		,Industrial Fuel] :EXCEPT: [iron and steel 241,Industrial Fuel]=
 	BAU Industrial Feedstock Use after Adjustments[Industry Category,Industrial Fuel]
-	* (1 + Percent Change in Production due to Policies[Industry Category])
+	* (1 + Percent Change in Production due to Policies[Industry Category]) ~~|
+Industrial Fuel Use for Non Energy Purposes Before Feedstock Shifting[iron and steel 241\
+		,Industrial Fuel]=
+	Steel Module Energy Use by Fuel Type[Industrial Fuel]
+	* Steel Fuel Feedstock Share[Industrial Fuel]
 	~	BTU
 	~		|
 
@@ -62423,6 +62440,39 @@ Start Year Vehicles Share by Technology[Vehicle Type,Cargo Type,Vehicle Technolo
 	)
 	~	Dmnl
 	~		|
+
+Steel Energy Use Process Shares[Industrial Fuel,industrial process end use]= INITIAL(
+	ZIDZ(
+	  BAU Percentage Fuel Use by Industrial Process with Fallback Data[iron and steel 241\
+		,Industrial Fuel,industrial process end use],
+	  SUM(BAU Percentage Fuel Use by Industrial Process with Fallback Data[iron and steel 241\
+		,Industrial Fuel,industrial process end use!])
+	))
+	~	Dmnl
+	~	Start-year distribution of each fuel across steel's process end uses, \
+		taken from the model's own BAU apportionment (BPFUbIP with fallbacks) \
+		renormalized over process end uses. Spreads the pathway module's \
+		energy-by-fuel into process bands so WHR, process-efficiency, and \
+		band-specific logic keep working. Phase 2's coke chain can assign \
+		coal/coke physically to heat above 1000 C instead.
+	|
+
+Steel Fuel Feedstock Share[Industrial Fuel]= INITIAL(
+	ZIDZ(
+	  BIFU BAU Industrial Fuel Use as Feedstock[iron and steel 241,Industrial Fuel],
+	  BIFU BAU Industrial Fuel Use for Energy[iron and steel 241,Industrial Fuel]
+	  * SUM(BAU Percentage Fuel Use by Industrial Process with Fallback Data[iron and steel 241\
+		,Industrial Fuel,industrial process end use!])
+	  + BIFU BAU Industrial Fuel Use as Feedstock[iron and steel 241,Industrial Fuel]
+	))
+	~	Dmnl
+	~	Start-year share of each fuel's total steel use (process-end-use energy \
+		plus feedstock) that is feedstock rather than combustion - nonzero for \
+		hard coal (coking coal) and natural gas. Splits the pathway module's \
+		total fuel demand between the energy and nonenergy chains, accounting- \
+		neutral at the start year. Phase 2's coke chain replaces this ratio \
+		with physical coke, PCI, and reduction-gas flows.
+	|
 
 Steel Module Energy Use by Fuel Type[Industrial Fuel]=
 	SUM(
