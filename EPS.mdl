@@ -11287,6 +11287,27 @@ BAU Minimum Eligible Fuel Cost per Unit Energy in Electricity Equivalent[Industr
 		Equivalent. See that variable for documentation.
 	|
 
+BAU Minimum Eligible Steel Pathway Cost per Ton=
+	VMIN(
+	  BAU Steel Pathway Levelized Cost per Ton[Steel Production Pathway!]
+	  + IF THEN ELSE(
+	      SPSW Steel Pathway Shareweight[Steel Production Pathway!] > 0,
+	      0,
+	      1e+09
+	    )
+	)
+	~	$/metric ton
+	~	BAU twin of Minimum Eligible Steel Pathway Cost per Ton.
+	|
+
+BAU Model Run Steel Capacity Retirements by Pathway[Steel Production Pathway]=
+	BAU Steel Production Capacity Added During Model Run by Pathway[Steel Production Pathway\
+		]
+	/ SPPL Steel Pathway Plant Lifetime[Steel Production Pathway]
+	~	metric tons/Year
+	~	BAU twin of Model Run Steel Capacity Retirements by Pathway.
+	|
+
 BAU Net Electricity Clean Firm Demand Relative to Available Clean Firm Supply by Hour before Additions\
 		[Hour,peak day electricity timeslice]=
 	BAU Total Electricity Demand by Hour Before Demand Altering Technologies Plus Reserve Margin Required from Clean Dispatchable Resource\
@@ -12050,6 +12071,26 @@ BAU New Policy Mandated Retrofits[Electricity Source]=
 	 )
 	~	MW
 	~		|
+
+BAU New Steel Production Capacity by Pathway[ore based steel pathway]=
+	BAU Preliminary New Steel Production Capacity by Pathway[ore based steel pathway]
+	+ MAX(
+	    0,
+	    BAU Preliminary New Steel Production Capacity by Pathway[scrap EAF]
+	    - BAU Scrap EAF New Capacity Headroom
+	  )
+	  * ZIDZ(
+	      BAU Steel Pathway Choice Weight[ore based steel pathway],
+	      SUM(BAU Steel Pathway Choice Weight[ore based steel pathway!])
+	    ) ~~|
+BAU New Steel Production Capacity by Pathway[scrap EAF]=
+	MIN(
+	  BAU Preliminary New Steel Production Capacity by Pathway[scrap EAF],
+	  BAU Scrap EAF New Capacity Headroom
+	)
+	~	metric tons/Year
+	~	BAU twin of New Steel Production Capacity by Pathway.
+	|
 
 BAU New Utility and Distributed Electricity Capacity Last Year[Electricity Source]= DELAY FIXED\
 		 (
@@ -13229,6 +13270,32 @@ BAU Predicted Change in Energy Market Revenue for CCUS Retrofits[lignite w CCS e
 		]
 	~	$/MW
 	~		|
+
+BAU Preexisting Steel Capacity Retirements by Pathway[Steel Production Pathway]=
+	MIN(
+	  SPRS Steel Preexisting Capacity Retirement Schedule[Steel Production Pathway],
+	  BAU Preexisting Steel Production Capacity by Pathway[Steel Production Pathway]
+	)
+	~	metric tons/Year
+	~	BAU twin of Preexisting Steel Capacity Retirements by Pathway. Identical \
+		until policy-driven early retirement arrives in Phase 2.
+	|
+
+BAU Preexisting Steel Production Capacity by Pathway[Steel Production Pathway]= INTEG(
+	-BAU Preexisting Steel Capacity Retirements by Pathway[Steel Production Pathway],
+		SYSPbP Start Year Steel Production by Pathway[Steel Production Pathway]
+		/ SYSCU Start Year Steel Capacity Utilization)
+	~	metric tons/Year
+	~	BAU twin of Preexisting Steel Production Capacity by Pathway.
+	|
+
+BAU Preliminary New Steel Production Capacity by Pathway[Steel Production Pathway]=
+	BAU Share of New Steel Production Capacity by Pathway[Steel Production Pathway]
+	* BAU Unmet Steel Production Capacity Need
+	/ SYSCU Start Year Steel Capacity Utilization
+	~	metric tons/Year
+	~	BAU twin of Preliminary New Steel Production Capacity by Pathway.
+	|
 
 BAU Present Value of Clean Industrial Heat Subsidy[Industry Category,Industrial Fuel,\
 		industrial heating process]=
@@ -14758,6 +14825,17 @@ BAU Salvageable Curtailed Capacity by Hour for Hybrid Power Plants[Electricity S
 	~	Dmnl
 	~		|
 
+BAU Scrap EAF New Capacity Headroom=
+	MAX(
+	  0,
+	  MASSfS Maximum Annual Scrap Supply for Steel
+	  / SYSCU Start Year Steel Capacity Utilization
+	  - BAU Steel Production Capacity by Pathway[scrap EAF]
+	)
+	~	metric tons/Year
+	~	BAU twin of Scrap EAF New Capacity Headroom.
+	|
+
 BAU Second Tier Guaranteed Dispatch Amount[Electricity Source,Electricity Timeslice,Hour\
 		]=
 	BAU Guaranteed Dispatch Amount[Electricity Source,Electricity Timeslice,Hour]
@@ -14895,6 +14973,15 @@ BAU Share of New Passenger LDV EV Purchases Requiring Home Charger Installations
 		])
 	~	Dmnl
 	~		|
+
+BAU Share of New Steel Production Capacity by Pathway[Steel Production Pathway]=
+	ZIDZ(
+	  BAU Steel Pathway Choice Weight[Steel Production Pathway],
+	  SUM(BAU Steel Pathway Choice Weight[Steel Production Pathway!])
+	)
+	~	Dmnl
+	~	BAU twin of Share of New Steel Production Capacity by Pathway.
+	|
 
 BAU Share of Off Grid Electricity Demand That is New This Year Met by Power Plant Type\
 		[Electricity Source]=
@@ -15115,6 +15202,80 @@ BAU Start Year Other Hydrogen Production Shares by Pathway[Hydrogen Production P
 	)
 	~	Dmnl
 	~		|
+
+BAU Steel Module Energy Use by Fuel Type[Industrial Fuel]=
+	SUM(
+	  BAU Steel Production by Pathway[Steel Production Pathway!]
+	  * SEIbPaF Steel Energy Intensity by Pathway and Fuel[Steel Production Pathway!\
+		,Industrial Fuel]
+	)
+	~	BTU/Year
+	~	BAU twin of Steel Module Energy Use by Fuel Type.
+	|
+
+BAU Steel Pathway Choice Weight[Steel Production Pathway]=
+	10000
+	* SPSW Steel Pathway Shareweight[Steel Production Pathway]
+	* (
+	  MAX(BAU Steel Pathway Levelized Cost per Ton[Steel Production Pathway], 0.01)
+	  / MAX(BAU Minimum Eligible Steel Pathway Cost per Ton, 0.01)
+	) ^ IELC Industrial Equipment Logit Coefficient
+	~	Dmnl
+	~	BAU twin of Steel Pathway Choice Weight.
+	|
+
+BAU Steel Pathway Levelized Cost per Ton[Steel Production Pathway]=
+	SPCC Steel Pathway Capital Cost per Unit Annual Capacity[Steel Production Pathway]
+	/ (
+	  SPPL Steel Pathway Plant Lifetime[Steel Production Pathway]
+	  * SYSCU Start Year Steel Capacity Utilization
+	)
+	+ SUM(
+	    SEIbPaF Steel Energy Intensity by Pathway and Fuel[Steel Production Pathway\
+		,Industrial Fuel!]
+	    * BAU Industrial Fuel Cost per Unit Energy[iron and steel 241,Industrial Fuel!]
+	  )
+	~	$/metric ton
+	~	BAU twin of Steel Pathway Levelized Cost per Ton, at BAU fuel costs.
+	|
+
+BAU Steel Production by Pathway[Steel Production Pathway]=
+	(
+	  BAU Steel Production Capacity by Pathway[Steel Production Pathway]
+	  + BAU New Steel Production Capacity by Pathway[Steel Production Pathway]
+	)
+	* SYSCU Start Year Steel Capacity Utilization
+	* MIN(
+	    1,
+	    ZIDZ(
+	      BAU Total Steel Demand,
+	      (
+	        SUM(BAU Steel Production Capacity by Pathway[Steel Production Pathway!])
+	        + SUM(BAU New Steel Production Capacity by Pathway[Steel Production Pathway!\
+		])
+	      ) * SYSCU Start Year Steel Capacity Utilization
+	    )
+	  )
+	~	metric tons/Year
+	~	BAU twin of Steel Production by Pathway.
+	|
+
+BAU Steel Production Capacity Added During Model Run by Pathway[Steel Production Pathway\
+		]= INTEG(
+	BAU New Steel Production Capacity by Pathway[Steel Production Pathway]
+	- BAU Model Run Steel Capacity Retirements by Pathway[Steel Production Pathway],
+		0)
+	~	metric tons/Year
+	~	BAU twin of Steel Production Capacity Added During Model Run by Pathway.
+	|
+
+BAU Steel Production Capacity by Pathway[Steel Production Pathway]=
+	BAU Preexisting Steel Production Capacity by Pathway[Steel Production Pathway]
+	+ BAU Steel Production Capacity Added During Model Run by Pathway[Steel Production Pathway\
+		]
+	~	metric tons/Year
+	~	BAU twin of Steel Production Capacity by Pathway.
+	|
 
 BAU Subsidies for Elec Production for Existing Plants Paid This Year[Electricity Source\
 		]=
@@ -17385,6 +17546,15 @@ BAU Total Qualifying RPS Electricity Demand by Hour After Demand Altering Techno
 	~	MW*hour
 	~		|
 
+BAU Total Steel Demand=
+	BSD BAU Steel Demand
+	~	metric tons/Year
+	~	Total BAU crude steel demand. Pathway attribution is endogenous (the \
+		cost logit, calibrated to start-year data via SYSPbP and the SPSW \
+		shareweights), so only total demand is exogenous. Part of the Phase 1a \
+		compute-only steel pathway module.
+	|
+
 BAU Total Subsidies per Unit Electricity Output Adjusted for Lifetime[Electricity Source\
 		]=
 	(BAU CCS Subsidy per MWh[Electricity Source]*BCS Duration of Subsidies for Carbon Sequestration
@@ -17852,6 +18022,17 @@ BAU Unmet Electricity Demand Summed Across Hours[Electricity Timeslice]=
 	SUM(BAU Unmet Electricity Demand by Hour[Electricity Timeslice,Hour!])
 	~	MW*hr
 	~		~	:SUPPLEMENTARY 
+	|
+
+BAU Unmet Steel Production Capacity Need=
+	MAX(
+	  0,
+	  BAU Total Steel Demand
+	  - SUM(BAU Steel Production Capacity by Pathway[Steel Production Pathway!])
+	    * SYSCU Start Year Steel Capacity Utilization
+	)
+	~	metric tons/Year
+	~	BAU twin of Unmet Steel Production Capacity Need.
 	|
 
 BAU Value Added by ISIC Code by Year[ISIC Code]=
@@ -21873,6 +22054,18 @@ BS Duration of Subsidies per Unit Electricity Output[Electricity Source]:=
 	)
 	~	Year
 	~		|
+
+BSD BAU Steel Demand:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/indst/BSD/BSD.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	metric tons/Year
+	~	BAU demand for crude steel (total, all pathways). DRAFT placeholder \
+		(flat 80 MMT/yr) - anchor to AEO/AISI before release.
+	|
 
 BSfGBP BAU Subsidy for Grid Battery Production:INTERPOLATE::=
 	GET DIRECT DATA(
@@ -41839,6 +42032,16 @@ Industrial Heating Process Fuel Use before Measures[Industry Category,Industrial
 		measure savings fractions are defined.
 	|
 
+industrial nonprocess end use:
+	facility HVAC,
+	facility lighting,
+	other nonprocess
+	~	
+	~	Nonprocess end uses, which remain in the generic industrial equipment \
+		structure for industries whose process end uses are served by a \
+		production-pathway module (currently iron and steel).
+	|
+
 Industrial Process:
 	heat below 100 C,
 	heat 100 to 200 C,
@@ -41853,6 +42056,21 @@ Industrial Process:
 	other nonprocess
 	~	
 	~		|
+
+industrial process end use:
+	heat below 100 C,
+	heat 100 to 200 C,
+	heat 200 to 500 C,
+	heat 500 to 1000 C,
+	heat above 1000 C,
+	cooling,
+	machine drive,
+	other processes
+	~	
+	~	Process (production-related) end uses. For industries with a \
+		production-pathway module (currently iron and steel), these end uses \
+		will be served by the pathway structure from Phase 1b onward.
+	|
 
 Industrial Sector CO2e Emissions[Industry Category]=
 	SUM(Industrial Sector Pollutant Emissions[Industry Category,Pollutant!]
@@ -44883,6 +45101,20 @@ Marginal Dispatch Cost by Hour[Electricity Timeslice,Hour]=
 	~	$/(MW*hour)
 	~		|
 
+MASSfS Maximum Annual Scrap Supply for Steel:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/indst/MASSfS/MASSfS.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	metric tons/Year
+	~	Maximum ferrous scrap available to steelmaking each year, capping scrap \
+		EAF capacity growth. Assumes roughly one ton of scrap per ton of steel. \
+		DRAFT placeholder (USGS apparent consumption plus exports basis); \
+		competing scrap uses (BOF charge, foundries) not yet netted out.
+	|
+
 Material Efficiency Improvement[Source ISIC Code,Target ISIC Code] :EXCEPT: [Source ISIC Code\
 		,Industry Category ISIC Code]=
 	0 ~~|
@@ -46078,6 +46310,22 @@ Minimum Eligible Fuel Cost per Unit Energy in Electricity Equivalent[Industry Ca
 		above any real fuel or equipment cost per BTU.
 	|
 
+Minimum Eligible Steel Pathway Cost per Ton=
+	VMIN(
+	  Steel Pathway Levelized Cost per Ton[Steel Production Pathway!]
+	  + IF THEN ELSE(
+	      SPSW Steel Pathway Shareweight[Steel Production Pathway!] > 0,
+	      0,
+	      1e+09
+	    )
+	)
+	~	$/metric ton
+	~	Cheapest pathway with a positive shareweight: the reference cost for the \
+		relative-cost pathway logit, mirroring Minimum Eligible Fuel Cost per \
+		Unit Energy in Electricity Equivalent. The ineligibility adder is large \
+		in absolute terms because pathway costs are hundreds of dollars per ton.
+	|
+
 Minimum Incremental Clean Firm Demand Requirement=
 	50
 	~	MW*hr
@@ -46145,6 +46393,15 @@ MLfPPR Minimum Lifetime for Power Plant Retirements=
 	)
 	~	years
 	~		|
+
+Model Run Steel Capacity Retirements by Pathway[Steel Production Pathway]=
+	Steel Production Capacity Added During Model Run by Pathway[Steel Production Pathway\
+		]
+	/ SPPL Steel Pathway Plant Lifetime[Steel Production Pathway]
+	~	metric tons/Year
+	~	Age-based retirement of model-run capacity additions: one over lifetime \
+		of the surviving added stock per year.
+	|
 
 Model Run Vintage:
 	GET DIRECT SUBSCRIPT(
@@ -48930,6 +49187,29 @@ New Solar Capacity Needed to Meet Capacity Requirement This Year=
 	~	MW
 	~		|
 
+New Steel Production Capacity by Pathway[ore based steel pathway]=
+	Preliminary New Steel Production Capacity by Pathway[ore based steel pathway]
+	+ MAX(
+	    0,
+	    Preliminary New Steel Production Capacity by Pathway[scrap EAF]
+	    - Scrap EAF New Capacity Headroom
+	  )
+	  * ZIDZ(
+	      Steel Pathway Choice Weight[ore based steel pathway],
+	      SUM(Steel Pathway Choice Weight[ore based steel pathway!])
+	    ) ~~|
+New Steel Production Capacity by Pathway[scrap EAF]=
+	MIN(
+	  Preliminary New Steel Production Capacity by Pathway[scrap EAF],
+	  Scrap EAF New Capacity Headroom
+	)
+	~	metric tons/Year
+	~	This year's new steel production capacity by pathway: the logit \
+		allocation, with scrap EAF capped by scrap availability and any capped \
+		excess reallocated across the ore-based pathways in proportion to their \
+		choice weights.
+	|
+
 New Utility and Distributed Electricity Capacity Last Year[Electricity Source]= DELAY FIXED\
 		 (
 	New Utility and Distributed Electricity Source Capacity[Electricity Source], 1 , 0)
@@ -50185,6 +50465,18 @@ Optimized RPS Credit Price=
 	~	$/(MW*hr)
 	~	Although "last pass" is intended to contain a single element, we must sum \
 		across it becuase it is technically a subrange.
+	|
+
+ore based steel pathway:
+	traditional BF BOF,
+	BF BOF with CCS,
+	natural gas DRI,
+	hydrogen DRI,
+	molten oxide electrolysis,
+	aqueous electrolysis
+	~	
+	~	Primary (ore-based) steel production pathways - every pathway except \
+		scrap EAF, whose growth is capped by scrap availability.
 	|
 
 Other Changes in Industry Sector Tax and Tax Rebate Revenues[Cash Flow Entity] :EXCEPT:\
@@ -56853,6 +57145,36 @@ Preexisting Industrial Equipment Fuel Type Shares in Electricity Equivalent Adju
 	~	Dmnl
 	~		|
 
+Preexisting Steel Capacity Retirements by Pathway[Steel Production Pathway]=
+	MIN(
+	  SPRS Steel Preexisting Capacity Retirement Schedule[Steel Production Pathway],
+	  Preexisting Steel Production Capacity by Pathway[Steel Production Pathway]
+	)
+	~	metric tons/Year
+	~	Scheduled retirements of the start-year fleet, floored so the stock \
+		cannot go negative once the fleet is exhausted.
+	|
+
+Preexisting Steel Production Capacity by Pathway[Steel Production Pathway]= INTEG(
+	-Preexisting Steel Capacity Retirements by Pathway[Steel Production Pathway],
+		SYSPbP Start Year Steel Production by Pathway[Steel Production Pathway]
+		/ SYSCU Start Year Steel Capacity Utilization)
+	~	metric tons/Year
+	~	Surviving start-year steel production capacity (nameplate), drawn down by \
+		the exogenous retirement schedule. Initialized at start-year production \
+		divided by observed utilization, so nameplate exceeds production.
+	|
+
+Preliminary New Steel Production Capacity by Pathway[Steel Production Pathway]=
+	Share of New Steel Production Capacity by Pathway[Steel Production Pathway]
+	* Unmet Steel Production Capacity Need
+	/ SYSCU Start Year Steel Capacity Utilization
+	~	metric tons/Year
+	~	Logit allocation of needed new steel capacity (nameplate: the production \
+		gap grossed up by the target utilization) before the scrap availability \
+		cap is applied.
+	|
+
 Present Value Discount and Lifetime Window Denominator[Industry Category,Industrial Process\
 		,Future Year]=
 	(1 + BCoISC Weighted Average Cost of Capital by Industry[Industry Category]
@@ -60451,6 +60773,19 @@ SCoC Social Cost of Carbon:INTERPOLATE::=
 	~	$/g CO2e
 	~		|
 
+Scrap EAF New Capacity Headroom=
+	MAX(
+	  0,
+	  MASSfS Maximum Annual Scrap Supply for Steel
+	  / SYSCU Start Year Steel Capacity Utilization
+	  - Steel Production Capacity by Pathway[scrap EAF]
+	)
+	~	metric tons/Year
+	~	Room for additional scrap EAF nameplate capacity under the scrap supply \
+		limit (scrap supply grossed up to nameplate at the target utilization; \
+		roughly one ton of scrap per ton of steel).
+	|
+
 Season:
 	summer,
 	winter
@@ -60490,6 +60825,20 @@ Sectors:
 		and CCS allocation between electricity and industry sectors.  Since fuel \
 		prices differ by building type, the buildings sector is split into \
 		residential and commercial buildings.
+	|
+
+SEIbPaF Steel Energy Intensity by Pathway and Fuel[Steel Production Pathway,Industrial Fuel\
+		]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/SEIbPaF/SEIbPaF.csv',
+	   ',',
+	   'B2'
+	)
+	~	BTU/metric ton
+	~	Final energy per metric ton of crude steel by production pathway and \
+		fuel (ironmaking plus steelmaking boundary; hydrogen DRI hydrogen booked \
+		under hydrogen if pending the hydrogen-type split). DRAFT placeholder \
+		from IEA/MPP/Vogl et al. literature ranges - verify before release.
 	|
 
 Selected Policy Implementation Schedule[Policy Element]=
@@ -60860,6 +61209,16 @@ Share of New Passenger LDV EV Purchases Requiring Home Charger Installations=
 		])
 	~	Dmnl
 	~		|
+
+Share of New Steel Production Capacity by Pathway[Steel Production Pathway]=
+	ZIDZ(
+	  Steel Pathway Choice Weight[Steel Production Pathway],
+	  SUM(Steel Pathway Choice Weight[Steel Production Pathway!])
+	)
+	~	Dmnl
+	~	Pathway shares of this year's new steel capacity from the relative-cost \
+		logit.
+	|
 
 Share of Off Grid Electricity Demand That is New This Year Met by Power Plant Type[Electricity Source\
 		]=
@@ -61738,6 +62097,18 @@ Spare Potential Output from Surviving Capacity by Hour after Seasonal Net Peak L
 		possibility of a shortfall in a given hour.
 	|
 
+SPCC Steel Pathway Capital Cost per Unit Annual Capacity[Steel Production Pathway]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/SPCC/SPCC.csv',
+	   ',',
+	   'B2*'
+	)
+	~	$/(metric tons/Year)
+	~	Greenfield capital cost per metric ton of annual crude steel capacity by \
+		pathway. DRAFT placeholder from IEA/MPP/DOE Liftoff literature ranges - \
+		verify before release.
+	|
+
 SPISFY Precomputed Schedule Table[Schedule1,foresight policy element,Future Year]=
 	GET DIRECT CONSTANTS(
 	   'InputData/plcy-schd/FoPITY/SPISFY-1.csv',
@@ -61794,6 +62165,47 @@ SPISFY Precomputed Schedule Table[Schedule9,foresight policy element,Future Year
 	)
 	~	Dmnl
 	~		|
+
+SPPL Steel Pathway Plant Lifetime[Steel Production Pathway]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/SPPL/SPPL.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Years
+	~	Plant lifetime by pathway (blast furnace campaign/reline cycle for BF \
+		BOF; equipment life for EAF-based routes). Used for age-based retirement \
+		and the draft straight-line capital term in the choice cost. DRAFT \
+		placeholder - verify before release.
+	|
+
+SPRS Steel Preexisting Capacity Retirement Schedule[Steel Production Pathway]:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/indst/SPRS/SPRS.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	metric tons/Year
+	~	Scheduled retirements of the start-year fleet by pathway, intended to be \
+		built from Global Energy Monitor's Global Iron and Steel Tracker \
+		(plant-level blast furnace retirements and relines). DRAFT placeholder \
+		(linear fleet turnover) - replace with the GEM-derived schedule.
+	|
+
+SPSW Steel Pathway Shareweight[Steel Production Pathway]:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/indst/SPSW/SPSW.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	Dmnl
+	~	Entry-gate shareweight time series by steel production pathway (TBS \
+		convention): zero until a pathway is commercially available, so \
+		commercialization timing rides the data, not the structure. DRAFT \
+		placeholder ramps - calibrate in Phase 4.
+	|
 
 Spur Line Construction Costs[Electricity Source]=
 	New Generation Capacity Excluding Retrofit Capacity[Electricity Source]
@@ -62011,6 +62423,122 @@ Start Year Vehicles Share by Technology[Vehicle Type,Cargo Type,Vehicle Technolo
 	)
 	~	Dmnl
 	~		|
+
+Steel Module Energy Use by Fuel Type[Industrial Fuel]=
+	SUM(
+	  Steel Production by Pathway[Steel Production Pathway!]
+	  * SEIbPaF Steel Energy Intensity by Pathway and Fuel[Steel Production Pathway!\
+		,Industrial Fuel]
+	)
+	~	BTU/Year
+	~	Steel sector energy use by fuel implied by the pathway module. In Phase \
+		1b this replaces the generic structure's process-end-use energy for iron \
+		and steel 241; in Phase 1a it is diagnostic only.
+	|
+
+Steel Module Energy Use Ratio to Existing Structure[Industrial Fuel]=
+	ZIDZ(
+	  Steel Module Energy Use by Fuel Type[Industrial Fuel],
+	  Industrial Fuel Use for Energy Purposes[Industrial Fuel,iron and steel 241]
+	)
+	~	Dmnl
+	~	Calibration diagnostic: pathway-module energy by fuel over the current \
+		generic structure's energy for iron and steel. The Phase 1b wiring gate \
+		targets values near one for fuels the module covers.
+	|
+
+Steel Pathway Choice Weight[Steel Production Pathway]=
+	10000
+	* SPSW Steel Pathway Shareweight[Steel Production Pathway]
+	* (
+	  MAX(Steel Pathway Levelized Cost per Ton[Steel Production Pathway], 0.01)
+	  / MAX(Minimum Eligible Steel Pathway Cost per Ton, 0.01)
+	) ^ IELC Industrial Equipment Logit Coefficient
+	~	Dmnl
+	~	Relative-cost (power function) logit weight for new steel capacity by \
+		pathway, cloning the Industrial Equipment Fuel Choice Weight form and \
+		reusing its exponent. Cost floors are rescaled to per-ton magnitudes \
+		(0.01 $/ton versus 1e-7 $/BTU in the fuel-choice version).
+	|
+
+Steel Pathway Levelized Cost per Ton[Steel Production Pathway]=
+	SPCC Steel Pathway Capital Cost per Unit Annual Capacity[Steel Production Pathway]
+	/ (
+	  SPPL Steel Pathway Plant Lifetime[Steel Production Pathway]
+	  * SYSCU Start Year Steel Capacity Utilization
+	)
+	+ SUM(
+	    SEIbPaF Steel Energy Intensity by Pathway and Fuel[Steel Production Pathway\
+		,Industrial Fuel!]
+	    * Industrial Fuel Cost per Unit Energy[iron and steel 241,Industrial Fuel!]
+	  )
+	~	$/metric ton
+	~	Draft choice cost: straight-line capital per ton actually produced \
+		(nameplate capex grossed up by the target utilization) plus fuel costs \
+		per ton. Phase 3 upgrades the capital term to the financing-annuity \
+		basis (BCoISC) and Phase 2 adds carbon tax exposure; non-energy variable \
+		costs are omitted because shared components cancel in the cost-ratio \
+		logit.
+	|
+
+Steel Production by Pathway[Steel Production Pathway]=
+	(
+	  Steel Production Capacity by Pathway[Steel Production Pathway]
+	  + New Steel Production Capacity by Pathway[Steel Production Pathway]
+	)
+	* SYSCU Start Year Steel Capacity Utilization
+	* MIN(
+	    1,
+	    ZIDZ(
+	      Total Steel Demand,
+	      (
+	        SUM(Steel Production Capacity by Pathway[Steel Production Pathway!])
+	        + SUM(New Steel Production Capacity by Pathway[Steel Production Pathway!])
+	      ) * SYSCU Start Year Steel Capacity Utilization
+	    )
+	  )
+	~	metric tons/Year
+	~	Production by pathway: nameplate capacity including this year's new \
+		builds (same-year commissioning, so builds close this year's gap), run \
+		at the target utilization, rationed uniformly when demand falls short. \
+		Realized utilization is therefore emergent: it equals the target when \
+		capacity is fully used and falls in demand slumps.
+	|
+
+Steel Production Capacity Added During Model Run by Pathway[Steel Production Pathway\
+		]= INTEG(
+	New Steel Production Capacity by Pathway[Steel Production Pathway]
+	- Model Run Steel Capacity Retirements by Pathway[Steel Production Pathway],
+		0)
+	~	metric tons/Year
+	~	Steel production capacity built during the model run, retiring by \
+		pathway lifetime.
+	|
+
+Steel Production Capacity by Pathway[Steel Production Pathway]=
+	Preexisting Steel Production Capacity by Pathway[Steel Production Pathway]
+	+ Steel Production Capacity Added During Model Run by Pathway[Steel Production Pathway\
+		]
+	~	metric tons/Year
+	~	Total surviving steel production capacity: the start-year fleet (retiring \
+		on the exogenous GEM-informed schedule) plus model-run additions \
+		(retiring by lifetime).
+	|
+
+Steel Production Pathway:
+	traditional BF BOF,
+	BF BOF with CCS,
+	natural gas DRI,
+	hydrogen DRI,
+	molten oxide electrolysis,
+	aqueous electrolysis,
+	scrap EAF
+	~	
+	~	Crude steel production pathways. DRI pathways include their EAF melting \
+		step; scrap EAF is the secondary (recycled) route. Pre-commercial \
+		pathways are gated by the SPSW shareweight time series, not by \
+		structure.
+	|
 
 Steps Allowed in Same Direction With Declining Step Size=
 	1
@@ -62910,6 +63438,21 @@ SYPEL Start Year Peak Electricity Load=
 	~	MW
 	~		|
 
+SYSCU Start Year Steel Capacity Utilization=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/SYSCU/SYSCU.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Dmnl
+	~	Observed start-year steel capacity utilization (AISI 2024-2025 average \
+		roughly 0.76), applied as the target utilization for new-build sizing \
+		and the production basis throughout. Held constant: realized utilization \
+		is emergent (falls in demand slumps via the production ration), and \
+		pathway-differentiated utilization is a logged refinement. DRAFT - \
+		verify against AISI before release.
+	|
+
 SYSHECF Start year Seasonal Expected Capacity Factor for Distributed Sources[Electricity Source\
 		,Electricity Timeslice,Hour] :EXCEPT:  [solar PV es,Electricity Timeslice,Hour]=
 	SYSHECF Start Year Seasonal Expected Hourly Electricity Capacity Factors[Electricity Source\
@@ -63104,6 +63647,19 @@ SYSHECF Start Year Seasonal Expected Hourly Electricity Capacity Factors[hydroge
 	)
 	~	Dmnl
 	~		|
+
+SYSPbP Start Year Steel Production by Pathway[Steel Production Pathway]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/SYSPbP/SYSPbP.csv',
+	   ',',
+	   'B2*'
+	)
+	~	metric tons/Year
+	~	Start-year crude steel production by pathway, initializing the \
+		preexisting capacity stock and calibrating the pathway logit. DRAFT \
+		placeholder (24/4/52 MMT BF BOF / NG DRI / scrap EAF) - verify against \
+		AISI/USGS before release.
+	|
 
 SYTaDC Start Year Distribution Capital Costs=
 	GET DIRECT CONSTANTS(
@@ -66159,6 +66715,16 @@ Total Qualifying RPS Electricity Demand by Hour After Demand Altering Technologi
 	~	MW*hr
 	~		|
 
+Total Steel Demand=
+	BAU Total Steel Demand
+	* (1 + Percent Change in Production due to Policies[iron and steel 241])
+	~	metric tons/Year
+	~	Policy-case steel demand in physical units: BAU tonnage scaled by the \
+		same policy-driven production change the dollar-based industry chain \
+		already computes (dollars drive tons, one way - see \
+		Steel_Breakout_Design.md decision D7).
+	|
+
 Total Subsidies per Unit Electricity Output Adjusted for Lifetime[Electricity Source]\
 		=
 	(Electricity Sector CCS Subsidy per MWh[Electricity Source]*BCS Duration of Subsidies for Carbon Sequestration
@@ -67401,6 +67967,20 @@ Unmet Electricity Demand Summed Across Hours[Electricity Timeslice]=
 	SUM(Unmet Electricity Demand by Hour[Electricity Timeslice,Hour!])
 	~	MW*hr
 	~		~	:SUPPLEMENTARY 
+	|
+
+Unmet Steel Production Capacity Need=
+	MAX(
+	  0,
+	  Total Steel Demand
+	  - SUM(Steel Production Capacity by Pathway[Steel Production Pathway!])
+	    * SYSCU Start Year Steel Capacity Utilization
+	)
+	~	metric tons/Year
+	~	Demand (production units) not servable by surviving nameplate capacity \
+		running at the target utilization; drives new builds allocated by the \
+		pathway logit. Realized utilization above the target is not allowed - \
+		the fleet builds rather than overdrives.
 	|
 
 URPbIC Union Representation Percentage by ISIC Code[ISIC Code]=

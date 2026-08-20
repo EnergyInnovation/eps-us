@@ -1,0 +1,53 @@
+# Industry breakout replication log
+
+*Running log of every structural choice made in the iron & steel breakout, kept so cement (next) and chemicals (potentially after) can replicate the pattern instead of re-deriving it. One entry per decision: what was done, why, and what the replicating industry should do differently if anything. Companion docs: `Steel_Breakout_Design.md` (spec), `Industry_42_IronSteel_Breakout_Assessment.md` (background).*
+
+## Pattern entries
+
+**P1 — Module shape: exogenous BAU tonnage, endogenous policy-case pathway competition.** BAU production by pathway is a data input (`BSPbP`); the policy case starts from the same initial capacity and evolves endogenously (logit on new capacity need). This mirrors the model-wide convention that BAU is exogenous/calibrated and policy is endogenous. *Cement analog: BAU clinker production by kiln type.* Consequence: policy-at-defaults matches BAU by calibration (shareweights), not by construction — the defaults-run diagnostic ratio is the calibration instrument.
+
+**P2 — Tons↔dollars: dollars drive tons, one-way.** Physical demand = BAU tonnage × (1 + `Percent Change in Production due to Policies[category]`) (which, despite the name, is a fraction). Module costs feed back only through the existing expenditure/revenue chains. Never write tonnage into the IO layer. *Same for cement.*
+
+**P3 — Pathway subscript naming.** Family `<Industry> Production Pathway` with plain-language elements; technologies not yet commercial are elements from day one, gated by a shareweight time series (TBS convention) rather than by structure. Subrange for the group needing special resource logic (`ore based steel pathway` complements scrap EAF; cement analog: subrange excluding any resource-capped route).
+
+**P4 — Capacity as a simple INTEG stock, not Model Run Vintage.** Capacity by pathway = INTEG(new − retirements), retirements = stock/lifetime. Chosen for draft simplicity; MRV vintaging is a logged upgrade if per-cohort economics (PTC-style latching, age-based stranding) become policy-relevant. Demand dips leave idle capacity rather than shrinking the stock → dip-and-recover cannot trigger phantom builds (thermal-battery high-water-mark lesson, inherent here because the basis is a stock).
+
+**P5 — Allocation: house relative-cost power logit on levelized cost per physical unit.** Weight = 10000 × shareweight × (cost/min eligible cost)^IELC, reusing `IELC` (−6) and the 10000×/floor guards verbatim from `Industrial Equipment Fuel Choice Weight`. Cost floors rescaled to the per-ton cost magnitude (0.01 $/ton vs 1e-7 $/BTU). Dedicated exponent input deferred until someone needs pathway choice stickier/looser than fuel choice.
+
+**P6 — Resource cap via headroom-and-reallocate.** Scrap-EAF allocation capped at MAX(0, supportable production − existing scrap capacity); capped excess reallocated across the other pathways in proportion to their weights (ZIDZ-guarded). *Cement analog: SCM availability capping clinker substitution.* Draft ignores competing scrap uses (BOF charge ~15–20%, foundries, exports) — logged refinement for Phase 4.
+
+**P7 — Energy accounting basis.** Intensity input in BTU per metric ton by pathway × `Industrial Fuel` (so the module speaks the model's fuel dimension natively from day one; carve-out in 1b is then a substitution at `Industrial Fuel Use` level, not a unit conversion). Hydrogen intensities booked under `hydrogen if` in the draft; hydrogen-type split (green/low-carbon) deferred to Phase 2 alongside the existing industry hydrogen-type input.
+
+**P8 — Compute-only first (Phase 1a).** Entire module lands with nothing consumed by existing variables → bit-identical gate still applies. The wiring commit (1b) is where the gate switches to BAU-calibration equivalence. Keeps every commit verifiable.
+
+**P9 — Carve-out via end-use subranges (from Dan, 2026-08-20).** `industrial process end use` (5 heat bands + cooling + machine drive + other processes) vs `industrial nonprocess end use` (HVAC, lighting, other nonprocess); module replaces process end uses only. Fallback if :EXCEPT: proliferation gets unmanageable: fully offboard the industry.
+
+## Decision journal
+
+- 2026-08-20: D1–D8 settled with Dan (see design spec). Phase 1a structure drafted: 4 subscript entries, 6 inputs (BSPbP, SEIbPaF, SPCC, SPPL, SPSW, MASSfS), ~16 equations, all placeholder-DRAFT data.
+- 2026-08-20: Straight-line capex (SPCC/SPPL) in the 1a choice cost; financing-annuity basis deferred to Phase 3 (needs BCoISC wiring + repayment ladders).
+- 2026-08-20: Uniform utilization ration across pathways (production = capacity × demand/Σcapacity). Merit-order utilization (cheap pathways run first) logged as an upgrade — interacts with cost-based retirement when that arrives.
+- 2026-08-20: Diagnostic variable compares module energy to `Industrial Fuel Use for Energy Purposes[fuel, iron and steel 241]` — this is the 1b calibration target.
+
+**P10 — Gate results, Phase 1a (2026-08-20).** Bit-identical at defaults vs pre-insert baseline (full `OutputVarsToExport.lst`, 8,772 rows, `cmp` exact). Module mechanics verified in the same run (`Steel_checks.lst` → `SteelDraft_steel.tab`): initialization reproduces BAU exactly in the start year; BF-BOF stock decays on its lifetime; H2-DRI enters exactly when its shareweight gate opens (2028); logit allocates ~99% of new builds to scrap EAF at draft costs ($51/t vs $114–145/t); scrap cap not binding (17–20 Mt headroom).
+
+**Findings for Phase 1b (from the diagnostic ratios):**
+- *Hard-coal boundary gap:* module coal use = **9.65×** the generic structure's `hard coal if` for iron and steel 241. Likely the coke/coking-coal accounting boundary (feedstock vs energy classification, coke ovens as transformation) — the single biggest reconciliation item before wiring. Resolve against MECS/AEO steel-sector energy accounting.
+- *Electricity 0.40×, NG 0.21×:* expected — module boundary is ironmaking+steelmaking; the generic structure also carries finishing/rolling and other process loads. The 1b carve-out definition must state which part of the generic process end-use energy the module replaces (candidate: scale module intensities up to full-sector, or leave a "rest of steel processes" residual in the generic structure).
+- *One-year capacity lag:* new builds close this year's gap but enter the stock next year, so production runs ~4% (one year of retirements) below demand in steady state. Acceptable for a draft; fix candidates: same-year commissioning of new builds in the production equation, or building to expected next-year demand.
+
+**P11 — Exogenous demand, endogenous attribution (Dan's correction, 2026-08-20).** The BAU input is *total* demand only (`BSD`); the pathway split is never a data series. Start-year production by pathway (`SYSPbP`) initializes the capacity stock and anchors logit calibration; from year one the split evolves by cost. *Cement analog: BAU cement demand total + start-year kiln-type split.* Lesson: don't exogenize what the module exists to endogenize.
+
+**P12 — Two-stock capacity: scheduled preexisting fleet + lifetime-retiring additions (Dan, 2026-08-20).** The start-year fleet retires on an exogenous plant-level schedule (`SPRS`, built from GEM's Global Iron and Steel Tracker — retirements and reline windows); only model-run additions use the 1/lifetime proxy. Mirrors the model's preexisting-vs-model-run equipment convention and gives BAU retirement realism (lumpy BF relines) without vintaging. *Cement analog: GEM Global Cement and Concrete Tracker.*
+
+*GEM access notes (2026-08-20):* the GIST bulk file is registration-gated (name/email/org form at globalenergymonitor.org → "Download data"; contact: Astrid Grigsby-Schulte, GEM; cite "Global Iron and Steel Tracker, GEM, June 2026 (V1) release"; CC BY 4.0). Furnace-level data (capacity, status, start year, last reline) is public per-plant on gem.wiki — the Gary Works page was spot-verified against the assembled table. Fleet picture used for the DRAFT SPRS: ~24.6 Mt/yr operating BF hot metal across 8 plants / 13 operating furnaces (+~9.5 Mt mothballed, excluded from the module's start-year stock since SYSPbP is production-based); ~11 Mt of the operating fleet hits a reline-or-retire decision point 2025–2028 (Granite City B, Edgar Thomson BF3, Cleveland BF6, Burns Harbor C+D), while Nippon-committed and recently-relined units (Gary BF14 $350M reline Dec 2025, Edgar Thomson BF1 10-yr pledge, Indiana Harbor BF7 H2 retrofit, Middletown BF3 refurb — the DOE H2-DRI award was cancelled in 2025 and Middletown continues on coal) point to continued operation through the 2030s. DRAFT SPRS retires ~11.4 Mt of BF-BOF by 2050 at six event dates (2028/29/30/32/46/49) — judgment calls documented in the CSV generator; replace with the GIST bulk schedule and treat the 18–20-yr campaign assumption as unverified.
+
+**P13 — Nameplate + target utilization (Dan, 2026-08-20 PM).** Capacity stocks are nameplate; a start-year observed utilization input (`SYSCU`) sizes builds, grosses up per-ton capex in the choice cost, and caps production. Target constant; realized utilization emergent. Policies act on utilization via demand and (later) merit-order composition + stranding, never a direct lever. *Cement analog: kiln utilization from PCA/GNR data.*
+
+**P14 — Same-year commissioning (Dan, 2026-08-20 PM).** New builds enter the production basis in their build year (stock still integrates next year), matching the electricity-sector convention and closing the one-year-lag shortfall.
+
+**P15 — Full BAU twinning at the physical-core stage.** 16 BAU twin equations (BAU logit at BAU fuel costs/demand) added in Phase 1a rather than deferred to wiring — cheap while the structure is fresh, and it makes the compute-only diagnostics meaningful under policy runs.
+
+## Deferred items (steel)
+
+Coke/met-coal intermediates; endogenous process CO2 (#189); CCS old/new (existing framework); Clean Steel Standard lever (D2 overlay); early-retirement + cost-based stranding; net imports in tons (trade stays dollar-based via IESE for now); full BAU twin chain; acronym-key.xlsx entries; input workbooks to house standard; sketch view ("Industry - Steel"); WebAppData; competing scrap demands; hydrogen-type split; capacity data replacing production-as-capacity init (AISI 117.8 Mnt capability, ~76% utilization).
