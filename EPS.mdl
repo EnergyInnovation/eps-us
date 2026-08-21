@@ -13463,7 +13463,7 @@ BAU Process Emissions after CCS[Industry Category,Pollutant]=
 
 BAU Process Emissions after GDP and Fuel Production Adjustment[Industry Category,Pollutant\
 		] :EXCEPT:      [energy industries within industry category
-,Pollutant]=
+,Pollutant], [iron and steel 241,CO2]=
 	BPE BAU Process Emissions[Industry Category,Pollutant]
 	* (1 + Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment[industry sector\
 		]) ~~|
@@ -13472,7 +13472,10 @@ BAU Process Emissions after GDP and Fuel Production Adjustment[energy industries
 	BPE BAU Process Emissions[energy industries within industry category
 	,Pollutant]
 	* (1 + Last Year BAU Percent Change in Fuel Production from Calculated Fuel Demand[energy industries within industry category\
-		])
+		]) ~~|
+BAU Process Emissions after GDP and Fuel Production Adjustment[iron and steel 241\
+		,CO2]=
+	BAU Steel Process CO2 Emissions
 	~	g pollutant
 	~		|
 
@@ -15241,10 +15244,41 @@ BAU Steel Pathway Levelized Cost per Ton[Steel Production Pathway]=
 	+ SUM(
 	    SEIbPaF Steel Energy Intensity by Pathway and Fuel[Steel Production Pathway\
 		,Industrial Fuel!]
-	    * BAU Industrial Fuel Cost per Unit Energy[iron and steel 241,Industrial Fuel!]
+	    * (
+	      BAU Industrial Fuel Cost per Unit Energy[iron and steel 241,Industrial Fuel!]
+	      - Steel Fuel Feedstock Share[Industrial Fuel!]
+	        * BAU Industrial Fuel Carbon Tax Amount per Unit Energy[iron and steel 241\
+		,Industrial Fuel!]
+	    )
 	  )
+	+ Steel Process CO2 Intensity per Ton by Pathway[Steel Production Pathway]
+	  / Grams per Metric Ton CO2e
+	  * BAU Steel Process Emissions Carbon Tax Rate
 	~	$/metric ton
-	~	BAU twin of Steel Pathway Levelized Cost per Ton, at BAU fuel costs.
+	~	BAU twin of Steel Pathway Levelized Cost per Ton.
+	|
+
+BAU Steel Process CO2 Emissions=
+	SUM(
+	  BAU Steel Production by Pathway[Steel Production Pathway!]
+	  * Steel Process CO2 Intensity per Ton by Pathway[Steel Production Pathway!]
+	)
+	~	g CO2
+	~	BAU twin of Steel Process CO2 Emissions. Shares the intensity variable \
+		with the policy case (fuel carbon contents are physical constants).
+	|
+
+BAU Steel Process Emissions Carbon Tax Rate=
+	IF THEN ELSE(
+	  BEPEfCT Boolean Exempt Process Emissions from Carbon Tax[iron and steel 241] > 0,
+	  0,
+	  BCTR BAU Carbon Tax Rate[industry sector]
+	  * BFoICStCT BAU Fraction of Industry Category Subject to Carbon Tax[iron and steel 241\
+		]
+	  * BPTbCP BAU Industry Pollutants Taxed by Carbon Pricing[iron and steel 241,CO2]
+	)
+	~	$/metric ton CO2e
+	~	BAU twin of Steel Process Emissions Carbon Tax Rate.
 	|
 
 BAU Steel Production by Pathway[Steel Production Pathway]=
@@ -58415,7 +58449,7 @@ Process Emissions after CCS[Industry Category,Pollutant]=
 	~		|
 
 Process Emissions before CCS[Industry Category,Pollutant] :EXCEPT:  [agriculture and forestry 01T03\
-		,CO2]=
+		,CO2], [iron and steel 241,CO2]=
 	MAX((BAU Process Emissions before CCS[Industry Category,Pollutant]
 	     + SUM(Decrease in Process Emissions at BAU Production Levels[Industry Category,\
 		Industry Process Emissions Policy!,Pollutant
@@ -58438,7 +58472,9 @@ Process Emissions before CCS[agriculture and forestry 01T03,CO2]=
 	  + Change in Process Emissions from Feedstock Shifting[agriculture and forestry 01T03\
 		,CO2]
 	)
-	* (1 + Percent Change in Production due to Policies[agriculture and forestry 01T03])
+	* (1 + Percent Change in Production due to Policies[agriculture and forestry 01T03]) ~~|
+Process Emissions before CCS[iron and steel 241,CO2]=
+	Steel Process CO2 Emissions
 	~	g pollutant
 	~		|
 
@@ -62457,6 +62493,15 @@ Steel Energy Use Process Shares[Industrial Fuel,industrial process end use]= INI
 		coal/coke physically to heat above 1000 C instead.
 	|
 
+Steel Fuel CO2 Emissions Intensity[Industrial Fuel]=
+	CO2 Emissions Intensity by Fuel for All Fuels[industrial fuel within all fuels]
+	~	g CO2/BTU
+	~	CO2 content of each industrial fuel, mapped from the All Fuels dimension \
+		onto Industrial Fuel. Exists because a mapped subrange cannot co-range \
+		with Industrial Fuel inside a SUM (they range independently, producing a \
+		double sum) - the elementwise mapping here is the safe form.
+	|
+
 Steel Fuel Feedstock Share[Industrial Fuel]= INITIAL(
 	ZIDZ(
 	  BIFU BAU Industrial Fuel Use as Feedstock[iron and steel 241,Industrial Fuel],
@@ -62520,15 +62565,69 @@ Steel Pathway Levelized Cost per Ton[Steel Production Pathway]=
 	+ SUM(
 	    SEIbPaF Steel Energy Intensity by Pathway and Fuel[Steel Production Pathway\
 		,Industrial Fuel!]
-	    * Industrial Fuel Cost per Unit Energy[iron and steel 241,Industrial Fuel!]
+	    * (
+	      Industrial Fuel Cost per Unit Energy[iron and steel 241,Industrial Fuel!]
+	      - Steel Fuel Feedstock Share[Industrial Fuel!]
+	        * Industrial Fuel Carbon Tax Amount per Unit Energy[iron and steel 241,Industrial Fuel!\
+		]
+	    )
 	  )
+	+ Steel Process CO2 Intensity per Ton by Pathway[Steel Production Pathway]
+	  / Grams per Metric Ton CO2e
+	  * Steel Process Emissions Carbon Tax Rate
 	~	$/metric ton
-	~	Draft choice cost: straight-line capital per ton actually produced \
-		(nameplate capex grossed up by the target utilization) plus fuel costs \
-		per ton. Phase 3 upgrades the capital term to the financing-annuity \
-		basis (BCoISC) and Phase 2 adds carbon tax exposure; non-energy variable \
-		costs are omitted because shared components cancel in the cost-ratio \
-		logit.
+	~	Pathway choice cost: straight-line capital per ton produced (Phase 3 \
+		upgrades to the financing-annuity basis), fuel costs with the fuel-price \
+		carbon tax netted OFF feedstock quantities (feedstocks are not taxed as \
+		fuel - matching the Amount Spent on Industry Fuels convention - their \
+		carbon is priced through the process-CO2 term instead, avoiding a double \
+		count), plus the carbon tax on process CO2. Non-energy variable costs \
+		(ore, scrap, labor) omitted: shared components cancel in the cost-ratio \
+		logit; pathway-differential ones are a Phase 4 refinement.
+	|
+
+Steel Process CO2 Emissions=
+	SUM(
+	  Steel Production by Pathway[Steel Production Pathway!]
+	  * Steel Process CO2 Intensity per Ton by Pathway[Steel Production Pathway!]
+	)
+	~	g CO2
+	~	Endogenous steel process CO2, replacing the exogenous BPE series for \
+		[iron and steel 241, CO2]. Declines with BF BOF retirement and pathway \
+		shifts instead of following an exogenous trajectory (issue 189 for \
+		steel). Non-CO2 process pollutants remain on BPE.
+	|
+
+Steel Process CO2 Intensity per Ton by Pathway[Steel Production Pathway]=
+	SUM(
+	  SEIbPaF Steel Energy Intensity by Pathway and Fuel[Steel Production Pathway,Industrial Fuel!\
+		]
+	  * Steel Fuel Feedstock Share[Industrial Fuel!]
+	  * Steel Fuel CO2 Emissions Intensity[Industrial Fuel!]
+	)
+	~	g CO2/metric ton
+	~	Process CO2 per ton of crude steel by pathway: the carbon in feedstock \
+		fuels (coking coal, reduction gas), released during reduction chemistry \
+		and byproduct-gas combustion rather than in the fuel-combustion \
+		accounting. Carbon retained in the steel product (~0.1-1 percent) is \
+		deliberately not netted out (team default). Flux calcination CO2 (small) \
+		is not yet represented - Phase 2 refinement. Cross-check: start-year \
+		feedstock carbon reproduces the GHGI iron and steel plus met coke \
+		process-CO2 anchor (40.7 MMT, 2022) within a few percent.
+	|
+
+Steel Process Emissions Carbon Tax Rate=
+	IF THEN ELSE(
+	  Does Carbon Tax Exempt Process Emissions This Year[iron and steel 241] > 0,
+	  0,
+	  Carbon Tax Rate[industry sector]
+	  * Fraction of Industry Category Subject to Carbon Tax[iron and steel 241]
+	  * Industry Pollutants Taxed by Carbon Pricing[iron and steel 241,CO2]
+	)
+	~	$/metric ton CO2e
+	~	Effective carbon tax rate on steel process CO2 for the pathway choice, \
+		mirroring Carbon Tax on Process Emissions by Industry's gating (BEPEfCT \
+		exemption, coverage fraction, pollutant coverage).
 	|
 
 Steel Production by Pathway[Steel Production Pathway]=
