@@ -1808,6 +1808,18 @@ Average Four Year Prior Total Predicted Net Energy Market Revenue per MW[CCUS El
 	~	$/(MW*hr)
 	~		|
 
+Average New Steel Capacity Cost per Ton=
+	SUM(
+	  Share of New Steel Production Capacity by Pathway[Steel Production Pathway!]
+	  * Steel Pathway Levelized Cost per Ton[Steel Production Pathway!]
+	)
+	~	$/metric ton
+	~	Share-weighted cost of this year's new-build pathway mix: the \
+		replacement alternative in the reline-vs-replace decision. Does not yet \
+		see the scrap-availability cap on the replacement mix (part of what the \
+		SRSW calibration weight absorbs).
+	|
+
 Average Three Year Prior Net Loss per Unit Output[Electricity Source,Optimization Pass\
 		]=
 	IF THEN ELSE(
@@ -3173,6 +3185,15 @@ BAU Average Four Year Prior Total Predicted Net Energy Market Revenue per MW[CCU
 		]
 	~	$/(MW*hr)
 	~		|
+
+BAU Average New Steel Capacity Cost per Ton=
+	SUM(
+	  BAU Share of New Steel Production Capacity by Pathway[Steel Production Pathway!]
+	  * BAU Steel Pathway Levelized Cost per Ton[Steel Production Pathway!]
+	)
+	~	$/metric ton
+	~	BAU twin of Average New Steel Capacity Cost per Ton.
+	|
 
 BAU Average Three Year Prior Net Loss per Unit Output[Electricity Source,Optimization Pass\
 		]=
@@ -13280,13 +13301,9 @@ BAU Predicted Change in Energy Market Revenue for CCUS Retrofits[lignite w CCS e
 	~		|
 
 BAU Preexisting Steel Capacity Retirements by Pathway[Steel Production Pathway]=
-	MIN(
-	  SPRS Steel Preexisting Capacity Retirement Schedule[Steel Production Pathway],
-	  BAU Preexisting Steel Production Capacity by Pathway[Steel Production Pathway]
-	)
+	BAU Steel Capacity Retired at Reline Decision by Pathway[Steel Production Pathway]
 	~	metric tons/Year
-	~	BAU twin of Preexisting Steel Capacity Retirements by Pathway. Identical \
-		until policy-driven early retirement arrives in Phase 2.
+	~	BAU twin of Preexisting Steel Capacity Retirements by Pathway.
 	|
 
 BAU Preexisting Steel Production Capacity by Pathway[Steel Production Pathway]= INTEG(
@@ -15214,6 +15231,38 @@ BAU Start Year Other Hydrogen Production Shares by Pathway[Hydrogen Production P
 	~	Dmnl
 	~		|
 
+BAU Steel Capacity Facing Reline Decision by Pathway[Steel Production Pathway]=
+	MIN(
+	  BAU Preexisting Steel Production Capacity by Pathway[Steel Production Pathway],
+	  SPRS Steel Preexisting Capacity Reline Decision Schedule[Steel Production Pathway]
+	  + BAU Steel Capacity Relined One Campaign Ago by Pathway[Steel Production Pathway]
+	)
+	~	metric tons/Year
+	~	BAU twin of Steel Capacity Facing Reline Decision by Pathway.
+	|
+
+BAU Steel Capacity Relined by Pathway[Steel Production Pathway]=
+	BAU Steel Capacity Facing Reline Decision by Pathway[Steel Production Pathway]
+	* BAU Steel Reline Share at Decision[Steel Production Pathway]
+	~	metric tons/Year
+	~	BAU twin of Steel Capacity Relined by Pathway.
+	|
+
+BAU Steel Capacity Relined One Campaign Ago by Pathway[Steel Production Pathway]= DELAY FIXED(
+	BAU Steel Capacity Relined by Pathway[Steel Production Pathway],
+	SPPL Steel Pathway Plant Lifetime[Steel Production Pathway],
+	0)
+	~	metric tons/Year
+	~	BAU twin of Steel Capacity Relined One Campaign Ago by Pathway.
+	|
+
+BAU Steel Capacity Retired at Reline Decision by Pathway[Steel Production Pathway]=
+	BAU Steel Capacity Facing Reline Decision by Pathway[Steel Production Pathway]
+	* (1 - BAU Steel Reline Share at Decision[Steel Production Pathway])
+	~	metric tons/Year
+	~	BAU twin of Steel Capacity Retired at Reline Decision by Pathway.
+	|
+
 BAU Steel Module Energy Use by Fuel Type[Industrial Fuel]=
 	SUM(
 	  BAU Steel Production by Pathway[Steel Production Pathway!]
@@ -15241,21 +15290,27 @@ BAU Steel Pathway Levelized Cost per Ton[Steel Production Pathway]=
 	  SPPL Steel Pathway Plant Lifetime[Steel Production Pathway]
 	  * SYSCU Start Year Steel Capacity Utilization
 	)
-	+ SUM(
-	    SEIbPaF Steel Energy Intensity by Pathway and Fuel[Steel Production Pathway\
+	+ BAU Steel Pathway Operating Cost per Ton[Steel Production Pathway]
+	~	$/metric ton
+	~	BAU twin of Steel Pathway Levelized Cost per Ton.
+	|
+
+BAU Steel Pathway Operating Cost per Ton[Steel Production Pathway]=
+	SUM(
+	  SEIbPaF Steel Energy Intensity by Pathway and Fuel[Steel Production Pathway\
 		,Industrial Fuel!]
-	    * (
-	      BAU Industrial Fuel Cost per Unit Energy[iron and steel 241,Industrial Fuel!]
-	      - Steel Fuel Feedstock Share[Industrial Fuel!]
-	        * BAU Industrial Fuel Carbon Tax Amount per Unit Energy[iron and steel 241\
+	  * (
+	    BAU Industrial Fuel Cost per Unit Energy[iron and steel 241,Industrial Fuel!]
+	    - Steel Fuel Feedstock Share[Industrial Fuel!]
+	      * BAU Industrial Fuel Carbon Tax Amount per Unit Energy[iron and steel 241\
 		,Industrial Fuel!]
-	    )
 	  )
+	)
 	+ Steel Process CO2 Intensity per Ton by Pathway[Steel Production Pathway]
 	  / Grams per Metric Ton CO2e
 	  * BAU Steel Process Emissions Carbon Tax Rate
 	~	$/metric ton
-	~	BAU twin of Steel Pathway Levelized Cost per Ton.
+	~	BAU twin of Steel Pathway Operating Cost per Ton.
 	|
 
 BAU Steel Process CO2 Emissions=
@@ -15282,8 +15337,10 @@ BAU Steel Process Emissions Carbon Tax Rate=
 	|
 
 BAU Steel Production by Pathway[Steel Production Pathway]=
-	(
+	MAX(
+	  0,
 	  BAU Steel Production Capacity by Pathway[Steel Production Pathway]
+	  - BAU Steel Capacity Retired at Reline Decision by Pathway[Steel Production Pathway]
 	  + BAU New Steel Production Capacity by Pathway[Steel Production Pathway]
 	)
 	* SYSCU Start Year Steel Capacity Utilization
@@ -15293,6 +15350,8 @@ BAU Steel Production by Pathway[Steel Production Pathway]=
 	      BAU Total Steel Demand,
 	      (
 	        SUM(BAU Steel Production Capacity by Pathway[Steel Production Pathway!])
+	        - SUM(BAU Steel Capacity Retired at Reline Decision by Pathway[Steel Production Pathway!\
+		])
 	        + SUM(BAU New Steel Production Capacity by Pathway[Steel Production Pathway!\
 		])
 	      ) * SYSCU Start Year Steel Capacity Utilization
@@ -15317,6 +15376,35 @@ BAU Steel Production Capacity by Pathway[Steel Production Pathway]=
 		]
 	~	metric tons/Year
 	~	BAU twin of Steel Production Capacity by Pathway.
+	|
+
+BAU Steel Reline Continuation Cost per Ton[Steel Production Pathway]=
+	SRCC Steel Reline Capital Cost per Unit Annual Capacity[Steel Production Pathway]
+	/ (
+	  SPPL Steel Pathway Plant Lifetime[Steel Production Pathway]
+	  * SYSCU Start Year Steel Capacity Utilization
+	)
+	+ BAU Steel Pathway Operating Cost per Ton[Steel Production Pathway]
+	~	$/metric ton
+	~	BAU twin of Steel Reline Continuation Cost per Ton.
+	|
+
+BAU Steel Reline Share at Decision[Steel Production Pathway]=
+	ZIDZ(
+	  SRSW Steel Reline Shareweight
+	  * (
+	      MAX(BAU Steel Reline Continuation Cost per Ton[Steel Production Pathway], 0.01)
+	      / MAX(BAU Average New Steel Capacity Cost per Ton, 0.01)
+	    ) ^ IELC Industrial Equipment Logit Coefficient,
+	  SRSW Steel Reline Shareweight
+	  * (
+	      MAX(BAU Steel Reline Continuation Cost per Ton[Steel Production Pathway], 0.01)
+	      / MAX(BAU Average New Steel Capacity Cost per Ton, 0.01)
+	    ) ^ IELC Industrial Equipment Logit Coefficient
+	  + 1
+	)
+	~	Dmnl
+	~	BAU twin of Steel Reline Share at Decision.
 	|
 
 BAU Subsidies for Elec Production for Existing Plants Paid This Year[Electricity Source\
@@ -18070,7 +18158,11 @@ BAU Unmet Steel Production Capacity Need=
 	MAX(
 	  0,
 	  BAU Total Steel Demand
-	  - SUM(BAU Steel Production Capacity by Pathway[Steel Production Pathway!])
+	  - (
+	      SUM(BAU Steel Production Capacity by Pathway[Steel Production Pathway!])
+	      - SUM(BAU Steel Capacity Retired at Reline Decision by Pathway[Steel Production Pathway!\
+		])
+	    )
 	    * SYSCU Start Year Steel Capacity Utilization
 	)
 	~	metric tons/Year
@@ -57197,13 +57289,12 @@ Preexisting Industrial Equipment Fuel Type Shares in Electricity Equivalent Adju
 	~		|
 
 Preexisting Steel Capacity Retirements by Pathway[Steel Production Pathway]=
-	MIN(
-	  SPRS Steel Preexisting Capacity Retirement Schedule[Steel Production Pathway],
-	  Preexisting Steel Production Capacity by Pathway[Steel Production Pathway]
-	)
+	Steel Capacity Retired at Reline Decision by Pathway[Steel Production Pathway]
 	~	metric tons/Year
-	~	Scheduled retirements of the start-year fleet, floored so the stock \
-		cannot go negative once the fleet is exhausted.
+	~	Retirements of the start-year fleet are the retire branch of the \
+		endogenous reline-vs-replace decision (the fixed retirement schedule was \
+		retired in Phase 2-B). Policy early-retirement levers will add to this \
+		flow when implemented.
 	|
 
 Preexisting Steel Production Capacity by Pathway[Steel Production Pathway]= INTEG(
@@ -62232,7 +62323,7 @@ SPPL Steel Pathway Plant Lifetime[Steel Production Pathway]=
 		placeholder - verify before release.
 	|
 
-SPRS Steel Preexisting Capacity Retirement Schedule[Steel Production Pathway]:INTERPOLATE::=
+SPRS Steel Preexisting Capacity Reline Decision Schedule[Steel Production Pathway]:INTERPOLATE::=
 	GET DIRECT DATA(
 	   'InputData/indst/SPRS/SPRS.csv',
 	   ',',
@@ -62240,10 +62331,12 @@ SPRS Steel Preexisting Capacity Retirement Schedule[Steel Production Pathway]:IN
 	   'B2'
 	)
 	~	metric tons/Year
-	~	Scheduled retirements of the start-year fleet by pathway, intended to be \
-		built from Global Energy Monitor's Global Iron and Steel Tracker \
-		(plant-level blast furnace retirements and relines). DRAFT placeholder \
-		(linear fleet turnover) - replace with the GEM-derived schedule.
+	~	Nameplate capacity reaching a reline-or-replace decision each year, from \
+		GEM Global Iron and Steel Tracker unit-level reline data (announced \
+		reline years where present, last completed reline plus a twenty-year \
+		campaign otherwise; GEM iron capacities scaled to module nameplate). The \
+		decision OUTCOME is endogenous - see Steel Reline Share at Decision. \
+		DRAFT - verify against the GIST bulk data before release.
 	|
 
 SPSW Steel Pathway Shareweight[Steel Production Pathway]:INTERPOLATE::=
@@ -62266,6 +62359,20 @@ Spur Line Construction Costs[Electricity Source]=
 	~	$
 	~		|
 
+SRCC Steel Reline Capital Cost per Unit Annual Capacity[Steel Production Pathway]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/SRCC/SRCC.csv',
+	   ',',
+	   'B2*'
+	)
+	~	$/(metric tons/Year)
+	~	Capital cost to reline or rebuild a unit for one more campaign, per ton \
+		of nameplate capacity. Anchor: Gary Works BF14's announced $350M full \
+		reline over 2,540 ttpa is about $138/(t/yr), roughly a tenth of \
+		greenfield. Other pathways ~15 percent of greenfield as DRAFT \
+		placeholders - verify before release.
+	|
+
 SRPbVT Separately Regulated Pollutants by Vehicle Type[Vehicle Type,Pollutant]=
 	GET DIRECT CONSTANTS(
 	   'InputData/trans/SRPbVT/SRPbVT.csv',
@@ -62274,6 +62381,21 @@ SRPbVT Separately Regulated Pollutants by Vehicle Type[Vehicle Type,Pollutant]=
 	)
 	~	Dmnl
 	~		|
+
+SRSW Steel Reline Shareweight:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/indst/SRSW/SRSW.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	Dmnl
+	~	Calibration weight on the reline branch of the reline-vs-replace choice, \
+		capturing unmodeled stickiness (product-mix and quality requirements, \
+		site integration, switching costs). Set so relining wins at default \
+		costs, reproducing the fleet-wide reline behavior GEM documents, while a \
+		strong carbon tax still flips the decision. DRAFT calibration.
+	|
 
 Start Year BAU Fraction of CCS Potential Achieved by Industry Sector[Industry Category\
 		,Emissions Type]= INITIAL(
@@ -62477,6 +62599,45 @@ Start Year Vehicles Share by Technology[Vehicle Type,Cargo Type,Vehicle Technolo
 	~	Dmnl
 	~		|
 
+Steel Capacity Facing Reline Decision by Pathway[Steel Production Pathway]=
+	MIN(
+	  Preexisting Steel Production Capacity by Pathway[Steel Production Pathway],
+	  SPRS Steel Preexisting Capacity Reline Decision Schedule[Steel Production Pathway]
+	  + Steel Capacity Relined One Campaign Ago by Pathway[Steel Production Pathway]
+	)
+	~	metric tons/Year
+	~	Nameplate capacity whose campaign ends this year: the GEM-derived \
+		first-decision schedule plus capacity that relined one campaign ago and \
+		now decides again. Capped by the surviving preexisting stock.
+	|
+
+Steel Capacity Relined by Pathway[Steel Production Pathway]=
+	Steel Capacity Facing Reline Decision by Pathway[Steel Production Pathway]
+	* Steel Reline Share at Decision[Steel Production Pathway]
+	~	metric tons/Year
+	~	Capacity that relines for another campaign. Stays in the preexisting \
+		stock and re-enters the decision pool one campaign later.
+	|
+
+Steel Capacity Relined One Campaign Ago by Pathway[Steel Production Pathway]= DELAY FIXED(
+	Steel Capacity Relined by Pathway[Steel Production Pathway],
+	SPPL Steel Pathway Plant Lifetime[Steel Production Pathway],
+	0)
+	~	metric tons/Year
+	~	Capacity that relined one campaign length ago and therefore faces its \
+		next reline-or-replace decision this year. Standalone because DELAY \
+		FIXED cannot be nested inside other functions.
+	|
+
+Steel Capacity Retired at Reline Decision by Pathway[Steel Production Pathway]=
+	Steel Capacity Facing Reline Decision by Pathway[Steel Production Pathway]
+	* (1 - Steel Reline Share at Decision[Steel Production Pathway])
+	~	metric tons/Year
+	~	Capacity that retires at its campaign-end decision instead of relining. \
+		Excluded from production in the decision year and replaced the same year \
+		through the new-build pathway logit.
+	|
+
 Steel Energy Use Process Shares[Industrial Fuel,industrial process end use]= INITIAL(
 	ZIDZ(
 	  BAU Percentage Fuel Use by Industrial Process with Fallback Data[iron and steel 241\
@@ -62562,28 +62723,35 @@ Steel Pathway Levelized Cost per Ton[Steel Production Pathway]=
 	  SPPL Steel Pathway Plant Lifetime[Steel Production Pathway]
 	  * SYSCU Start Year Steel Capacity Utilization
 	)
-	+ SUM(
-	    SEIbPaF Steel Energy Intensity by Pathway and Fuel[Steel Production Pathway\
+	+ Steel Pathway Operating Cost per Ton[Steel Production Pathway]
+	~	$/metric ton
+	~	New-build pathway choice cost: straight-line greenfield capital per ton \
+		produced (Phase 3 upgrades to the financing-annuity basis) plus the \
+		operating cost (fuel with feedstock carbon-tax netting, process-CO2 \
+		tax). Non-energy variable costs (ore, scrap, labor) omitted: shared \
+		components cancel in the cost-ratio logit; pathway-differential ones are \
+		a Phase 4 refinement.
+	|
+
+Steel Pathway Operating Cost per Ton[Steel Production Pathway]=
+	SUM(
+	  SEIbPaF Steel Energy Intensity by Pathway and Fuel[Steel Production Pathway\
 		,Industrial Fuel!]
-	    * (
-	      Industrial Fuel Cost per Unit Energy[iron and steel 241,Industrial Fuel!]
-	      - Steel Fuel Feedstock Share[Industrial Fuel!]
-	        * Industrial Fuel Carbon Tax Amount per Unit Energy[iron and steel 241,Industrial Fuel!\
+	  * (
+	    Industrial Fuel Cost per Unit Energy[iron and steel 241,Industrial Fuel!]
+	    - Steel Fuel Feedstock Share[Industrial Fuel!]
+	      * Industrial Fuel Carbon Tax Amount per Unit Energy[iron and steel 241,Industrial Fuel!\
 		]
-	    )
 	  )
+	)
 	+ Steel Process CO2 Intensity per Ton by Pathway[Steel Production Pathway]
 	  / Grams per Metric Ton CO2e
 	  * Steel Process Emissions Carbon Tax Rate
 	~	$/metric ton
-	~	Pathway choice cost: straight-line capital per ton produced (Phase 3 \
-		upgrades to the financing-annuity basis), fuel costs with the fuel-price \
-		carbon tax netted OFF feedstock quantities (feedstocks are not taxed as \
-		fuel - matching the Amount Spent on Industry Fuels convention - their \
-		carbon is priced through the process-CO2 term instead, avoiding a double \
-		count), plus the carbon tax on process CO2. Non-energy variable costs \
-		(ore, scrap, labor) omitted: shared components cancel in the cost-ratio \
-		logit; pathway-differential ones are a Phase 4 refinement.
+	~	Non-capital cost per ton by pathway: fuel costs (with the fuel-price \
+		carbon tax netted off feedstock quantities) plus the carbon tax on \
+		process CO2. Shared by the new-build levelized cost and the reline \
+		continuation cost.
 	|
 
 Steel Process CO2 Emissions=
@@ -62631,8 +62799,10 @@ Steel Process Emissions Carbon Tax Rate=
 	|
 
 Steel Production by Pathway[Steel Production Pathway]=
-	(
+	MAX(
+	  0,
 	  Steel Production Capacity by Pathway[Steel Production Pathway]
+	  - Steel Capacity Retired at Reline Decision by Pathway[Steel Production Pathway]
 	  + New Steel Production Capacity by Pathway[Steel Production Pathway]
 	)
 	* SYSCU Start Year Steel Capacity Utilization
@@ -62642,16 +62812,16 @@ Steel Production by Pathway[Steel Production Pathway]=
 	      Total Steel Demand,
 	      (
 	        SUM(Steel Production Capacity by Pathway[Steel Production Pathway!])
+	        - SUM(Steel Capacity Retired at Reline Decision by Pathway[Steel Production Pathway!\
+		])
 	        + SUM(New Steel Production Capacity by Pathway[Steel Production Pathway!])
 	      ) * SYSCU Start Year Steel Capacity Utilization
 	    )
 	  )
 	~	metric tons/Year
-	~	Production by pathway: nameplate capacity including this year's new \
-		builds (same-year commissioning, so builds close this year's gap), run \
-		at the target utilization, rationed uniformly when demand falls short. \
-		Realized utilization is therefore emergent: it equals the target when \
-		capacity is fully used and falls in demand slumps.
+	~	Production by pathway: nameplate capacity net of this year's decision \
+		retirements plus this year's new builds (same-year commissioning), at \
+		the target utilization, rationed uniformly when demand falls short.
 	|
 
 Steel Production Capacity Added During Model Run by Pathway[Steel Production Pathway\
@@ -62687,6 +62857,43 @@ Steel Production Pathway:
 		step; scrap EAF is the secondary (recycled) route. Pre-commercial \
 		pathways are gated by the SPSW shareweight time series, not by \
 		structure.
+	|
+
+Steel Reline Continuation Cost per Ton[Steel Production Pathway]=
+	SRCC Steel Reline Capital Cost per Unit Annual Capacity[Steel Production Pathway]
+	/ (
+	  SPPL Steel Pathway Plant Lifetime[Steel Production Pathway]
+	  * SYSCU Start Year Steel Capacity Utilization
+	)
+	+ Steel Pathway Operating Cost per Ton[Steel Production Pathway]
+	~	$/metric ton
+	~	Cost per ton of relining and running one more campaign: reline capital \
+		(straight-line over the campaign, per ton produced) plus operating cost \
+		including carbon exposure. Compared against the cost of replacement \
+		capacity in the reline-vs-replace choice.
+	|
+
+Steel Reline Share at Decision[Steel Production Pathway]=
+	ZIDZ(
+	  SRSW Steel Reline Shareweight
+	  * (
+	      MAX(Steel Reline Continuation Cost per Ton[Steel Production Pathway], 0.01)
+	      / MAX(Average New Steel Capacity Cost per Ton, 0.01)
+	    ) ^ IELC Industrial Equipment Logit Coefficient,
+	  SRSW Steel Reline Shareweight
+	  * (
+	      MAX(Steel Reline Continuation Cost per Ton[Steel Production Pathway], 0.01)
+	      / MAX(Average New Steel Capacity Cost per Ton, 0.01)
+	    ) ^ IELC Industrial Equipment Logit Coefficient
+	  + 1
+	)
+	~	Dmnl
+	~	Share of decision-facing capacity that relines rather than retiring: a \
+		two-option relative-cost logit (reline continuation cost vs the average \
+		new-build cost, same exponent as the pathway choice), with the SRSW \
+		calibration weight on the reline branch so default costs reproduce \
+		observed fleet-wide relining. A deterministic threshold rule is the \
+		logged alternative form, pending team preference.
 	|
 
 Steps Allowed in Same Direction With Declining Step Size=
@@ -68122,14 +68329,17 @@ Unmet Steel Production Capacity Need=
 	MAX(
 	  0,
 	  Total Steel Demand
-	  - SUM(Steel Production Capacity by Pathway[Steel Production Pathway!])
+	  - (
+	      SUM(Steel Production Capacity by Pathway[Steel Production Pathway!])
+	      - SUM(Steel Capacity Retired at Reline Decision by Pathway[Steel Production Pathway!\
+		])
+	    )
 	    * SYSCU Start Year Steel Capacity Utilization
 	)
 	~	metric tons/Year
-	~	Demand (production units) not servable by surviving nameplate capacity \
-		running at the target utilization; drives new builds allocated by the \
-		pathway logit. Realized utilization above the target is not allowed - \
-		the fleet builds rather than overdrives.
+	~	Demand (production units) not servable this year by surviving nameplate \
+		capacity net of this year's decision retirements, at the target \
+		utilization; drives same-year replacement builds via the pathway logit.
 	|
 
 URPbIC Union Representation Percentage by ISIC Code[ISIC Code]=

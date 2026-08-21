@@ -124,18 +124,55 @@ write("MASSfS", "MASSfS.csv", rows)
 # BF3/BF1 2030) are assumed to continue; cost-based/policy retirement takes
 # over in Phase 2/3. Question flagged for team: how aggressive should
 # scheduled BAU BF retirements be?
-bf_events = {2028: 1_270_000,   # Granite City BF B (reline 2007, none planned, protection expires 2027)
-             2033: 1_370_000}   # Cleveland BF6 (reline 2013, none planned, flagged end-of-life)
-ngdri_events = {2043: 1_000_000, 2044: 1_000_000}  # Nucor Louisiana share, ~30 yr from 2013
+# P2-B recast (Dan 2026-08-20): SPRS is no longer a retirement schedule but
+# tons of nameplate capacity reaching a reline-or-replace DECISION each year
+# (GEM GIST June 2026 V1 reline data: announced planned-reline years where
+# present, last completed reline + 20 yr campaign otherwise). The outcome is
+# chosen endogenously in the model. GEM iron capacities (ttpa) are scaled to
+# module nameplate (production / SYSCU) so the whole start-year stock decides.
+SCALE_BF = (24_000_000 / 0.76) / 24_595_000
+bf_decisions = {2026: 2_540_000,                          # Gary BF14 (reline announced 2026)
+                2027: 2_480_000 + 2_480_000 + 2_090_000,  # Burns Harbor C+D, Middletown BF3 (planned 2027)
+                2028: 1_270_000,                          # Granite City B (campaign end, none planned)
+                2030: 1_270_000 + 1_500_000,              # Edgar Thomson BF3+BF1 (planned 2030)
+                2033: 1_370_000,                          # Cleveland BF6 (2013+20)
+                2036: 1_361_000,                          # Gary BF8 (2016+20)
+                2038: 1_234_000,                          # Gary BF6 (2018+20)
+                2040: 1_360_000,                          # Gary BF4 (2020+20)
+                2041: 4_200_000,                          # Indiana Harbor BF7 (2021+20)
+                2042: 1_440_000}                          # Cleveland BF5 (2022+20)
+ngdri_decisions = {2040: 2_440_000,                       # Cliffs Toledo HBI (2020+20, scaled)
+                   2043: 1_300_000, 2044: 1_300_000}      # Nucor Louisiana (~30 yr from 2013, scaled)
 def sprs(pw, y):
-    if pw == "traditional BF BOF": return bf_events.get(y, 0)
-    if pw == "natural gas DRI": return ngdri_events.get(y, 0)
-    if pw == "scrap EAF": return 1_500_000
+    if pw == "traditional BF BOF": return round(bf_decisions.get(y, 0) * SCALE_BF)
+    if pw == "natural gas DRI": return ngdri_decisions.get(y, 0)
+    if pw == "scrap EAF": return 2_740_000  # 68.4 Mt nameplate fleet / ~25 yr rebuild cycle
     return 0
-rows = [["Unit: metric tons/year retired (DRAFT from GEM GIST June 2026 V1 reline data - see gem-gist-june-2026/ and replication log P12)"] + YEARS]
+rows = [["Unit: metric tons/year of nameplate capacity reaching a reline-or-replace decision (DRAFT from GEM GIST June 2026 V1; decision outcome is endogenous)"] + YEARS]
 for pw in PATHWAYS:
     rows.append([pw] + [sprs(pw, y) for y in YEARS])
 write("SPRS", "SPRS.csv", rows)
+
+# ---------------- SRCC: reline capital cost ----------------
+# Anchor: Gary BF14 full reline $350M / 2,540 ttpa ~= $138/(t/yr). Other
+# pathways: ~15% of greenfield as placeholder (no public data found).
+rcc = {"traditional BF BOF": 138, "BF BOF with CCS": 138, "natural gas DRI": 105,
+       "hydrogen DRI": 158, "molten oxide electrolysis": 150, "aqueous electrolysis": 225,
+       "scrap EAF": 75}
+rows = [["Unit: $/(metric ton/yr) reline or rebuild (DRAFT - Gary BF14 $350M/2.54Mt anchor; others ~15% of greenfield placeholder)", "Reline Capital Cost"]]
+for pw in PATHWAYS:
+    rows.append([pw, rcc[pw]])
+write("SRCC", "SRCC.csv", rows)
+
+# ---------------- SRSW: reline shareweight ----------------
+# Calibration weight on the reline branch capturing unmodeled stickiness
+# (product-mix/quality requirements, site integration, switching costs), set
+# so relining wins at default costs - reproducing the fleet-wide reline
+# behavior GEM documents - while a strong carbon tax still flips the
+# decision. DRAFT pending calibration review.
+rows = [["Unit: dimensionless (DRAFT calibration weight for the reline branch; verify against observed reline behavior)"] + YEARS,
+        ["Reline Shareweight"] + [25] * len(YEARS)]
+write("SRSW", "SRSW.csv", rows)
 
 # ---------------- SEIbPaF: literature route values, then D13 level calibration ----------------
 lit = {
