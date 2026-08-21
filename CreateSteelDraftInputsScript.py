@@ -241,3 +241,12 @@ rows = [["Unit: years (DRAFT placeholder - BF campaign/reline vs EAF life; GEM s
 for pw in PATHWAYS:
     rows.append([pw, life[pw]])
 write("SPPL", "SPPL.csv", rows)
+
+# ---------------- SPAL: asset life (split from SPPL campaign length, review F6) ----------------
+al = {"traditional BF BOF": 40, "BF BOF with CCS": 40, "natural gas DRI": 40,
+      "hydrogen DRI": 40, "molten oxide electrolysis": 30, "aqueous electrolysis": 30,
+      "scrap EAF": 40}
+rows = [["Unit: years economic asset life (DRAFT - site lives through several reline campaigns; verify)", "Asset Life"]]
+for pw in PATHWAYS:
+    rows.append([pw, al[pw]])
+write("SPAL", "SPAL.csv", rows)
