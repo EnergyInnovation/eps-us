@@ -4551,18 +4551,268 @@ BAU Demand Responsive Electricity Capacity for Electrolyzers=
 	~	MW
 	~		|
 
+BAU CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source]=
+	BAU Last Year Annual Net Energy Market Revenue per MW by Plant Type[Electricity Source]
+	+ BAU Last Year Revenue from CES Credits per Unit Electricity Output by Plant Type[Electricity Source]
+	~	$/MW
+	~		|
+
+BAU Last Year CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source]=
+	DELAY FIXED(BAU CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source], 1, 0)
+	~	$/MW
+	~		|
+
+BAU Two Years Prior CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source]=
+	DELAY FIXED(BAU Last Year CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source], 1, 0)
+	~	$/MW
+	~		|
+
+BAU Three Year Average CF Scaling Revenue for Cost Driven Retirement[Electricity Source]=
+	IF THEN ELSE(Time = INITIAL TIME,
+	  BAU CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source],
+	  IF THEN ELSE(Time = INITIAL TIME + 1,
+	    (BAU CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source]
+	     + BAU Last Year CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source]) / 2,
+	    (BAU CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source]
+	     + BAU Last Year CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source]
+	     + BAU Two Years Prior CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source]) / 3))
+	~	$/MW
+	~		|
+
+BAU Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source]=
+	ZIDZ(BAU Last Year Electricity Generation by Type[Electricity Source],
+	  BAU Last Year Electricity Generation Capacity[Electricity Source])
+	~	hours
+	~		|
+
+BAU Last Year Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source]=
+	DELAY FIXED(BAU Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source], 1, 0)
+	~	hours
+	~		|
+
+BAU Two Years Prior Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source]=
+	DELAY FIXED(BAU Last Year Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source], 1, 0)
+	~	hours
+	~		|
+
+BAU Three Year Average Fleet Generation Hours for Cost Driven Retirement[Electricity Source]=
+	IF THEN ELSE(Time = INITIAL TIME,
+	  BAU Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source],
+	  IF THEN ELSE(Time = INITIAL TIME + 1,
+	    (BAU Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source]
+	     + BAU Last Year Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source]) / 2,
+	    (BAU Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source]
+	     + BAU Last Year Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source]
+	     + BAU Two Years Prior Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source]) / 3))
+	~	hours
+	~		|
+
+BAU Viability Headroom Ratio for Cost Driven Retirement[Electricity Source]=
+	MAX(1,
+	  ZIDZ(BAU Maximum Capacity Factor after RAF[Electricity Source] * Hours per Year,
+	    BAU Three Year Average Fleet Generation Hours for Cost Driven Retirement[Electricity Source]))
+	~	Dmnl
+	~		|
+
+BAU Deep Unviability Floor for Cost Driven Retirement[Electricity Source]=
+	ZIDZ(DUVT Deep Unviability Threshold,
+	  SoFCtMbCtPR Share of Forward Costs that Must Be Covered to Prevent Retirement[Electricity Source])
+	~	Dmnl
+	~		|
+
+BAU Required Revenue for Breakeven Target[Electricity Source]=
+	BAU Last Year Annual Recurring Costs by Plant Type[Electricity Source]
+	* SoFCtMbCtPR Share of Forward Costs that Must Be Covered to Prevent Retirement[Electricity Source]
+	~	$/MW
+	~		|
+
+BAU Viability Ratio for Cost Driven Retirement[Electricity Source,Optimization Pass]=
+	ZIDZ(
+	  BAU Three Year Average CF Scaling Revenue for Cost Driven Retirement[Electricity Source]
+	    * BAU Viability Headroom Ratio for Cost Driven Retirement[Electricity Source]
+	  + BAU Predicted Capacity Payment by Plant Type for Existing Plants[Electricity Source,Optimization Pass],
+	  BAU Required Revenue for Breakeven Target[Electricity Source])
+	~	Dmnl
+	~		|
+
+BAU Breakeven Capacity for Cost Driven Retirement[Electricity Source,Optimization Pass]=
+	IF THEN ELSE(BAU Viability Ratio for Cost Driven Retirement[Electricity Source,Optimization Pass] >= 1,
+	  IF THEN ELSE(BAU Required Revenue for Breakeven Target[Electricity Source]
+	      - BAU Predicted Capacity Payment by Plant Type for Existing Plants[Electricity Source,Optimization Pass] > 0,
+	    BAU Last Year Electricity Generation Capacity[Electricity Source]
+	      * BAU Three Year Average CF Scaling Revenue for Cost Driven Retirement[Electricity Source]
+	      / (BAU Required Revenue for Breakeven Target[Electricity Source]
+	         - BAU Predicted Capacity Payment by Plant Type for Existing Plants[Electricity Source,Optimization Pass]),
+	    BAU Last Year Electricity Generation Capacity[Electricity Source]),
+	  BAU Last Year Electricity Generation Capacity[Electricity Source]
+	    * ZIDZ(1, BAU Viability Headroom Ratio for Cost Driven Retirement[Electricity Source])
+	    * MAX(0, ZIDZ(BAU Viability Ratio for Cost Driven Retirement[Electricity Source,Optimization Pass]
+	              - BAU Deep Unviability Floor for Cost Driven Retirement[Electricity Source],
+	              1 - BAU Deep Unviability Floor for Cost Driven Retirement[Electricity Source])))
+	~	MW
+	~		|
+
+BAU Cost Driven Retirement Gap[Electricity Source,Optimization Pass]=
+	MAX(0, BAU Last Year Electricity Generation Capacity[Electricity Source]
+	  - BAU Breakeven Capacity for Cost Driven Retirement[Electricity Source,Optimization Pass])
+	~	MW
+	~		|
+
+BAU Cleared Viability Ratio for Cost Driven Retirement[Electricity Source]=
+	SUM(BAU Viability Ratio for Cost Driven Retirement[Electricity Source,last pass!])
+	~	Dmnl
+	~		|
+
+BAU Last Year Cleared Viability Ratio for Cost Driven Retirement[Electricity Source]=
+	DELAY FIXED(BAU Cleared Viability Ratio for Cost Driven Retirement[Electricity Source], 1, 1)
+	~	Dmnl
+	~		|
+
+BAU Boolean Subject to Economic Retirement[Electricity Source]=
+	IF THEN ELSE(SoFCtMbCtPR Share of Forward Costs that Must Be Covered to Prevent Retirement[Electricity Source]
+	  > 0, 1, 0)
+	~	Dmnl
+	~		|
+
+BAU Boolean Deep Unviable for Cost Driven Retirement[Electricity Source]=
+	BAU Boolean Subject to Economic Retirement[Electricity Source]
+	* IF THEN ELSE(BAU Required Revenue for Breakeven Target[Electricity Source] > 0, 1, 0)
+	* IF THEN ELSE(BAU Last Year Cleared Viability Ratio for Cost Driven Retirement[Electricity Source]
+	  < BAU Deep Unviability Floor for Cost Driven Retirement[Electricity Source], 1, 0)
+	~	Dmnl
+	~		|
+
+BAU Last Year Boolean Deep Unviable for Cost Driven Retirement[Electricity Source]=
+	DELAY FIXED(BAU Boolean Deep Unviable for Cost Driven Retirement[Electricity Source], 1, 0)
+	~	Dmnl
+	~		|
+
+BAU Two Years Prior Boolean Deep Unviable for Cost Driven Retirement[Electricity Source]=
+	DELAY FIXED(BAU Last Year Boolean Deep Unviable for Cost Driven Retirement[Electricity Source], 1, 0)
+	~	Dmnl
+	~		|
+
+BAU Boolean Persistently Deep Unviable for Cost Driven Retirement[Electricity Source]=
+	BAU Boolean Deep Unviable for Cost Driven Retirement[Electricity Source]
+	* BAU Last Year Boolean Deep Unviable for Cost Driven Retirement[Electricity Source]
+	* BAU Two Years Prior Boolean Deep Unviable for Cost Driven Retirement[Electricity Source]
+	~	Dmnl
+	~		|
+
+BAU Last Year Boolean Persistently Deep Unviable for Cost Driven Retirement[Electricity Source]=
+	DELAY FIXED(BAU Boolean Persistently Deep Unviable for Cost Driven Retirement[Electricity Source], 1, 0)
+	~	Dmnl
+	~		|
+
+BAU Newly Persistently Deep Unviable for Cost Driven Retirement[Electricity Source]=
+	BAU Boolean Persistently Deep Unviable for Cost Driven Retirement[Electricity Source]
+	* (1 - BAU Last Year Boolean Persistently Deep Unviable for Cost Driven Retirement[Electricity Source])
+	~	Dmnl
+	~		|
+
+BAU Unviable Fleet Retirement Schedule Base[Electricity Source]= INTEG (
+	BAU Change in Unviable Fleet Retirement Schedule Base[Electricity Source],
+	0)
+	~	MW
+	~		|
+
+BAU Change in Unviable Fleet Retirement Schedule Base[Electricity Source]=
+	( BAU Newly Persistently Deep Unviable for Cost Driven Retirement[Electricity Source]
+	    * BAU Max Capacity that Can be Retired Economically by Plant Type[Electricity Source]
+	  - (1 - BAU Boolean Persistently Deep Unviable for Cost Driven Retirement[Electricity Source])
+	    * BAU Unviable Fleet Retirement Schedule Base[Electricity Source]
+	) / One Year
+	~	MW/Year
+	~		|
+
+BAU Unviable Fleet Scheduled Retirement[Electricity Source]=
+	BAU Boolean Persistently Deep Unviable for Cost Driven Retirement[Electricity Source]
+	* ZIDZ(
+	    (BAU Unviable Fleet Retirement Schedule Base[Electricity Source]
+	     + BAU Newly Persistently Deep Unviable for Cost Driven Retirement[Electricity Source]
+	       * BAU Max Capacity that Can be Retired Economically by Plant Type[Electricity Source])
+	    * One Year,
+	    ATfUF Retirement Schedule Length for Unviable Fleets[Electricity Source])
+	~	MW
+	~		|
+
+BAU Boolean Cost Driven Retirement Gate at Last Pass[Electricity Source]=
+	IF THEN ELSE(SUM(BAU Average Three Year Prior Net Loss per Unit Output[Electricity Source,last pass!]) > 0, 1, 0)
+	~	Dmnl
+	~		|
+
+BAU Pending Cost Driven Retirements[Electricity Source]= INTEG(
+	BAU Change in Pending Cost Driven Retirements[Electricity Source], 0)
+	~	MW
+	~		|
+
+BAU Change in Pending Cost Driven Retirements[Electricity Source]=
+	MAX(-BAU Pending Cost Driven Retirements[Electricity Source],
+	  BAU Boolean Cost Driven Retirement Gate at Last Pass[Electricity Source]
+	    * (SUM(BAU Desired Cost Driven Capacity Retirements[Electricity Source,last pass!])
+	       - SUM(BAU Economic Capacity Retirements by Optimization Pass[Electricity Source,last pass!]))
+	  - (1 - BAU Boolean Cost Driven Retirement Gate at Last Pass[Electricity Source])
+	    * BAU Pending Cost Driven Retirements[Electricity Source])
+	/ One Year
+	~	MW/Year
+	~		|
+
+BAU Viability Ratio for Cost Driven Retirement Excluding Capacity Payment[Electricity Source]=
+	ZIDZ(
+	  BAU Three Year Average CF Scaling Revenue for Cost Driven Retirement[Electricity Source]
+	    * BAU Viability Headroom Ratio for Cost Driven Retirement[Electricity Source],
+	  BAU Required Revenue for Breakeven Target[Electricity Source])
+	~	Dmnl
+	~		|
+
+BAU Breakeven Capacity for Cost Driven Retirement Excluding Capacity Payment[Electricity Source]=
+	IF THEN ELSE(BAU Viability Ratio for Cost Driven Retirement Excluding Capacity Payment[Electricity Source] >= 1,
+	  BAU Last Year Electricity Generation Capacity[Electricity Source]
+	    * ZIDZ(BAU Three Year Average CF Scaling Revenue for Cost Driven Retirement[Electricity Source],
+	        BAU Required Revenue for Breakeven Target[Electricity Source]),
+	  BAU Last Year Electricity Generation Capacity[Electricity Source]
+	    * ZIDZ(1, BAU Viability Headroom Ratio for Cost Driven Retirement[Electricity Source])
+	    * MAX(0, (BAU Viability Ratio for Cost Driven Retirement Excluding Capacity Payment[Electricity Source]
+	              - DUVT Deep Unviability Threshold) / (1 - DUVT Deep Unviability Threshold)))
+	~	MW
+	~		|
+
+BAU Cost Driven Retirement Gap Excluding Capacity Payment[Electricity Source]=
+	MAX(0, BAU Last Year Electricity Generation Capacity[Electricity Source]
+	  - BAU Breakeven Capacity for Cost Driven Retirement Excluding Capacity Payment[Electricity Source])
+	~	MW
+	~		|
+
 BAU Desired Cost Driven Capacity Retirements[Electricity Source,Optimization Pass]=
-	BAU Average Three Year Prior Net Loss per Unit Output[Electricity Source,Optimization Pass\
-		]
-	* CRpUNL Capacity Retired per Unit Net Loss[Electricity Source]
+	IF THEN ELSE(BAU Boolean Subject to Economic Retirement[Electricity Source] > 0
+	  :AND: BAU Average Three Year Prior Net Loss per Unit Output[Electricity Source,Optimization Pass] > 0,
+	  MIN(
+	    MAX(
+	      ZIDZ(BAU Cost Driven Retirement Gap[Electricity Source,Optimization Pass] * One Year,
+	        ATfER Adjustment Time for Economic Retirements[Electricity Source]),
+	      BAU Unviable Fleet Scheduled Retirement[Electricity Source]),
+	    MAX(
+	      MSoCRiaSY Maximum Share of Capacity Retired in a Single Year[Electricity Source]
+	        * BAU Last Year Electricity Generation Capacity[Electricity Source],
+	      KMPPC Typical Units Retired in a Peak Year[Electricity Source]
+	        * MPPC Minimum Power Plant Capacity[Electricity Source])),
+	  0)
 	~	MW
 	~		|
 
 BAU Desired Cost Driven Capacity Retirements Excluding Capacity Payment[Electricity Source\
 		]=
-	BAU Average Three Year Prior Net Loss per Unit Output Excluding Capacity Payment[Electricity Source\
-		]
-	* CRpUNL Capacity Retired per Unit Net Loss[Electricity Source]
+	IF THEN ELSE(BAU Boolean Subject to Economic Retirement[Electricity Source] > 0
+	  :AND: BAU Average Three Year Prior Net Loss per Unit Output Excluding Capacity Payment[Electricity Source] > 0,
+	  MIN(
+	    ZIDZ(BAU Cost Driven Retirement Gap Excluding Capacity Payment[Electricity Source] * One Year,
+	      ATfER Adjustment Time for Economic Retirements[Electricity Source]),
+	    MAX(
+	      MSoCRiaSY Maximum Share of Capacity Retired in a Single Year[Electricity Source]
+	        * BAU Last Year Electricity Generation Capacity[Electricity Source],
+	      KMPPC Typical Units Retired in a Peak Year[Electricity Source]
+	        * MPPC Minimum Power Plant Capacity[Electricity Source])),
+	  0)
 	~	MW
 	~		|
 
@@ -4835,14 +5085,16 @@ BAU Duration Multiplier for Subsidies per Unit Electricity Output[Electricity So
 
 BAU Economic Capacity Retirements by Optimization Pass[Electricity Source,Optimization Pass\
 		]=
-	QUANTUM(
-	  MIN(BAU Desired Cost Driven Capacity Retirements[Electricity Source,Optimization Pass\
-		],
-	    BAU Max Capacity that Can be Retired Economically by Plant Type[Electricity Source\
-		]),
-	
-	  MPPC Minimum Power Plant Capacity[Electricity Source]
-	 )
+	IF THEN ELSE(
+	  BAU Desired Cost Driven Capacity Retirements[Electricity Source,Optimization Pass] > 0
+	  :AND: BAU Max Capacity that Can be Retired Economically by Plant Type[Electricity Source]
+	        < 2 * MPPC Minimum Power Plant Capacity[Electricity Source],
+	  BAU Max Capacity that Can be Retired Economically by Plant Type[Electricity Source],
+	  QUANTUM(
+	    MIN(BAU Pending Cost Driven Retirements[Electricity Source]
+	        + BAU Desired Cost Driven Capacity Retirements[Electricity Source,Optimization Pass],
+	      BAU Max Capacity that Can be Retired Economically by Plant Type[Electricity Source]),
+	    MPPC Minimum Power Plant Capacity[Electricity Source]))
 	~	MW
 	~	If the same power plant is scheduled to retire and is also uneconomic to \
 		operate, that plant retires only once, not twice.  Therefore, we must use \
@@ -9006,11 +9258,12 @@ BAU Max Capacity Buildable This Year[Electricity Source]=
 	~		|
 
 BAU Max Capacity that Can be Retired Economically by Plant Type[Electricity Source]=
-	SUM(
-	  BAU Last Year Electricity Generation Capacity by Vintage[Electricity Source,Vintage\
-		!]
-	  * BAU Retirable Vintages by Year[Vintage!]
-	)
+	MAX(0,
+	  SUM(
+	    BAU Last Year Electricity Generation Capacity by Vintage[Electricity Source,Vintage!]
+	    * BAU Retirable Vintages by Year[Vintage!]
+	  )
+	  - BCRbQ BAU Capacity Retirements before Quantization[Electricity Source])
 	~	MW
 	~		|
 
@@ -14503,10 +14756,10 @@ BAU Water Withdrawn by Power Plants[Electricity Source]=
 BAU Weighted Average Annual Capital Costs per Unit Capacity[Electricity Source]=
 	ZIDZ(
 	  SUM(
-	   CCaMC Annual CAPEX per Unit Capacity[Electricity Source,Vintage!]
+	   Annual CAPEX per Unit Capacity This Year[Electricity Source,Vintage!]
 	    * BAU Electricity Generation Capacity by Vintage[Electricity Source,Vintage!]
 	  ),
-	
+
 	   BAU Electricity Generation Capacity[Electricity Source]
 	)
 	~	$/MW
@@ -24635,45 +24888,366 @@ demographic trait excluding age bracket:
 	~	
 	~		|
 
+CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source]=
+	Last Year Annual Net Energy Market Revenue per MW by Plant Type[Electricity Source]
+	+ Last Year Revenue from CES Credits per Unit Electricity Output by Plant Type[Electricity Source]
+	~	$/MW
+	~		|
+
+Last Year CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source]=
+	DELAY FIXED(CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source], 1, 0)
+	~	$/MW
+	~		|
+
+Two Years Prior CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source]=
+	DELAY FIXED(Last Year CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source], 1, 0)
+	~	$/MW
+	~		|
+
+Three Year Average CF Scaling Revenue for Cost Driven Retirement[Electricity Source]=
+	IF THEN ELSE(Time = INITIAL TIME,
+	  CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source],
+	  IF THEN ELSE(Time = INITIAL TIME + 1,
+	    (CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source]
+	     + Last Year CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source]) / 2,
+	    (CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source]
+	     + Last Year CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source]
+	     + Two Years Prior CF Scaling Revenue per Unit Capacity for Cost Driven Retirement[Electricity Source]) / 3))
+	~	$/MW
+	~		|
+
+Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source]=
+	ZIDZ(Last Year Electricity Generation by Type[Electricity Source],
+	  Last Year Electricity Generation Capacity[Electricity Source])
+	~	hours
+	~		|
+
+Last Year Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source]=
+	DELAY FIXED(Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source], 1, 0)
+	~	hours
+	~		|
+
+Two Years Prior Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source]=
+	DELAY FIXED(Last Year Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source], 1, 0)
+	~	hours
+	~		|
+
+Three Year Average Fleet Generation Hours for Cost Driven Retirement[Electricity Source]=
+	IF THEN ELSE(Time = INITIAL TIME,
+	  Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source],
+	  IF THEN ELSE(Time = INITIAL TIME + 1,
+	    (Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source]
+	     + Last Year Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source]) / 2,
+	    (Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source]
+	     + Last Year Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source]
+	     + Two Years Prior Fleet Average Generation Hours for Cost Driven Retirement[Electricity Source]) / 3))
+	~	hours
+	~		|
+
+Viability Headroom Ratio for Cost Driven Retirement[Electricity Source]=
+	MAX(1,
+	  ZIDZ(Maximum Capacity Factor after RAF[Electricity Source] * Hours per Year,
+	    Three Year Average Fleet Generation Hours for Cost Driven Retirement[Electricity Source]))
+	~	Dmnl
+	~		|
+
+Deep Unviability Floor for Cost Driven Retirement[Electricity Source]=
+	ZIDZ(DUVT Deep Unviability Threshold,
+	  SoFCtMbCtPR Share of Forward Costs that Must Be Covered to Prevent Retirement[Electricity Source])
+	~	Dmnl
+	~		|
+
+Required Revenue for Breakeven Target[Electricity Source]=
+	Last Year Annual Recurring Costs by Plant Type[Electricity Source]
+	* SoFCtMbCtPR Share of Forward Costs that Must Be Covered to Prevent Retirement[Electricity Source]
+	~	$/MW
+	~		|
+
+Viability Ratio for Cost Driven Retirement[Electricity Source,Optimization Pass]=
+	ZIDZ(
+	  Three Year Average CF Scaling Revenue for Cost Driven Retirement[Electricity Source]
+	    * Viability Headroom Ratio for Cost Driven Retirement[Electricity Source]
+	  + Predicted Capacity Payment by Plant Type for Existing Plants[Electricity Source,Optimization Pass],
+	  Required Revenue for Breakeven Target[Electricity Source])
+	~	Dmnl
+	~		|
+
+Breakeven Capacity for Cost Driven Retirement[Electricity Source,Optimization Pass]=
+	IF THEN ELSE(Viability Ratio for Cost Driven Retirement[Electricity Source,Optimization Pass] >= 1,
+	  IF THEN ELSE(Required Revenue for Breakeven Target[Electricity Source]
+	      - Predicted Capacity Payment by Plant Type for Existing Plants[Electricity Source,Optimization Pass] > 0,
+	    Last Year Electricity Generation Capacity[Electricity Source]
+	      * Three Year Average CF Scaling Revenue for Cost Driven Retirement[Electricity Source]
+	      / (Required Revenue for Breakeven Target[Electricity Source]
+	         - Predicted Capacity Payment by Plant Type for Existing Plants[Electricity Source,Optimization Pass]),
+	    Last Year Electricity Generation Capacity[Electricity Source]),
+	  Last Year Electricity Generation Capacity[Electricity Source]
+	    * ZIDZ(1, Viability Headroom Ratio for Cost Driven Retirement[Electricity Source])
+	    * MAX(0, ZIDZ(Viability Ratio for Cost Driven Retirement[Electricity Source,Optimization Pass]
+	              - Deep Unviability Floor for Cost Driven Retirement[Electricity Source],
+	              1 - Deep Unviability Floor for Cost Driven Retirement[Electricity Source])))
+	~	MW
+	~		|
+
+Cost Driven Retirement Gap[Electricity Source,Optimization Pass]=
+	MAX(0, Last Year Electricity Generation Capacity[Electricity Source]
+	  - Breakeven Capacity for Cost Driven Retirement[Electricity Source,Optimization Pass])
+	~	MW
+	~		|
+
+Cleared Viability Ratio for Cost Driven Retirement[Electricity Source]=
+	SUM(Viability Ratio for Cost Driven Retirement[Electricity Source,last pass!])
+	~	Dmnl
+	~		|
+
+Last Year Cleared Viability Ratio for Cost Driven Retirement[Electricity Source]=
+	DELAY FIXED(Cleared Viability Ratio for Cost Driven Retirement[Electricity Source], 1, 1)
+	~	Dmnl
+	~		|
+
+Boolean Subject to Economic Retirement[Electricity Source]=
+	IF THEN ELSE(SoFCtMbCtPR Share of Forward Costs that Must Be Covered to Prevent Retirement[Electricity Source]
+	  > 0, 1, 0)
+	~	Dmnl
+	~		|
+
+Boolean Deep Unviable for Cost Driven Retirement[Electricity Source]=
+	Boolean Subject to Economic Retirement[Electricity Source]
+	* IF THEN ELSE(Required Revenue for Breakeven Target[Electricity Source] > 0, 1, 0)
+	* IF THEN ELSE(Last Year Cleared Viability Ratio for Cost Driven Retirement[Electricity Source]
+	  < Deep Unviability Floor for Cost Driven Retirement[Electricity Source], 1, 0)
+	~	Dmnl
+	~		|
+
+Last Year Boolean Deep Unviable for Cost Driven Retirement[Electricity Source]=
+	DELAY FIXED(Boolean Deep Unviable for Cost Driven Retirement[Electricity Source], 1, 0)
+	~	Dmnl
+	~		|
+
+Two Years Prior Boolean Deep Unviable for Cost Driven Retirement[Electricity Source]=
+	DELAY FIXED(Last Year Boolean Deep Unviable for Cost Driven Retirement[Electricity Source], 1, 0)
+	~	Dmnl
+	~		|
+
+Boolean Persistently Deep Unviable for Cost Driven Retirement[Electricity Source]=
+	Boolean Deep Unviable for Cost Driven Retirement[Electricity Source]
+	* Last Year Boolean Deep Unviable for Cost Driven Retirement[Electricity Source]
+	* Two Years Prior Boolean Deep Unviable for Cost Driven Retirement[Electricity Source]
+	~	Dmnl
+	~		|
+
+Last Year Boolean Persistently Deep Unviable for Cost Driven Retirement[Electricity Source]=
+	DELAY FIXED(Boolean Persistently Deep Unviable for Cost Driven Retirement[Electricity Source], 1, 0)
+	~	Dmnl
+	~		|
+
+Newly Persistently Deep Unviable for Cost Driven Retirement[Electricity Source]=
+	Boolean Persistently Deep Unviable for Cost Driven Retirement[Electricity Source]
+	* (1 - Last Year Boolean Persistently Deep Unviable for Cost Driven Retirement[Electricity Source])
+	~	Dmnl
+	~		|
+
+Unviable Fleet Retirement Schedule Base[Electricity Source]= INTEG (
+	Change in Unviable Fleet Retirement Schedule Base[Electricity Source],
+	0)
+	~	MW
+	~		|
+
+Change in Unviable Fleet Retirement Schedule Base[Electricity Source]=
+	( Newly Persistently Deep Unviable for Cost Driven Retirement[Electricity Source]
+	    * Max Capacity that Can be Retired Economically by Plant Type[Electricity Source]
+	  - (1 - Boolean Persistently Deep Unviable for Cost Driven Retirement[Electricity Source])
+	    * Unviable Fleet Retirement Schedule Base[Electricity Source]
+	) / One Year
+	~	MW/Year
+	~		|
+
+Unviable Fleet Scheduled Retirement[Electricity Source]=
+	Boolean Persistently Deep Unviable for Cost Driven Retirement[Electricity Source]
+	* ZIDZ(
+	    (Unviable Fleet Retirement Schedule Base[Electricity Source]
+	     + Newly Persistently Deep Unviable for Cost Driven Retirement[Electricity Source]
+	       * Max Capacity that Can be Retired Economically by Plant Type[Electricity Source])
+	    * One Year,
+	    ATfUF Retirement Schedule Length for Unviable Fleets[Electricity Source])
+	~	MW
+	~		|
+
+Boolean Cost Driven Retirement Gate at Last Pass[Electricity Source]=
+	IF THEN ELSE(SUM(Average Three Year Prior Net Loss per Unit Output[Electricity Source,last pass!]) > 0, 1, 0)
+	~	Dmnl
+	~		|
+
+Pending Cost Driven Retirements[Electricity Source]= INTEG(
+	Change in Pending Cost Driven Retirements[Electricity Source], 0)
+	~	MW
+	~		|
+
+Change in Pending Cost Driven Retirements[Electricity Source]=
+	MAX(-Pending Cost Driven Retirements[Electricity Source],
+	  Boolean Cost Driven Retirement Gate at Last Pass[Electricity Source]
+	    * (SUM(Desired Cost Driven Capacity Retirements[Electricity Source,last pass!])
+	       - SUM(Economic Capacity Retirements by Optimization Pass[Electricity Source,last pass!]))
+	  - (1 - Boolean Cost Driven Retirement Gate at Last Pass[Electricity Source])
+	    * Pending Cost Driven Retirements[Electricity Source])
+	/ One Year
+	~	MW/Year
+	~		|
+
+Viability Ratio for Cost Driven Retirement Excluding Capacity Payment[Electricity Source]=
+	ZIDZ(
+	  Three Year Average CF Scaling Revenue for Cost Driven Retirement[Electricity Source]
+	    * Viability Headroom Ratio for Cost Driven Retirement[Electricity Source],
+	  Required Revenue for Breakeven Target[Electricity Source])
+	~	Dmnl
+	~		|
+
+Breakeven Capacity for Cost Driven Retirement Excluding Capacity Payment[Electricity Source]=
+	IF THEN ELSE(Viability Ratio for Cost Driven Retirement Excluding Capacity Payment[Electricity Source] >= 1,
+	  Last Year Electricity Generation Capacity[Electricity Source]
+	    * ZIDZ(Three Year Average CF Scaling Revenue for Cost Driven Retirement[Electricity Source],
+	        Required Revenue for Breakeven Target[Electricity Source]),
+	  Last Year Electricity Generation Capacity[Electricity Source]
+	    * ZIDZ(1, Viability Headroom Ratio for Cost Driven Retirement[Electricity Source])
+	    * MAX(0, (Viability Ratio for Cost Driven Retirement Excluding Capacity Payment[Electricity Source]
+	              - DUVT Deep Unviability Threshold) / (1 - DUVT Deep Unviability Threshold)))
+	~	MW
+	~		|
+
+Cost Driven Retirement Gap Excluding Capacity Payment[Electricity Source]=
+	MAX(0, Last Year Electricity Generation Capacity[Electricity Source]
+	  - Breakeven Capacity for Cost Driven Retirement Excluding Capacity Payment[Electricity Source])
+	~	MW
+	~		|
+
+ATfER Adjustment Time for Economic Retirements[Electricity Source]=
+	GET DIRECT CONSTANTS(
+	   'InputData/elec/ATfER/ATfER.csv',
+	   ',',
+	   'B2*'
+	)
+	~	year
+	~		|
+
+ATfUF Retirement Schedule Length for Unviable Fleets[Electricity Source]=
+	GET DIRECT CONSTANTS(
+	   'InputData/elec/ATfUF/ATfUF.csv',
+	   ',',
+	   'B2*'
+	)
+	~	year
+	~		|
+
+MSoCRiaSY Maximum Share of Capacity Retired in a Single Year[Electricity Source]=
+	GET DIRECT CONSTANTS(
+	   'InputData/elec/MSoCRiaSY/MSoCRiaSY.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Dmnl
+	~		|
+
+KMPPC Typical Units Retired in a Peak Year[Electricity Source]=
+	GET DIRECT CONSTANTS(
+	   'InputData/elec/KMPPC/KMPPC.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Dmnl
+	~		|
+
+DUVT Deep Unviability Threshold=
+	GET DIRECT CONSTANTS(
+	   'InputData/elec/DUVT/DUVT.csv',
+	   ',',
+	   'B2'
+	)
+	~	Dmnl
+	~		|
+
+ACXAGE Annual Sustaining CAPEX Base per Unit Capacity[Electricity Source]=
+	GET DIRECT CONSTANTS(
+	   'InputData/elec/ACXAGE/ACXAGE-base.csv',
+	   ',',
+	   'B2*'
+	)
+	~	$/MW
+	~		|
+
+ACXAGE Annual Sustaining CAPEX Age Slope[Electricity Source]=
+	GET DIRECT CONSTANTS(
+	   'InputData/elec/ACXAGE/ACXAGE-slope.csv',
+	   ',',
+	   'B2*'
+	)
+	~	$/MW
+	~		|
+
+ACXAGE Annual Sustaining CAPEX Adder Over 30 Years[Electricity Source]=
+	GET DIRECT CONSTANTS(
+	   'InputData/elec/ACXAGE/ACXAGE-adder30.csv',
+	   ',',
+	   'B2*'
+	)
+	~	$/MW
+	~		|
+
+ACXAGE Annual Sustaining CAPEX Incremental Adder Over 40 Years[Electricity Source]=
+	GET DIRECT CONSTANTS(
+	   'InputData/elec/ACXAGE/ACXAGE-adder40.csv',
+	   ',',
+	   'B2*'
+	)
+	~	$/MW
+	~		|
+
+Age of Vintage in Years[Vintage]=
+	Time/One Year - Vintage to Year Mapping[Vintage]
+	~	Dmnl
+	~		|
+
+Annual CAPEX per Unit Capacity This Year[Electricity Source,Vintage]=
+	MAX(0,
+	  ACXAGE Annual Sustaining CAPEX Base per Unit Capacity[Electricity Source]
+	  + ACXAGE Annual Sustaining CAPEX Age Slope[Electricity Source]
+	    * MAX(0, Age of Vintage in Years[Vintage])
+	  + ACXAGE Annual Sustaining CAPEX Adder Over 30 Years[Electricity Source]
+	    * IF THEN ELSE(Age of Vintage in Years[Vintage] > 30, 1, 0)
+	  + ACXAGE Annual Sustaining CAPEX Incremental Adder Over 40 Years[Electricity Source]
+	    * IF THEN ELSE(Age of Vintage in Years[Vintage] > 40, 1, 0))
+	~	$/MW
+	~		|
+
 Desired Cost Driven Capacity Retirements[Electricity Source,Optimization Pass]=
-	{MAX(
-	  0,
-	
-	  IF THEN ELSE(
-	    Time = INITIAL TIME + 1 :OR: Time = INITIAL TIME,
-	
-	    Net Loss per Unit Output[Electricity Source],
-	
-	    IF THEN ELSE(
-	      Time = INITIAL TIME + 2,
-	
-	      MIN(
-	        Net Loss per Unit Output[Electricity Source],
-	        Last Year Net Loss per Unit Output[Electricity Source]
-	      ),
-	
-	      MIN(
-	        MIN(
-	          Net Loss per Unit Output[Electricity Source],
-	          Last Year Net Loss per Unit Output[Electricity Source]
-	        ),
-	        Two Years Prior Net Loss per Unit Output[Electricity Source]
-	      )
-	    )
-	  )
-	)}
-	
-	Average Three Year Prior Net Loss per Unit Output[Electricity Source,Optimization Pass\
-		]
-	* CRpUNL Capacity Retired per Unit Net Loss[Electricity Source]
+	IF THEN ELSE(Boolean Subject to Economic Retirement[Electricity Source] > 0
+	  :AND: Average Three Year Prior Net Loss per Unit Output[Electricity Source,Optimization Pass] > 0,
+	  MIN(
+	    MAX(
+	      ZIDZ(Cost Driven Retirement Gap[Electricity Source,Optimization Pass] * One Year,
+	        ATfER Adjustment Time for Economic Retirements[Electricity Source]),
+	      Unviable Fleet Scheduled Retirement[Electricity Source]),
+	    MAX(
+	      MSoCRiaSY Maximum Share of Capacity Retired in a Single Year[Electricity Source]
+	        * Last Year Electricity Generation Capacity[Electricity Source],
+	      KMPPC Typical Units Retired in a Peak Year[Electricity Source]
+	        * MPPC Minimum Power Plant Capacity[Electricity Source])),
+	  0)
 	~	MW
 	~		|
 
 Desired Cost Driven Capacity Retirements Excluding Capacity Payment[Electricity Source\
 		]=
-	Average Three Year Prior Net Loss per Unit Output Excluding Capacity Payment[Electricity Source\
-		]
-	* CRpUNL Capacity Retired per Unit Net Loss[Electricity Source]
+	IF THEN ELSE(Boolean Subject to Economic Retirement[Electricity Source] > 0
+	  :AND: Average Three Year Prior Net Loss per Unit Output Excluding Capacity Payment[Electricity Source] > 0,
+	  MIN(
+	    ZIDZ(Cost Driven Retirement Gap Excluding Capacity Payment[Electricity Source] * One Year,
+	      ATfER Adjustment Time for Economic Retirements[Electricity Source]),
+	    MAX(
+	      MSoCRiaSY Maximum Share of Capacity Retired in a Single Year[Electricity Source]
+	        * Last Year Electricity Generation Capacity[Electricity Source],
+	      KMPPC Typical Units Retired in a Peak Year[Electricity Source]
+	        * MPPC Minimum Power Plant Capacity[Electricity Source])),
+	  0)
 	~	MW
 	~		|
 
@@ -25688,14 +26262,16 @@ Economic Benefit from Avoided Climate Damages=
 
 Economic Capacity Retirements by Optimization Pass[Electricity Source,Optimization Pass\
 		]=
-	QUANTUM(
-	  MIN(Desired Cost Driven Capacity Retirements[Electricity Source,Optimization Pass]\
-		,
-	    Max Capacity that Can be Retired Economically by Plant Type[Electricity Source])\
-		,
-	
-	  MPPC Minimum Power Plant Capacity[Electricity Source]
-	 )
+	IF THEN ELSE(
+	  Desired Cost Driven Capacity Retirements[Electricity Source,Optimization Pass] > 0
+	  :AND: Max Capacity that Can be Retired Economically by Plant Type[Electricity Source]
+	        < 2 * MPPC Minimum Power Plant Capacity[Electricity Source],
+	  Max Capacity that Can be Retired Economically by Plant Type[Electricity Source],
+	  QUANTUM(
+	    MIN(Pending Cost Driven Retirements[Electricity Source]
+	        + Desired Cost Driven Capacity Retirements[Electricity Source,Optimization Pass],
+	      Max Capacity that Can be Retired Economically by Plant Type[Electricity Source]),
+	    MPPC Minimum Power Plant Capacity[Electricity Source]))
 	~	MW
 	~	If the same power plant is scheduled to retire and is also uneconomic to \
 		operate, that plant retires only once, not twice.  Therefore, we must use \
@@ -36611,10 +37187,12 @@ Max Capacity Buildable This Year[Electricity Source]=
 	~		|
 
 Max Capacity that Can be Retired Economically by Plant Type[Electricity Source]=
-	SUM(
-	  Last Year Electricity Generation Capacity by Vintage[Electricity Source,Vintage!]
-	  * Retirable Vintages by Year[Vintage!]
-	)
+	MAX(0,
+	  SUM(
+	    Last Year Electricity Generation Capacity by Vintage[Electricity Source,Vintage!]
+	    * Retirable Vintages by Year[Vintage!]
+	  )
+	  - Planned and Policy Mandated Capacity Retirements[Electricity Source])
 	~	MW
 	~		|
 
@@ -54013,10 +54591,10 @@ Water Withdrawn by Power Plants[Electricity Source]=
 Weighted Average Annual Capital Costs per Unit Capacity[Electricity Source]=
 	ZIDZ(
 	  SUM(
-	   CCaMC Annual CAPEX per Unit Capacity[Electricity Source,Vintage!]
+	   Annual CAPEX per Unit Capacity This Year[Electricity Source,Vintage!]
 	    * Electricity Generation Capacity by Vintage[Electricity Source,Vintage!]
 	  ),
-	
+
 	   Electricity Generation Capacity[Electricity Source]
 	)
 	~	$/MW
