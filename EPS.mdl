@@ -4330,6 +4330,21 @@ BAU Cement Module Energy Use by Fuel Type[Industrial Fuel]=
 	~	BAU twin of Cement Module Energy Use by Fuel Type.
 	|
 
+BAU Cement Module Wired Energy Use by Fuel Type[Industrial Fuel]=
+	BAU Cement Module Energy Use by Fuel Type[Industrial Fuel]
+	* (1 - Cement Fuel Feedstock Share[Industrial Fuel])
+	* Cement Fuel Wiring Mask[Industrial Fuel]
+	~	BTU/Year
+	~	BAU twin of Cement Module Wired Energy Use by Fuel Type.
+	|
+
+BAU Cement Module Wired Feedstock Use by Fuel Type[Industrial Fuel]=
+	BAU Cement Module Energy Use by Fuel Type[Industrial Fuel]
+	* Cement Fuel Feedstock Share[Industrial Fuel]
+	~	BTU/Year
+	~	BAU twin of Cement Module Wired Feedstock Use by Fuel Type.
+	|
+
 BAU Cement Pathway Choice Weight[Cement Production Pathway]=
 	10000
 	* CPSW Cement Pathway Shareweight[Cement Production Pathway]
@@ -4362,6 +4377,99 @@ BAU Cement Pathway Levelized Cost per Ton[Cement Production Pathway]=
 		until Phase 2a). Later phases upgrade the capital term to the \
 		financing-annuity basis; non-energy variable costs are omitted \
 		because shared components cancel in the cost-ratio logit.
+	|
+
+BAU Cement Residual Feedstock Use[Industrial Fuel]=
+	BIFU BAU Industrial Fuel Use as Feedstock[cement and other nonmetallic minerals 239\
+		,Industrial Fuel]
+	* (1 + Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment[industry sector\
+		])
+	* (1 - Cement Carveout Share of Feedstock by Fuel[Industrial Fuel])
+	~	BTU/Year
+	~	The non-cement residual of 239's feedstock use: the generic data- \
+		driven computation (BIFUaF with the exogenous GDP adjustment, \
+		duplicated from the main branch of BAU Industrial Feedstock Use \
+		after Adjustments - mirror edits) scaled by one minus the cement \
+		module's feedstock share. In practice near zero for heavy or \
+		residual fuel oil (the module owns the petcoke stream) and the full \
+		generic value for every other fuel.
+	|
+
+BAU Cement Generic Process Energy by Fuel and Process[Industrial Fuel,industrial process end use\
+		] :EXCEPT: [electricity if,industrial process end use]=
+	ZIDZ(
+	  SUM(
+	    BAU Output from Industrial Equipment Installed During Model Run[cement and other nonmetallic minerals 239\
+		,industrial process end use,Model Run Vintage!]
+	    * BAU Last Year Industrial Equipment Fuel Type Shares in Electricity Equivalent by Vintage\
+		[cement and other nonmetallic minerals 239,industrial process end use
+	,Industrial Fuel,Model Run Vintage!]
+	    * BAU Last Year Energy Intensity of Industrial Production in Electricity Equivalent by Vintage\
+		[cement and other nonmetallic minerals 239,Industrial Fuel,industrial process end use,Model Run Vintage!]
+	  )
+
+	  + BAU Output from New Industrial Equipment[cement and other nonmetallic minerals 239\
+		,industrial process end use]
+	  * BAU Share of New Industrial Equipment Allocated by Fuel Type in Electricity Equivalent\
+		[cement and other nonmetallic minerals 239,Industrial Fuel
+	,industrial process end use]
+	  * BAU Energy Intensity of Industrial Production by Fuel and Process for New Equipment in Electricity Equivalent\
+		[cement and other nonmetallic minerals 239
+	,Industrial Fuel,industrial process end use]
+
+	  + BAU Output from Preexisting Industrial Equipment[cement and other nonmetallic minerals 239\
+		,industrial process end use]
+	  * Start Year BAU Fuel Type Shares in Electricity Equivalent[cement and other nonmetallic minerals 239\
+		,industrial process end use,Industrial Fuel]
+	  * Start Year Energy Intensity of Industrial Production in Electricity Equivalent[cement and other nonmetallic minerals 239\
+		],
+	  1 - PIFURfE Percentage Industry Fuel Use Reduction for Electricity[cement and other nonmetallic minerals 239\
+		,industrial process end use]
+	)
+	 ~~|
+BAU Cement Generic Process Energy by Fuel and Process[electricity if,industrial process end use\
+		]=
+	(
+	SUM(
+	  BAU Output from Industrial Equipment Installed During Model Run[cement and other nonmetallic minerals 239\
+		,industrial process end use,Model Run Vintage!]
+	  * BAU Last Year Industrial Equipment Fuel Type Shares in Electricity Equivalent by Vintage\
+		[cement and other nonmetallic minerals 239,industrial process end use
+	,electricity if,Model Run Vintage!]
+	  * BAU Last Year Energy Intensity of Industrial Production in Electricity Equivalent by Vintage\
+		[cement and other nonmetallic minerals 239,electricity if,industrial process end use,Model Run Vintage!]
+	)
+
+	+ BAU Output from New Industrial Equipment[cement and other nonmetallic minerals 239\
+		,industrial process end use]
+	* BAU Share of New Industrial Equipment Allocated by Fuel Type in Electricity Equivalent\
+		[cement and other nonmetallic minerals 239,electricity if
+	,industrial process end use]
+	* BAU Energy Intensity of Industrial Production by Fuel and Process for New Equipment in Electricity Equivalent\
+		[cement and other nonmetallic minerals 239,electricity if,industrial process end use\
+		]
+
+	+ BAU Output from Preexisting Industrial Equipment[cement and other nonmetallic minerals 239\
+		,industrial process end use]
+	* Start Year BAU Fuel Type Shares in Electricity Equivalent[cement and other nonmetallic minerals 239\
+		,industrial process end use,electricity if]
+	* Start Year Energy Intensity of Industrial Production in Electricity Equivalent[cement and other nonmetallic minerals 239\
+		]
+	)
+	~	BTU/Year
+	~	BAU twin of Cement Generic Process Energy by Fuel and Process (both \
+		branches). SYNC NOTE: duplicates both branches of BAU Industrial \
+		Energy Use by Fuel Type and Process at 239 - mirror any edit to \
+		that equation here.
+	|
+
+BAU Cement Residual Generic Energy Use by Fuel and Process[Industrial Fuel,industrial process end use\
+		]=
+	BAU Cement Generic Process Energy by Fuel and Process[Industrial Fuel,industrial process end use\
+		]
+	* (1 - Cement Carveout Share of Energy by Fuel[Industrial Fuel])
+	~	BTU/Year
+	~	BAU twin of Cement Residual Generic Energy Use by Fuel and Process.
 	|
 
 BAU CES Costs for ACP Compliance[RPS]=
@@ -8893,7 +9001,8 @@ BAU Incremental Revenue for Cost Effectiveness Additions without CES[Electricity
 	~	$/MW
 	~		|
 
-BAU Industrial Clean Heat Production Subsidy Amount Paid[Industry Category]=
+BAU Industrial Clean Heat Production Subsidy Amount Paid[Industry Category] :EXCEPT: [cement and other nonmetallic minerals 239\
+		]=
 	SUM(
 	  BAU Clean Industrial Heat Production Subsidy Rate by Equipment Vintage[Industrial Fuel\
 		!,industrial heating process!,Model Run Vintage
@@ -8922,9 +9031,45 @@ BAU Industrial Clean Heat Production Subsidy Amount Paid[Industry Category]=
 	  * BAU Energy Intensity of Industrial Production by Fuel and Process for New Equipment in Electricity Equivalent\
 		[Industry Category
 	,Industrial Fuel!,industrial heating process!]
+	) ~~|
+BAU Industrial Clean Heat Production Subsidy Amount Paid[cement and other nonmetallic minerals 239\
+		]=
+	SUM(
+	  BAU Clean Industrial Heat Production Subsidy Rate by Equipment Vintage[Industrial Fuel\
+		!,industrial heating process!,Model Run Vintage
+	!]
+	  * BAU Output from Industrial Equipment Installed During Model Run[cement and other nonmetallic minerals 239\
+		,industrial heating process!,Model Run Vintage
+	!]
+	  * BAU Last Year Industrial Equipment Fuel Type Shares in Electricity Equivalent by Vintage\
+		[cement and other nonmetallic minerals 239,industrial heating process
+	!,Industrial Fuel!,Model Run Vintage!]
+	  * BAU Last Year Energy Intensity of Industrial Production in Electricity Equivalent by Vintage\
+		[cement and other nonmetallic minerals 239,
+	Industrial Fuel!,industrial heating process!,Model Run Vintage!]
+	  * (1 - Cement Carveout Share of Energy by Fuel[Industrial Fuel!])
+	)
+
+	+
+
+	SUM(
+	  BAU Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel!,industrial heating process\
+		!]
+	  * BAU Output from New Industrial Equipment[cement and other nonmetallic minerals 239,industrial heating process\
+		!]
+	  * BAU Share of New Industrial Equipment Allocated by Fuel Type in Electricity Equivalent\
+		[cement and other nonmetallic minerals 239,Industrial Fuel
+	!,industrial heating process!]
+	  * BAU Energy Intensity of Industrial Production by Fuel and Process for New Equipment in Electricity Equivalent\
+		[cement and other nonmetallic minerals 239
+	,Industrial Fuel!,industrial heating process!]
+	  * (1 - Cement Carveout Share of Energy by Fuel[Industrial Fuel!])
 	)
 	~	$
-	~		|
+	~	BAU twin, including the 239 residual-only branch - see the policy \
+		twin's note. SYNC NOTE: duplicates the generic BAU branch - mirror \
+		edits.
+	|
 
 BAU Industrial Combustion Fuel Base for Measures[Industry Category]=
 	SUM(BAU Industrial Total Fuel Use for Measures[Industry Category,Industrial Fuel!])
@@ -8958,7 +9103,7 @@ BAU Industrial Energy Related Emissions Excluding Fuels to Power CCS[Industrial 
 
 BAU Industrial Energy Use by Fuel Type and Process[Industry Category,Industrial Fuel
 ,Industrial Process] :EXCEPT:                  [Industry Category,electricity if,Industrial Process\
-		]=
+		], [cement and other nonmetallic minerals 239,Industrial Fuel,industrial process end use]=
 	ZIDZ(
 	  SUM(
 	    BAU Output from Industrial Equipment Installed During Model Run[Industry Category\
@@ -8989,7 +9134,8 @@ BAU Industrial Energy Use by Fuel Type and Process[Industry Category,Industrial 
 		,Industrial Process]
 	) ~~|
 BAU Industrial Energy Use by Fuel Type and Process[Industry Category,electricity if
-,Industrial Process]=
+,Industrial Process] :EXCEPT: [cement and other nonmetallic minerals 239,electricity if\
+		,industrial process end use]=
 	SUM(
 	  BAU Output from Industrial Equipment Installed During Model Run[Industry Category,\
 		Industrial Process,Model Run Vintage
@@ -9014,7 +9160,13 @@ BAU Industrial Energy Use by Fuel Type and Process[Industry Category,electricity
 	* Start Year BAU Fuel Type Shares in Electricity Equivalent[Industry Category,Industrial Process\
 		,electricity if]
 	* Start Year Energy Intensity of Industrial Production in Electricity Equivalent[Industry Category\
+		] ~~|
+BAU Industrial Energy Use by Fuel Type and Process[cement and other nonmetallic minerals 239\
+		,Industrial Fuel,industrial process end use]=
+	BAU Cement Residual Generic Energy Use by Fuel and Process[Industrial Fuel,industrial process end use\
 		]
+	+ BAU Cement Module Wired Energy Use by Fuel Type[Industrial Fuel]
+	* Cement Energy Use Process Shares[Industrial Fuel,industrial process end use]
 	~	BTU
 	~	"Industrial Equipment Fuel Type Shares in Electricity Equivalent by \
 		Vintage" add to 1 for each industry category, so that variable is \
@@ -9159,7 +9311,7 @@ BAU Industrial Equipment Utilization Factor[Industry Category,Industrial Process
 
 BAU Industrial Feedstock Use after Adjustments[Industry Category,Industrial Fuel] :EXCEPT:\
 		    [energy industries within industry category
-,Industrial Fuel]=
+,Industrial Fuel], [cement and other nonmetallic minerals 239,Industrial Fuel]=
 	BIFU BAU Industrial Fuel Use as Feedstock[Industry Category,Industrial Fuel]
 	* (1 + Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment[industry sector\
 		]) ~~|
@@ -9168,9 +9320,19 @@ BAU Industrial Feedstock Use after Adjustments[energy industries within industry
 	BIFU BAU Industrial Fuel Use as Feedstock[energy industries within industry category\
 		,Industrial Fuel]
 	* (1 + Last Year BAU Percent Change in Fuel Production from Calculated Fuel Demand[energy industries within industry category\
-		])
+		]) ~~|
+BAU Industrial Feedstock Use after Adjustments[cement and other nonmetallic minerals 239\
+		,Industrial Fuel]=
+	BAU Cement Residual Feedstock Use[Industrial Fuel]
+	+ BAU Cement Module Wired Feedstock Use by Fuel Type[Industrial Fuel]
 	~	BTU
-	~		|
+	~	The cement and other nonmetallic minerals 239 branch blends the \
+		non-cement residual (lime, gypsum, ceramics - generic data-driven \
+		computation scaled by one minus the cement feedstock share) with \
+		the cement module's feedstock stream (petcoke riding the heavy or \
+		residual fuel oil element). Calibration-neutral at the start year \
+		by construction of the carveout shares.
+	|
 
 BAU Industrial Fuel Carbon Tax Amount per Unit Energy[Industry Category,Industrial Fuel\
 		]=
@@ -15954,7 +16116,8 @@ BAU Thermal Battery Charging Window[Electricity Timeslice,Hour]=
 		select different hours.
 	|
 
-BAU Thermal Battery Choice Weight[Industry Category,industrial heating process]=
+BAU Thermal Battery Choice Weight[Industry Category,industrial heating process] :EXCEPT:\
+		 [cement and other nonmetallic minerals 239,industrial heating process]=
 	10000
 	* TBS Thermal Battery Shareweight
 	* (
@@ -15962,10 +16125,21 @@ BAU Thermal Battery Choice Weight[Industry Category,industrial heating process]=
 		[Industry Category,industrial heating process], 1e-07)
 	  / MAX(BAU Minimum Eligible Fuel Cost per Unit Energy in Electricity Equivalent[Industry Category\
 		,industrial heating process], 1e-07)
+	) ^ IELC Industrial Equipment Logit Coefficient ~~|
+BAU Thermal Battery Choice Weight[cement and other nonmetallic minerals 239,industrial heating process\
+		]=
+	10000
+	* TBS Thermal Battery Shareweight
+	* (
+	  MAX(BAU Thermal Battery Annual Costs and Annual Financing Repayment per Unit Energy in Electricity Equivalent\
+		[cement and other nonmetallic minerals 239,industrial heating process], 1e-07)
+	  / MAX(BAU Minimum Eligible Fuel Cost per Unit Energy in Electricity Equivalent[cement and other nonmetallic minerals 239\
+		,industrial heating process], 1e-07)
 	) ^ IELC Industrial Equipment Logit Coefficient
+	* (1 - Cement Carveout Share of Heat Band Energy[industrial heating process])
 	~	Dmnl
-	~	BAU twin of Thermal Battery Choice Weight. See that variable for \
-		documentation.
+	~	BAU twin of Thermal Battery Choice Weight, including the residual- \
+		scaled 239 branch. See that variable for documentation.
 	|
 
 BAU Thermal Battery Demand Cap in Electricity Equivalent[Industry Category,industrial heating process\
@@ -16844,11 +17018,16 @@ BAU Total Carbon Tax Revenue=
 
 BAU Total Cement Demand=
 	BCD BAU Cement Demand
+	* (1 + Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment[industry sector\
+		])
 	~	metric tons/Year
-	~	Total BAU cement demand (domestic-production basis). Pathway \
-		attribution is endogenous (the cost logit, calibrated to start-year \
-		data via SYCPbP and the CPSW shareweights), so only total demand is \
-		exogenous. Part of the Phase 1a compute-only cement pathway module.
+	~	Total BAU cement demand (domestic-production basis), scaled by the \
+		exogenous GDP adjustment so the EGGRA control setting reaches cement \
+		like every other industry (steel review finding, P23). The policy- \
+		case demand builds on this, so both cases carry the adjustment \
+		symmetrically. Pathway attribution is endogenous (the cost logit, \
+		calibrated to start-year data via SYCPbP and the CPSW shareweights), \
+		so only total demand is exogenous.
 	|
 
 BAU Total Change in Energy Market and CES Revenue for CCUS Retrofits[CCUS Electricity Source\
@@ -24495,6 +24674,138 @@ CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway,In
 		release.
 	|
 
+Cement Carveout Share of Energy by Fuel[Industrial Fuel]= INITIAL(
+	MIN(1,
+	ZIDZ(
+	  BAU Cement Module Wired Energy Use by Fuel Type[Industrial Fuel],
+	  BIFU BAU Industrial Fuel Use for Energy[cement and other nonmetallic minerals 239\
+		,Industrial Fuel]
+	  * SUM(BAU Percentage Fuel Use by Industrial Process with Fallback Data[cement and other nonmetallic minerals 239\
+		,Industrial Fuel,industrial process end use!])
+	  * (1 + Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment[industry sector\
+		])
+	)))
+	~	Dmnl
+	~	The cement module's start-year share of 239's process-end-use energy \
+		by fuel: module start-year energy (energy-purpose part, wired fuels \
+		only) over the BIFU data's start-year process-end-use energy. The \
+		carve-out blend (residual = generic x (1 - this); module added on \
+		top) is calibration-neutral at the start year to within the generic \
+		structure's own data-vs-stock-computation calibration error (~1%, \
+		steel-precedent tolerance). The denominator deliberately uses the \
+		BIFU DATA, not INITIAL of the stock-computed generic energy: the \
+		initialization pass evaluates the new-equipment output term as \
+		zero, so INITIAL of that computation understates the first reported \
+		year by ~9% (first-year equipment turnover) - an init-pass artifact, \
+		not a real quantity. Capped at 1 (a module slightly exceeding the \
+		generic stream takes the whole stream; the small excess is a \
+		documented inventory refresh). Roughly 0.75 for hard coal, 0.24 \
+		natural gas, 0.23 electricity at draft values; the remainder is \
+		lime, gypsum, and ceramics.
+	|
+
+Cement Carveout Share of Feedstock by Fuel[Industrial Fuel]= INITIAL(
+	MIN(1,
+	ZIDZ(
+	  BAU Cement Module Energy Use by Fuel Type[Industrial Fuel]
+	  * Cement Fuel Feedstock Share[Industrial Fuel],
+	  BIFU BAU Industrial Fuel Use as Feedstock[cement and other nonmetallic minerals 239\
+		,Industrial Fuel]
+	  * (1 + Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment[industry sector\
+		])
+	)))
+	~	Dmnl
+	~	The cement module's start-year share of 239's feedstock use by fuel - \
+		~1 for heavy or residual fuel oil, where the module's petcoke \
+		(0.686 MMBtu per ton clinker x start-year clinker) matches the \
+		legacy 47 TBtu stream within ~1%. Capped at 1; the sub-1% excess is \
+		a documented inventory refresh.
+	|
+
+Cement Carveout Share of Heat Band Energy[industrial heating process]= INITIAL(
+	MIN(1,
+	ZIDZ(
+	  SUM(
+	    BAU Cement Module Wired Energy Use by Fuel Type[Industrial Fuel!]
+	    * Cement Energy Use Process Shares[Industrial Fuel!,industrial heating process]
+	  ),
+	  SUM(
+	    BIFU BAU Industrial Fuel Use for Energy[cement and other nonmetallic minerals 239\
+		,Industrial Fuel!]
+	    * BAU Percentage Fuel Use by Industrial Process with Fallback Data[cement and other nonmetallic minerals 239\
+		,Industrial Fuel!,industrial heating process]
+	  )
+	)))
+	~	Dmnl
+	~	The cement module's start-year share of each of 239's heat bands \
+		(all fuels), used to scale the thermal battery choice weight for \
+		239 down to the non-cement residual (lime, gypsum, ceramics): TB \
+		deployment there is sized on the full generic equipment stock, so \
+		without this scaling TB would serve cement's share of heat while \
+		the pathway module still burns its kiln fuels (adversarial-review \
+		finding, 2026-08-24; Dan's interim disposition 2026-08-24). \
+		First-order correct for small TB shares; replaced by the output- \
+		level residual restructure at Phase 3a.
+	|
+
+Cement Energy Use Process Shares[Industrial Fuel,industrial process end use]= INITIAL(
+	ZIDZ(
+	  BAU Percentage Fuel Use by Industrial Process with Fallback Data[cement and other nonmetallic minerals 239\
+		,Industrial Fuel,industrial process end use],
+	  SUM(BAU Percentage Fuel Use by Industrial Process with Fallback Data[cement and other nonmetallic minerals 239\
+		,Industrial Fuel,industrial process end use!])
+	))
+	~	Dmnl
+	~	Start-year distribution of each fuel across cement and other \
+		nonmetallic minerals 239's process end uses, taken from the model's \
+		own BAU apportionment (BPFUbIP with fallbacks) renormalized over \
+		process end uses. Spreads the cement module's energy-by-fuel into \
+		process bands so WHR, process-efficiency, and band-specific logic \
+		keep working. Phase 2 can assign kiln fuel physically to heat above \
+		1000 C instead.
+	|
+
+Cement Fuel Feedstock Share[Industrial Fuel]= INITIAL(
+	ZIDZ(
+	  BIFU BAU Industrial Fuel Use as Feedstock[cement and other nonmetallic minerals 239\
+		,Industrial Fuel],
+	  BIFU BAU Industrial Fuel Use for Energy[cement and other nonmetallic minerals 239\
+		,Industrial Fuel]
+	  * SUM(BAU Percentage Fuel Use by Industrial Process with Fallback Data[cement and other nonmetallic minerals 239\
+		,Industrial Fuel,industrial process end use!])
+	  + BIFU BAU Industrial Fuel Use as Feedstock[cement and other nonmetallic minerals 239\
+		,Industrial Fuel]
+	))
+	~	Dmnl
+	~	Start-year share of each fuel's total 239 use (process-end-use energy \
+		plus feedstock) that is feedstock rather than combustion - in \
+		practice ~0.997 for heavy or residual fuel oil, where the legacy data \
+		books petcoke (the module's petcoke matches that stream within ~1%, \
+		cement's analog of steel's coking-coal feedstock). Splits the cement \
+		module's fuel demand between the energy and nonenergy chains.
+	|
+
+Cement Fuel Wiring Mask[Industrial Fuel]= INITIAL(
+	IF THEN ELSE(
+	  BIFU BAU Industrial Fuel Use for Energy[cement and other nonmetallic minerals 239\
+		,Industrial Fuel]
+	  * SUM(BAU Percentage Fuel Use by Industrial Process with Fallback Data[cement and other nonmetallic minerals 239\
+		,Industrial Fuel,industrial process end use!])
+	  + BIFU BAU Industrial Fuel Use as Feedstock[cement and other nonmetallic minerals 239\
+		,Industrial Fuel]
+	  > 0, 1, 0
+	))
+	~	Dmnl
+	~	One for fuels the legacy 239 data actually carries (so the cement \
+		module's energy can splice against a nonzero generic stream), zero \
+		otherwise. Today this only zeroes the biomass row, where the module \
+		books alternative kiln fuels (16% of kiln fuel per PCA) that the \
+		legacy data buries in other fuels: wiring them would inject net-new \
+		energy and break start-year neutrality, so they stay module-internal \
+		pending a team decision on refreshing 239's BAU fuel composition \
+		(documented in Cement_1b_Carveout_Memo.md).
+	|
+
 Cement Module Energy as Share of Generic Energy by Fuel[Industrial Fuel]=
 	ZIDZ(
 	  Cement Module Energy Use by Fuel Type[Industrial Fuel],
@@ -24502,19 +24813,15 @@ Cement Module Energy as Share of Generic Energy by Fuel[Industrial Fuel]=
 		]
 	)
 	~	Dmnl
-	~	Calibration diagnostic for the Phase 1b wiring/share splice: pathway- \
-		module energy by fuel over the current generic structure's ENERGY- \
-		purpose fuel use for cement and other nonmetallic minerals 239 (a \
-		category that also contains lime, gypsum, and ceramics). Expected at \
-		defaults: electricity and natural gas roughly 0.2-0.3, hard coal \
-		roughly 0.6-0.8 (cement dominates 239's coal). Heavy or residual \
-		fuel oil reads far above 1 BY DESIGN: the module books petcoke \
-		there, while the generic structure books petcoke as FEEDSTOCK \
-		(BIFUaF), outside this denominator - cement's analog of steel's \
-		coking-coal boundary finding, to be spliced against the feedstock \
-		chain at 1b. Biomass reads 0 by ZIDZ (module books alternative \
-		fuels there; generic 239 biomass is zero) - a known 1b calibration \
-		boundary item.
+	~	Monitoring diagnostic (post-1b semantics): pathway-module energy by \
+		fuel over 239's TOTAL energy-purpose fuel use, whose 239 process \
+		cells now CONTAIN the module via the carve-out blend - so this \
+		reads module / (module + residual + nonprocess), i.e. the module's \
+		realized share of the blended total, not a pre-splice calibration \
+		gap. Heavy or residual fuel oil still reads far above 1 by design \
+		(the module books petcoke there; the model consumes it on the \
+		feedstock chain, outside this denominator). Biomass reads 0 by ZIDZ \
+		(module-internal alternative fuels; see Cement Fuel Wiring Mask).
 	|
 
 Cement Module Energy Use by Fuel Type[Industrial Fuel]=
@@ -24528,6 +24835,42 @@ Cement Module Energy Use by Fuel Type[Industrial Fuel]=
 		later wiring phase this replaces the generic structure's process-end- \
 		use energy for cement and other nonmetallic minerals 239; in Phase 1a \
 		it is diagnostic only.
+	|
+
+Cement Module Unwired Energy This Year=
+	SUM(Cement Module Energy Use by Fuel Type[Industrial Fuel!])
+	- SUM(Cement Module Wired Energy Use by Fuel Type[Industrial Fuel!])
+	- SUM(Cement Module Wired Feedstock Use by Fuel Type[Industrial Fuel!])
+	~	BTU/Year
+	~	Diagnostic (adversarial-review finding, 2026-08-24): module energy \
+		that reaches neither the energy nor the feedstock chain - the \
+		Cement Fuel Wiring Mask's silent-loss channel. At draft data this \
+		equals exactly the alternative-fuels (biomass row) energy, which is \
+		module-internal BY DESIGN pending the team's alt-fuels booking \
+		decision; any OTHER nonzero contribution means a module fuel the \
+		legacy 239 data does not carry got masked off accidentally. Check \
+		alongside Unserved Clinker Demand This Year in every gate \
+		extraction.
+	|
+
+Cement Module Wired Energy Use by Fuel Type[Industrial Fuel]=
+	Cement Module Energy Use by Fuel Type[Industrial Fuel]
+	* (1 - Cement Fuel Feedstock Share[Industrial Fuel])
+	* Cement Fuel Wiring Mask[Industrial Fuel]
+	~	BTU/Year
+	~	The part of the cement module's energy that wires into the generic \
+		structure's energy chain: energy-purpose (feedstock split off to the \
+		nonenergy chain) and wired fuels only (the biomass/alternative-fuel \
+		row stays module-internal - see Cement Fuel Wiring Mask).
+	|
+
+Cement Module Wired Feedstock Use by Fuel Type[Industrial Fuel]=
+	Cement Module Energy Use by Fuel Type[Industrial Fuel]
+	* Cement Fuel Feedstock Share[Industrial Fuel]
+	~	BTU/Year
+	~	The feedstock (nonenergy) part of the cement module's fuel demand - \
+		in practice the petcoke stream riding the heavy or residual fuel oil \
+		element. Wires into the nonenergy/feedstock chains.
 	|
 
 Cement Pathway Choice Weight[Cement Production Pathway]=
@@ -24579,6 +24922,108 @@ Cement Production Pathway:
 	~	Clinker/cement production pathways. Pre-commercial routes (CCS, \
 		electric kiln, alternative chemistry) are gated by the CPSW \
 		shareweight time series, not by structure.
+	|
+
+Cement Generic Process Energy by Fuel and Process[Industrial Fuel,industrial process end use\
+		] :EXCEPT: [electricity if,industrial process end use]=
+	ZIDZ(
+	  SUM(
+	    Output from Industrial Equipment Installed During Model Run[cement and other nonmetallic minerals 239\
+		,industrial process end use,Model Run Vintage!]
+	    * Last Year Industrial Equipment Fuel Type Shares in Electricity Equivalent by Vintage\
+		[cement and other nonmetallic minerals 239,industrial process end use
+	,Industrial Fuel,Model Run Vintage!]
+	    * Last Year Energy Intensity of Industrial Production by Fuel and Vintage in Electricity Equivalent\
+		[cement and other nonmetallic minerals 239,Industrial Fuel,industrial process end use,Model Run Vintage!]
+	  )
+
+	  +
+
+	  Output from New Industrial Equipment[cement and other nonmetallic minerals 239,industrial process end use\
+		]
+	  * Share of New Industrial Equipment by Fuel Type and Process in Electricity Equivalent\
+		[cement and other nonmetallic minerals 239,Industrial Fuel
+	,industrial process end use]
+	  * Energy Intensity of Industrial Production by Fuel and Process for New Equipment in Electricity Equivalent\
+		[cement and other nonmetallic minerals 239,Industrial Fuel,industrial process end use\
+		]
+
+	  +
+
+	  Output from Preexisting Industrial Equipment[cement and other nonmetallic minerals 239\
+		,industrial process end use]
+	  * Preexisting Industrial Equipment Fuel Type Shares in Electricity Equivalent Adjusted by Early Retirement Policy\
+		[cement and other nonmetallic minerals 239
+	,industrial process end use,Industrial Fuel]
+	  * Start Year Energy Intensity of Industrial Production in Electricity Equivalent[cement and other nonmetallic minerals 239\
+		]
+	  ,
+	  1 - PIFURfE Percentage Industry Fuel Use Reduction for Electricity[cement and other nonmetallic minerals 239\
+		,industrial process end use]
+	) ~~|
+Cement Generic Process Energy by Fuel and Process[electricity if,industrial process end use\
+		]=
+	(
+	SUM(
+	  Output from Industrial Equipment Installed During Model Run[cement and other nonmetallic minerals 239\
+		,industrial process end use,Model Run Vintage!]
+	  * Last Year Industrial Equipment Fuel Type Shares in Electricity Equivalent by Vintage\
+		[cement and other nonmetallic minerals 239,industrial process end use
+	,electricity if,Model Run Vintage!]
+	  * Last Year Energy Intensity of Industrial Production by Fuel and Vintage in Electricity Equivalent\
+		[cement and other nonmetallic minerals 239,electricity if,industrial process end use,Model Run Vintage!]
+	)
+
+	+
+
+	Output from New Industrial Equipment[cement and other nonmetallic minerals 239,industrial process end use\
+		]
+	* Share of New Industrial Equipment by Fuel Type and Process in Electricity Equivalent\
+		[cement and other nonmetallic minerals 239,electricity if
+	,industrial process end use]
+	* Energy Intensity of Industrial Production by Fuel and Process for New Equipment in Electricity Equivalent\
+		[cement and other nonmetallic minerals 239,electricity if,industrial process end use\
+		]
+
+	+
+
+	Output from Preexisting Industrial Equipment[cement and other nonmetallic minerals 239\
+		,industrial process end use]
+	* Preexisting Industrial Equipment Fuel Type Shares in Electricity Equivalent Adjusted by Early Retirement Policy\
+		[cement and other nonmetallic minerals 239
+	,industrial process end use,electricity if]
+	* Start Year Energy Intensity of Industrial Production in Electricity Equivalent[cement and other nonmetallic minerals 239\
+		]
+	)
+	~	BTU/Year
+	~	What the generic equipment-stock structure computes for 239's \
+		process-end-use energy (all of 239: cement plus lime, gypsum, \
+		ceramics). SYNC NOTE: deliberately DUPLICATES both branches of \
+		Industrial Equipment Energy Use by Fuel Type and Process before \
+		Waste Heat Recovery, evaluated at cement and other nonmetallic \
+		minerals 239 - any edit to that equation must be mirrored here and \
+		in the BAU twin. Scaled by (1 - cement carveout share) it becomes \
+		the non-cement residual. (Do NOT try to anchor the carveout share \
+		to INITIAL of this variable: the initialization pass evaluates the \
+		new-equipment output term as zero, understating the first reported \
+		year by ~9% - the share is anchored to the BIFU data instead.) \
+		Generic levers (electrification via PIFURfE, IFSR, intensity \
+		standards, etc.) keep acting on this stream's residual use and stop \
+		reaching the module's share, implementing the agreed lever \
+		dispositions structurally.
+	|
+
+Cement Residual Generic Energy Use by Fuel and Process[Industrial Fuel,industrial process end use\
+		]=
+	Cement Generic Process Energy by Fuel and Process[Industrial Fuel,industrial process end use\
+		]
+	* (1 - Cement Carveout Share of Energy by Fuel[Industrial Fuel])
+	~	BTU/Year
+	~	The non-cement residual of 239's process-end-use energy (lime, \
+		gypsum, ceramics): the generic equipment-stock computation scaled \
+		by one minus the cement module's start-year share. Generic levers \
+		keep acting here; the module's share is served by the pathway \
+		module instead.
 	|
 
 CES Costs for ACP Compliance[RPS]=
@@ -41942,7 +42387,8 @@ Industrial CCS Transportation and Storage Subsidy=
 	~	$/metric ton CO2e
 	~		|
 
-Industrial Clean Heat Production Subsidy Amount Paid[Industry Category]=
+Industrial Clean Heat Production Subsidy Amount Paid[Industry Category] :EXCEPT: [cement and other nonmetallic minerals 239\
+		]=
 	SUM(
 	  Clean Industrial Heat Production Subsidy Rate by Equipment Vintage[Industrial Fuel\
 		!,industrial heating process!,Model Run Vintage
@@ -41975,9 +42421,57 @@ Industrial Clean Heat Production Subsidy Amount Paid[Industry Category]=
 	!,industrial heating process!]
 	  * WHR Measure Energy Use Multiplier[Industry Category,Industrial Fuel!]
 	  * Efficiency Measure Energy Use Multiplier[Industry Category,Industrial Fuel!]
+	) ~~|
+Industrial Clean Heat Production Subsidy Amount Paid[cement and other nonmetallic minerals 239\
+		]=
+	SUM(
+	  Clean Industrial Heat Production Subsidy Rate by Equipment Vintage[Industrial Fuel\
+		!,industrial heating process!,Model Run Vintage
+	!]
+	  * Output from Industrial Equipment Installed During Model Run[cement and other nonmetallic minerals 239\
+		,industrial heating process!,Model Run Vintage
+	!]
+	  * Last Year Industrial Equipment Fuel Type Shares in Electricity Equivalent by Vintage\
+		[cement and other nonmetallic minerals 239,industrial heating process
+	!,Industrial Fuel!,Model Run Vintage!]
+	  * Last Year Energy Intensity of Industrial Production by Fuel and Vintage in Electricity Equivalent\
+		[cement and other nonmetallic minerals 239
+	,Industrial Fuel!,industrial heating process!,Model Run Vintage!]
+	  * WHR Measure Energy Use Multiplier[cement and other nonmetallic minerals 239,Industrial Fuel\
+		!]
+	  * Efficiency Measure Energy Use Multiplier[cement and other nonmetallic minerals 239\
+		,Industrial Fuel!]
+	  * (1 - Cement Carveout Share of Energy by Fuel[Industrial Fuel!])
+	)
+
+	+
+
+	SUM(
+	  Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel!,industrial heating process\
+		!]
+	  * Output from New Industrial Equipment[cement and other nonmetallic minerals 239,industrial heating process\
+		!]
+	  * Share of New Industrial Equipment by Fuel Type and Process in Electricity Equivalent\
+		[cement and other nonmetallic minerals 239,Industrial Fuel
+	!,industrial heating process!]
+	  * Energy Intensity of Industrial Production by Fuel and Process for New Equipment in Electricity Equivalent\
+		[cement and other nonmetallic minerals 239,Industrial Fuel
+	!,industrial heating process!]
+	  * WHR Measure Energy Use Multiplier[cement and other nonmetallic minerals 239,Industrial Fuel\
+		!]
+	  * Efficiency Measure Energy Use Multiplier[cement and other nonmetallic minerals 239\
+		,Industrial Fuel!]
+	  * (1 - Cement Carveout Share of Energy by Fuel[Industrial Fuel!])
 	)
 	~	$
-	~		|
+	~	The cement and other nonmetallic minerals 239 branch pays the clean- \
+		heat production subsidy only on the non-cement residual's energy \
+		(each fuel term scaled by one minus the cement carveout share): the \
+		generic reconstruction otherwise pays on full-239 energy the model \
+		no longer consumes (adversarial-review finding, 2026-08-24). SYNC \
+		NOTE: duplicates the generic branch - mirror edits. The cement \
+		module's own pathway subsidies arrive in Phase 3.
+	|
 
 Industrial Combustion Fuel Base for Measures[Industry Category]=
 	SUM(Industrial Total Fuel Use before Measures[Industry Category,Industrial Fuel!])
@@ -42163,7 +42657,7 @@ Industrial Equipment Energy Use by Fuel Type and Process before Process Improvem
 Industrial Equipment Energy Use by Fuel Type and Process before Waste Heat Recovery[Industry Category\
 		,Industrial Fuel,
 Industrial Process] :EXCEPT:                  [Industry Category,electricity if,Industrial Process\
-		]=
+		], [cement and other nonmetallic minerals 239,Industrial Fuel,industrial process end use]=
 	ZIDZ(
 	  SUM(
 	    Output from Industrial Equipment Installed During Model Run[Industry Category,Industrial Process\
@@ -42199,7 +42693,8 @@ Industrial Process] :EXCEPT:                  [Industry Category,electricity if,
 		,Industrial Process]
 	) ~~|
 Industrial Equipment Energy Use by Fuel Type and Process before Waste Heat Recovery[Industry Category\
-		,electricity if,Industrial Process]=
+		,electricity if,Industrial Process] :EXCEPT: [cement and other nonmetallic minerals 239\
+		,electricity if,industrial process end use]=
 	SUM(
 	  Output from Industrial Equipment Installed During Model Run[Industry Category,Industrial Process\
 		,Model Run Vintage!]
@@ -42227,7 +42722,13 @@ Industrial Equipment Energy Use by Fuel Type and Process before Waste Heat Recov
 		[Industry Category
 	,Industrial Process,electricity if]
 	* Start Year Energy Intensity of Industrial Production in Electricity Equivalent[Industry Category\
+		] ~~|
+Industrial Equipment Energy Use by Fuel Type and Process before Waste Heat Recovery[cement and other nonmetallic minerals 239\
+		,Industrial Fuel,industrial process end use]=
+	Cement Residual Generic Energy Use by Fuel and Process[Industrial Fuel,industrial process end use\
 		]
+	+ Cement Module Wired Energy Use by Fuel Type[Industrial Fuel]
+	* Cement Energy Use Process Shares[Industrial Fuel,industrial process end use]
 	~	BTU
 	~	"Industrial Equipment Fuel Type Shares in Electricity Equivalent by \
 		Vintage" add to 1 for each industry category, so that variable is \
@@ -42422,12 +42923,12 @@ Industrial Fuel Use for Energy Purposes[natural gas if,Industry Category]=
 	~		|
 
 Industrial Fuel Use for Non Energy Purposes[Industry Category,Target Industrial Fuel]\
-		=
+		 :EXCEPT: [cement and other nonmetallic minerals 239,Target Industrial Fuel]=
 	Industrial Fuel Use for Non Energy Purposes Before Feedstock Shifting[Industry Category\
 		,Target Industrial Fuel]
 	* (1 - Fraction of Feedstock Shifted This Year[Industry Category,Target Industrial Fuel\
 		])
-	
+
 	+ SUM(Industrial Fuel Use for Non Energy Purposes Before Feedstock Shifting[Industry Category\
 		,Source Industrial Fuel!]
 	  * IFSR Industrial Fuel Shifting Ratio[Industry Category,Source Industrial Fuel!]
@@ -42435,16 +42936,55 @@ Industrial Fuel Use for Non Energy Purposes[Industry Category,Target Industrial 
 		!]
 	  * IFSRF Industrial Feedstock Shifting Recipient Fuel[Source Industrial Fuel!,Target Industrial Fuel\
 		]
+	  ) ~~|
+Industrial Fuel Use for Non Energy Purposes[cement and other nonmetallic minerals 239\
+		,Target Industrial Fuel]=
+	Industrial Fuel Use for Non Energy Purposes Before Feedstock Shifting[cement and other nonmetallic minerals 239\
+		,Target Industrial Fuel]
+	* (1 - Fraction of Feedstock Shifted This Year[cement and other nonmetallic minerals 239\
+		,Target Industrial Fuel])
+
+	+ SUM(Industrial Fuel Use for Non Energy Purposes Before Feedstock Shifting[cement and other nonmetallic minerals 239\
+		,Source Industrial Fuel!]
+	  * IFSR Industrial Fuel Shifting Ratio[cement and other nonmetallic minerals 239,Source Industrial Fuel\
+		!]
+	  * Fraction of Feedstock Shifted This Year[cement and other nonmetallic minerals 239\
+		,Source Industrial Fuel!]
+	  * IFSRF Industrial Feedstock Shifting Recipient Fuel[Source Industrial Fuel!,Target Industrial Fuel\
+		]
 	  )
+
+	+ Cement Module Wired Feedstock Use by Fuel Type[Target Industrial Fuel]
 	~	BTU
-	~		|
+	~	The cement and other nonmetallic minerals 239 branch applies the \
+		feedstock-shifting lever to the non-cement residual only (the \
+		before-shifting variable carries only the residual for 239), then \
+		adds the cement module's feedstock (petcoke) unshifted - fuel \
+		shifting for cement's share is the pathway module's mechanism. SYNC \
+		NOTE: the first two terms duplicate the generic branch - mirror \
+		edits.
+	|
 
 Industrial Fuel Use for Non Energy Purposes Before Feedstock Shifting[Industry Category\
-		,Industrial Fuel]=
+		,Industrial Fuel] :EXCEPT: [cement and other nonmetallic minerals 239,Industrial Fuel]=
 	BAU Industrial Feedstock Use after Adjustments[Industry Category,Industrial Fuel]
-	* (1 + Percent Change in Production due to Policies[Industry Category])
+	* (1 + Percent Change in Production due to Policies[Industry Category]) ~~|
+Industrial Fuel Use for Non Energy Purposes Before Feedstock Shifting[cement and other nonmetallic minerals 239\
+		,Industrial Fuel]=
+	BAU Cement Residual Feedstock Use[Industrial Fuel]
+	* (1 + Percent Change in Production due to Policies[cement and other nonmetallic minerals 239\
+		])
 	~	BTU
-	~		|
+	~	The cement and other nonmetallic minerals 239 branch carries ONLY \
+		the non-cement residual (responding to the policy production change \
+		as in the generic branch), so the feedstock-shifting lever \
+		downstream acts on the residual alone. The cement module's own \
+		feedstock (petcoke) is added after the shifting step - see \
+		Industrial Fuel Use for Non Energy Purposes - because fuel shifting \
+		for cement's share is the pathway module's mechanism, not the \
+		generic lever's (adversarial-review finding, 2026-08-24; approved \
+		lever dispositions).
+	|
 
 industrial fuel within all fuels:
 	electricity,
@@ -42511,6 +43051,16 @@ Industrial Heating Process Fuel Use before Measures[Industry Category,Industrial
 		measure savings fractions are defined.
 	|
 
+industrial nonprocess end use:
+	facility HVAC,
+	facility lighting,
+	other nonprocess
+	~
+	~	Nonprocess end uses, which remain in the generic industrial equipment \
+		structure for industries whose process end uses are served (in whole \
+		or in share) by a production-pathway module.
+	|
+
 Industrial Process:
 	heat below 100 C,
 	heat 100 to 200 C,
@@ -42525,6 +43075,23 @@ Industrial Process:
 	other nonprocess
 	~	
 	~		|
+
+industrial process end use:
+	heat below 100 C,
+	heat 100 to 200 C,
+	heat 200 to 500 C,
+	heat 500 to 1000 C,
+	heat above 1000 C,
+	cooling,
+	machine drive,
+	other processes
+	~
+	~	Process (production-related) end uses. For industries with a \
+		production-pathway module (currently cement, in share form), these \
+		are the end uses the module serves; nonprocess end uses stay in the \
+		generic industrial equipment structure. Matches the steel branch's \
+		definition for merge compatibility.
+	|
 
 Industrial Sector CO2e Emissions[Industry Category]=
 	SUM(Industrial Sector Pollutant Emissions[Industry Category,Pollutant!]
@@ -64432,7 +64999,8 @@ Thermal Battery Charging Window[Electricity Timeslice,Hour]=
 		not consuming in. Replaces the former static TBCW input mask.
 	|
 
-Thermal Battery Choice Weight[Industry Category,industrial heating process]=
+Thermal Battery Choice Weight[Industry Category,industrial heating process] :EXCEPT:\
+		 [cement and other nonmetallic minerals 239,industrial heating process]=
 	10000
 	* TBS Thermal Battery Shareweight
 	* (
@@ -64440,10 +65008,32 @@ Thermal Battery Choice Weight[Industry Category,industrial heating process]=
 		[Industry Category,industrial heating process], 1e-07)
 	  / MAX(Minimum Eligible Fuel Cost per Unit Energy in Electricity Equivalent[Industry Category\
 		,industrial heating process], 1e-07)
+	) ^ IELC Industrial Equipment Logit Coefficient ~~|
+Thermal Battery Choice Weight[cement and other nonmetallic minerals 239,industrial heating process\
+		]=
+	10000
+	* TBS Thermal Battery Shareweight
+	* (
+	  MAX(Thermal Battery Annual Costs and Annual Financing Repayment per Unit Energy in Electricity Equivalent\
+		[cement and other nonmetallic minerals 239,industrial heating process], 1e-07)
+	  / MAX(Minimum Eligible Fuel Cost per Unit Energy in Electricity Equivalent[cement and other nonmetallic minerals 239\
+		,industrial heating process], 1e-07)
 	) ^ IELC Industrial Equipment Logit Coefficient
+	* (1 - Cement Carveout Share of Heat Band Energy[industrial heating process])
 	~	Dmnl
 	~	Thermal battery entry in the new equipment relative-cost logit, as a \
 		thirteenth competitor alongside the twelve Industrial Fuel elements. \
+		For cement and other nonmetallic minerals 239 the weight is scaled \
+		by one minus the cement share of the heat band (adversarial-review \
+		finding + Dan's disposition, 2026-08-24): the TB service and \
+		charging chains reconstruct FULL-239 energy from equipment output x \
+		shares x intensity, bypassing the cement carve-out blend, so \
+		unscaled TB deployment would double-serve the cement module's share \
+		(heat served by batteries while the module still burns its kiln \
+		fuels). The scaling keeps TB available to the non-cement residual \
+		(lime, ceramics) while excluding cement's share to first order; the \
+		Phase 3a output-level residual restructure replaces it. SYNC NOTE: \
+		duplicates the generic branch's formula - mirror edits. \
 		Identical form to Industrial Equipment Fuel Choice Weight. Using the same \
 		reference cost as the fuel weights keeps shares exact: the reference \
 		raised to the logit exponent multiplies every competitor's weight equally \
