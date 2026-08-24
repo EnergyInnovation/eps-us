@@ -1528,6 +1528,25 @@ Average Four Year Prior Net Energy Market Revenue by Plant Type Excluding Subsid
 	~	$/MW
 	~		|
 
+Fleet Average Capacity Factor x Hours per Year by Power Plant Type[Electricity Source]=
+	SUM(
+	  Last Year Hourly Bid Electricity Capacity Factors by Plant Type[Electricity Timeslice!,Hour!,Electricity Source]
+	  * SHELF Days per Electricity Timeslice[Electricity Timeslice!]
+	  * One Hour
+	)
+	~	hours
+	~		|
+
+New Plant Capacity Factor Scaling for Merchant Entry[Electricity Source]=
+	IF THEN ELSE(
+	  Fleet Average Capacity Factor x Hours per Year by Power Plant Type[Electricity Source] < One Hour,
+	  1,
+	  Expected Capacity Factor x Hours per Year for Plants Built This Year[Electricity Source]
+	  / Fleet Average Capacity Factor x Hours per Year by Power Plant Type[Electricity Source]
+	)
+	~	Dmnl
+	~		|
+
 Average Four Year Prior Total Predicted Net Energy Market Revenue per MW[Electricity Source\
 		] :EXCEPT: [CCUS Electricity Source]=
 	IF THEN ELSE(
@@ -1551,7 +1570,8 @@ Average Four Year Prior Total Predicted Net Energy Market Revenue per MW[Electri
 	  )
 	 )
 	)
-	
+	* New Plant Capacity Factor Scaling for Merchant Entry[Electricity Source]
+
 	+ (Variable Subsidies per Unit New Elec Output[Electricity Source]
 	  + Carbon Price Credit per MWh[Electricity Source])
 	  *Expected Capacity Factor x Hours per Year for Plants Built This Year
@@ -1579,7 +1599,8 @@ Average Four Year Prior Total Predicted Net Energy Market Revenue per MW[CCUS El
 	  )
 	 )
 	)
-	
+	* New Plant Capacity Factor Scaling for Merchant Entry[CCUS Electricity Source]
+
 	+ (Total Subsidies per Unit Electricity Output Adjusted for Lifetime[CCUS Electricity Source\
 		]
 	  + Carbon Price Credit per MWh[CCUS Electricity Source])
@@ -2758,6 +2779,25 @@ BAU Average Four Year Prior Net Energy Market Revenue by Plant Type Excluding Su
 	~	$/MW
 	~		|
 
+BAU Fleet Average Capacity Factor x Hours per Year by Power Plant Type[Electricity Source]=
+	SUM(
+	  BAU Last Year Hourly Bid Electricity Capacity Factors by Plant Type[Electricity Timeslice!,Hour!,Electricity Source]
+	  * SHELF Days per Electricity Timeslice[Electricity Timeslice!]
+	  * One Hour
+	)
+	~	hours
+	~		|
+
+BAU New Plant Capacity Factor Scaling for Merchant Entry[Electricity Source]=
+	IF THEN ELSE(
+	  BAU Fleet Average Capacity Factor x Hours per Year by Power Plant Type[Electricity Source] < One Hour,
+	  1,
+	  BAU Expected Capacity Factor x Hours per Year for Plants Built This Year[Electricity Source]
+	  / BAU Fleet Average Capacity Factor x Hours per Year by Power Plant Type[Electricity Source]
+	)
+	~	Dmnl
+	~		|
+
 BAU Average Four Year Prior Total Predicted Net Energy Market Revenue per MW[Electricity Source\
 		] :EXCEPT: [CCUS Electricity Source]=
 	IF THEN ELSE(
@@ -2781,7 +2821,8 @@ BAU Average Four Year Prior Total Predicted Net Energy Market Revenue per MW[Ele
 	  )
 	 )
 	)
-	
+	* BAU New Plant Capacity Factor Scaling for Merchant Entry[Electricity Source]
+
 	+ (BAU Variable Subsidies per Unit New Electricity Output[Electricity Source]
 	  + BAU Carbon Price Credit per MWh[Electricity Source])
 	  * BAU Expected Capacity Factor x Hours per Year for Plants Built This Year[Electricity Source\
@@ -2809,7 +2850,8 @@ BAU Average Four Year Prior Total Predicted Net Energy Market Revenue per MW[CCU
 	  )
 	 )
 	)
-	
+	* BAU New Plant Capacity Factor Scaling for Merchant Entry[CCUS Electricity Source]
+
 	+ (BAU Total Subsidies per Unit Electricity Output Adjusted for Lifetime[CCUS Electricity Source\
 		]
 	  + BAU Carbon Price Credit per MWh[CCUS Electricity Source])
@@ -3058,7 +3100,7 @@ BAU Boolean Plant Types that May Not be Built due to Having Been Retired to Zero
 		] > 0,
 	
 	  IF THEN ELSE(
-	   BCRbQ BAU Capacity Retirements before Quantization[Electricity Source]
+	   BAU Capacity Retirements from Schedule[Electricity Source]
 	    >= BAU Last Year Electricity Generation Capacity[Electricity Source],
 	
 	    1,
@@ -8323,7 +8365,7 @@ BAU Last Year Boolean Persistently Deep Unviable for Cost Driven Retirement[Elec
 BAU Last Year Capacity and This Year Mandated Change in Capacity by Electricity Source\
 		[Electricity Source]=
 	BAU Last Year Electricity Generation Capacity[Electricity Source]
-	 - BCRbQ BAU Capacity Retirements before Quantization[Electricity Source]
+	 - BAU Capacity Retirements from Schedule[Electricity Source]
 	 - BAU Decrease in Capacity from Mandated CCUS Retrofits[Electricity Source]
 	 + BPMCCS BAU Policy Mandated Capacity Construction Schedule[Electricity Source]
 	 + BPMCRS BAU Policy Mandated Capacity Retrofit Schedule[Electricity Source]
@@ -9274,7 +9316,7 @@ BAU Max Capacity that Can be Retired Economically by Plant Type[Electricity Sour
 		!]
 	    * BAU Retirable Vintages by Year[Vintage!]
 	  )
-	  - BCRbQ BAU Capacity Retirements before Quantization[Electricity Source])
+	  - BAU Capacity Retirements from Schedule[Electricity Source])
 	~	MW
 	~		|
 
@@ -10760,17 +10802,25 @@ BAU Newly Persistently Deep Unviable for Cost Driven Retirement[Electricity Sour
 	~	Dmnl
 	~		|
 
+BAU Qualifying Hourly Supply for Reliability Credit[Clean Elec Requirement,Electricity Timeslice,Hour]=
+	SUM(
+	  BAU Elec Portfolio Qualifying Sources[Electricity Source!,Clean Elec Requirement]
+	  * BAU Electricity Generation Capacity before Reliability Additions[Electricity Source!]
+	  * BAU Last Year Hourly Bid Electricity Capacity Factors by Plant Type[Electricity Timeslice,Hour,Electricity Source!]
+	)
+	~	MW
+	~		|
+
 BAU Non Qualifying Annual Energy Serving Peak Reliability Timeslices[Clean Elec Requirement\
 		]=
+	MAX(One MW * One Hour,
 	SUM(
-	  (1 - BAU Elec Portfolio Qualifying Sources[Electricity Source!,Clean Elec Requirement\
-		])
-	  * BAU Electricity Generation Capacity before Reliability Additions[Electricity Source\
-		!]
-	  * BAU Last Year Hourly Bid Electricity Capacity Factors by Plant Type[peak day electricity timeslice\
-		!,Hour!,Electricity Source!]
+	  MAX(0,
+	    BAU Total Electricity Demand by Hour Plus Reserve Margin After Demand Altering Technologies[peak day electricity timeslice!,Hour!]
+	    - BAU Qualifying Hourly Supply for Reliability Credit[Clean Elec Requirement,peak day electricity timeslice!,Hour!]
+	  )
 	  * SHELF Days per Electricity Timeslice[peak day electricity timeslice!]
-	)
+	))
 	~	MW*hour
 	~		|
 
@@ -12173,7 +12223,7 @@ BAU Retiring Generation Capacity Including Economic and Mandated Retirements[Ele
 		,Optimization Pass]=
 	BAU Economic Capacity Retirements by Optimization Pass[Electricity Source,Optimization Pass\
 		]
-	+ BCRbQ BAU Capacity Retirements before Quantization[Electricity Source]
+	+ BAU Capacity Retirements from Schedule[Electricity Source]
 	+SUM(BAU Capacity Retirements Based on Economic Lifetime[Electricity Source,Vintage!\
 		])
 	~	MW
@@ -12182,7 +12232,7 @@ BAU Retiring Generation Capacity Including Economic and Mandated Retirements[Ele
 BAU Retiring Generation Capacity including Economic and Policy Mandated Retirements Excluding Capacity Payment\
 		[Electricity Source]=
 	BAU Economic Capacity Retirements Excluding Capacity Payment[Electricity Source]
-	+ BCRbQ BAU Capacity Retirements before Quantization[Electricity Source]
+	+ BAU Capacity Retirements from Schedule[Electricity Source]
 	+ SUM(BAU Capacity Retirements Based on Economic Lifetime[Electricity Source,Vintage\
 		!])
 	~	MW
@@ -12901,7 +12951,7 @@ BAU Surviving Electricity Generation Capacity before Economic Retirements[Electr
 	  0,
 	
 	  BAU Last Year Electricity Generation Capacity[Electricity Source]
-	  - BCRbQ BAU Capacity Retirements before Quantization[Electricity Source]
+	  - BAU Capacity Retirements from Schedule[Electricity Source]
 	)
 	~	MW
 	~		|
@@ -15519,6 +15569,27 @@ BCRbQ BAU Capacity Retirements before Quantization[Electricity Source]:INTERPOLA
 	   'B2'
 	)
 	~	MW
+	~		|
+
+BAU Capacity Retirements from Schedule[Electricity Source]=
+	MAX(0,
+	  BCRbQ BAU Capacity Retirements before Quantization[Electricity Source]
+	  - BAU Schedule Netting Credit from Economic Retirements[Electricity Source])
+	~	MW
+	~		|
+
+BAU Schedule Netting Credit from Economic Retirements[Electricity Source]= INTEG (
+	Change in BAU Schedule Netting Credit from Economic Retirements[Electricity Source],
+		0)
+	~	MW
+	~		|
+
+Change in BAU Schedule Netting Credit from Economic Retirements[Electricity Source]=
+	(SUM(BAU Economic Capacity Retirements by Optimization Pass[Electricity Source,last pass!])
+	- MIN(BAU Schedule Netting Credit from Economic Retirements[Electricity Source],
+	  BCRbQ BAU Capacity Retirements before Quantization[Electricity Source]))
+	/ One Year
+	~	MW/Year
 	~		|
 
 BCS BAU CCS Subsidy[CCS Sectors]:INTERPOLATE::=
@@ -19457,6 +19528,13 @@ Capacity Retirements by Vintage[Electricity Source,current vintage]=
 	~		|
 
 Capacity Retirements from Selected Schedule[Electricity Source]=
+	MAX(0,
+	  Capacity Retirements from Selected Schedule before Netting[Electricity Source]
+	  - Schedule Netting Credit from Economic Retirements[Electricity Source])
+	~	MW
+	~		|
+
+Capacity Retirements from Selected Schedule before Netting[Electricity Source]=
 	IF THEN ELSE(
 	    Boolean Use Non BAU Capacity Retirement Schedule This Year[Electricity Source] >\
 		 0,
@@ -19466,6 +19544,20 @@ Capacity Retirements from Selected Schedule[Electricity Source]=
 	    BCRbQ BAU Capacity Retirements before Quantization[Electricity Source]
 	)
 	~	MW
+	~		|
+
+Schedule Netting Credit from Economic Retirements[Electricity Source]= INTEG (
+	Change in Schedule Netting Credit from Economic Retirements[Electricity Source],
+		0)
+	~	MW
+	~		|
+
+Change in Schedule Netting Credit from Economic Retirements[Electricity Source]=
+	(SUM(Economic Capacity Retirements by Optimization Pass[Electricity Source,last pass!])
+	- MIN(Schedule Netting Credit from Economic Retirements[Electricity Source],
+	  Capacity Retirements from Selected Schedule before Netting[Electricity Source]))
+	/ One Year
+	~	MW/Year
 	~		|
 
 Capacity Supply Curve Parameters:
@@ -40941,17 +41033,25 @@ Non Fossil Primary Energy=
 	~	BTU
 	~		|
 
+Qualifying Hourly Supply for Reliability Credit[Clean Elec Requirement,Electricity Timeslice,Hour]=
+	SUM(
+	  Elec Portfolio Qualifying Sources[Electricity Source!,Clean Elec Requirement]
+	  * Electricity Generation Capacity before Reliability Additions[Electricity Source!]
+	  * Last Year Hourly Bid Electricity Capacity Factors by Plant Type[Electricity Timeslice,Hour,Electricity Source!]
+	)
+	~	MW
+	~		|
+
 Non Qualifying Annual Energy Serving Peak Reliability Timeslices[Clean Elec Requirement\
 		]=
+	MAX(One MW * One Hour,
 	SUM(
-	  (1 - Elec Portfolio Qualifying Sources[Electricity Source!,Clean Elec Requirement]\
-		)
-	  * Electricity Generation Capacity before Reliability Additions[Electricity Source!\
-		]
-	  * Last Year Hourly Bid Electricity Capacity Factors by Plant Type[peak day electricity timeslice\
-		!,Hour!,Electricity Source!]
+	  MAX(0,
+	    Total Electricity Demand by Hour Plus Reserve Margin After Demand Altering Technologies[peak day electricity timeslice!,Hour!]
+	    - Qualifying Hourly Supply for Reliability Credit[Clean Elec Requirement,peak day electricity timeslice!,Hour!]
+	  )
 	  * SHELF Days per Electricity Timeslice[peak day electricity timeslice!]
-	)
+	))
 	~	MW*hour
 	~		|
 
@@ -49888,13 +49988,39 @@ SoESCaOMCbIC Share of Electricity Sector Variable OM Costs by ISIC Code[Electric
 	~	Dmnl
 	~		|
 
-SoFCtMbCtPR Share of Forward Costs that Must Be Covered to Prevent Retirement[Electricity Source\
-		]=
+SoCtICoS Share of Capacity that Is Cost of Service[Electricity Source]=
 	GET DIRECT CONSTANTS(
-	   'InputData/elec/SoFCtMbCtPR/SoFCtMbCtPR.csv',
+	   'InputData/elec/SoCtICoS/SoCtICoS.csv',
 	   ',',
 	   'B2*'
 	)
+	~	Dmnl
+	~		|
+
+SoFCtMbCtPRCoS Share of Forward Costs that Must Be Covered to Prevent Retirement for Cost of Service Plants[Electricity Source]=
+	GET DIRECT CONSTANTS(
+	   'InputData/elec/SoFCtMbCtPRCoS/SoFCtMbCtPRCoS.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Dmnl
+	~		|
+
+SoFCtMbCtPRM Share of Forward Costs that Must Be Covered to Prevent Retirement for Merchant Plants[Electricity Source]=
+	GET DIRECT CONSTANTS(
+	   'InputData/elec/SoFCtMbCtPRM/SoFCtMbCtPRM.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Dmnl
+	~		|
+
+SoFCtMbCtPR Share of Forward Costs that Must Be Covered to Prevent Retirement[Electricity Source\
+		]=
+	SoCtICoS Share of Capacity that Is Cost of Service[Electricity Source]
+	* SoFCtMbCtPRCoS Share of Forward Costs that Must Be Covered to Prevent Retirement for Cost of Service Plants[Electricity Source]
+	+ (1 - SoCtICoS Share of Capacity that Is Cost of Service[Electricity Source])
+	* SoFCtMbCtPRM Share of Forward Costs that Must Be Covered to Prevent Retirement for Merchant Plants[Electricity Source]
 	~	Dmnl
 	~		|
 
