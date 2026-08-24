@@ -4320,6 +4320,50 @@ BAU CCS Subsidy per Unit Output for Dispatch by Vintage[Electricity Source,Model
 	~	$/(MW*hr)
 	~		|
 
+BAU Cement Module Energy Use by Fuel Type[Industrial Fuel]=
+	SUM(
+	  BAU Clinker Production by Pathway[Cement Production Pathway!]
+	  * CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway!\
+		,Industrial Fuel]
+	)
+	~	BTU/Year
+	~	BAU twin of Cement Module Energy Use by Fuel Type.
+	|
+
+BAU Cement Pathway Choice Weight[Cement Production Pathway]=
+	10000
+	* CPSW Cement Pathway Shareweight[Cement Production Pathway]
+	* (
+	  MAX(BAU Cement Pathway Levelized Cost per Ton[Cement Production Pathway], 0.01)
+	  / MAX(BAU Minimum Eligible Cement Pathway Cost per Ton, 0.01)
+	) ^ IELC Industrial Equipment Logit Coefficient
+	~	Dmnl
+	~	BAU twin of Cement Pathway Choice Weight.
+	|
+
+BAU Cement Pathway Levelized Cost per Ton[Cement Production Pathway]=
+	CPCC Cement Pathway Capital Cost per Unit Annual Capacity[Cement Production Pathway]
+	/ (
+	  CPAL Cement Pathway Asset Life[Cement Production Pathway]
+	  * SYCCU Start Year Cement Capacity Utilization
+	)
+	+ SUM(
+	    CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway\
+		,Industrial Fuel!]
+	    * BAU Industrial Fuel Cost per Unit Energy[cement and other nonmetallic minerals 239\
+		,Industrial Fuel!]
+	  )
+	~	$/metric ton
+	~	BAU twin of Cement Pathway Levelized Cost per Ton, at BAU fuel costs. \
+		Draft choice cost: straight-line capital per ton actually produced \
+		(nameplate capex grossed up by the target utilization) plus fuel \
+		costs per ton. See the policy twin's WARNING on carbon-tax exposure \
+		(fuel prices carry the tax, no capture credit or calcination term \
+		until Phase 2a). Later phases upgrade the capital term to the \
+		financing-annuity basis; non-energy variable costs are omitted \
+		because shared components cancel in the cost-ratio logit.
+	|
+
 BAU CES Costs for ACP Compliance[RPS]=
 	MAX(0,
 	    BAU Elec Portfolio Percentage to Seek This Year[RPS]-SUM(BAU Expected Achievable Annual RPS by Optimization Pass\
@@ -4726,6 +4770,61 @@ BAU Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel,industrial h
 		]
 	~	$/BTU
 	~		|
+
+BAU Clinker Production by Pathway[Cement Production Pathway]=
+	(
+	  BAU Clinker Production Capacity by Pathway[Cement Production Pathway]
+	  + BAU New Clinker Production Capacity by Pathway[Cement Production Pathway]
+	)
+	* SYCCU Start Year Cement Capacity Utilization
+	* MIN(
+	    1,
+	    ZIDZ(
+	      BAU Total Clinker Demand,
+	      (
+	        SUM(BAU Clinker Production Capacity by Pathway[Cement Production Pathway!])
+	        + SUM(BAU New Clinker Production Capacity by Pathway[Cement Production Pathway!\
+		])
+	      ) * SYCCU Start Year Cement Capacity Utilization
+	    )
+	  )
+	~	metric tons/Year
+	~	BAU twin of Clinker Production by Pathway.
+	|
+
+BAU Clinker Production Capacity Added During Model Run by Pathway[Cement Production Pathway\
+		]= INTEG(
+	BAU New Clinker Production Capacity by Pathway[Cement Production Pathway]
+	- BAU Model Run Clinker Capacity Retirements by Pathway[Cement Production Pathway],
+		0)
+	~	metric tons/Year
+	~	BAU twin of Clinker Production Capacity Added During Model Run by \
+		Pathway.
+	|
+
+BAU Clinker Production Capacity by Pathway[Cement Production Pathway]=
+	BAU Preexisting Clinker Production Capacity by Pathway[Cement Production Pathway]
+	+ BAU Clinker Production Capacity Added During Model Run by Pathway[Cement Production Pathway\
+		]
+	~	metric tons/Year
+	~	BAU twin of Clinker Production Capacity by Pathway: the start-year \
+		fleet (retiring on the exogenous schedule) plus model-run additions \
+		(retiring by asset life).
+	|
+
+BAU Clinker to Cement Ratio=
+	MAX(
+	  BCtCR BAU Clinker to Cement Ratio,
+	  1 - ZIDZ(MASCM Maximum Annual SCM Supply for Cement, BAU Total Cement Demand)
+	)
+	~	Dmnl
+	~	BAU clinker-to-cement mass ratio: the exogenous observed ratio (BCtCR), \
+		floored so it cannot imply more supplementary cementitious material \
+		(SCM) blending than MASCM allows available. The floor is structural \
+		and non-binding at default 2025-anchored values in Phase 1a (no \
+		policy lever yet drives blending up). ZIDZ-guarded for the case \
+		BAU Total Cement Demand is ever zero.
+	|
 
 BAU CO2 Captured via DAC=
 	DACD Direct Air Capture Potential
@@ -11294,6 +11393,19 @@ BAU Minimum Buildable Capacity for Plants=
 	~	MW
 	~		|
 
+BAU Minimum Eligible Cement Pathway Cost per Ton=
+	VMIN(
+	  BAU Cement Pathway Levelized Cost per Ton[Cement Production Pathway!]
+	  + IF THEN ELSE(
+	      CPSW Cement Pathway Shareweight[Cement Production Pathway!] > 0,
+	      0,
+	      1e+09
+	    )
+	)
+	~	$/metric ton
+	~	BAU twin of Minimum Eligible Cement Pathway Cost per Ton.
+	|
+
 BAU Minimum Eligible Fuel Cost per Unit Energy in Electricity Equivalent[Industry Category\
 		,Industrial Process]=
 	VMIN(
@@ -11309,6 +11421,14 @@ BAU Minimum Eligible Fuel Cost per Unit Energy in Electricity Equivalent[Industr
 	~	$/BTU
 	~	BAU twin of Minimum Eligible Fuel Cost per Unit Energy in Electricity \
 		Equivalent. See that variable for documentation.
+	|
+
+BAU Model Run Clinker Capacity Retirements by Pathway[Cement Production Pathway]=
+	BAU Clinker Production Capacity Added During Model Run by Pathway[Cement Production Pathway\
+		]
+	/ CPAL Cement Pathway Asset Life[Cement Production Pathway]
+	~	metric tons/Year
+	~	BAU twin of Model Run Clinker Capacity Retirements by Pathway.
 	|
 
 BAU Net Electricity Clean Firm Demand Relative to Available Clean Firm Supply by Hour before Additions\
@@ -11720,6 +11840,14 @@ BAU New Cargo Dist Transported Allocated by Last Year Vehicle Technologies[Vehic
 		,Vehicle Technology]
 	~	thing*miles
 	~		|
+
+BAU New Clinker Production Capacity by Pathway[Cement Production Pathway]=
+	BAU Preliminary New Clinker Production Capacity by Pathway[Cement Production Pathway]
+	~	metric tons/Year
+	~	BAU twin of New Clinker Production Capacity by Pathway. No secondary \
+		availability cap exists in the cement module (unlike steel's scrap \
+		EAF cap), so the logit allocation is uncapped and final as computed.
+	|
 
 BAU New Components Energy Use[Building Type,Building Fuel,Building Component] :EXCEPT:\
 		     [Building Type,Building Fuel,envelope
@@ -13256,6 +13384,41 @@ BAU Predicted Change in Energy Market Revenue for CCUS Retrofits[lignite w CCS e
 		]
 	~	$/MW
 	~		|
+
+BAU Preexisting Clinker Capacity Retirements by Pathway[Cement Production Pathway]=
+	MIN(
+	  CPRS Cement Preexisting Capacity Retirement Schedule[Cement Production Pathway],
+	  BAU Preexisting Clinker Production Capacity by Pathway[Cement Production Pathway]
+	)
+	~	metric tons/Year
+	~	BAU twin of Preexisting Clinker Capacity Retirements by Pathway. \
+		Floored so the stock cannot go negative once the start-year fleet is \
+		exhausted. Identical to the policy case until policy-driven early \
+		retirement arrives in a later phase.
+	|
+
+BAU Preexisting Clinker Production Capacity by Pathway[Cement Production Pathway]= INTEG(
+	-BAU Preexisting Clinker Capacity Retirements by Pathway[Cement Production Pathway],
+		SYCPbP Start Year Clinker Production by Pathway[Cement Production Pathway]
+		/ SYCCU Start Year Cement Capacity Utilization)
+	~	metric tons/Year
+	~	BAU twin of Preexisting Clinker Production Capacity by Pathway. \
+		Surviving start-year clinker capacity (nameplate), drawn down by the \
+		exogenous retirement schedule. Initialized at start-year production \
+		divided by observed utilization, so nameplate exceeds production.
+	|
+
+BAU Preliminary New Clinker Production Capacity by Pathway[Cement Production Pathway]=
+	BAU Share of New Clinker Production Capacity by Pathway[Cement Production Pathway]
+	* BAU Unmet Clinker Production Capacity Need
+	/ SYCCU Start Year Cement Capacity Utilization
+	~	metric tons/Year
+	~	BAU twin of Preliminary New Clinker Production Capacity by Pathway. \
+		Unlike steel, there is no scrap-availability analog inside the logit \
+		here (the SCM cap already acted upstream on the clinker-to-cement \
+		ratio), so this preliminary allocation is also the final allocation - \
+		see BAU New Clinker Production Capacity by Pathway below.
+	|
 
 BAU Present Value of Clean Industrial Heat Subsidy[Industry Category,Industrial Fuel,\
 		industrial heating process]=
@@ -14909,6 +15072,15 @@ BAU Share of Maximum Annual Decrease in Demand from Diurnal Grid Batteries=
 	)
 	~	Dmnl
 	~		|
+
+BAU Share of New Clinker Production Capacity by Pathway[Cement Production Pathway]=
+	ZIDZ(
+	  BAU Cement Pathway Choice Weight[Cement Production Pathway],
+	  SUM(BAU Cement Pathway Choice Weight[Cement Production Pathway!])
+	)
+	~	Dmnl
+	~	BAU twin of Share of New Clinker Production Capacity by Pathway.
+	|
 
 BAU Share of New Industrial Equipment Allocated by Fuel Type in Electricity Equivalent\
 		[Industry Category,Industrial Fuel
@@ -16670,6 +16842,15 @@ BAU Total Carbon Tax Revenue=
 	~	$
 	~		|
 
+BAU Total Cement Demand=
+	BCD BAU Cement Demand
+	~	metric tons/Year
+	~	Total BAU cement demand (domestic-production basis). Pathway \
+		attribution is endogenous (the cost logit, calibrated to start-year \
+		data via SYCPbP and the CPSW shareweights), so only total demand is \
+		exogenous. Part of the Phase 1a compute-only cement pathway module.
+	|
+
 BAU Total Change in Energy Market and CES Revenue for CCUS Retrofits[CCUS Electricity Source\
 		, Optimization Pass,RPS]=
 	BAU Predicted Change in Energy Market Revenue for CCUS Retrofits[CCUS Electricity Source\
@@ -16692,6 +16873,15 @@ BAU Total Change in Energy Market and CES Revenue for CCUS Retrofits[CCUS Electr
 		,CCUS Source Electricity Source]
 	~	$/MW
 	~		|
+
+BAU Total Clinker Demand=
+	BAU Total Cement Demand * BAU Clinker to Cement Ratio
+	~	metric tons/Year
+	~	BAU clinker (not cement) demand: everything downstream of this point \
+		in the module - capacity, the pathway logit, production, and energy - \
+		runs on clinker tons, since clinker production (not final grinding/ \
+		blending) is where the pathway choice and kiln energy use occur.
+	|
 
 BAU Total CO2e Emissions=
 	SUM(
@@ -17917,6 +18107,17 @@ BAU Two Years Prior Net Loss per Unit Capacity Excluding Capacity Payment[Electr
 	~	$/MW
 	~		|
 
+BAU Unmet Clinker Production Capacity Need=
+	MAX(
+	  0,
+	  BAU Total Clinker Demand
+	  - SUM(BAU Clinker Production Capacity by Pathway[Cement Production Pathway!])
+	    * SYCCU Start Year Cement Capacity Utilization
+	)
+	~	metric tons/Year
+	~	BAU twin of Unmet Clinker Production Capacity Need.
+	|
+
 BAU Unmet Electricity Demand After Elec Portfolio Std Dispatch[Electricity Timeslice,\
 		Hour]=
 	QUANTUM(
@@ -18006,6 +18207,18 @@ BAU Unmet Electricity Demand Summed Across Hours[Electricity Timeslice]=
 	SUM(BAU Unmet Electricity Demand by Hour[Electricity Timeslice,Hour!])
 	~	MW*hr
 	~		~	:SUPPLEMENTARY 
+	|
+
+BAU Unserved Clinker Demand This Year=
+	MAX(
+	  0,
+	  BAU Total Clinker Demand
+	  - SUM(BAU Clinker Production by Pathway[Cement Production Pathway!])
+	)
+	~	metric tons/Year
+	~	BAU twin of Unserved Clinker Demand This Year. Diagnostic (steel P23 \
+		lesson): should be zero in any healthy run; check it in every gate \
+		extraction.
 	|
 
 BAU Value Added by ISIC Code by Year[ISIC Code]=
@@ -18475,6 +18688,19 @@ BBPPRTY BAU Ban Power Plant Retrofits This Year[Electricity Source]:=
 	~	Dmnl
 	~		|
 
+BCD BAU Cement Demand:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/indst/BCD/BCD.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	metric tons/Year
+	~	BAU demand for cement (total, domestic-production basis; all \
+		pathways). DRAFT placeholder (flat 84 MMT/yr from USGS MCS2026 2025 \
+		production) - anchor to AEO/PCA before release.
+	|
+
 BCDTRtSY BAU Cargo Dist Transported Relative to Start Year[Vehicle Type,passenger]:INTERPOLATE:\
 		:=
 	GET DIRECT DATA(
@@ -18897,6 +19123,23 @@ BCSG BAU CO2 Sequestered Globally:INTERPOLATE::=
 	)
 	~	metric tons CO2e
 	~		|
+
+BCtCR BAU Clinker to Cement Ratio:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/indst/BCtCR/BCtCR.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	Dmnl
+	~	Observed BAU clinker-to-cement mass ratio on the DOMESTIC-production \
+		basis (imported clinker excluded, so start-year clinker demand \
+		matches start-year domestic production and the module does not build \
+		capacity to replace imports; clinker trade stays dollar-side via \
+		IESE). DRAFT placeholder (0.8214 flat = USGS 2025 domestic clinker \
+		69 over cement 84; WRI cites 0.88 for the US - reconciliation \
+		flagged, verify before release).
+	|
 
 BCTR BAU Carbon Tax Rate[Sectors]:INTERPOLATE::=
 	GET DIRECT DATA(
@@ -23642,6 +23885,19 @@ Carbon Tax Rebate on Exported Nonenergy Products[Industry Category]=
 	~	$
 	~		|
 
+carbonate cement pathway:
+	dry kiln with precalciner,
+	dry kiln with CCS,
+	electric kiln
+	~
+	~	Subrange of Cement Production Pathway covering routes that emit \
+		calcination CO2 from carbonate decomposition (all routes based on \
+		conventional clinker chemistry). Declared in Phase 1a for use in \
+		Phase 2a's calcination-emissions structure; alternative chemistry \
+		cement is excluded because it is designed around a low- or no- \
+		carbonate binder chemistry.
+	|
+
 Cargo Dist Increases due to Mode Shifting[Target Vehicle Type,Cargo Type]=
 	SUM(
 	  Cargo Dist Transported after Macroeconomic Feedbacks[Vehicle Type!,Cargo Type]
@@ -24220,6 +24476,110 @@ CECRCbI Cost Effective CCS Retrofit Capacity by Industry[Industry Category,proce
 	)
 	~	Dmnl
 	~		|
+
+CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway,Industrial Fuel\
+		]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/CEIbPaF/CEIbPaF.csv',
+	   ',',
+	   'B2'
+	)
+	~	BTU/metric ton
+	~	Final energy per metric ton of clinker by production pathway and \
+		fuel (kiln boundary). DRAFT placeholder from DOE Bandwidth Study \
+		2017 (3.43 MMBtu/t thermal energy) and PCA fuel mix 2023 (53% coal \
+		plus petcoke / 31% natural gas / 16% alternative fuels, all booked \
+		to the coal element as legacy-neutral); dry kiln with CCS adds an \
+		amine-capture energy penalty (DRAFT); electric kiln and alternative \
+		chemistry cement are electricity-only placeholders - verify before \
+		release.
+	|
+
+Cement Module Energy as Share of Generic Energy by Fuel[Industrial Fuel]=
+	ZIDZ(
+	  Cement Module Energy Use by Fuel Type[Industrial Fuel],
+	  Industrial Fuel Use for Energy Purposes[Industrial Fuel,cement and other nonmetallic minerals 239\
+		]
+	)
+	~	Dmnl
+	~	Calibration diagnostic for the Phase 1b wiring/share splice: pathway- \
+		module energy by fuel over the current generic structure's ENERGY- \
+		purpose fuel use for cement and other nonmetallic minerals 239 (a \
+		category that also contains lime, gypsum, and ceramics). Expected at \
+		defaults: electricity and natural gas roughly 0.2-0.3, hard coal \
+		roughly 0.6-0.8 (cement dominates 239's coal). Heavy or residual \
+		fuel oil reads far above 1 BY DESIGN: the module books petcoke \
+		there, while the generic structure books petcoke as FEEDSTOCK \
+		(BIFUaF), outside this denominator - cement's analog of steel's \
+		coking-coal boundary finding, to be spliced against the feedstock \
+		chain at 1b. Biomass reads 0 by ZIDZ (module books alternative \
+		fuels there; generic 239 biomass is zero) - a known 1b calibration \
+		boundary item.
+	|
+
+Cement Module Energy Use by Fuel Type[Industrial Fuel]=
+	SUM(
+	  Clinker Production by Pathway[Cement Production Pathway!]
+	  * CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway!\
+		,Industrial Fuel]
+	)
+	~	BTU/Year
+	~	Cement sector energy use by fuel implied by the pathway module. In a \
+		later wiring phase this replaces the generic structure's process-end- \
+		use energy for cement and other nonmetallic minerals 239; in Phase 1a \
+		it is diagnostic only.
+	|
+
+Cement Pathway Choice Weight[Cement Production Pathway]=
+	10000
+	* CPSW Cement Pathway Shareweight[Cement Production Pathway]
+	* (
+	  MAX(Cement Pathway Levelized Cost per Ton[Cement Production Pathway], 0.01)
+	  / MAX(Minimum Eligible Cement Pathway Cost per Ton, 0.01)
+	) ^ IELC Industrial Equipment Logit Coefficient
+	~	Dmnl
+	~	Relative-cost (power function) logit weight for new clinker capacity \
+		by pathway, cloning the Industrial Equipment Fuel Choice Weight form \
+		(and steel's pathway-logit clone of it) and reusing its exponent \
+		(IELC). Cost floors are rescaled to per-ton magnitudes (0.01 $/ton \
+		versus 1e-7 $/BTU in the fuel-choice version).
+	|
+
+Cement Pathway Levelized Cost per Ton[Cement Production Pathway]=
+	CPCC Cement Pathway Capital Cost per Unit Annual Capacity[Cement Production Pathway]
+	/ (
+	  CPAL Cement Pathway Asset Life[Cement Production Pathway]
+	  * SYCCU Start Year Cement Capacity Utilization
+	)
+	+ SUM(
+	    CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway\
+		,Industrial Fuel!]
+	    * Industrial Fuel Cost per Unit Energy[cement and other nonmetallic minerals 239\
+		,Industrial Fuel!]
+	  )
+	~	$/metric ton
+	~	Draft choice cost: straight-line capital per ton actually produced \
+		(nameplate capex grossed up by the target utilization) plus fuel \
+		costs per ton, at policy-case fuel costs. WARNING: the fuel prices \
+		already carry the fuel carbon tax, but there is no capture credit \
+		and no calcination-CO2 term yet, so the CCS pathway pays MORE tax \
+		than the incumbent under a carbon tax - do not interpret pathway \
+		economics under carbon pricing until Phase 2a adds the process-CO2 \
+		and capture terms. Later phases also upgrade the capital term to \
+		the financing-annuity basis (BCoISC); non-energy variable costs are \
+		omitted because shared components cancel in the cost-ratio logit.
+	|
+
+Cement Production Pathway:
+	dry kiln with precalciner,
+	dry kiln with CCS,
+	electric kiln,
+	alternative chemistry cement
+	~
+	~	Clinker/cement production pathways. Pre-commercial routes (CCS, \
+		electric kiln, alternative chemistry) are gated by the CPSW \
+		shareweight time series, not by structure.
+	|
 
 CES Costs for ACP Compliance[RPS]=
 	MAX(0,
@@ -27887,6 +28247,67 @@ Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel,industrial heati
 	~	$/BTU
 	~		|
 
+Clinker Production by Pathway[Cement Production Pathway]=
+	(
+	  Clinker Production Capacity by Pathway[Cement Production Pathway]
+	  + New Clinker Production Capacity by Pathway[Cement Production Pathway]
+	)
+	* SYCCU Start Year Cement Capacity Utilization
+	* MIN(
+	    1,
+	    ZIDZ(
+	      Total Clinker Demand,
+	      (
+	        SUM(Clinker Production Capacity by Pathway[Cement Production Pathway!])
+	        + SUM(New Clinker Production Capacity by Pathway[Cement Production Pathway!])
+	      ) * SYCCU Start Year Cement Capacity Utilization
+	    )
+	  )
+	~	metric tons/Year
+	~	Production by pathway: nameplate capacity including this year's new \
+		builds (same-year commissioning, so builds close this year's gap), \
+		run at the target utilization, rationed uniformly when demand falls \
+		short. Realized utilization is therefore emergent: it equals the \
+		target when capacity is fully used and falls in demand slumps. No \
+		scrap-cap analog exists here (unlike steel), so the logit allocation \
+		feeding this equation is uncapped.
+	|
+
+Clinker Production Capacity Added During Model Run by Pathway[Cement Production Pathway\
+		]= INTEG(
+	New Clinker Production Capacity by Pathway[Cement Production Pathway]
+	- Model Run Clinker Capacity Retirements by Pathway[Cement Production Pathway],
+		0)
+	~	metric tons/Year
+	~	Clinker production capacity built during the model run, retiring by \
+		pathway asset life (CPAL).
+	|
+
+Clinker Production Capacity by Pathway[Cement Production Pathway]=
+	Preexisting Clinker Production Capacity by Pathway[Cement Production Pathway]
+	+ Clinker Production Capacity Added During Model Run by Pathway[Cement Production Pathway\
+		]
+	~	metric tons/Year
+	~	Total surviving clinker production capacity: the start-year fleet \
+		(retiring on the exogenous schedule) plus model-run additions \
+		(retiring by asset life).
+	|
+
+Clinker to Cement Ratio=
+	MAX(
+	  BCtCR BAU Clinker to Cement Ratio,
+	  1 - ZIDZ(MASCM Maximum Annual SCM Supply for Cement, Total Cement Demand)
+	)
+	~	Dmnl
+	~	Policy-case twin of BAU Clinker to Cement Ratio, evaluated against \
+		policy-case Total Cement Demand. In Phase 1a there is no policy lever \
+		on blending itself (e.g. an SCM-substitution mandate), so this differs \
+		from the BAU ratio only through the SCM cap's dependence on the \
+		(policy-scaled) demand denominator; the floor is structural, non- \
+		binding at defaults. A dedicated blending policy lever arrives in a \
+		later phase.
+	|
+
 CO2 Abated by Improved Forest Management This Year=
 	Land Area Newly Affected by Policy[land forest management] * One Year
 	* CApULAbIFM CO2 Abated per Unit Land Area by Improved Forest Management
@@ -29062,6 +29483,66 @@ Cost to Industry from Process Emissions Policies Paid to Labor[chemicals 20,inds
 	* (1 - Boolean Is Industry the Recipient of Funds by Policy[indst N2O abatement])
 	~	$
 	~		|
+
+CPAL Cement Pathway Asset Life[Cement Production Pathway]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/CPAL/CPAL.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Years
+	~	Economic asset life by pathway. Used for age-based model-run \
+		retirement (CPAL) and the draft straight-line capital term in the \
+		choice cost (CPCC/CPAL). No separate campaign-length input exists in \
+		Phase 1a (arrives in Phase 2b alongside the reline/replace decision \
+		structure). DRAFT placeholder - verify before release.
+	|
+
+CPCC Cement Pathway Capital Cost per Unit Annual Capacity[Cement Production Pathway]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/CPCC/CPCC.csv',
+	   ',',
+	   'B2*'
+	)
+	~	$/(metric tons/Year)
+	~	Greenfield capital cost per metric ton of annual clinker capacity by \
+		pathway. DRAFT placeholder (dry kiln with precalciner and electric \
+		kiln/alternative chemistry: judgment; dry kiln with CCS: scaled from \
+		Princeton Net-Zero America $3.5B/3.75 Mt) - verify before release.
+	|
+
+CPRS Cement Preexisting Capacity Retirement Schedule[Cement Production Pathway]:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/indst/CPRS/CPRS.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	metric tons/Year
+	~	Scheduled retirements of the start-year clinker fleet by pathway. \
+		DRAFT placeholder (dry kiln with precalciner: 1.0 Mt/yr 2027-2036, \
+		all other years and pathways zero; conservative age-based estimate, \
+		roughly 10 Mt of the start-year fleet over the decade) - a plain \
+		retirement schedule in Phase 1a; recast to a reline/replace decision \
+		schedule (steel's Phase 2b pattern) in Phase 2b.
+	|
+
+CPSW Cement Pathway Shareweight[Cement Production Pathway]:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/indst/CPSW/CPSW.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	Dmnl
+	~	Entry-gate shareweight time series by cement production pathway (TBS \
+		convention): zero until a pathway is commercially available, so \
+		commercialization timing rides the data, not the structure. DRAFT \
+		placeholder ramps (dry kiln with precalciner: 1 all years; dry kiln \
+		with CCS: 0 to 1 from 2028; electric kiln: 0 to 1 from 2032; \
+		alternative chemistry cement: 0 to 1 from 2030) - calibrate in a \
+		later phase.
+	|
 
 CpUDSC Cost per Unit Distributed Solar Capacity:INTERPOLATE::=
 	GET DIRECT DATA(
@@ -45080,6 +45561,21 @@ Marginal Dispatch Cost by Hour[Electricity Timeslice,Hour]=
 	~	$/(MW*hour)
 	~		|
 
+MASCM Maximum Annual SCM Supply for Cement:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/indst/MASCM/MASCM.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	metric tons/Year
+	~	Maximum supplementary cementitious material (fly ash, slag, pozzolans) \
+		available to cement blending each year, capping how far the clinker- \
+		to-cement ratio can fall below the observed BAU ratio. DRAFT \
+		placeholder (25 MMT/yr flat, judgment) - fly ash/slag/pozzolan supply \
+		build-up pending primary-source verification.
+	|
+
 Material Efficiency Improvement[Source ISIC Code,Target ISIC Code] :EXCEPT: [Source ISIC Code\
 		,Industry Category ISIC Code]=
 	0 ~~|
@@ -46248,6 +46744,23 @@ Minimum Distributed Solar to Meet Capacity Requirement[Building Type,Electricity
 	~	MW
 	~		|
 
+Minimum Eligible Cement Pathway Cost per Ton=
+	VMIN(
+	  Cement Pathway Levelized Cost per Ton[Cement Production Pathway!]
+	  + IF THEN ELSE(
+	      CPSW Cement Pathway Shareweight[Cement Production Pathway!] > 0,
+	      0,
+	      1e+09
+	    )
+	)
+	~	$/metric ton
+	~	Cheapest pathway with a positive shareweight: the reference cost for \
+		the relative-cost pathway logit, mirroring Minimum Eligible Fuel Cost \
+		per Unit Energy in Electricity Equivalent. The ineligibility adder is \
+		large in absolute terms because pathway costs are hundreds of dollars \
+		per ton.
+	|
+
 Minimum Eligible Fuel Cost per Unit Energy in Electricity Equivalent[Industry Category\
 		,Industrial Process]=
 	VMIN(
@@ -46342,6 +46855,15 @@ MLfPPR Minimum Lifetime for Power Plant Retirements=
 	)
 	~	years
 	~		|
+
+Model Run Clinker Capacity Retirements by Pathway[Cement Production Pathway]=
+	Clinker Production Capacity Added During Model Run by Pathway[Cement Production Pathway\
+		]
+	/ CPAL Cement Pathway Asset Life[Cement Production Pathway]
+	~	metric tons/Year
+	~	Age-based retirement of model-run capacity additions: one over asset \
+		life of the surviving added stock per year.
+	|
 
 Model Run Vintage:
 	GET DIRECT SUBSCRIPT(
@@ -48368,6 +48890,15 @@ New Cargo Dist Transported Allocated by Last Year Vehicle Technologies[Vehicle T
 		,Vehicle Technology]
 	~	thing*miles
 	~		|
+
+New Clinker Production Capacity by Pathway[Cement Production Pathway]=
+	Preliminary New Clinker Production Capacity by Pathway[Cement Production Pathway]
+	~	metric tons/Year
+	~	This year's new clinker production capacity by pathway: the logit \
+		allocation, uncapped (the SCM supply cap already acted upstream on the \
+		clinker-to-cement ratio, so there is no analog of steel's scrap-EAF \
+		headroom cap inside the logit itself).
+	|
 
 New Component Energy Use Shifted to Electricity[Building Type,Source Building Fuel,Building Component\
 		] :EXCEPT: [Building Type,electricity bf,Building Component]=
@@ -56997,6 +57528,31 @@ Predicted Change in Energy Market Revenue for CCUS Retrofits[lignite w CCS es]=
 	~	$/MW
 	~		|
 
+Preexisting Clinker Capacity Retirements by Pathway[Cement Production Pathway]=
+	MIN(
+	  CPRS Cement Preexisting Capacity Retirement Schedule[Cement Production Pathway],
+	  Preexisting Clinker Production Capacity by Pathway[Cement Production Pathway]
+	)
+	~	metric tons/Year
+	~	Scheduled retirements of the start-year fleet, floored so the stock \
+		cannot go negative once the fleet is exhausted. CPRS is a plain \
+		exogenous retirement schedule in Phase 1a (nameplate tons; the flow \
+		in year Y reduces the stock from Y plus one under Euler integration \
+		- author schedules with that lag in mind); a campaign-length/reline- \
+		decision structure (steel's Phase 2b pattern) arrives in Phase 2b.
+	|
+
+Preexisting Clinker Production Capacity by Pathway[Cement Production Pathway]= INTEG(
+	-Preexisting Clinker Capacity Retirements by Pathway[Cement Production Pathway],
+		SYCPbP Start Year Clinker Production by Pathway[Cement Production Pathway]
+		/ SYCCU Start Year Cement Capacity Utilization)
+	~	metric tons/Year
+	~	Surviving start-year clinker production capacity (nameplate), drawn \
+		down by the exogenous retirement schedule. Initialized at start-year \
+		production divided by observed utilization, so nameplate exceeds \
+		production.
+	|
+
 Preexisting Industrial Equipment Fuel Type Shares in Electricity Equivalent Adjusted by Early Retirement Policy\
 		[Industry Category
 ,Industrial Process,Industrial Fuel]=
@@ -57052,6 +57608,18 @@ Preexisting Industrial Equipment Fuel Type Shares in Electricity Equivalent Adju
 	)
 	~	Dmnl
 	~		|
+
+Preliminary New Clinker Production Capacity by Pathway[Cement Production Pathway]=
+	Share of New Clinker Production Capacity by Pathway[Cement Production Pathway]
+	* Unmet Clinker Production Capacity Need
+	/ SYCCU Start Year Cement Capacity Utilization
+	~	metric tons/Year
+	~	Logit allocation of needed new clinker capacity (nameplate: the \
+		production gap grossed up by the target utilization). No secondary \
+		availability cap applies (unlike steel's scrap-EAF cap), so this is \
+		also the final allocation - see New Clinker Production Capacity by \
+		Pathway below.
+	|
 
 Present Value Discount and Lifetime Window Denominator[Industry Category,Industrial Process\
 		,Future Year]=
@@ -61000,6 +61568,16 @@ Share of Maximum Annual Decrease in Demand from Diurnal Grid Batteries=
 	~	Dmnl
 	~		|
 
+Share of New Clinker Production Capacity by Pathway[Cement Production Pathway]=
+	ZIDZ(
+	  Cement Pathway Choice Weight[Cement Production Pathway],
+	  SUM(Cement Pathway Choice Weight[Cement Production Pathway!])
+	)
+	~	Dmnl
+	~	Pathway shares of this year's new clinker capacity from the relative- \
+		cost logit.
+	|
+
 Share of New Industrial Equipment Allocated by Fuel Type in Electricity Equivalent[Industry Category\
 		,Industrial Fuel,Industrial Process] :EXCEPT: [Industry Category,Industrial Fuel,industrial heating process\
 		]=
@@ -63085,6 +63663,22 @@ SYBPP Start Year Battery Pack Price=
 	~	$/(kW*hr)
 	~		|
 
+SYCCU Start Year Cement Capacity Utilization=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/SYCCU/SYCCU.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Dmnl
+	~	Observed start-year cement/clinker capacity utilization (USGS 2025: \
+		69 Mt clinker production over roughly 100 Mt nameplate capacity), \
+		applied as the target utilization for new-build sizing and the \
+		production basis throughout. Held constant: realized utilization is \
+		emergent (falls in demand slumps via the production ration), and \
+		pathway-differentiated utilization is a logged refinement. DRAFT - \
+		verify against USGS/PCA before release.
+	|
+
 SYCEU Start Year Components Energy Use[urban residential,Building Fuel,Building Component\
 		]=
 	GET DIRECT CONSTANTS(
@@ -63107,6 +63701,20 @@ SYCEU Start Year Components Energy Use[commercial,Building Fuel,Building Compone
 	)
 	~	BTU
 	~		|
+
+SYCPbP Start Year Clinker Production by Pathway[Cement Production Pathway]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/SYCPbP/SYCPbP.csv',
+	   ',',
+	   'B2*'
+	)
+	~	metric tons/Year
+	~	Start-year clinker production by pathway, initializing the \
+		preexisting capacity stock and calibrating the pathway logit. DRAFT \
+		placeholder (dry kiln with precalciner 69 MMT, all other pathways \
+		zero; USGS 2025 clinker production) - verify against USGS/PCA before \
+		release.
+	|
 
 SYDEC Start Year Distributed Electricity Capacity[Building Type,Electricity Source]=
 	GET DIRECT CONSTANTS(
@@ -65566,6 +66174,20 @@ Total Carbon Tax Revenue=
 	~	$
 	~		|
 
+Total Cement Demand=
+	MAX(0,
+	  BAU Total Cement Demand
+	  * (1 + Percent Change in Production due to Policies[cement and other nonmetallic minerals 239\
+		]))
+	~	metric tons/Year
+	~	Policy-case cement demand in physical units: BAU tonnage scaled by \
+		the same policy-driven production change the dollar-based industry \
+		chain already computes (dollars drive tons, one way, mirroring the \
+		steel module's Total Steel Demand). Floored at zero so an extreme \
+		negative production change cannot drive the clinker ratio above one \
+		or energy use negative.
+	|
+
 Total Change in Average Household Energy Expenditures=
 	Direct Change in Energy Expenditures by Entity[labor and consumers]
 	/ NoH Number of Households
@@ -65703,6 +66325,12 @@ Total Change in Tax Revenues=
 	)
 	~	$
 	~		~	:SUPPLEMENTARY 
+	|
+
+Total Clinker Demand=
+	Total Cement Demand * Clinker to Cement Ratio
+	~	metric tons/Year
+	~	Policy-case twin of BAU Total Clinker Demand.
 	|
 
 Total CO2e Emissions=
@@ -67717,6 +68345,20 @@ Union Status:
 	~	
 	~		|
 
+Unmet Clinker Production Capacity Need=
+	MAX(
+	  0,
+	  Total Clinker Demand
+	  - SUM(Clinker Production Capacity by Pathway[Cement Production Pathway!])
+	    * SYCCU Start Year Cement Capacity Utilization
+	)
+	~	metric tons/Year
+	~	Demand (production units) not servable by surviving nameplate capacity \
+		running at the target utilization; drives new builds allocated by the \
+		pathway logit. Realized utilization above the target is not allowed - \
+		the fleet builds rather than overdrives.
+	|
+
 Unmet Electricity Demand After Elec Portfolio Std Dispatch[Electricity Timeslice,Hour\
 		]=
 	MAX(
@@ -67787,6 +68429,19 @@ Unmet Electricity Demand Summed Across Hours[Electricity Timeslice]=
 	SUM(Unmet Electricity Demand by Hour[Electricity Timeslice,Hour!])
 	~	MW*hr
 	~		~	:SUPPLEMENTARY 
+	|
+
+Unserved Clinker Demand This Year=
+	MAX(
+	  0,
+	  Total Clinker Demand
+	  - SUM(Clinker Production by Pathway[Cement Production Pathway!])
+	)
+	~	metric tons/Year
+	~	Diagnostic (steel P23 lesson): demand the module could not serve \
+		(nonzero only if new-build allocation is blocked, e.g. every pathway \
+		shareweight zero). Should be zero in any healthy run; check it in \
+		every gate extraction.
 	|
 
 URPbIC Union Representation Percentage by ISIC Code[ISIC Code]=
