@@ -203,4 +203,18 @@ for pw in PATHWAYS:
     rows.append([pw] + [lit[pw].get(f, 0) for f in FUELS])
 write("CEIbPaF", "CEIbPaF.csv", rows)
 
-print("\nDone. 10 input CSVs written under", ROOT)
+# ---------------- CCF: Calcination CO2 Factor by Pathway ----------------
+# Net process CO2 per t clinker (g CO2/t), Phase 2a. Dry precalciner and
+# electric kiln: 510,000 g/t (EPA GHGI calcination emission factor 0.510
+# tCO2/t clinker; electrification changes combustion, not chemistry). Dry
+# kiln with CCS: 51,000 (90% capture DRAFT judgment - capture energy is in
+# CEIbPaF; captured-tons ledger/45Q integration deferred to the CCS-framework
+# reconciliation). Alternative chemistry cement: 0 (non-carbonate binder).
+ccf = {"dry kiln with precalciner": 510_000, "dry kiln with CCS": 51_000,
+       "electric kiln": 510_000, "alternative chemistry cement": 0}
+rows = [["Unit: g CO2/metric ton clinker net of pathway-integral capture (DRAFT: EPA GHGI 0.510 t/t calcination factor; CCS 90% capture judgment; verify before release)", "Calcination CO2 Factor"]]
+for pw in PATHWAYS:
+    rows.append([pw, ccf[pw]])
+write("CCF", "CCF.csv", rows)
+
+print("\nDone. 11 input CSVs written under", ROOT)

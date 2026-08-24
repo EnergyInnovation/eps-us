@@ -4365,18 +4365,47 @@ BAU Cement Pathway Levelized Cost per Ton[Cement Production Pathway]=
 	+ SUM(
 	    CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway\
 		,Industrial Fuel!]
-	    * BAU Industrial Fuel Cost per Unit Energy[cement and other nonmetallic minerals 239\
+	    * (
+	      BAU Industrial Fuel Cost per Unit Energy[cement and other nonmetallic minerals 239\
 		,Industrial Fuel!]
+	      - Cement Fuel Feedstock Share[Industrial Fuel!]
+	        * BAU Industrial Fuel Carbon Tax Amount per Unit Energy[cement and other nonmetallic minerals 239\
+		,Industrial Fuel!]
+	    )
 	  )
+	+ Cement Process CO2 Intensity per Ton by Pathway[Cement Production Pathway]
+	  / Grams per Metric Ton CO2e
+	  * BAU Cement Process Emissions Carbon Tax Rate
 	~	$/metric ton
-	~	BAU twin of Cement Pathway Levelized Cost per Ton, at BAU fuel costs. \
-		Draft choice cost: straight-line capital per ton actually produced \
-		(nameplate capex grossed up by the target utilization) plus fuel \
-		costs per ton. See the policy twin's WARNING on carbon-tax exposure \
-		(fuel prices carry the tax, no capture credit or calcination term \
-		until Phase 2a). Later phases upgrade the capital term to the \
-		financing-annuity basis; non-energy variable costs are omitted \
-		because shared components cancel in the cost-ratio logit.
+	~	BAU twin of Cement Pathway Levelized Cost per Ton, at BAU fuel costs \
+		and the BAU carbon tax gating. See the policy twin for the \
+		feedstock-netting and process-CO2 pricing conventions.
+	|
+
+BAU Cement Process CO2 Emissions=
+	SUM(
+	  BAU Clinker Production by Pathway[Cement Production Pathway!]
+	  * Cement Process CO2 Intensity per Ton by Pathway[Cement Production Pathway!]
+	)
+	~	g CO2
+	~	BAU twin of Cement Process CO2 Emissions. Shares the intensity \
+		variable with the policy case (chemistry and fuel carbon contents \
+		are physical constants).
+	|
+
+BAU Cement Process Emissions Carbon Tax Rate=
+	IF THEN ELSE(
+	  BEPEfCT Boolean Exempt Process Emissions from Carbon Tax[cement and other nonmetallic minerals 239\
+		] > 0,
+	  0,
+	  BCTR BAU Carbon Tax Rate[industry sector]
+	  * BFoICStCT BAU Fraction of Industry Category Subject to Carbon Tax[cement and other nonmetallic minerals 239\
+		]
+	  * BPTbCP BAU Industry Pollutants Taxed by Carbon Pricing[cement and other nonmetallic minerals 239\
+		,CO2]
+	)
+	~	$/metric ton CO2e
+	~	BAU twin of Cement Process Emissions Carbon Tax Rate.
 	|
 
 BAU Cement Residual Feedstock Use[Industrial Fuel]=
@@ -4470,6 +4499,18 @@ BAU Cement Residual Generic Energy Use by Fuel and Process[Industrial Fuel,indus
 	* (1 - Cement Carveout Share of Energy by Fuel[Industrial Fuel])
 	~	BTU/Year
 	~	BAU twin of Cement Residual Generic Energy Use by Fuel and Process.
+	|
+
+BAU Cement Residual Process CO2=
+	BPE BAU Process Emissions[cement and other nonmetallic minerals 239,CO2]
+	* (1 + Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment[industry sector\
+		])
+	* (1 - Cement Carveout Share of Process CO2)
+	~	g CO2
+	~	The non-cement residual of 239's process CO2 (lime and other \
+		carbonate sources), staying on the exogenous BPE series. SYNC NOTE: \
+		the first two factors duplicate the main branch of BAU Process \
+		Emissions after GDP and Fuel Production Adjustment - mirror edits.
 	|
 
 BAU CES Costs for ACP Compliance[RPS]=
@@ -13740,7 +13781,7 @@ BAU Process Emissions after CCS[Industry Category,Pollutant]=
 
 BAU Process Emissions after GDP and Fuel Production Adjustment[Industry Category,Pollutant\
 		] :EXCEPT:      [energy industries within industry category
-,Pollutant]=
+,Pollutant], [cement and other nonmetallic minerals 239,CO2]=
 	BPE BAU Process Emissions[Industry Category,Pollutant]
 	* (1 + Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment[industry sector\
 		]) ~~|
@@ -13749,9 +13790,17 @@ BAU Process Emissions after GDP and Fuel Production Adjustment[energy industries
 	BPE BAU Process Emissions[energy industries within industry category
 	,Pollutant]
 	* (1 + Last Year BAU Percent Change in Fuel Production from Calculated Fuel Demand[energy industries within industry category\
-		])
+		]) ~~|
+BAU Process Emissions after GDP and Fuel Production Adjustment[cement and other nonmetallic minerals 239\
+		,CO2]=
+	BAU Cement Residual Process CO2
+	+ BAU Cement Process CO2 Emissions
 	~	g pollutant
-	~		|
+	~	The cement and other nonmetallic minerals 239 CO2 branch blends the \
+		exogenous residual (lime and other carbonate sources, staying on \
+		BPE) with the cement module's endogenous calcination-plus-petcoke \
+		process CO2. Non-CO2 pollutants for 239 keep the generic BPE branch.
+	|
 
 BAU Process Emissions before CCS[Industry Category,Pollutant]=
 	BAU Process Emissions after GDP and Fuel Production Adjustment[Industry Category,Pollutant\
@@ -24333,6 +24382,24 @@ CCaMC Variable OM Cost per Unit Output[Electricity Source,Modeled Vintage]=
 	~	$/(MW*hour)
 	~		|
 
+CCF Calcination CO2 Factor by Pathway[Cement Production Pathway]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/CCF/CCF.csv',
+	   ',',
+	   'B2*'
+	)
+	~	g CO2/metric ton
+	~	Net calcination (process) CO2 released per metric ton of clinker by \
+		pathway: the carbonate-decomposition chemistry, net of any capture \
+		integral to the pathway. DRAFT: dry kiln with precalciner and \
+		electric kiln 510,000 g/t (EPA GHGI calcination factor, 0.510 t/t - \
+		electrification changes combustion, not chemistry); dry kiln with \
+		CCS 51,000 (90% capture DRAFT - capture energy already in CEIbPaF; \
+		the captured-tons ledger and 45Q-style accounting await the CCS- \
+		framework reconciliation, flagged for team review); alternative \
+		chemistry cement 0 (non-carbonate binder). Verify before release.
+	|
+
 CCP CO2 Capture Potential by Electricity Source[Electricity Source]=
 	GET DIRECT CONSTANTS(
 	   'InputData/ccs/CCP/CPPbES.csv',
@@ -24748,6 +24815,23 @@ Cement Carveout Share of Heat Band Energy[industrial heating process]= INITIAL(
 		level residual restructure at Phase 3a.
 	|
 
+Cement Carveout Share of Process CO2= INITIAL(
+	MIN(1,
+	ZIDZ(
+	  BAU Cement Process CO2 Emissions,
+	  BPE BAU Process Emissions[cement and other nonmetallic minerals 239,CO2]
+	  * (1 + Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment[industry sector\
+		])
+	)))
+	~	Dmnl
+	~	The cement module's start-year share of 239's exogenous process CO2 \
+		(BPE, a blend of cement calcination, lime, and other carbonate \
+		sources per its source workbook): module start-year process CO2 \
+		over the BPE data. Roughly 0.71 at draft values - consistent with \
+		GHGI's cement 41.9 vs lime 12.2 MMT split. Anchored to the BPE \
+		DATA (init-stable), same convention as the energy carveout shares.
+	|
+
 Cement Energy Use Process Shares[Industrial Fuel,industrial process end use]= INITIAL(
 	ZIDZ(
 	  BAU Percentage Fuel Use by Industrial Process with Fallback Data[cement and other nonmetallic minerals 239\
@@ -24763,6 +24847,16 @@ Cement Energy Use Process Shares[Industrial Fuel,industrial process end use]= IN
 		process bands so WHR, process-efficiency, and band-specific logic \
 		keep working. Phase 2 can assign kiln fuel physically to heat above \
 		1000 C instead.
+	|
+
+Cement Fuel CO2 Emissions Intensity[Industrial Fuel]=
+	CO2 Emissions Intensity by Fuel for All Fuels[industrial fuel within all fuels]
+	~	g CO2/BTU
+	~	CO2 content of each industrial fuel, mapped from the All Fuels \
+		dimension onto Industrial Fuel. Exists because a mapped subrange \
+		cannot co-range with Industrial Fuel inside a SUM (they range \
+		independently, producing a double sum) - the elementwise mapping \
+		here is the safe form (steel P2-A lesson, in the KB gotchas).
 	|
 
 Cement Fuel Feedstock Share[Industrial Fuel]= INITIAL(
@@ -24897,20 +24991,85 @@ Cement Pathway Levelized Cost per Ton[Cement Production Pathway]=
 	+ SUM(
 	    CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway\
 		,Industrial Fuel!]
-	    * Industrial Fuel Cost per Unit Energy[cement and other nonmetallic minerals 239\
+	    * (
+	      Industrial Fuel Cost per Unit Energy[cement and other nonmetallic minerals 239\
 		,Industrial Fuel!]
+	      - Cement Fuel Feedstock Share[Industrial Fuel!]
+	        * Industrial Fuel Carbon Tax Amount per Unit Energy[cement and other nonmetallic minerals 239\
+		,Industrial Fuel!]
+	    )
 	  )
+	+ Cement Process CO2 Intensity per Ton by Pathway[Cement Production Pathway]
+	  / Grams per Metric Ton CO2e
+	  * Cement Process Emissions Carbon Tax Rate
 	~	$/metric ton
-	~	Draft choice cost: straight-line capital per ton actually produced \
-		(nameplate capex grossed up by the target utilization) plus fuel \
-		costs per ton, at policy-case fuel costs. WARNING: the fuel prices \
-		already carry the fuel carbon tax, but there is no capture credit \
-		and no calcination-CO2 term yet, so the CCS pathway pays MORE tax \
-		than the incumbent under a carbon tax - do not interpret pathway \
-		economics under carbon pricing until Phase 2a adds the process-CO2 \
-		and capture terms. Later phases also upgrade the capital term to \
-		the financing-annuity basis (BCoISC); non-energy variable costs are \
-		omitted because shared components cancel in the cost-ratio logit.
+	~	Pathway choice cost: straight-line capital per ton produced (Phase 3 \
+		upgrades to the financing-annuity basis), fuel costs with the fuel- \
+		price carbon tax netted OFF feedstock quantities (petcoke is not \
+		taxed as fuel - matching the Amount Spent on Industry Fuels \
+		convention - its carbon is priced through the process-CO2 term \
+		instead, avoiding a double count), plus the carbon tax on process \
+		CO2 (calcination + petcoke carbon). The CCS pathway's net CCF gives \
+		it the capture credit, resolving the Phase 1b WARNING. Non-energy \
+		variable costs (raw meal, labor) omitted: shared components cancel \
+		in the cost-ratio logit; pathway-differential ones are a Phase 4 \
+		refinement.
+	|
+
+Cement Process CO2 Emissions=
+	SUM(
+	  Clinker Production by Pathway[Cement Production Pathway!]
+	  * Cement Process CO2 Intensity per Ton by Pathway[Cement Production Pathway!]
+	)
+	~	g CO2
+	~	Endogenous cement process CO2, replacing the CEMENT SHARE of the \
+		exogenous BPE series for [cement and other nonmetallic minerals \
+		239, CO2] (the residual share - lime, other carbonates - stays on \
+		BPE, per decision C9). Declines with pathway shifts and clinker \
+		substitution instead of following an exogenous trajectory. Non-CO2 \
+		process pollutants remain on BPE.
+	|
+
+Cement Process CO2 Intensity per Ton by Pathway[Cement Production Pathway]=
+	CCF Calcination CO2 Factor by Pathway[Cement Production Pathway]
+	+ SUM(
+	    CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway\
+		,Industrial Fuel!]
+	    * Cement Fuel Feedstock Share[Industrial Fuel!]
+	    * Cement Fuel CO2 Emissions Intensity[Industrial Fuel!]
+	  )
+	~	g CO2/metric ton
+	~	Process CO2 per metric ton of clinker by pathway: calcination \
+		chemistry (CCF) plus the carbon in feedstock-booked fuels - in \
+		practice petcoke, which the legacy data books as heavy/residual-oil \
+		FEEDSTOCK and whose combustion CO2 the legacy energy chain never \
+		counts (steel P19 pattern). At the start year the petcoke carbon is \
+		ABSORBED inside the BPE envelope via the carveout share (total 239 \
+		process CO2 unchanged; the residual attribution shrinks \
+		correspondingly, ~16 MMT vs GHGI lime 12.2 - whether BPE's blend \
+		already contains petcoke carbon is an open question for the BPE \
+		workbook review); over time it tracks module clinker instead of \
+		the exogenous series. Start-year cross-check: 69 Mt x (0.510 \
+		calcination + 0.052 petcoke, from 0.69 MMBtu/t x 75.1 kg/MMBtu) = \
+		38.8 MMT vs the GHGI cement process anchor 41.9 MMT (2022, at \
+		higher clinker output).
+	|
+
+Cement Process Emissions Carbon Tax Rate=
+	IF THEN ELSE(
+	  Does Carbon Tax Exempt Process Emissions This Year[cement and other nonmetallic minerals 239\
+		] > 0,
+	  0,
+	  Carbon Tax Rate[industry sector]
+	  * Fraction of Industry Category Subject to Carbon Tax[cement and other nonmetallic minerals 239\
+		]
+	  * Industry Pollutants Taxed by Carbon Pricing[cement and other nonmetallic minerals 239\
+		,CO2]
+	)
+	~	$/metric ton CO2e
+	~	Effective carbon tax rate on cement process CO2 for the pathway \
+		choice, mirroring Carbon Tax on Process Emissions by Industry's \
+		gating (BEPEfCT exemption, coverage fraction, pollutant coverage).
 	|
 
 Cement Production Pathway:
@@ -27232,12 +27391,27 @@ Change in Industrial Clean Heat Production Subsidies Paid[Industry Category]=
 	~		|
 
 Change in Industrial Fuel Use for Non Energy Purposes due to Feedstock Shifting[Industry Category\
-		,Industrial Fuel]=
+		,Industrial Fuel] :EXCEPT: [cement and other nonmetallic minerals 239,Industrial Fuel]=
 	Industrial Fuel Use for Non Energy Purposes[Industry Category,Industrial Fuel]
 	- Industrial Fuel Use for Non Energy Purposes Before Feedstock Shifting[Industry Category\
+		,Industrial Fuel] ~~|
+Change in Industrial Fuel Use for Non Energy Purposes due to Feedstock Shifting[cement and other nonmetallic minerals 239\
+		,Industrial Fuel]=
+	Industrial Fuel Use for Non Energy Purposes[cement and other nonmetallic minerals 239\
 		,Industrial Fuel]
+	- Industrial Fuel Use for Non Energy Purposes Before Feedstock Shifting[cement and other nonmetallic minerals 239\
+		,Industrial Fuel]
+	- Cement Module Wired Feedstock Use by Fuel Type[Industrial Fuel]
 	~	BTU
-	~		|
+	~	For cement and other nonmetallic minerals 239 the cement module's \
+		feedstock (petcoke) enters the non-energy chain DOWNSTREAM of the \
+		shifting step, so the post-minus-pre difference must subtract it to \
+		measure only genuine shifting of the non-cement residual - \
+		otherwise the module's petcoke reads as a 47-TBtu shift and its \
+		carbon double-books as process emissions (Phase 2a gate catch, \
+		2026-08-24). The module's feedstock carbon is priced and emitted \
+		through Cement Process CO2 Intensity per Ton by Pathway.
+	|
 
 Change in Industry Sector Carbon Tax Rebate due to CCS[Industry Category]=
 	Industry Sector Carbon Tax Rebate due to CCS[Industry Category]
@@ -58874,34 +59048,18 @@ Process Emissions Abated due to Carbon Tax by Marginal Cost[Industry by Process 
 	) ~~|
 Process Emissions Abated due to Carbon Tax by Marginal Cost[cement industry measures,\
 		Marginal Abatement Cost]=
-	IF THEN ELSE(
-	
-	  Does Carbon Tax Exempt Process Emissions This Year[cement and other nonmetallic minerals 239\
-		]
-	  = 0
-	
-	  :AND:
-	
-	  PERAC Marginal Cost Definitions[Marginal Abatement Cost]
-	  > 0
-	
-	  :AND:
-	
-	  PERAC Mass CO2e Avoidable by Marginal Cost[cement industry measures,Marginal Abatement Cost\
-		]
-	  > 0
-	
-	  :AND:
-	
-	  Incremental Carbon Tax from Policy[cement and other nonmetallic minerals 239]
-	  > PERAC Marginal Cost Definitions[Marginal Abatement Cost],
-	
-	
-	  PERAC Mass CO2e Avoidable by Marginal Cost[cement industry measures,Marginal Abatement Cost\
-		],
-	
-	  0
-	) ~~|
+	0
+	{RETIRED WITH THE CEMENT BREAKOUT (Phase 2a adversarial-review finding,
+	2026-08-24): this MAC element represents cement measures (clinker
+	substitution etc.), and cement's process CO2 is now owned by the cement
+	pathway module - under any industry carbon tax above the PERAC bin
+	(~$0.1-10/t) the old branch fired its FULL 17-23 MMT potential against
+	the non-cement RESIDUAL of 239's process emissions (lime and other
+	carbonates), annihilating it, while the cost chain booked spending for
+	abatement the MAX(0) floor discarded. Cement abatement economics now
+	live in the module (pathway choice, calcination pricing; the SCM /
+	clinker-substitution lever is the planned successor to this element).
+	Restore only if a lime-appropriate curve is authored for the residual.} ~~|
 Process Emissions Abated due to Carbon Tax by Marginal Cost[agriculture tillage,Marginal Abatement Cost\
 		]=
 	IF THEN ELSE(
@@ -59411,7 +59569,7 @@ Process Emissions after CCS[Industry Category,Pollutant]=
 	~		|
 
 Process Emissions before CCS[Industry Category,Pollutant] :EXCEPT:  [agriculture and forestry 01T03\
-		,CO2]=
+		,CO2], [cement and other nonmetallic minerals 239,CO2]=
 	MAX((BAU Process Emissions before CCS[Industry Category,Pollutant]
 	     + SUM(Decrease in Process Emissions at BAU Production Levels[Industry Category,\
 		Industry Process Emissions Policy!,Pollutant
@@ -59434,9 +59592,36 @@ Process Emissions before CCS[agriculture and forestry 01T03,CO2]=
 	  + Change in Process Emissions from Feedstock Shifting[agriculture and forestry 01T03\
 		,CO2]
 	)
-	* (1 + Percent Change in Production due to Policies[agriculture and forestry 01T03])
+	* (1 + Percent Change in Production due to Policies[agriculture and forestry 01T03]) ~~|
+Process Emissions before CCS[cement and other nonmetallic minerals 239,CO2]=
+	MAX(
+	  (
+	    BAU Cement Residual Process CO2
+	    + SUM(Decrease in Process Emissions at BAU Production Levels[cement and other nonmetallic minerals 239\
+		,Industry Process Emissions Policy!,CO2])
+	    + SUM(Non BAU Process Emissions Additions at BAU Production Levels[cement and other nonmetallic minerals 239\
+		,Industry Process Emissions Policy!,CO2])
+	    + Change in Process Emissions from Feedstock Shifting[cement and other nonmetallic minerals 239\
+		,CO2]
+	  )
+	  * (1 + Percent Change in Production due to Policies[cement and other nonmetallic minerals 239\
+		])
+	  ,0
+	)
+	+ Cement Process CO2 Emissions
 	~	g pollutant
-	~		|
+	~	The cement and other nonmetallic minerals 239 CO2 branch: the \
+		generic process-emissions machinery (MAC-curve decreases/additions, \
+		feedstock shifting, production scaling) acts on the non-cement \
+		RESIDUAL only, and the cement module's endogenous process CO2 - \
+		which already carries the policy production change through its own \
+		demand chain - is added on top. NOTE: the inert indst cement \
+		measures MAC element currently targets the residual (lime etc.) \
+		here; if that lever is ever activated it belongs INSIDE the module \
+		(the planned SCM/clinker-substitution lever), not in this branch. \
+		SYNC NOTE: the residual part duplicates the generic branch's form - \
+		mirror edits.
+	|
 
 Process Emissions Cost Parameters as Vector[Marginal Abatement Cost,ptype]=
 	1 ~~|
