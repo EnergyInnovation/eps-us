@@ -1332,9 +1332,10 @@ Annual Financing Repayment for Newly Purchased Cement Pathway Equipment=
 	~	Annual repayment on this year's financed cement pathway capital (new \
 		builds plus kiln overhauls), paralleling the per-process industrial \
 		equipment ladders. Annuity proxy: the 239 electric-equipment factor \
-		for heat above 1000 C - a documented approximation until a cement- \
-		specific annuity over CPAL/CPPL is built (Phase 3b, steel P24 \
-		pattern).
+		for heat above 1000 C. Deliberately NOT annuitized over CPAL/CPPL: \
+		the repayment-period window is the correct basis for loan streams \
+		(steel P24 convention) - asset life belongs only in the choice \
+		cost's capital-recovery factors.
 	|
 
 Annual Financing Repayment for Newly Purchased Cement Pathway Equipment at Unsubsidized Rate=
@@ -4503,10 +4504,8 @@ BAU Cement Module Wired Feedstock Use by Fuel Type[Industrial Fuel]=
 
 BAU Cement Overhaul Continuation Cost per Ton[Cement Production Pathway]=
 	CRCC Cement Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway]
-	/ (
-	  CPPL Cement Pathway Campaign Length[Cement Production Pathway]
-	  * SYCCU Start Year Cement Capacity Utilization
-	)
+	* Cement Overhaul Capital Recovery Factor[Cement Production Pathway]
+	/ SYCCU Start Year Cement Capacity Utilization
 	+ BAU Cement Pathway Operating Cost per Ton[Cement Production Pathway]
 	~	$/metric ton
 	~	BAU twin of Cement Overhaul Continuation Cost per Ton.
@@ -4543,10 +4542,8 @@ BAU Cement Pathway Choice Weight[Cement Production Pathway]=
 
 BAU Cement Pathway Levelized Cost per Ton[Cement Production Pathway]=
 	CPCC Cement Pathway Capital Cost per Unit Annual Capacity[Cement Production Pathway]
-	/ (
-	  CPAL Cement Pathway Asset Life[Cement Production Pathway]
-	  * SYCCU Start Year Cement Capacity Utilization
-	)
+	* Cement Pathway Capital Recovery Factor[Cement Production Pathway]
+	/ SYCCU Start Year Cement Capacity Utilization
 	+ BAU Cement Pathway Operating Cost per Ton[Cement Production Pathway]
 	~	$/metric ton
 	~	BAU twin of Cement Pathway Levelized Cost per Ton. See the policy \
@@ -25192,18 +25189,36 @@ Cement Module Wired Feedstock Use by Fuel Type[Industrial Fuel]=
 		element. Wires into the nonenergy/feedstock chains.
 	|
 
+Cement Overhaul Capital Recovery Factor[Cement Production Pathway]= INITIAL(
+	ZIDZ(
+	  BCoISC Weighted Average Cost of Capital by Industry[cement and other nonmetallic minerals 239\
+		]
+	  * (1 + BCoISC Weighted Average Cost of Capital by Industry[cement and other nonmetallic minerals 239\
+		])
+	    ^ (CPPL Cement Pathway Campaign Length[Cement Production Pathway] / One Year),
+	  (1 + BCoISC Weighted Average Cost of Capital by Industry[cement and other nonmetallic minerals 239\
+		])
+	    ^ (CPPL Cement Pathway Campaign Length[Cement Production Pathway] / One Year)
+	  - 1
+	))
+	~	1/Year
+	~	Capital recovery factor for kiln overhaul capital: the industry WACC \
+		annuitized over one campaign length (an overhaul buys one more \
+		campaign, so its amortization window is CPPL, not the site asset \
+		life).
+	|
+
 Cement Overhaul Continuation Cost per Ton[Cement Production Pathway]=
 	CRCC Cement Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway]
-	/ (
-	  CPPL Cement Pathway Campaign Length[Cement Production Pathway]
-	  * SYCCU Start Year Cement Capacity Utilization
-	)
+	* Cement Overhaul Capital Recovery Factor[Cement Production Pathway]
+	/ SYCCU Start Year Cement Capacity Utilization
 	+ Cement Pathway Operating Cost per Ton[Cement Production Pathway]
 	~	$/metric ton
 	~	Cost per ton of overhauling and running one more campaign: overhaul \
-		capital (straight-line over the campaign, per ton produced) plus \
-		operating cost including carbon exposure. Compared against the cost \
-		of replacement capacity in the overhaul-vs-replace choice.
+		capital annuitized at the industry WACC over the campaign (Phase \
+		3b; per ton produced via the utilization gross-up) plus operating \
+		cost including carbon exposure. Compared against the cost of \
+		replacement capacity in the overhaul-vs-replace choice.
 	|
 
 Cement Overhaul Share at Decision[Cement Production Pathway]=
@@ -25230,6 +25245,29 @@ Cement Overhaul Share at Decision[Cement Production Pathway]=
 		preference (steel open question 3).
 	|
 
+Cement Pathway Capital Recovery Factor[Cement Production Pathway]= INITIAL(
+	ZIDZ(
+	  BCoISC Weighted Average Cost of Capital by Industry[cement and other nonmetallic minerals 239\
+		]
+	  * (1 + BCoISC Weighted Average Cost of Capital by Industry[cement and other nonmetallic minerals 239\
+		])
+	    ^ (CPAL Cement Pathway Asset Life[Cement Production Pathway] / One Year),
+	  (1 + BCoISC Weighted Average Cost of Capital by Industry[cement and other nonmetallic minerals 239\
+		])
+	    ^ (CPAL Cement Pathway Asset Life[Cement Production Pathway] / One Year)
+	  - 1
+	))
+	~	1/Year
+	~	Capital recovery factor for greenfield cement pathway capital: the \
+		industry WACC annuitized over the pathway asset life. The hurdle \
+		rate premium (HRPfIEP) is deliberately excluded: it is an \
+		equipment-adoption behavioral parameter calibrated on small \
+		purchases against a 20 percent adoption target, not a plant-scale \
+		investment criterion - including it would triple the effective \
+		discount rate on billion-dollar facilities (steel P24 convention, \
+		flagged for team review alongside the CRSW calibration).
+	|
+
 Cement Pathway Choice Weight[Cement Production Pathway]=
 	10000
 	* CPSW Cement Pathway Shareweight[Cement Production Pathway]
@@ -25247,19 +25285,18 @@ Cement Pathway Choice Weight[Cement Production Pathway]=
 
 Cement Pathway Levelized Cost per Ton[Cement Production Pathway]=
 	CPCC Cement Pathway Capital Cost per Unit Annual Capacity[Cement Production Pathway]
-	/ (
-	  CPAL Cement Pathway Asset Life[Cement Production Pathway]
-	  * SYCCU Start Year Cement Capacity Utilization
-	)
+	* Cement Pathway Capital Recovery Factor[Cement Production Pathway]
+	/ SYCCU Start Year Cement Capacity Utilization
 	+ Cement Pathway Operating Cost per Ton[Cement Production Pathway]
 	~	$/metric ton
-	~	New-build pathway choice cost: straight-line greenfield capital per \
-		ton produced (Phase 3 upgrades to the financing-annuity basis) plus \
-		the operating cost (fuel with feedstock carbon-tax netting, process- \
-		CO2 tax - the CCS pathway's net CCF gives it the capture credit). \
-		Non-energy variable costs (raw meal, labor) omitted: shared \
-		components cancel in the cost-ratio logit; pathway-differential ones \
-		are a Phase 4 refinement.
+	~	New-build pathway choice cost: greenfield capital annuitized at the \
+		industry WACC over the pathway asset life (Phase 3b; per ton \
+		produced via the utilization gross-up) plus the operating cost \
+		(fuel with feedstock carbon-tax netting, process-CO2 tax - the CCS \
+		pathway's net CCF gives it the capture credit). Non-energy variable \
+		costs (raw meal, labor) omitted: shared components cancel in the \
+		cost-ratio logit; pathway-differential ones are a Phase 4 \
+		refinement.
 	|
 
 Cement Pathway Operating Cost per Ton[Cement Production Pathway]=
@@ -30431,10 +30468,11 @@ CPAL Cement Pathway Asset Life[Cement Production Pathway]=
 	)
 	~	Years
 	~	Economic asset life by pathway. Used for age-based model-run \
-		retirement and the greenfield straight-line capital term in the \
-		choice cost (CPCC/CPAL) - DISTINCT from CPPL campaign length, which \
-		governs the overhaul recurrence and overhaul amortization (steel \
-		P23 lesson). DRAFT placeholder - verify before release.
+		retirement and as the annuitization window of the greenfield \
+		capital-recovery factor in the choice cost (Phase 3b) - DISTINCT \
+		from CPPL campaign length, which governs the overhaul recurrence \
+		and overhaul amortization (steel P23 lesson). DRAFT placeholder - \
+		verify before release.
 	|
 
 CPCC Cement Pathway Capital Cost per Unit Annual Capacity[Cement Production Pathway]=
@@ -30458,8 +30496,9 @@ CPPL Cement Pathway Campaign Length[Cement Production Pathway]=
 	)
 	~	Years
 	~	Campaign length between kiln overhaul decisions (shell/drive rebuild \
-		cycle), used for the overhaul recurrence and the overhaul capital \
-		straight-line - DISTINCT from CPAL asset life (steel P23 lesson: \
+		cycle), used for the overhaul recurrence and as the annuitization \
+		window of the overhaul capital-recovery factor (Phase 3b) - \
+		DISTINCT from CPAL asset life (steel P23 lesson: \
 		conflating them overstates greenfield capital and mis-decays the \
 		model-run stock). DRAFT 35 years (Princeton NZA kiln-life \
 		convention; no public authoritative campaign source - weakest- \
