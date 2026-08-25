@@ -50,34 +50,55 @@ def write(folder, name, rows):
 
 
 # ---------------- BCD: BAU Cement Demand ----------------
-# DRAFT: flat 84 MMT/yr. Source: USGS Mineral Commodity Summaries 2026,
-# reported 2025 US cement production ~84 Mt. Held flat pending an AEO- or
-# PCA-anchored growth trajectory.
-rows = [["Unit: metric tons/year (DRAFT flat 84 MMT; USGS MCS2026 2025 production - anchor to AEO/PCA before release)"] + YEARS,
+# Phase 4 verification (2026-08-25): 84.0 Mt CONFIRMED (USGS MCS2026:
+# portland+blended 82.0 + masonry 2.1; 2021-25 series 91.0/91.2/89.7/85.0/
+# 84.0). No physical tonnage forecast exists: AEO2026 Table 29 (cement AND
+# lime, suptab_29.xlsx, "Counterfactual Baseline") implies ~+0.5-0.6%/yr in
+# shipments-$ and process-CO2 proxies to 2050. Held FLAT as the deliberate
+# simplification (the proxies bundle lime and are not tonnage); the AEO-
+# consistent alternative (~97 Mt by 2050) is documented for team choice.
+rows = [["Unit: metric tons/year (VERIFIED 84 MMT 2025, USGS MCS2026; held flat - AEO2026 Table 29 proxies imply ~+0.5%/yr, team choice documented)"] + YEARS,
         ["BAU Cement Demand"] + [84_000_000] * len(YEARS)]
 write("BCD", "BCD.csv", rows)
 
 # ---------------- BCtCR: BAU Clinker to Cement Ratio ----------------
-# DRAFT: 0.8214 flat = USGS 2025 DOMESTIC clinker production (69 Mt) over
-# BCD (84 Mt). Imported clinker (~0.66 Mt) is deliberately EXCLUDED
-# (adversarial-review finding 4, 2026-08-24): the module's demand basis is
-# domestically produced clinker, so including imports made the module build
-# 1.04 Mt of greenfield capacity in the start year to "replace" imports.
-# With 0.8214, start-year clinker demand equals SYCPbP exactly and the
-# start year opens balanced. Clinker trade stays dollar-side via IESE.
-# WRI's commonly cited US clinker ratio is 0.88 - flagged for team
-# reconciliation (likely an apparent-consumption basis difference).
-rows = [["Unit: dimensionless (DRAFT 0.8214 flat; USGS 2025 domestic clinker 69/84 - imported clinker excluded so start year opens balanced; WRI cites 0.88, reconciliation flagged)"] + YEARS,
-        ["BAU Clinker to Cement Ratio"] + [0.8214] * len(YEARS)]
+# VERIFIED 2026-08-25 (Phase 4): 0.8214 = USGS MCS2026 2025 domestic clinker
+# production (69 Mt) over cement production (84 Mt). Imported clinker
+# (~0.66 Mt) deliberately EXCLUDED (module demand basis = domestically
+# produced clinker; including imports made the module build capacity to
+# "replace" imports). The WRI-cited 0.88 is RECONCILED: same USGS series,
+# older vintage - the domestic ratio fell 0.8749/0.8716/0.8560/0.8471/0.8214
+# over 2021-2025 (PLC/Type IL adoption; USGS: blended cement = 63% of 2025
+# shipments, 95% of it Type IL). A flat ratio therefore overstates future
+# clinker: DRAFT BAU trajectory declines linearly 0.8214 (2025) -> 0.78
+# (2035), flat after (judgment: the market-driven PLC transition largely
+# completes; PCA's 0.75-by-2050 roadmap figure is a target, not BAU - team
+# review item). 2025 value unchanged so the start year stays balanced.
+def bctcr(y):
+    if y <= 2025:
+        return 0.8214
+    if y >= 2035:
+        return 0.78
+    return round(0.8214 + (0.78 - 0.8214) * (y - 2025) / 10, 5)
+rows = [["Unit: dimensionless (VERIFIED 2025 = USGS 69/84 domestic basis; declining to 0.78 by 2035 per 2021-25 PLC trend, judgment - see generator comments)"] + YEARS,
+        ["BAU Clinker to Cement Ratio"] + [bctcr(y) for y in YEARS]]
 write("BCtCR", "BCtCR.csv", rows)
 
 # ---------------- MASCM: Maximum Annual SCM Supply for Cement ----------------
-# DRAFT: 25 MMT/yr flat, judgment placeholder. Fly ash + slag + pozzolan
-# supply build-up (coal-plant retirements shrinking fly ash supply over the
-# horizon, offset by growing slag/pozzolan/limestone-calcined-clay supply)
-# is not yet modeled; this is a static judgment call pending that build-up.
-rows = [["Unit: metric tons/year (DRAFT 25 MMT flat; judgment placeholder - fly ash/slag/pozzolan supply build-up pending, verify before release)"] + YEARS,
-        ["Maximum Annual SCM Supply for Cement"] + [25_000_000] * len(YEARS)]
+# Phase 4 build-up (2026-08-25, sources per verification dossier): fly ash
+# used in concrete 14.6 Mt (ACAA 2024 survey, DIRECT) + CCPs to blended
+# cement/clinker feed 5.3 Mt (ACAA - possible overlap with the concrete
+# figure, flagged) + GGBFS <~4.8 Mt (USGS slag MCS: 16 Mt total slag sales,
+# GGBFS <30% of tonnage, heavily import-dependent) + natural pozzolans ~1-2
+# Mt (capacity ~2 Mt, NPA via secondary) = ~22 Mt current. Structurally
+# DECLINING: fly ash falls with coal retirements (partially offset by pond
+# harvesting), GGBFS falls with BF closures and rides imports. DRAFT
+# trajectory: 22 Mt (2025) declining linearly to 15 Mt (2050). Non-binding
+# at default blending levels; binds only under aggressive SCM policies.
+def mascm(y):
+    return round(22_000_000 + (15_000_000 - 22_000_000) * max(0, y - 2025) / 25)
+rows = [["Unit: metric tons/year (Phase 4 build-up: ~22 MMT current from ACAA fly ash + USGS GGBFS + pozzolans, declining to 15 by 2050 - see generator comments)"] + YEARS,
+        ["Maximum Annual SCM Supply for Cement"] + [mascm(y) for y in YEARS]]
 write("MASCM", "MASCM.csv", rows)
 
 # ---------------- SYCPbP: Start Year Clinker Production by Pathway ----------------
@@ -111,14 +132,31 @@ write("SYCCU", "SYCCU.csv", rows)
 # decides 5.0 Mt/yr over 2026-2035; post-2000 cohort 4.7 Mt/yr over
 # 2036-2045 (install years + ~35). Upgrade with PCA Plant Information
 # Summary kiln-level data if access is granted.
+# Phase 4 verification (2026-08-25): the cohort totals are CONFIRMED EXACTLY
+# against NZA Annex K sec 6.3 (92 pre-2000 kilns = 49.6 Mt/yr; 38 post-2000
+# = 46.7 Mt/yr). Schedule shape revised to match NZA's own convention: the
+# pre-2000 cohort turns over at 7%/yr of its 49.6 Mt from 2026 (3.47 Mt/yr,
+# exhausting ~2040 - NZA's post-2025 rate; its 3%/yr 2018-25 retirements are
+# already embedded in the USGS 2025 capacity our stock initializes from);
+# the post-2000 cohort reaches its 35-yr campaign end individually staggered
+# over installs ~2000-2010, approximated as 4.7 Mt/yr over 2036-2045.
+# Decision OUTCOME stays endogenous. Upgrade path: PCA Plant Information
+# Summary kiln-level data (proprietary - EI access needed).
 def cprs(pw, y):
-    if pw == "dry kiln with precalciner":
-        if 2026 <= y <= 2035:
-            return 5_000_000
-        if 2036 <= y <= 2045:
-            return 4_700_000
-    return 0
-rows = [["Unit: metric tons/year nameplate reaching campaign-end decision (DRAFT age cohorts from Princeton NZA; 35-yr campaign; decision outcome endogenous - verify before release)"] + YEARS]
+    if pw != "dry kiln with precalciner":
+        return 0
+    total = 0
+    # pre-2000 cohort: 7%/yr of 49.6 Mt from 2026 until the 49.6 exhausts
+    # (14 x 3.47 = 48.58; remainder 1.02 in 2040)
+    if 2026 <= y <= 2039:
+        total += 3_470_000
+    elif y == 2040:
+        total += 1_020_000
+    # post-2000 cohort: 35-yr staggered campaign ends, approximated flat
+    if 2036 <= y <= 2045:
+        total += 4_700_000
+    return total
+rows = [["Unit: metric tons/year nameplate reaching campaign-end decision (NZA Annex K cohorts confirmed exact; pre-2000 at NZA 7%/yr from 2026, post-2000 35-yr staggered 2036-45)"] + YEARS]
 for pw in PATHWAYS:
     rows.append([pw] + [cprs(pw, y) for y in YEARS])
 write("CPRS", "CPRS.csv", rows)
@@ -137,13 +175,20 @@ for pw in PATHWAYS:
 write("CPPL", "CPPL.csv", rows)
 
 # ---------------- CRCC: Cement Overhaul Capital Cost per Unit Annual Capacity ----------------
-# DRAFT judgment: ~10% of greenfield CPCC by pathway (steel's reline-to-
-# greenfield ratio; the only public cement anchors are refractory-vendor
-# order-of-magnitude figures, far below a shell/drive rebuild). Verify
-# before release, ideally against PCA plant-level data.
-crcc = {"dry kiln with precalciner": 30, "dry kiln with CCS": 93,
+# Phase 4 verification (2026-08-25): NO authoritative kiln overhaul/shell-
+# replacement cost exists in public literature (targeted search: GCCA,
+# IEEE-IAS/PCA Cement Conference, company disclosures - nothing citable;
+# 1990s-era long-dry-to-precalciner CONVERSION studies ran $9-29/(t/yr) in
+# then-year dollars). Generic manufacturing brownfield-modernization runs
+# 40-70% of greenfield, but that describes full modernization - our ~10%
+# represents a NARROW kiln shell/drive/controls overhaul buying one more
+# campaign, between the refractory-only trivial case and full rebuild.
+# Explicitly an EI engineering judgment (dry kiln updated to track the
+# raised greenfield: 10% of 375); resolving data likely lives in PCA
+# Cement Conference or member-only ECRA reports.
+crcc = {"dry kiln with precalciner": 38, "dry kiln with CCS": 93,
         "electric kiln": 45, "alternative chemistry cement": 60}
-rows = [["Unit: $/(metric ton/yr) overhaul (DRAFT ~10% of greenfield judgment - verify before release)", "Overhaul Capital Cost"]]
+rows = [["Unit: $/(metric ton/yr) overhaul (EI judgment ~10% of greenfield; no public source exists - see generator comments)", "Overhaul Capital Cost"]]
 for pw in PATHWAYS:
     rows.append([pw, crcc[pw]])
 write("CRCC", "CRCC.csv", rows)
@@ -158,26 +203,38 @@ rows = [["Unit: dimensionless (DRAFT 25 flat, steel SRSW draft value - calibrate
 write("CRSW", "CRSW.csv", rows)
 
 # ---------------- CPCC: Cement Pathway Capital Cost per Unit Annual Capacity ----------------
-# DRAFT: dry kiln with precalciner ($300/(t/yr)) and electric kiln/
-# alternative chemistry cement ($450 / $600) are judgment placeholders;
-# dry kiln with CCS ($933/(t/yr)) is scaled from the Princeton Net-Zero
-# America study's cited cement CCS retrofit cost of ~$3.5B for a 3.75 Mt/yr
-# clinker line (3.5e9 / 3.75e6 ~= 933).
-capex = {"dry kiln with precalciner": 300, "dry kiln with CCS": 933,
+# Phase 4 verification (2026-08-25): dry kiln with CCS $933 CONFIRMED
+# EXACTLY (Princeton NZA Annex K Table 3, $3.5B / 3.75 Mt/yr, no learning;
+# note the CCS increment it implies, ~$560/t, sits above CEMCAP European
+# estimates and the Brevik retrofit ~$333/t - open uncertainty, likely
+# transport/no-learning inclusions). Dry kiln with precalciner raised 300 ->
+# 375: ECRA 2009 gives $180-350/t (2009$, size-dependent) and an IEA-cited
+# ~EUR 263/t (2010, 1 Mt/yr); inflating ~$235/t (2009$) by construction-cost
+# indices to 2026$ lands ~$370-400 [SNIPPET tier - primary ECRA/IEA PDFs not
+# directly readable]. Electric kiln $450: NO cost data exists at any scale
+# (pilot-only) - pure judgment. Alternative chemistry $600: an Nth-plant
+# assumption; first-of-kind actuals are 5-8x higher (Brimstone ~$2,700/t,
+# Sublime Holyoke ~$5,000/t at demo scale) with no published learning curve -
+# strong caveat, team review item.
+capex = {"dry kiln with precalciner": 375, "dry kiln with CCS": 933,
          "electric kiln": 450, "alternative chemistry cement": 600}
-rows = [["Unit: $/(metric ton/yr) greenfield (DRAFT; dry kiln/electric kiln/alt chem judgment placeholder, CCS = Princeton NZA $3.5B/3.75Mt - verify before release)", "Capital Cost"]]
+rows = [["Unit: $/(metric ton/yr) greenfield (CCS=NZA confirmed; dry kiln 375 = ECRA-inflated SNIPPET tier; electric/alt-chem judgment, FOAK actuals 5-8x higher - see generator comments)", "Capital Cost"]]
 for pw in PATHWAYS:
     rows.append([pw, capex[pw]])
 write("CPCC", "CPCC.csv", rows)
 
 # ---------------- CPAL: Cement Pathway Asset Life ----------------
-# DRAFT placeholders: dry kiln with precalciner and dry kiln with CCS 40
-# years (typical cement plant/kiln life), electric kiln 35 years (newer,
-# less field experience), alternative chemistry cement 30 years (novel
-# process, conservative shorter assumed life pending data).
-life = {"dry kiln with precalciner": 40, "dry kiln with CCS": 40,
+# Phase 4 verification (2026-08-25): the only public anchor is 35 years -
+# Princeton NZA Annex K's kiln retirement age (EIA IDM's 30-yr assumption
+# "extended by 5", matching the observed ~36-yr fleet age); NO source exists
+# for 40-yr or vintage-differentiated lives. CPAL aligned to the anchor:
+# 35/35/35/30. Note CPAL (asset life) and CPPL (campaign length) currently
+# COINCIDE at these values - they remain separate inputs (steel P23 lesson)
+# because for cement the overhaul campaign plausibly IS the economic life;
+# revisit if kiln-level campaign data ever arrives.
+life = {"dry kiln with precalciner": 35, "dry kiln with CCS": 35,
         "electric kiln": 35, "alternative chemistry cement": 30}
-rows = [["Unit: years economic asset life (DRAFT placeholder - verify before release)", "Asset Life"]]
+rows = [["Unit: years economic asset life (35 = NZA Annex K / EIA-IDM+5 anchor, the only public source; alt chem 30 judgment)", "Asset Life"]]
 for pw in PATHWAYS:
     rows.append([pw, life[pw]])
 write("CPAL", "CPAL.csv", rows)
@@ -188,26 +245,48 @@ write("CPAL", "CPAL.csv", rows)
 # 2028; electric kiln from 2032; alternative chemistry cement from 2030.
 # Ramp years are judgment calls pending team review, mirroring the
 # structure (not calibration) of steel's SPSW.
+# Gates revised in Phase 4 verification (2026-08-25): the May 30, 2025 DOE/
+# OCED cancellation wave killed the Heidelberg Mitchell CCS ($500M),
+# Brimstone ($189M), and Sublime ($87M) awards; Brevik (Norway) proves CCS
+# at commercial scale but no US project has a live path; electric kilns are
+# pilot-only (Heidelberg ELECTRA plasma first test Feb 2025, Coolbrook/
+# Adani in development). Gates: CCS 2030 (was 2028), alternative chemistry
+# 2033 (was 2030; Sublime Holyoke is 30 kt/yr demo scale), electric kiln
+# 2035 (was 2032). Judgment ramp years, team review item.
 def sw(pw, y):
     if pw == "dry kiln with precalciner":
         return 1
     if pw == "dry kiln with CCS":
-        return 1 if y >= 2028 else 0
-    if pw == "electric kiln":
-        return 1 if y >= 2032 else 0
-    if pw == "alternative chemistry cement":
         return 1 if y >= 2030 else 0
-rows = [["Unit: dimensionless (DRAFT placeholder entry gates; ramp shapes pending team review)"] + YEARS]
+    if pw == "electric kiln":
+        return 1 if y >= 2035 else 0
+    if pw == "alternative chemistry cement":
+        return 1 if y >= 2033 else 0
+rows = [["Unit: dimensionless (entry gates revised per post-2025 DOE-cancellation project landscape: CCS 2030 / alt chem 2033 / electric 2035; team review)"] + YEARS]
 for pw in PATHWAYS:
     rows.append([pw] + [sw(pw, y) for y in YEARS])
 write("CPSW", "CPSW.csv", rows)
 
 # ---------------- CEIbPaF: Cement Energy Intensity by Pathway and Fuel ----------------
-# DRAFT: dry kiln with precalciner intensities from DOE Bandwidth Study
-# 2017 (3.43 MMBtu/t clinker thermal) apportioned by PCA's 2023 reported
-# fuel mix, RE-BOOKED per adversarial-review finding 3 (2026-08-24; the
-# earlier draft's coal+petcoke+alt-fuel lump made module coal 1.58x the
-# generic 239 coal total - structurally impossible for a subset):
+# Phase 4 verification (2026-08-25): thermal 3.43 MMBtu/METRIC ton CONFIRMED
+# = DOE Bandwidth Study 2017 Table 3-2 "current typical" dry pyroprocessing
+# 1,554 Btu/lb x 2,204.6 lb/metric ton (a verification agent flagged a
+# "discrepancy" using 2,000 lb/short ton - the metric conversion is correct);
+# nothing newer supersedes it (GNR global ~3.3-3.5 MJ-basis is consistent).
+# PCA 2023 fuel-mix totals CONFIRMED via PCA press release (NG 31% record,
+# alt fuels 16%); the 33/20 coal-vs-petcoke split within the remaining 53%
+# stays a documented judgment - no 2023 primary split exists, but MECS 2018
+# (coal 41% : petcoke 24% of onsite fuel = ~63:37) is directionally
+# consistent with our ~62:38. Electricity 142 kWh/t cement is within the
+# MECS-2018-derived 132-142 range (re-derive from MECS Table 3.2 + USGS for
+# release precision). CCS adders CORROBORATED: 2.1 MMBtu/t at ~0.72 tCO2/t
+# captured = ~2.9 GJ/tCO2, inside IEAGHG 2018-TR03's with-heat-recovery band
+# (3.1-3.3) and Brevik's reported 2.7-3.0 GJ/tCO2. Electric kiln 4.0 and
+# alt-chem 2.5 MMBtu/t remain INTERNAL ENGINEERING ESTIMATES - neither
+# Coolbrook nor Sublime has published an energy intensity.
+# Apportionment (adversarial-review finding 3, 2026-08-24; the earlier
+# draft's coal+petcoke+alt-fuel lump made module coal 1.58x the generic 239
+# coal total - structurally impossible for a subset):
 #   coal        33% -> hard coal if                 1.13e6 BTU/t
 #   natural gas 31% -> natural gas if               1.06e6 BTU/t
 #   petcoke     20% -> heavy or residual fuel oil if 0.69e6 BTU/t
@@ -242,11 +321,16 @@ write("CEIbPaF", "CEIbPaF.csv", rows)
 
 # ---------------- CCF: Calcination CO2 Factor by Pathway ----------------
 # Net process CO2 per t clinker (g CO2/t), Phase 2a. Dry precalciner and
-# electric kiln: 510,000 g/t (EPA GHGI calcination emission factor 0.510
-# tCO2/t clinker; electrification changes combustion, not chemistry). Dry
-# kiln with CCS: 51,000 (90% capture DRAFT judgment - capture energy is in
-# CEIbPaF; captured-tons ledger/45Q integration deferred to the CCS-framework
-# reconciliation). Alternative chemistry cement: 0 (non-carbonate binder).
+# electric kiln: 510,000 g/t - CONFIRMED Phase 4 (2026-08-25): EPA GHGI
+# Eq. 4-1, EF = 0.650 CaO x (44.01/56.08) = 0.510, identical in the
+# 1990-2023 edition (NOTE: that edition was never officially posted by EPA;
+# the public copy is EDF's FOIA release - cite the official 1990-2022
+# edition for the factor). Updated anchors: cement process CO2 40.6 MMT
+# (2023) / 41.9 (2022, official); lime 11.5 (2023) / 12.2 (2022). Dry kiln
+# with CCS: 51,000 (90% capture DRAFT judgment - capture energy is in
+# CEIbPaF; captured-tons ledger/45Q integration deferred to the CCS-
+# framework reconciliation). Alternative chemistry cement: 0 (non-carbonate
+# binder).
 ccf = {"dry kiln with precalciner": 510_000, "dry kiln with CCS": 51_000,
        "electric kiln": 510_000, "alternative chemistry cement": 0}
 rows = [["Unit: g CO2/metric ton clinker net of pathway-integral capture (DRAFT: EPA GHGI 0.510 t/t calcination factor; CCS 90% capture judgment; verify before release)", "Calcination CO2 Factor"]]
