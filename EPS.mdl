@@ -1810,6 +1810,16 @@ Average Four Year Prior Total Predicted Net Energy Market Revenue per MW[CCUS El
 	~	$/(MW*hr)
 	~		|
 
+Average New Clinker Capacity Cost per Ton=
+	SUM(
+	  Share of New Clinker Production Capacity by Pathway[Cement Production Pathway!]
+	  * Cement Pathway Levelized Cost per Ton[Cement Production Pathway!]
+	)
+	~	$/metric ton
+	~	Share-weighted cost of this year's new-build pathway mix: the \
+		replacement alternative in the overhaul-vs-replace decision.
+	|
+
 Average Three Year Prior Net Loss per Unit Output[Electricity Source,Optimization Pass\
 		]=
 	IF THEN ELSE(
@@ -3177,6 +3187,15 @@ BAU Average Four Year Prior Total Predicted Net Energy Market Revenue per MW[CCU
 	~	$/(MW*hr)
 	~		|
 
+BAU Average New Clinker Capacity Cost per Ton=
+	SUM(
+	  BAU Share of New Clinker Production Capacity by Pathway[Cement Production Pathway!]
+	  * BAU Cement Pathway Levelized Cost per Ton[Cement Production Pathway!]
+	)
+	~	$/metric ton
+	~	BAU twin of Average New Clinker Capacity Cost per Ton.
+	|
+
 BAU Average Three Year Prior Net Loss per Unit Output[Electricity Source,Optimization Pass\
 		]=
 	IF THEN ELSE(
@@ -4320,6 +4339,40 @@ BAU CCS Subsidy per Unit Output for Dispatch by Vintage[Electricity Source,Model
 	~	$/(MW*hr)
 	~		|
 
+BAU Cement Capacity Facing Overhaul Decision by Pathway[Cement Production Pathway]=
+	MIN(
+	  BAU Preexisting Clinker Production Capacity by Pathway[Cement Production Pathway],
+	  CPRS Cement Preexisting Capacity Overhaul Decision Schedule[Cement Production Pathway\
+		]
+	  + BAU Cement Capacity Overhauled One Campaign Ago by Pathway[Cement Production Pathway\
+		]
+	)
+	~	metric tons/Year
+	~	BAU twin of Cement Capacity Facing Overhaul Decision by Pathway.
+	|
+
+BAU Cement Capacity Overhauled by Pathway[Cement Production Pathway]=
+	BAU Cement Capacity Facing Overhaul Decision by Pathway[Cement Production Pathway]
+	* BAU Cement Overhaul Share at Decision[Cement Production Pathway]
+	~	metric tons/Year
+	~	BAU twin of Cement Capacity Overhauled by Pathway.
+	|
+
+BAU Cement Capacity Overhauled One Campaign Ago by Pathway[Cement Production Pathway]= DELAY FIXED(
+	BAU Cement Capacity Overhauled by Pathway[Cement Production Pathway],
+	CPPL Cement Pathway Campaign Length[Cement Production Pathway],
+	0)
+	~	metric tons/Year
+	~	BAU twin of Cement Capacity Overhauled One Campaign Ago by Pathway.
+	|
+
+BAU Cement Capacity Retired at Overhaul Decision by Pathway[Cement Production Pathway]=
+	BAU Cement Capacity Facing Overhaul Decision by Pathway[Cement Production Pathway]
+	* (1 - BAU Cement Overhaul Share at Decision[Cement Production Pathway])
+	~	metric tons/Year
+	~	BAU twin of Cement Capacity Retired at Overhaul Decision by Pathway.
+	|
+
 BAU Cement Module Energy Use by Fuel Type[Industrial Fuel]=
 	SUM(
 	  BAU Clinker Production by Pathway[Cement Production Pathway!]
@@ -4345,6 +4398,35 @@ BAU Cement Module Wired Feedstock Use by Fuel Type[Industrial Fuel]=
 	~	BAU twin of Cement Module Wired Feedstock Use by Fuel Type.
 	|
 
+BAU Cement Overhaul Continuation Cost per Ton[Cement Production Pathway]=
+	CRCC Cement Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway]
+	/ (
+	  CPPL Cement Pathway Campaign Length[Cement Production Pathway]
+	  * SYCCU Start Year Cement Capacity Utilization
+	)
+	+ BAU Cement Pathway Operating Cost per Ton[Cement Production Pathway]
+	~	$/metric ton
+	~	BAU twin of Cement Overhaul Continuation Cost per Ton.
+	|
+
+BAU Cement Overhaul Share at Decision[Cement Production Pathway]=
+	ZIDZ(
+	  CRSW Cement Overhaul Shareweight
+	  * (
+	      MAX(BAU Cement Overhaul Continuation Cost per Ton[Cement Production Pathway], 0.01)
+	      / MAX(BAU Average New Clinker Capacity Cost per Ton, 0.01)
+	    ) ^ IELC Industrial Equipment Logit Coefficient,
+	  CRSW Cement Overhaul Shareweight
+	  * (
+	      MAX(BAU Cement Overhaul Continuation Cost per Ton[Cement Production Pathway], 0.01)
+	      / MAX(BAU Average New Clinker Capacity Cost per Ton, 0.01)
+	    ) ^ IELC Industrial Equipment Logit Coefficient
+	  + 1
+	)
+	~	Dmnl
+	~	BAU twin of Cement Overhaul Share at Decision.
+	|
+
 BAU Cement Pathway Choice Weight[Cement Production Pathway]=
 	10000
 	* CPSW Cement Pathway Shareweight[Cement Production Pathway]
@@ -4362,24 +4444,29 @@ BAU Cement Pathway Levelized Cost per Ton[Cement Production Pathway]=
 	  CPAL Cement Pathway Asset Life[Cement Production Pathway]
 	  * SYCCU Start Year Cement Capacity Utilization
 	)
-	+ SUM(
-	    CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway\
+	+ BAU Cement Pathway Operating Cost per Ton[Cement Production Pathway]
+	~	$/metric ton
+	~	BAU twin of Cement Pathway Levelized Cost per Ton. See the policy \
+		twin for conventions.
+	|
+
+BAU Cement Pathway Operating Cost per Ton[Cement Production Pathway]=
+	SUM(
+	  CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway\
 		,Industrial Fuel!]
-	    * (
-	      BAU Industrial Fuel Cost per Unit Energy[cement and other nonmetallic minerals 239\
+	  * (
+	    BAU Industrial Fuel Cost per Unit Energy[cement and other nonmetallic minerals 239\
 		,Industrial Fuel!]
-	      - Cement Fuel Feedstock Share[Industrial Fuel!]
-	        * BAU Industrial Fuel Carbon Tax Amount per Unit Energy[cement and other nonmetallic minerals 239\
+	    - Cement Fuel Feedstock Share[Industrial Fuel!]
+	      * BAU Industrial Fuel Carbon Tax Amount per Unit Energy[cement and other nonmetallic minerals 239\
 		,Industrial Fuel!]
-	    )
 	  )
+	)
 	+ Cement Process CO2 Intensity per Ton by Pathway[Cement Production Pathway]
 	  / Grams per Metric Ton CO2e
 	  * BAU Cement Process Emissions Carbon Tax Rate
 	~	$/metric ton
-	~	BAU twin of Cement Pathway Levelized Cost per Ton, at BAU fuel costs \
-		and the BAU carbon tax gating. See the policy twin for the \
-		feedstock-netting and process-CO2 pricing conventions.
+	~	BAU twin of Cement Pathway Operating Cost per Ton.
 	|
 
 BAU Cement Process CO2 Emissions=
@@ -4921,8 +5008,11 @@ BAU Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel,industrial h
 	~		|
 
 BAU Clinker Production by Pathway[Cement Production Pathway]=
-	(
+	MAX(
+	  0,
 	  BAU Clinker Production Capacity by Pathway[Cement Production Pathway]
+	  - BAU Cement Capacity Retired at Overhaul Decision by Pathway[Cement Production Pathway\
+		]
 	  + BAU New Clinker Production Capacity by Pathway[Cement Production Pathway]
 	)
 	* SYCCU Start Year Cement Capacity Utilization
@@ -4932,6 +5022,8 @@ BAU Clinker Production by Pathway[Cement Production Pathway]=
 	      BAU Total Clinker Demand,
 	      (
 	        SUM(BAU Clinker Production Capacity by Pathway[Cement Production Pathway!])
+	        - SUM(BAU Cement Capacity Retired at Overhaul Decision by Pathway[Cement Production Pathway!\
+		])
 	        + SUM(BAU New Clinker Production Capacity by Pathway[Cement Production Pathway!\
 		])
 	      ) * SYCCU Start Year Cement Capacity Utilization
@@ -4956,9 +5048,8 @@ BAU Clinker Production Capacity by Pathway[Cement Production Pathway]=
 	+ BAU Clinker Production Capacity Added During Model Run by Pathway[Cement Production Pathway\
 		]
 	~	metric tons/Year
-	~	BAU twin of Clinker Production Capacity by Pathway: the start-year \
-		fleet (retiring on the exogenous schedule) plus model-run additions \
-		(retiring by asset life).
+	~	BAU twin of Clinker Production Capacity by Pathway. See that \
+		variable for the retirement conventions.
 	|
 
 BAU Clinker to Cement Ratio=
@@ -13589,15 +13680,10 @@ BAU Predicted Change in Energy Market Revenue for CCUS Retrofits[lignite w CCS e
 	~		|
 
 BAU Preexisting Clinker Capacity Retirements by Pathway[Cement Production Pathway]=
-	MIN(
-	  CPRS Cement Preexisting Capacity Retirement Schedule[Cement Production Pathway],
-	  BAU Preexisting Clinker Production Capacity by Pathway[Cement Production Pathway]
-	)
+	BAU Cement Capacity Retired at Overhaul Decision by Pathway[Cement Production Pathway\
+		]
 	~	metric tons/Year
-	~	BAU twin of Preexisting Clinker Capacity Retirements by Pathway. \
-		Floored so the stock cannot go negative once the start-year fleet is \
-		exhausted. Identical to the policy case until policy-driven early \
-		retirement arrives in a later phase.
+	~	BAU twin of Preexisting Clinker Capacity Retirements by Pathway.
 	|
 
 BAU Preexisting Clinker Production Capacity by Pathway[Cement Production Pathway]= INTEG(
@@ -13605,10 +13691,8 @@ BAU Preexisting Clinker Production Capacity by Pathway[Cement Production Pathway
 		SYCPbP Start Year Clinker Production by Pathway[Cement Production Pathway]
 		/ SYCCU Start Year Cement Capacity Utilization)
 	~	metric tons/Year
-	~	BAU twin of Preexisting Clinker Production Capacity by Pathway. \
-		Surviving start-year clinker capacity (nameplate), drawn down by the \
-		exogenous retirement schedule. Initialized at start-year production \
-		divided by observed utilization, so nameplate exceeds production.
+	~	BAU twin of Preexisting Clinker Production Capacity by Pathway. See \
+		that variable for the Phase 2b decision-retirement convention.
 	|
 
 BAU Preliminary New Clinker Production Capacity by Pathway[Cement Production Pathway]=
@@ -18339,7 +18423,11 @@ BAU Unmet Clinker Production Capacity Need=
 	MAX(
 	  0,
 	  BAU Total Clinker Demand
-	  - SUM(BAU Clinker Production Capacity by Pathway[Cement Production Pathway!])
+	  - (
+	      SUM(BAU Clinker Production Capacity by Pathway[Cement Production Pathway!])
+	      - SUM(BAU Cement Capacity Retired at Overhaul Decision by Pathway[Cement Production Pathway!\
+		])
+	    )
 	    * SYCCU Start Year Cement Capacity Utilization
 	)
 	~	metric tons/Year
@@ -24741,6 +24829,49 @@ CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway,In
 		release.
 	|
 
+Cement Capacity Facing Overhaul Decision by Pathway[Cement Production Pathway]=
+	MIN(
+	  Preexisting Clinker Production Capacity by Pathway[Cement Production Pathway],
+	  CPRS Cement Preexisting Capacity Overhaul Decision Schedule[Cement Production Pathway\
+		]
+	  + Cement Capacity Overhauled One Campaign Ago by Pathway[Cement Production Pathway]
+	)
+	~	metric tons/Year
+	~	Nameplate capacity whose campaign ends this year: the age-based \
+		first-decision schedule (fleet age cohorts; kiln-level campaign data \
+		does not exist publicly - see CPRS) plus capacity that overhauled \
+		one campaign ago and now decides again. Capped by the surviving \
+		preexisting stock.
+	|
+
+Cement Capacity Overhauled by Pathway[Cement Production Pathway]=
+	Cement Capacity Facing Overhaul Decision by Pathway[Cement Production Pathway]
+	* Cement Overhaul Share at Decision[Cement Production Pathway]
+	~	metric tons/Year
+	~	Capacity that overhauls (kiln shell/drive rebuild) for another \
+		campaign. Stays in the preexisting stock and re-enters the decision \
+		pool one campaign later.
+	|
+
+Cement Capacity Overhauled One Campaign Ago by Pathway[Cement Production Pathway]= DELAY FIXED(
+	Cement Capacity Overhauled by Pathway[Cement Production Pathway],
+	CPPL Cement Pathway Campaign Length[Cement Production Pathway],
+	0)
+	~	metric tons/Year
+	~	Capacity that overhauled one campaign length ago and therefore faces \
+		its next overhaul-or-replace decision this year. Standalone because \
+		DELAY FIXED cannot be nested inside other functions (KB gotcha).
+	|
+
+Cement Capacity Retired at Overhaul Decision by Pathway[Cement Production Pathway]=
+	Cement Capacity Facing Overhaul Decision by Pathway[Cement Production Pathway]
+	* (1 - Cement Overhaul Share at Decision[Cement Production Pathway])
+	~	metric tons/Year
+	~	Capacity that retires at its campaign-end decision instead of \
+		overhauling. Excluded from production in the decision year and \
+		replaced the same year through the new-build pathway logit.
+	|
+
 Cement Carveout Share of Energy by Fuel[Industrial Fuel]= INITIAL(
 	MIN(1,
 	ZIDZ(
@@ -24967,6 +25098,44 @@ Cement Module Wired Feedstock Use by Fuel Type[Industrial Fuel]=
 		element. Wires into the nonenergy/feedstock chains.
 	|
 
+Cement Overhaul Continuation Cost per Ton[Cement Production Pathway]=
+	CRCC Cement Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway]
+	/ (
+	  CPPL Cement Pathway Campaign Length[Cement Production Pathway]
+	  * SYCCU Start Year Cement Capacity Utilization
+	)
+	+ Cement Pathway Operating Cost per Ton[Cement Production Pathway]
+	~	$/metric ton
+	~	Cost per ton of overhauling and running one more campaign: overhaul \
+		capital (straight-line over the campaign, per ton produced) plus \
+		operating cost including carbon exposure. Compared against the cost \
+		of replacement capacity in the overhaul-vs-replace choice.
+	|
+
+Cement Overhaul Share at Decision[Cement Production Pathway]=
+	ZIDZ(
+	  CRSW Cement Overhaul Shareweight
+	  * (
+	      MAX(Cement Overhaul Continuation Cost per Ton[Cement Production Pathway], 0.01)
+	      / MAX(Average New Clinker Capacity Cost per Ton, 0.01)
+	    ) ^ IELC Industrial Equipment Logit Coefficient,
+	  CRSW Cement Overhaul Shareweight
+	  * (
+	      MAX(Cement Overhaul Continuation Cost per Ton[Cement Production Pathway], 0.01)
+	      / MAX(Average New Clinker Capacity Cost per Ton, 0.01)
+	    ) ^ IELC Industrial Equipment Logit Coefficient
+	  + 1
+	)
+	~	Dmnl
+	~	Share of decision-facing capacity that overhauls rather than \
+		retiring: a two-option relative-cost logit (overhaul continuation \
+		cost vs the average new-build cost, same exponent as the pathway \
+		choice), with the CRSW calibration weight on the overhaul branch so \
+		default costs reproduce observed kiln longevity. A deterministic \
+		threshold rule is the logged alternative form, pending team \
+		preference (steel open question 3).
+	|
+
 Cement Pathway Choice Weight[Cement Production Pathway]=
 	10000
 	* CPSW Cement Pathway Shareweight[Cement Production Pathway]
@@ -24988,32 +25157,38 @@ Cement Pathway Levelized Cost per Ton[Cement Production Pathway]=
 	  CPAL Cement Pathway Asset Life[Cement Production Pathway]
 	  * SYCCU Start Year Cement Capacity Utilization
 	)
-	+ SUM(
-	    CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway\
+	+ Cement Pathway Operating Cost per Ton[Cement Production Pathway]
+	~	$/metric ton
+	~	New-build pathway choice cost: straight-line greenfield capital per \
+		ton produced (Phase 3 upgrades to the financing-annuity basis) plus \
+		the operating cost (fuel with feedstock carbon-tax netting, process- \
+		CO2 tax - the CCS pathway's net CCF gives it the capture credit). \
+		Non-energy variable costs (raw meal, labor) omitted: shared \
+		components cancel in the cost-ratio logit; pathway-differential ones \
+		are a Phase 4 refinement.
+	|
+
+Cement Pathway Operating Cost per Ton[Cement Production Pathway]=
+	SUM(
+	  CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway\
 		,Industrial Fuel!]
-	    * (
-	      Industrial Fuel Cost per Unit Energy[cement and other nonmetallic minerals 239\
+	  * (
+	    Industrial Fuel Cost per Unit Energy[cement and other nonmetallic minerals 239\
 		,Industrial Fuel!]
-	      - Cement Fuel Feedstock Share[Industrial Fuel!]
-	        * Industrial Fuel Carbon Tax Amount per Unit Energy[cement and other nonmetallic minerals 239\
+	    - Cement Fuel Feedstock Share[Industrial Fuel!]
+	      * Industrial Fuel Carbon Tax Amount per Unit Energy[cement and other nonmetallic minerals 239\
 		,Industrial Fuel!]
-	    )
 	  )
+	)
 	+ Cement Process CO2 Intensity per Ton by Pathway[Cement Production Pathway]
 	  / Grams per Metric Ton CO2e
 	  * Cement Process Emissions Carbon Tax Rate
 	~	$/metric ton
-	~	Pathway choice cost: straight-line capital per ton produced (Phase 3 \
-		upgrades to the financing-annuity basis), fuel costs with the fuel- \
-		price carbon tax netted OFF feedstock quantities (petcoke is not \
-		taxed as fuel - matching the Amount Spent on Industry Fuels \
-		convention - its carbon is priced through the process-CO2 term \
-		instead, avoiding a double count), plus the carbon tax on process \
-		CO2 (calcination + petcoke carbon). The CCS pathway's net CCF gives \
-		it the capture credit, resolving the Phase 1b WARNING. Non-energy \
-		variable costs (raw meal, labor) omitted: shared components cancel \
-		in the cost-ratio logit; pathway-differential ones are a Phase 4 \
-		refinement.
+	~	Non-capital cost per ton of clinker by pathway: fuel costs (with the \
+		fuel-price carbon tax netted off feedstock quantities - petcoke is \
+		priced through the process-CO2 term instead) plus the carbon tax on \
+		process CO2. Shared by the new-build levelized cost and the \
+		overhaul continuation cost.
 	|
 
 Cement Process CO2 Emissions=
@@ -28867,8 +29042,10 @@ Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel,industrial heati
 	~		|
 
 Clinker Production by Pathway[Cement Production Pathway]=
-	(
+	MAX(
+	  0,
 	  Clinker Production Capacity by Pathway[Cement Production Pathway]
+	  - Cement Capacity Retired at Overhaul Decision by Pathway[Cement Production Pathway]
 	  + New Clinker Production Capacity by Pathway[Cement Production Pathway]
 	)
 	* SYCCU Start Year Cement Capacity Utilization
@@ -28878,18 +29055,18 @@ Clinker Production by Pathway[Cement Production Pathway]=
 	      Total Clinker Demand,
 	      (
 	        SUM(Clinker Production Capacity by Pathway[Cement Production Pathway!])
+	        - SUM(Cement Capacity Retired at Overhaul Decision by Pathway[Cement Production Pathway!\
+		])
 	        + SUM(New Clinker Production Capacity by Pathway[Cement Production Pathway!])
 	      ) * SYCCU Start Year Cement Capacity Utilization
 	    )
 	  )
 	~	metric tons/Year
-	~	Production by pathway: nameplate capacity including this year's new \
-		builds (same-year commissioning, so builds close this year's gap), \
-		run at the target utilization, rationed uniformly when demand falls \
-		short. Realized utilization is therefore emergent: it equals the \
-		target when capacity is fully used and falls in demand slumps. No \
-		scrap-cap analog exists here (unlike steel), so the logit allocation \
-		feeding this equation is uncapped.
+	~	Production by pathway: nameplate capacity net of this year's decision \
+		retirements plus this year's new builds (same-year commissioning), \
+		at the target utilization, rationed uniformly when demand falls \
+		short. Realized utilization is emergent. No resource-cap analog \
+		exists in the logit (the SCM cap acts on the clinker ratio upstream).
 	|
 
 Clinker Production Capacity Added During Model Run by Pathway[Cement Production Pathway\
@@ -28908,8 +29085,10 @@ Clinker Production Capacity by Pathway[Cement Production Pathway]=
 		]
 	~	metric tons/Year
 	~	Total surviving clinker production capacity: the start-year fleet \
-		(retiring on the exogenous schedule) plus model-run additions \
-		(retiring by asset life).
+		(retiring via the endogenous overhaul-vs-replace decisions) plus \
+		model-run additions (retiring by asset life; model-run capacity \
+		does not enter the campaign-decision pool - no vintaging, steel \
+		template convention).
 	|
 
 Clinker to Cement Ratio=
@@ -30111,10 +30290,10 @@ CPAL Cement Pathway Asset Life[Cement Production Pathway]=
 	)
 	~	Years
 	~	Economic asset life by pathway. Used for age-based model-run \
-		retirement (CPAL) and the draft straight-line capital term in the \
-		choice cost (CPCC/CPAL). No separate campaign-length input exists in \
-		Phase 1a (arrives in Phase 2b alongside the reline/replace decision \
-		structure). DRAFT placeholder - verify before release.
+		retirement and the greenfield straight-line capital term in the \
+		choice cost (CPCC/CPAL) - DISTINCT from CPPL campaign length, which \
+		governs the overhaul recurrence and overhaul amortization (steel \
+		P23 lesson). DRAFT placeholder - verify before release.
 	|
 
 CPCC Cement Pathway Capital Cost per Unit Annual Capacity[Cement Production Pathway]=
@@ -30130,7 +30309,23 @@ CPCC Cement Pathway Capital Cost per Unit Annual Capacity[Cement Production Path
 		Princeton Net-Zero America $3.5B/3.75 Mt) - verify before release.
 	|
 
-CPRS Cement Preexisting Capacity Retirement Schedule[Cement Production Pathway]:INTERPOLATE::=
+CPPL Cement Pathway Campaign Length[Cement Production Pathway]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/CPPL/CPPL.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Years
+	~	Campaign length between kiln overhaul decisions (shell/drive rebuild \
+		cycle), used for the overhaul recurrence and the overhaul capital \
+		straight-line - DISTINCT from CPAL asset life (steel P23 lesson: \
+		conflating them overstates greenfield capital and mis-decays the \
+		model-run stock). DRAFT 35 years (Princeton NZA kiln-life \
+		convention; no public authoritative campaign source - weakest- \
+		sourced parameter, see research notes) - verify before release.
+	|
+
+CPRS Cement Preexisting Capacity Overhaul Decision Schedule[Cement Production Pathway]:INTERPOLATE::=
 	GET DIRECT DATA(
 	   'InputData/indst/CPRS/CPRS.csv',
 	   ',',
@@ -30138,12 +30333,15 @@ CPRS Cement Preexisting Capacity Retirement Schedule[Cement Production Pathway]:
 	   'B2'
 	)
 	~	metric tons/Year
-	~	Scheduled retirements of the start-year clinker fleet by pathway. \
-		DRAFT placeholder (dry kiln with precalciner: 1.0 Mt/yr 2027-2036, \
-		all other years and pathways zero; conservative age-based estimate, \
-		roughly 10 Mt of the start-year fleet over the decade) - a plain \
-		retirement schedule in Phase 1a; recast to a reline/replace decision \
-		schedule (steel's Phase 2b pattern) in Phase 2b.
+	~	Nameplate capacity reaching a kiln overhaul-or-replace decision each \
+		year, built from fleet AGE COHORTS (Princeton NZA: ~92 pre-2000 \
+		kilns ~49.6 Mt + 38 post-2000 ~46.7 Mt nameplate, 35-year campaign \
+		convention; GEM's cement tracker records no kiln vintages, so \
+		steel's observed-campaign pattern is unavailable - decision C15). \
+		The decision OUTCOME is endogenous - see Cement Overhaul Share at \
+		Decision. DRAFT (5.0 Mt/yr 2026-2035 pre-2000 cohort, 4.7 Mt/yr \
+		2036-2045 post-2000 cohort) - upgrade with PCA Plant Information \
+		Summary kiln-level data if access is granted.
 	|
 
 CPSW Cement Pathway Shareweight[Cement Production Pathway]:INTERPOLATE::=
@@ -30193,6 +30391,21 @@ CRbQ Capacity Retirements before Quantization[Electricity Source]:=
 	~	MW
 	~		|
 
+CRCC Cement Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/CRCC/CRCC.csv',
+	   ',',
+	   'B2*'
+	)
+	~	$/(metric tons/Year)
+	~	Capital cost to overhaul a kiln (shell/drive/controls rebuild) for \
+		one more campaign, per ton of nameplate capacity. DRAFT judgment: \
+		~10 percent of greenfield by pathway (steel's reline-to-greenfield \
+		ratio; the only public anchors are refractory-vendor order-of- \
+		magnitude figures) - verify before release, ideally against PCA \
+		plant-level data.
+	|
+
 CRDT CCS Retrofit Deployment Time[Industry Category,Emissions Type]=
 	GET DIRECT CONSTANTS(
 	   'InputData/ccs/CRDT/CRDT.csv',
@@ -30210,6 +30423,22 @@ CRpUNL Capacity Retired per Unit Net Loss[Electricity Source]=
 	)
 	~	MW/($/(MW))
 	~		|
+
+CRSW Cement Overhaul Shareweight:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/indst/CRSW/CRSW.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	Dmnl
+	~	Calibration weight on the overhaul branch of the overhaul-vs-replace \
+		choice, capturing unmodeled stickiness (site integration, quarry \
+		co-location, permitting). Set so overhauling wins at default costs, \
+		reproducing observed multi-decade kiln longevity, while a strong \
+		carbon tax can still flip the decision. DRAFT calibration (steel's \
+		draft value).
+	|
 
 CSCCCMvSoECBtY Capacity Cost Multiplier vs Share of Existing Capacity Built This Year\
 		[summer]=
@@ -58270,17 +58499,12 @@ Predicted Change in Energy Market Revenue for CCUS Retrofits[lignite w CCS es]=
 	~		|
 
 Preexisting Clinker Capacity Retirements by Pathway[Cement Production Pathway]=
-	MIN(
-	  CPRS Cement Preexisting Capacity Retirement Schedule[Cement Production Pathway],
-	  Preexisting Clinker Production Capacity by Pathway[Cement Production Pathway]
-	)
+	Cement Capacity Retired at Overhaul Decision by Pathway[Cement Production Pathway]
 	~	metric tons/Year
-	~	Scheduled retirements of the start-year fleet, floored so the stock \
-		cannot go negative once the fleet is exhausted. CPRS is a plain \
-		exogenous retirement schedule in Phase 1a (nameplate tons; the flow \
-		in year Y reduces the stock from Y plus one under Euler integration \
-		- author schedules with that lag in mind); a campaign-length/reline- \
-		decision structure (steel's Phase 2b pattern) arrives in Phase 2b.
+	~	Retirements of the start-year fleet are the retire branch of the \
+		endogenous overhaul-vs-replace decision (the fixed retirement \
+		schedule was retired in Phase 2b). Policy early-retirement levers \
+		will add to this flow when implemented.
 	|
 
 Preexisting Clinker Production Capacity by Pathway[Cement Production Pathway]= INTEG(
@@ -58289,9 +58513,10 @@ Preexisting Clinker Production Capacity by Pathway[Cement Production Pathway]= I
 		/ SYCCU Start Year Cement Capacity Utilization)
 	~	metric tons/Year
 	~	Surviving start-year clinker production capacity (nameplate), drawn \
-		down by the exogenous retirement schedule. Initialized at start-year \
-		production divided by observed utilization, so nameplate exceeds \
-		production.
+		down by the retire branch of the endogenous overhaul-vs-replace \
+		decision (Phase 2b; overhauled capacity stays in this stock and \
+		does not decay by asset life). Initialized at start-year production \
+		divided by observed utilization, so nameplate exceeds production.
 	|
 
 Preexisting Industrial Equipment Fuel Type Shares in Electricity Equivalent Adjusted by Early Retirement Policy\
@@ -69124,14 +69349,18 @@ Unmet Clinker Production Capacity Need=
 	MAX(
 	  0,
 	  Total Clinker Demand
-	  - SUM(Clinker Production Capacity by Pathway[Cement Production Pathway!])
+	  - (
+	      SUM(Clinker Production Capacity by Pathway[Cement Production Pathway!])
+	      - SUM(Cement Capacity Retired at Overhaul Decision by Pathway[Cement Production Pathway!\
+		])
+	    )
 	    * SYCCU Start Year Cement Capacity Utilization
 	)
 	~	metric tons/Year
-	~	Demand (production units) not servable by surviving nameplate capacity \
-		running at the target utilization; drives new builds allocated by the \
-		pathway logit. Realized utilization above the target is not allowed - \
-		the fleet builds rather than overdrives.
+	~	Demand (production units) not servable this year by surviving \
+		nameplate capacity net of this year's decision retirements, at the \
+		target utilization; drives same-year replacement builds via the \
+		pathway logit.
 	|
 
 Unmet Electricity Demand After Elec Portfolio Std Dispatch[Electricity Timeslice,Hour\

@@ -100,25 +100,62 @@ rows = [["Unit: dimensionless (DRAFT 69/100 Mt; USGS 2025 production over report
         ["Start Year Cement Capacity Utilization", 0.69]]
 write("SYCCU", "SYCCU.csv", rows)
 
-# ---------------- CPRS: Cement Preexisting Capacity Retirement Schedule ----------------
-# DRAFT: conservative age-based placeholder - 1.0 Mt/yr of dry kiln with
-# precalciner NAMEPLATE (the schedule subtracts from a nameplate stock)
-# retiring 2027-2036 (~10 Mt over the decade, roughly 10% of the start-year
-# fleet), all other pathways/years zero. TIMING CONVENTION (adversarial-
-# review finding 2, 2026-08-24): CPRS[Y] is the retirement FLOW during year
-# Y; with Euler INTEG the stock reflects it from Y+1, so scheduled tons
-# disappear from the capacity stock in 2028-2037. Author real schedules
-# with that one-year lag in mind (or move to steel's same-year-decision
-# form, which arrives anyway when this is recast to a decision schedule in
-# Phase 2b).
+# ---------------- CPRS: Cement Preexisting Capacity Overhaul Decision Schedule ----------------
+# Phase 2b DECISION SCHEDULE semantics: CPRS[Y] = NAMEPLATE capacity whose
+# kiln campaign ends in year Y (overhaul-vs-replace decided endogenously by
+# the CRSW-weighted two-option logit; retire-branch capacity exits
+# production same-year and leaves the stock from Y+1). Built from fleet age
+# cohorts (Princeton NZA Annex K: ~92 pre-2000 kilns ~49.6 Mt/yr nameplate
+# + 38 post-2000 kilns ~46.7 Mt/yr; 35-yr campaign convention) because
+# GEM's cement tracker records no kiln vintages. DRAFT: pre-2000 cohort
+# decides 5.0 Mt/yr over 2026-2035; post-2000 cohort 4.7 Mt/yr over
+# 2036-2045 (install years + ~35). Upgrade with PCA Plant Information
+# Summary kiln-level data if access is granted.
 def cprs(pw, y):
-    if pw == "dry kiln with precalciner" and 2027 <= y <= 2036:
-        return 1_000_000
+    if pw == "dry kiln with precalciner":
+        if 2026 <= y <= 2035:
+            return 5_000_000
+        if 2036 <= y <= 2045:
+            return 4_700_000
     return 0
-rows = [["Unit: metric tons/year (DRAFT ~10 Mt conservative age-based retirement of dry kiln with precalciner 2027-2036; recast to decision schedule in Phase 2b, verify before release)"] + YEARS]
+rows = [["Unit: metric tons/year nameplate reaching campaign-end decision (DRAFT age cohorts from Princeton NZA; 35-yr campaign; decision outcome endogenous - verify before release)"] + YEARS]
 for pw in PATHWAYS:
     rows.append([pw] + [cprs(pw, y) for y in YEARS])
 write("CPRS", "CPRS.csv", rows)
+
+# ---------------- CPPL: Cement Pathway Campaign Length ----------------
+# DRAFT: 35 years between kiln shell/drive overhaul decisions (Princeton NZA
+# kiln-life convention; no public authoritative campaign source - the
+# weakest-sourced parameter set, see Cement_Breakout_Research_Notes.md).
+# Alternative chemistry 30 (matches its shorter CPAL). DISTINCT from CPAL
+# asset life per the steel P23 lesson.
+cppl = {"dry kiln with precalciner": 35, "dry kiln with CCS": 35,
+        "electric kiln": 35, "alternative chemistry cement": 30}
+rows = [["Unit: years between kiln overhaul decisions (DRAFT NZA 35-yr convention; weakest-sourced parameter - verify before release)", "Campaign Length"]]
+for pw in PATHWAYS:
+    rows.append([pw, cppl[pw]])
+write("CPPL", "CPPL.csv", rows)
+
+# ---------------- CRCC: Cement Overhaul Capital Cost per Unit Annual Capacity ----------------
+# DRAFT judgment: ~10% of greenfield CPCC by pathway (steel's reline-to-
+# greenfield ratio; the only public cement anchors are refractory-vendor
+# order-of-magnitude figures, far below a shell/drive rebuild). Verify
+# before release, ideally against PCA plant-level data.
+crcc = {"dry kiln with precalciner": 30, "dry kiln with CCS": 93,
+        "electric kiln": 45, "alternative chemistry cement": 60}
+rows = [["Unit: $/(metric ton/yr) overhaul (DRAFT ~10% of greenfield judgment - verify before release)", "Overhaul Capital Cost"]]
+for pw in PATHWAYS:
+    rows.append([pw, crcc[pw]])
+write("CRCC", "CRCC.csv", rows)
+
+# ---------------- CRSW: Cement Overhaul Shareweight ----------------
+# DRAFT: 25 flat (steel's SRSW draft value) - calibration weight on the
+# overhaul branch capturing unmodeled stickiness (site integration, quarry
+# co-location, permitting); set so overhauling wins at default costs,
+# reproducing observed multi-decade kiln longevity.
+rows = [["Unit: dimensionless (DRAFT 25 flat, steel SRSW draft value - calibrate to observed fleet longevity)"] + YEARS,
+        ["Cement Overhaul Shareweight"] + [25] * len(YEARS)]
+write("CRSW", "CRSW.csv", rows)
 
 # ---------------- CPCC: Cement Pathway Capital Cost per Unit Annual Capacity ----------------
 # DRAFT: dry kiln with precalciner ($300/(t/yr)) and electric kiln/
@@ -217,4 +254,4 @@ for pw in PATHWAYS:
     rows.append([pw, ccf[pw]])
 write("CCF", "CCF.csv", rows)
 
-print("\nDone. 11 input CSVs written under", ROOT)
+print("\nDone. 14 input CSVs written under", ROOT)
