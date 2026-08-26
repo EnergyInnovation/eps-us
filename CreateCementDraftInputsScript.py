@@ -338,4 +338,53 @@ for pw in PATHWAYS:
     rows.append([pw, ccf[pw]])
 write("CCF", "CCF.csv", rows)
 
-print("\nDone. 14 input CSVs written under", ROOT)
+# ---------------- PACS: Potential Additional Clinker Substitution ----------------
+# Levers block (2026-08-26). Clinker-to-cement ratio points achievable at
+# full deployment of the clinker-substitution (SCM) lever beyond the BAU
+# trajectory: BAU already declines 0.8214 -> 0.78 by 2035 (PLC transition);
+# policy-driven SCM blending (calcined clay/LC3, slag cement, expanded
+# blended-cement specs like ASTM C595 ternary blends) can plausibly take
+# the US ratio toward ~0.65 (GCCA 2050 global roadmap targets 0.52-0.58;
+# PCA roadmap ~0.75 is nearer-term). DRAFT 0.13 = 0.78 - 0.65, a
+# conservative US judgment. The MASCM supply cap binds the implied SCM
+# tonnage endogenously, so PACS is a technical-potential ceiling, not a
+# supply claim. Verify before release.
+rows = [["Unit: dimensionless ratio points (DRAFT 0.13 = BAU 0.78 endpoint minus ~0.65 achievable; GCCA/PCA roadmaps - verify before release)", "Value"],
+        ["Potential Additional Clinker Substitution", 0.13]]
+write("PACS", "PACS.csv", rows)
+
+# ---------------- SCMEI: SCM Production Energy per Ton of Substitution ----------------
+# Levers block (2026-08-26). Thermal energy to produce one ton of the
+# MARGINAL SCM displacing clinker under the lever, booked to natural gas.
+# Fly ash / GGBFS are byproducts (negligible marginal energy); the marginal
+# supply at scale is calcined clay (~700-850 C calcination, ~2 GJ/t clay =
+# ~1.9e6 BTU/t; IEA notes calcined clay raises thermal needs ~11% vs OPC
+# route on a cement basis). DRAFT 1.0e6 BTU/t = ~50% calcined-clay share of
+# the marginal SCM mix x ~2e6 BTU/t clay. Without this term, substitution-
+# heavy scenarios would get free heat. Verify before release.
+rows = [["Unit: BTU/metric ton SCM (DRAFT 1.0e6 = ~50% calcined-clay share x ~2 GJ/t clay calcination; byproduct SCMs ~0 - verify before release)", "Value"],
+        ["SCM Production Energy per Ton of Substitution", 1_000_000]]
+write("SCMEI", "SCMEI.csv", rows)
+
+# ---------------- CNBEIR: Cement New Build Energy Intensity Ratio ----------------
+# Levers block (2026-08-26), pathway-subscripted after adversarial review:
+# ratio of NEW-BUILD energy intensity to the fleet-typical CEIbPaF values,
+# BY PATHWAY. Dry precalciner: new kilns built at BAT (~2.9 GJ/t clinker
+# thermal, DOE Bandwidth state-of-the-art) vs the fleet-typical 3.43 GJ/t
+# -> 0.846. Dry kiln with CCS: BAT applies only to the kiln component of
+# the pathway's energy, not the amine-regeneration/compression adder ->
+# (0.846 x 4020 + 1.0 x 2250) / 6270 = 0.901 (component totals from
+# CEIbPaF.csv; the blended scalar is exact on total pathway energy but
+# slightly misallocates the discount across fuels - documented
+# simplification). Electric kiln and alternative chemistry: 1.0 - their
+# CEIbPaF values are already forward-looking new-technology estimates with
+# no legacy fleet, so a BAT credit would double-count. Held flat
+# (roadmaps show BAT near-flat to 2050). Verify before release.
+cnbeir = {"dry kiln with precalciner": 0.846, "dry kiln with CCS": 0.901,
+          "electric kiln": 1.0, "alternative chemistry cement": 1.0}
+rows = [["Unit: dimensionless (DRAFT by pathway: precalciner 0.846 = 2.9/3.43 GJ/t DOE Bandwidth; CCS 0.901 kiln-component-only BAT; electric/alt-chem 1.0 already-BAT - verify before release)"] + YEARS]
+for pw in PATHWAYS:
+    rows.append([pw] + [cnbeir[pw]] * len(YEARS))
+write("CNBEIR", "CNBEIR.csv", rows)
+
+print("\nDone. 17 input CSVs written under", ROOT)

@@ -4477,11 +4477,20 @@ BAU Cement Capacity Retired at Overhaul Decision by Pathway[Cement Production Pa
 	~	BAU twin of Cement Capacity Retired at Overhaul Decision by Pathway.
 	|
 
+BAU Cement Energy Intensity Multiplier by Pathway[Cement Production Pathway]=
+	1
+	- BAU New Build Share of Clinker Production by Pathway[Cement Production Pathway]
+	  * (1 - CNBEIR Cement New Build Energy Intensity Ratio[Cement Production Pathway])
+	~	Dmnl
+	~	BAU twin of Cement Energy Intensity Multiplier by Pathway.
+	|
+
 BAU Cement Module Energy Use by Fuel Type[Industrial Fuel]=
 	SUM(
 	  BAU Clinker Production by Pathway[Cement Production Pathway!]
 	  * CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway!\
 		,Industrial Fuel]
+	  * BAU Cement Energy Intensity Multiplier by Pathway[Cement Production Pathway!]
 	)
 	~	BTU/Year
 	~	BAU twin of Cement Module Energy Use by Fuel Type.
@@ -4500,6 +4509,27 @@ BAU Cement Module Wired Feedstock Use by Fuel Type[Industrial Fuel]=
 	* Cement Fuel Feedstock Share[Industrial Fuel]
 	~	BTU/Year
 	~	BAU twin of Cement Module Wired Feedstock Use by Fuel Type.
+	|
+
+BAU Cement New Build Operating Cost per Ton[Cement Production Pathway]=
+	SUM(
+	  CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway\
+		,Industrial Fuel!]
+	  * CNBEIR Cement New Build Energy Intensity Ratio[Cement Production Pathway]
+	  * (
+	    BAU Industrial Fuel Cost per Unit Energy[cement and other nonmetallic minerals 239\
+		,Industrial Fuel!]
+	    - Cement Fuel Feedstock Share[Industrial Fuel!]
+	      * BAU Industrial Fuel Carbon Tax Amount per Unit Energy[cement and other nonmetallic minerals 239\
+		,Industrial Fuel!]
+	  )
+	)
+	+ Cement New Build Process CO2 Intensity per Ton by Pathway[Cement Production Pathway\
+		]
+	  / Grams per Metric Ton CO2e
+	  * BAU Cement Process Emissions Carbon Tax Rate
+	~	$/metric ton
+	~	BAU twin of Cement New Build Operating Cost per Ton.
 	|
 
 BAU Cement Overhaul Continuation Cost per Ton[Cement Production Pathway]=
@@ -4544,7 +4574,7 @@ BAU Cement Pathway Levelized Cost per Ton[Cement Production Pathway]=
 	CPCC Cement Pathway Capital Cost per Unit Annual Capacity[Cement Production Pathway]
 	* Cement Pathway Capital Recovery Factor[Cement Production Pathway]
 	/ SYCCU Start Year Cement Capacity Utilization
-	+ BAU Cement Pathway Operating Cost per Ton[Cement Production Pathway]
+	+ BAU Cement New Build Operating Cost per Ton[Cement Production Pathway]
 	~	$/metric ton
 	~	BAU twin of Cement Pathway Levelized Cost per Ton. See the policy \
 		twin for conventions.
@@ -11912,6 +11942,20 @@ BAU Net Loss per Unit Capacity Excluding Predicted Capacity Payment[Electricity 
 	)
 	~	$/MW
 	~		|
+
+BAU New Build Share of Clinker Production by Pathway[Cement Production Pathway]=
+	ZIDZ(
+	  BAU Clinker Production Capacity Added During Model Run by Pathway[Cement Production Pathway\
+		]
+	  + BAU New Clinker Production Capacity by Pathway[Cement Production Pathway],
+	  BAU Clinker Production Capacity by Pathway[Cement Production Pathway]
+	  - BAU Cement Capacity Retired at Overhaul Decision by Pathway[Cement Production Pathway\
+		]
+	  + BAU New Clinker Production Capacity by Pathway[Cement Production Pathway]
+	)
+	~	Dmnl
+	~	BAU twin of New Build Share of Clinker Production by Pathway.
+	|
 
 BAU New Capacity Added due to Elec Portfolio Stds for Hybrid Power Plants[Electricity Source\
 		,Clean Elec Requirement]=
@@ -25055,6 +25099,19 @@ Cement Carveout Share of Process CO2= INITIAL(
 		DATA (init-stable), same convention as the energy carveout shares.
 	|
 
+Cement Energy Intensity Multiplier by Pathway[Cement Production Pathway]=
+	1
+	- New Build Share of Clinker Production by Pathway[Cement Production Pathway]
+	  * (1 - CNBEIR Cement New Build Energy Intensity Ratio[Cement Production Pathway])
+	~	Dmnl
+	~	Production-weighted energy-intensity multiplier per pathway: one for \
+		an all-preexisting fleet, CNBEIR for an all-new fleet. Applied to \
+		CEIbPaF in the module energy accounting. The process-CO2 intensity \
+		deliberately keeps the unscaled CEIbPaF basis (calcination \
+		dominates it; the petcoke feedstock-carbon term's small overstate- \
+		ment for new builds is documented rather than modeled).
+	|
+
 Cement Energy Use Process Shares[Industrial Fuel,industrial process end use]= INITIAL(
 	ZIDZ(
 	  BAU Percentage Fuel Use by Industrial Process with Fallback Data[cement and other nonmetallic minerals 239\
@@ -25146,6 +25203,7 @@ Cement Module Energy Use by Fuel Type[Industrial Fuel]=
 	  Clinker Production by Pathway[Cement Production Pathway!]
 	  * CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway!\
 		,Industrial Fuel]
+	  * Cement Energy Intensity Multiplier by Pathway[Cement Production Pathway!]
 	)
 	~	BTU/Year
 	~	Cement sector energy use by fuel implied by the pathway module. In a \
@@ -25158,6 +25216,7 @@ Cement Module Unwired Energy This Year=
 	SUM(Cement Module Energy Use by Fuel Type[Industrial Fuel!])
 	- SUM(Cement Module Wired Energy Use by Fuel Type[Industrial Fuel!])
 	- SUM(Cement Module Wired Feedstock Use by Fuel Type[Industrial Fuel!])
+	+ Cement SCM Production Energy This Year
 	~	BTU/Year
 	~	Diagnostic (adversarial-review finding, 2026-08-24): module energy \
 		that reaches neither the energy nor the feedstock chain - the \
@@ -25170,15 +25229,25 @@ Cement Module Unwired Energy This Year=
 		extraction.
 	|
 
-Cement Module Wired Energy Use by Fuel Type[Industrial Fuel]=
+Cement Module Wired Energy Use by Fuel Type[Industrial Fuel] :EXCEPT: [natural gas if]=
 	Cement Module Energy Use by Fuel Type[Industrial Fuel]
 	* (1 - Cement Fuel Feedstock Share[Industrial Fuel])
-	* Cement Fuel Wiring Mask[Industrial Fuel]
+	* Cement Fuel Wiring Mask[Industrial Fuel] ~~|
+Cement Module Wired Energy Use by Fuel Type[natural gas if]=
+	Cement Module Energy Use by Fuel Type[natural gas if]
+	* (1 - Cement Fuel Feedstock Share[natural gas if])
+	* Cement Fuel Wiring Mask[natural gas if]
+	+ Cement SCM Production Energy This Year
 	~	BTU/Year
 	~	The part of the cement module's energy that wires into the generic \
 		structure's energy chain: energy-purpose (feedstock split off to the \
 		nonenergy chain) and wired fuels only (the biomass/alternative-fuel \
-		row stays module-internal - see Cement Fuel Wiring Mask).
+		row stays module-internal - see Cement Fuel Wiring Mask). The \
+		natural gas branch adds the SCM production energy for policy-driven \
+		clinker substitution (calcined-clay calcination), so substitution- \
+		heavy scenarios pay their heat bill; zero at defaults and in BAU \
+		(the lever is policy-only, so this is a policy-case divergence, not \
+		a twin asymmetry bug).
 	|
 
 Cement Module Wired Feedstock Use by Fuel Type[Industrial Fuel]=
@@ -25188,6 +25257,60 @@ Cement Module Wired Feedstock Use by Fuel Type[Industrial Fuel]=
 	~	The feedstock (nonenergy) part of the cement module's fuel demand - \
 		in practice the petcoke stream riding the heavy or residual fuel oil \
 		element. Wires into the nonenergy/feedstock chains.
+	|
+
+Cement New Build Operating Cost per Ton[Cement Production Pathway]=
+	SUM(
+	  CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway\
+		,Industrial Fuel!]
+	  * CNBEIR Cement New Build Energy Intensity Ratio[Cement Production Pathway]
+	  * (
+	    Industrial Fuel Cost per Unit Energy[cement and other nonmetallic minerals 239\
+		,Industrial Fuel!]
+	    - Cement Fuel Feedstock Share[Industrial Fuel!]
+	      * Industrial Fuel Carbon Tax Amount per Unit Energy[cement and other nonmetallic minerals 239\
+		,Industrial Fuel!]
+	  )
+	)
+	+ Cement New Build Process CO2 Intensity per Ton by Pathway[Cement Production Pathway\
+		]
+	  / Grams per Metric Ton CO2e
+	  * Cement Process Emissions Carbon Tax Rate
+	~	$/metric ton
+	~	Operating cost per ton for a NEW-BUILD plant: fuel at the new-build \
+		(best-available-technology) intensity, CNBEIR x CEIbPaF, with the \
+		same feedstock carbon-tax netting and process-CO2 term as the fleet \
+		operating cost. Used in the new-build levelized cost, so the \
+		overhaul-vs-replace decision correctly sees that a replacement \
+		plant is more efficient than the kiln it replaces (the overhaul \
+		continuation cost keeps the fleet-typical intensity - an overhaul \
+		does not rebuild the kiln to BAT). SYNC NOTE: mirrors Cement \
+		Pathway Operating Cost per Ton with the CNBEIR factor - mirror \
+		edits.
+	|
+
+Cement New Build Process CO2 Intensity per Ton by Pathway[Cement Production Pathway]=
+	CCF Calcination CO2 Factor by Pathway[Cement Production Pathway]
+	+ CNBEIR Cement New Build Energy Intensity Ratio[Cement Production Pathway]
+	  * SUM(
+	      CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway\
+		,Industrial Fuel!]
+	      * Cement Fuel Feedstock Share[Industrial Fuel!]
+	      * Cement Fuel CO2 Emissions Intensity[Industrial Fuel!]
+	    )
+	~	g CO2/metric ton
+	~	Process CO2 per ton of clinker for a NEW-BUILD plant: calcination \
+		chemistry (CCF, invariant to kiln efficiency) plus the feedstock- \
+		booked fuel carbon (petcoke) scaled by the new-build intensity \
+		ratio, since a BAT kiln burns proportionally less petcoke. Used in \
+		the new-build operating cost so the carbon-tax netting (which IS \
+		CNBEIR-scaled in the fuel term) and the process-CO2 term stay \
+		consistent - without this, ~15% of new-build petcoke carbon was \
+		taxed twice, eroding the intended BAT advantage as the tax rate \
+		grows (adversarial-review finding 9, 2026-08-26). The EMISSIONS \
+		accounting deliberately keeps the fleet-typical intensity (the \
+		multiplier's documented simplification); this variable is choice- \
+		cost-side only.
 	|
 
 Cement Overhaul Capital Recovery Factor[Cement Production Pathway]= INITIAL(
@@ -25288,16 +25411,18 @@ Cement Pathway Levelized Cost per Ton[Cement Production Pathway]=
 	CPCC Cement Pathway Capital Cost per Unit Annual Capacity[Cement Production Pathway]
 	* Cement Pathway Capital Recovery Factor[Cement Production Pathway]
 	/ SYCCU Start Year Cement Capacity Utilization
-	+ Cement Pathway Operating Cost per Ton[Cement Production Pathway]
+	+ Cement New Build Operating Cost per Ton[Cement Production Pathway]
 	~	$/metric ton
 	~	New-build pathway choice cost: greenfield capital annuitized at the \
-		industry WACC over the pathway asset life (Phase 3b; per ton \
-		produced via the utilization gross-up) plus the operating cost \
-		(fuel with feedstock carbon-tax netting, process-CO2 tax - the CCS \
-		pathway's net CCF gives it the capture credit). Non-energy variable \
-		costs (raw meal, labor) omitted: shared components cancel in the \
-		cost-ratio logit; pathway-differential ones are a Phase 4 \
-		refinement.
+		industry WACC over the pathway asset life (per ton produced via the \
+		utilization gross-up) plus the NEW-BUILD operating cost (fuel at \
+		best-available-technology intensity via CNBEIR, with feedstock \
+		carbon-tax netting and the process-CO2 tax - the CCS pathway's net \
+		CCF gives it the capture credit). The overhaul continuation cost \
+		keeps the fleet-typical operating cost, so replacement correctly \
+		looks more efficient than rebuilding the old kiln. Non-energy \
+		variable costs (raw meal, labor) omitted: shared components cancel \
+		in the cost-ratio logit.
 	|
 
 Cement Pathway Operating Cost per Ton[Cement Production Pathway]=
@@ -25505,6 +25630,24 @@ Cement Residual Share of Process Energy[industrial process end use]= INITIAL(
 		competitor in the same denominator - at its calibrated relative \
 		position (3a adversarial-review finding: without normalization TB's \
 		239 share inflated up to ~3.9x in the coal-heavy heat band).
+	|
+
+Cement SCM Production Energy This Year=
+	Fraction of Additional Clinker Substitution This Year
+	* Total Cement Demand
+	* SCMEI SCM Production Energy per Ton of Substitution
+	~	BTU/Year
+	~	Thermal energy to produce the marginal SCM tonnage displacing \
+		clinker under the substitution lever (calcined-clay calcination), \
+		booked to the module's wired natural gas stream so substitution- \
+		heavy scenarios pay their heat bill. SCM tonnage = substitution \
+		fraction x cement demand, i.e. a 1:1 mass substitution of SCM for \
+		clinker per ton of cement - the same assumption the MASCM cap uses. \
+		Named once so the wired-energy branch and the Cement Module Unwired \
+		Energy This Year diagnostic stay consistent (the diagnostic adds \
+		this back; otherwise the lever would contaminate its \
+		alternative-fuels invariant with a negative term). Zero at defaults \
+		and in BAU.
 	|
 
 Cement Start Year Module Energy Use by Fuel Type[Industrial Fuel]= INITIAL(
@@ -27883,11 +28026,15 @@ Change in New Industrial Equipment Capital Costs due to Change in Cost per Unit 
 	) ~~|
 Change in New Industrial Equipment Capital Costs due to Change in Cost per Unit Output\
 		[cement and other nonmetallic minerals 239]=
-	Total Cement Demand
+	MAX(0, BAU Total Cement Demand
+	  * (1 + Percent Change in Production due to Policies[cement and other nonmetallic minerals 239\
+		]))
 	* (
 	  ZIDZ(
 	    New Industrial Equipment Capital Cost[cement and other nonmetallic minerals 239],
-	    Total Cement Demand
+	    MAX(0, BAU Total Cement Demand
+	      * (1 + Percent Change in Production due to Policies[cement and other nonmetallic minerals 239\
+		]))
 	  )
 	  - ZIDZ(
 	    BAU New Industrial Equipment Capital Cost[cement and other nonmetallic minerals 239\
@@ -27909,7 +28056,13 @@ Change in New Industrial Equipment Capital Costs due to Change in Cost per Unit 
 		replaced, idle capacity is handled by the utilization factor) and this \
 		term is correctly zero - ceasing investment is not an output price change.  \
 		Feeds the equipment component of This Year Change in Industry Unit Costs \
-		as Share of BAU Output with Hold at Minimum Production.
+		as Share of BAU Output with Hold at Minimum Production. The cement branch \
+		normalizes on the PRE-content-lever demand basis (BAU demand x production \
+		change): the cement-content-of-concrete lever changes what a cubic meter \
+		of concrete contains, not the cement plant's unit economics, and using \
+		post-lever tonnage booked a spurious per-ton capital-cost increase from \
+		the schedule-driven overhaul capex (adversarial-review finding 1, \
+		2026-08-26).
 	|
 
 Change in Nonenergy Expenditures by Entity due to Expense Passthrough[Cash Flow Entity\
@@ -29271,14 +29424,43 @@ Clinker Production Capacity by Pathway[Cement Production Pathway]=
 	|
 
 Clinker to Cement Ratio=
-	BCtCR BAU Clinker to Cement Ratio
+	MAX(0,
+	  BCtCR BAU Clinker to Cement Ratio
+	  - Fraction of Additional Clinker Substitution This Year)
 	~	Dmnl
-	~	Policy-case twin of BAU Clinker to Cement Ratio. No policy lever on \
-		blending exists yet; when the SCM/clinker-substitution lever is \
-		implemented, POLICY-driven substitution below BCtCR gets capped by \
-		MASCM (fly ash, slag, and pozzolans are supply-limited) while the \
-		BAU limestone-driven trajectory stays uncapped - see the BAU twin's \
-		Phase 4 note. MASCM is retained as an input for that lever.
+	~	Policy-case clinker-to-cement ratio: the BAU (limestone-driven, \
+		uncapped) trajectory minus policy-driven SCM substitution from the \
+		cement-measures lever, which IS capped by MASCM supply (fly ash, \
+		slag, and pozzolans are supply-limited) - see Fraction of \
+		Additional Clinker Substitution This Year. The substitution's SCM \
+		production energy (calcined clay) is added to the module's natural \
+		gas stream via SCMEI.
+	|
+
+CNBEIR Cement New Build Energy Intensity Ratio[Cement Production Pathway]:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/indst/CNBEIR/CNBEIR.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	Dmnl
+	~	Ratio of NEW-BUILD energy intensity to the fleet-typical CEIbPaF \
+		values, BY PATHWAY: new conventional kilns are built at best- \
+		available technology (~2.9 GJ/t clinker thermal, DOE Bandwidth \
+		state-of-the-art) while the surviving fleet burns at the fleet- \
+		typical 3.43 GJ/t, so fleet-average intensity improves through \
+		capacity turnover rather than a declining intensity curve. Dry \
+		precalciner 0.846 (= 2.9/3.43); dry kiln with CCS 0.901 (BAT \
+		applies only to the 4.02 MMBtu/t kiln component, not the 2.25 \
+		amine-regeneration/compression adder: (0.846 x 4020 + 2250)/6270); \
+		electric kiln and alternative chemistry 1.0 (their CEIbPaF values \
+		are already forward-looking new-technology estimates with no legacy \
+		fleet - a further BAT credit would double-count; adversarial-review \
+		finding, 2026-08-26). Held flat (roadmaps show BAT near-flat to \
+		2050); the blended CCS ratio is exact on TOTAL pathway energy but \
+		slightly misallocates the discount across fuels - documented \
+		simplification. DRAFT - verify before release.
 	|
 
 CO2 Abated by Improved Forest Management This Year=
@@ -36838,6 +37020,27 @@ Fraction New Components by Quality Level[Building Type,Building Component,Buildi
 	~	Dmnl
 	~		|
 
+Fraction of Additional Clinker Substitution This Year=
+	MIN(
+	  Fraction of Cement Measures Achieved This Year
+	  * PACS Potential Additional Clinker Substitution,
+	  ZIDZ(
+	    MASCM Maximum Annual SCM Supply for Cement,
+	    Total Cement Demand
+	  )
+	)
+	~	Dmnl
+	~	Policy-driven clinker-to-cement ratio reduction below the BAU \
+		trajectory this year: the cement-measures lever (fraction of PACS \
+		achieved, on the indst cement measures implementation schedule) \
+		capped so the implied additional SCM tonnage cannot exceed MASCM \
+		supply - fly ash, slag, and pozzolans ARE supply-limited, unlike \
+		the limestone driving the BAU ratio decline. Known simplification \
+		(documented in the MASCM workbook): the cap treats MASCM as \
+		available for additional substitution without netting baseline SCM \
+		consumption - refine with the SCM data workstream.
+	|
+
 Fraction of Additional Demand Response Potential Achieved=
 	0
 	~	Dmnl [0,1]
@@ -36918,14 +37121,26 @@ Fraction of Buildings Owned by Entity after Allocation to Energy Supplier Entiti
 
 Fraction of Cement Measures Achieved=
 	0
-	~	Dmnl [0,1]
-	~		|
+	~	Dmnl [0,1,0.05]
+	~	Policy lever, repurposed with the cement breakout (2026-08-26): the \
+		fraction of PACS Potential Additional Clinker Substitution achieved \
+		at full implementation - policy-driven SCM blending (calcined clay, \
+		slag, blended-cement specs) that lowers the clinker-to-cement ratio \
+		below its BAU trajectory. The former MAC-allocation machinery for \
+		this element is retired (see Reduction Achieved by Marginal Cost \
+		Excluding Carbon Tax Driven Reductions and Process Emissions Abated \
+		due to Carbon Tax by Marginal Cost); the mechanistic response now \
+		lives in the cement pathway module via Fraction of Additional \
+		Clinker Substitution This Year.
+	|
 
 Fraction of Cement Measures Achieved This Year=
 	Fraction of Cement Measures Achieved
 	* Selected Policy Implementation Schedule[indst cement measures X]
 	~	Dmnl
-	~		|
+	~	The clinker-substitution lever as implemented this year, on the \
+		indst cement measures implementation schedule.
+	|
 
 Fraction of CO2 Captured by Industry Category[Industry Category,Emissions Type]=
 	MAX(
@@ -49747,6 +49962,29 @@ New and Retrofit Generation Capacity[Electricity Source]=
 	~	MW
 	~		|
 
+New Build Share of Clinker Production by Pathway[Cement Production Pathway]=
+	ZIDZ(
+	  Clinker Production Capacity Added During Model Run by Pathway[Cement Production Pathway\
+		]
+	  + New Clinker Production Capacity by Pathway[Cement Production Pathway],
+	  Clinker Production Capacity by Pathway[Cement Production Pathway]
+	  - Cement Capacity Retired at Overhaul Decision by Pathway[Cement Production Pathway\
+		]
+	  + New Clinker Production Capacity by Pathway[Cement Production Pathway]
+	)
+	~	Dmnl
+	~	Share of each pathway's PRODUCING capacity that was built during the \
+		model run (including this year's builds), used to apply the new- \
+		build energy-intensity ratio: model-run capacity burns at CNBEIR x \
+		CEIbPaF while the preexisting (and overhauled) fleet burns at \
+		fleet-typical intensity. No vintaging: the two-stock capacity \
+		structure provides the new-vs-old split. The denominator matches \
+		the production basis in Clinker Production by Pathway - capacity \
+		net of same-year overhaul-decision retirements plus this year's \
+		builds (retired capacity is preexisting-only, so omitting it \
+		understated the share; adversarial-review finding 4, 2026-08-26).
+	|
+
 New Capacity Added due to Elec Portfolio Stds for Hybrid Power Plants[Electricity Source\
 		,Clean Elec Requirement]=
 	New Capacity Desired due to Cost Effectiveness for Hybrid Power Plants[Electricity Source\
@@ -55465,6 +55703,21 @@ PAC Payback Acceptance Curve[Measure Set](
 		beyond both ends of the grid hold the endpoint.
 	|
 
+PACS Potential Additional Clinker Substitution=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/PACS/PACS.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Dmnl
+	~	Clinker-to-cement ratio points achievable at full deployment of the \
+		clinker-substitution lever, beyond the BAU trajectory: policy-driven \
+		SCM blending (calcined clay/LC3, slag cement, expanded blended-cement \
+		specs) can take the US ratio from the BAU 0.78 toward roughly 0.65 \
+		(GCCA global 2050 targets run 0.52-0.58; 0.13 points is a \
+		conservative US judgment). DRAFT - verify before release.
+	|
+
 Payment Period for Decommissioning Costs=
 	3
 	~	Year
@@ -57477,6 +57730,35 @@ Percent Reduction in BAU Subsidies This Year[All Fuels]=
 	  )
 	~	Dmnl
 	~		|
+
+Percent Reduction in Cement Content of Concrete=
+	0
+	~	Dmnl [0,0.2,0.01]
+	~	Policy lever: fraction by which the cement (binder) content per \
+		cubic meter of concrete is reduced at constant concrete demand and \
+		performance - admixture optimization, aggregate gradation, mix \
+		design QA, longer cure times. Distinct from clinker substitution \
+		(which swaps binder composition) and from material efficiency \
+		(which reduces concrete volume). Literature supports roughly 10-20% \
+		technical potential; rides the indst cement measures implementation \
+		schedule. SCOPE (adversarial review, 2026-08-26): this lever is \
+		PHYSICAL-ONLY in this version - the tonnage cut correctly drives \
+		energy, emissions, and capacity need, and the unit-cost machinery \
+		is normalized to ignore it, but the buyer's avoided cement purchase \
+		and 239's lost revenue are NOT booked (the dollar-side chain never \
+		sees the cut), so GDP/jobs output under this lever is not \
+		meaningful. Full economic booking (a cement-targeted material- \
+		efficiency entry in the IO chain, like Material Efficiency \
+		Improvement) is a logged team design decision.
+	|
+
+Percent Reduction in Cement Content of Concrete This Year=
+	Percent Reduction in Cement Content of Concrete
+	* Selected Policy Implementation Schedule[indst cement measures X]
+	~	Dmnl
+	~	The cement-content lever as implemented this year, on the same \
+		schedule as the other cement measures.
+	|
 
 Percent Reduction in Fossil Fuel Exports[All Fuels]=
 	0,	{electricity - NOT USED}
@@ -61007,11 +61289,27 @@ Reduce EV Range Anxiety This Year=
 	~		|
 
 Reduction Achieved by Marginal Cost[Industry by Process Emissions Policy,Marginal Abatement Cost\
-		]=
+		] :EXCEPT: [cement industry measures,Marginal Abatement Cost]=
 	Reduction Achieved by Marginal Cost Excluding Carbon Tax Driven Reductions[Industry by Process Emissions Policy\
 		,Marginal Abatement Cost]
 	+ Process Emissions Abated due to Carbon Tax by Marginal Cost[Industry by Process Emissions Policy\
-		,Marginal Abatement Cost]
+		,Marginal Abatement Cost] ~~|
+Reduction Achieved by Marginal Cost[cement industry measures,Marginal Abatement Cost]=
+	0
+	{RETIRED WITH THE CEMENT BREAKOUT (levers block, 2026-08-26): the
+	Process Emissions Policies lever for cement measures is repurposed as
+	the clinker-substitution (SCM) lever - Fraction of Cement Measures
+	Achieved now drives Fraction of Additional Clinker Substitution This
+	Year in the cement pathway module, which reduces clinker demand (and
+	hence calcination CO2 and kiln fuel) mechanistically rather than
+	through this MAC allocation. Left un-retired, setting the lever would
+	fire the MAC machinery against the non-cement RESIDUAL of 239's
+	process emissions (lime and other carbonates) AND double-count with
+	the module response. The retirement lives HERE, one node below the
+	ALLOCATE AVAILABLE, because Vensim rejects an EXCEPT split on the
+	ALLOCATE equation itself (batch LOADMODEL parse failure, verified
+	2026-08-26). Companion retirement: the carbon-tax branch of Process
+	Emissions Abated due to Carbon Tax by Marginal Cost (Phase 2a).}
 	~	g CO2e
 	~		|
 
@@ -62434,6 +62732,24 @@ SCGF Soft Cap Growth Fraction[Electricity Source]=
 	)
 	~	Dmnl
 	~		|
+
+SCMEI SCM Production Energy per Ton of Substitution=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/SCMEI/SCMEI.csv',
+	   ',',
+	   'B2*'
+	)
+	~	BTU/metric ton
+	~	Thermal energy required to produce one ton of the marginal \
+		supplementary cementitious material displacing clinker under the \
+		substitution lever, booked to natural gas. Dominated by calcined \
+		clay (~700-850 C calcination; IEA notes calcined clay raises \
+		thermal energy needs ~11%); fly ash and slag are byproducts with \
+		negligible marginal energy, so the value is a calcined-clay-share- \
+		weighted average. DRAFT 1.0e6 BTU/t (~50% clay share at ~2 GJ/t \
+		clay) - verify before release. Without this term, substitution- \
+		heavy scenarios would get free heat (research finding, 2026-08-25).
+	|
 
 SCoC Social Cost of Carbon:INTERPOLATE::=
 	GET DIRECT DATA(
@@ -66329,26 +66645,23 @@ indst methane capture
 This Year Decrease in Process Emissions by Policy and Industry[cement and other nonmetallic minerals 239\
 		,indst cement measures
 ,Pollutant]=
-	Industry Process Emissions Policy to Pollutant Mappings[indst cement measures,Pollutant\
-		]
-	*
-	(
-	  -SUM(Process Emissions Abated due to Carbon Tax by Marginal Cost[cement industry measures\
-		,Marginal Abatement Cost!])
-	   * Fraction of Industry Category Subject to Carbon Tax[cement and other nonmetallic minerals 239\
-		]
-	
-	  - (
-	      SUM(PERAC Mass CO2e Avoidable by Marginal Cost[cement industry measures,Marginal Abatement Cost\
-		!])
-	      - SUM(Process Emissions Abated due to Carbon Tax by Marginal Cost[cement industry measures\
-		,Marginal Abatement Cost
-	!])
-	        * Fraction of Industry Category Subject to Carbon Tax[cement and other nonmetallic minerals 239\
-		]
-	    )
-	    * Fraction of Cement Measures Achieved This Year
-	) ~~|
+	0
+	{RETIRED WITH THE CEMENT BREAKOUT (levers block, 2026-08-26). This
+	branch was the DIRECT lever path of the legacy cement-measures MAC:
+	PERAC avoidable mass x Fraction of Cement Measures Achieved This
+	Year, bypassing the ALLOCATE machinery entirely. With the lever
+	repurposed as the clinker-substitution lever it double-counted the
+	module's mechanistic response (23 MMT CO2e at full lever, caught in
+	the levers-block gate run) and fired against the non-cement RESIDUAL
+	of 239's process ledger. Cement process-CO2 abatement now flows
+	exclusively through the pathway module (clinker demand x CCF).
+	Companion retirements: the carbon-tax branch of Process Emissions
+	Abated due to Carbon Tax by Marginal Cost (Phase 2a) and the cement
+	branch of Reduction Achieved by Marginal Cost (levers block). The
+	Non BAU Process Emissions ADDITIONS channel for this element (BUNBPEA
+	boolean + PEAAC-cement data) is separate, off by default, and left
+	live - flagged for team review since additions would now book to the
+	lime/other-carbonate residual.} ~~|
 This Year Decrease in Process Emissions by Policy and Industry[oil and gas extraction 06\
 		,indst methane capture,Pollutant]=
 	Industry Process Emissions Policy to Pollutant Mappings[indst methane capture,Pollutant\
@@ -67403,14 +67716,17 @@ Total Cement Demand=
 	MAX(0,
 	  BAU Total Cement Demand
 	  * (1 + Percent Change in Production due to Policies[cement and other nonmetallic minerals 239\
-		]))
+		])
+	  * (1 - Percent Reduction in Cement Content of Concrete This Year))
 	~	metric tons/Year
 	~	Policy-case cement demand in physical units: BAU tonnage scaled by \
-		the same policy-driven production change the dollar-based industry \
-		chain already computes (dollars drive tons, one way, mirroring the \
-		steel module's Total Steel Demand). Floored at zero so an extreme \
-		negative production change cannot drive the clinker ratio above one \
-		or energy use negative.
+		the policy-driven production change the dollar-based industry chain \
+		computes (dollars drive tons, one way) and by the cement-content- \
+		of-concrete lever (mix optimization reducing binder per cubic meter \
+		at constant concrete demand - a channel distinct from both material \
+		efficiency, which shrinks concrete volume via the production \
+		change, and clinker substitution, which acts on the ratio). Floored \
+		at zero.
 	|
 
 Total Change in Average Household Energy Expenditures=
@@ -71580,6 +71896,7 @@ S
 S
 12,108,0,826,880,160,20,3,135,0,12,-1,2,0,0,-1--1--1,192-192-192,|14||0-0-0,0,0,0,0,0,0
 Industrial Demand Policies
+10,236,Percent Reduction in Cement Content of Concrete,822,862,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
 10,109,Percent Reduction in Nonenergy Nonagriculture Industry Product Demand,822,982,75,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 12,110,0,911,982,12,16,3,135,0,12,-1,2,0,0,-1--1--1,255-128-192,|16||0-0-0,0,0,0,0,0,0
 S
@@ -85375,6 +85692,27 @@ BAU twin chain (BAU logit at BAU fuel costs and BAU demand; identical to policy 
 10,130,BAU Last Year Financing Repayments for Cement Pathway Equipment,620,2730,75,30,3,131,0,0,-1,0,0,0,0,0,0,0,0,0
 12,131,0,620,2820,480,40,3,135,0,12,-1,3,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 BAU Total Cement Demand, BAU Total Clinker Demand, and BAU Clinker to Cement Ratio are drawn in the physical-core section above; every other BAU twin lives here
+12,132,0,620,2950,640,25,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Cement policy levers: clinker substitution (SCM), cement content of concrete, and new-build (BAT) energy intensity
+10,133,PACS Potential Additional Clinker Substitution,100,3040,75,30,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,134,SCMEI SCM Production Energy per Ton of Substitution,360,3040,75,30,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,135,CNBEIR Cement New Build Energy Intensity Ratio,620,3040,75,30,8,131,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,136,Fraction of Cement Measures Achieved,880,3040,75,30,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,137,Selected Policy Implementation Schedule,1140,3040,75,30,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,138,Percent Reduction in Cement Content of Concrete,1400,3040,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,139,Fraction of Cement Measures Achieved This Year,100,3130,75,30,8,130,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,140,Fraction of Additional Clinker Substitution This Year,360,3130,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,141,Percent Reduction in Cement Content of Concrete This Year,620,3130,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,142,New Build Share of Clinker Production by Pathway,880,3130,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,143,Cement Energy Intensity Multiplier by Pathway,1140,3130,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,144,Cement New Build Operating Cost per Ton,1400,3130,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,149,Cement SCM Production Energy This Year,100,3220,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,150,Cement New Build Process CO2 Intensity per Ton by Pathway,360,3220,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,145,BAU New Build Share of Clinker Production by Pathway,880,3220,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,146,BAU Cement Energy Intensity Multiplier by Pathway,1140,3220,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,147,BAU Cement New Build Operating Cost per Ton,1400,3220,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+12,148,0,620,3300,640,80,3,135,0,12,-1,3,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+The cement-measures lever (Fraction of Cement Measures Achieved, on the indst cement measures schedule) is REPURPOSED as the clinker-substitution lever: it lowers the clinker-to-cement ratio by up to PACS, capped by MASCM supply, and pays SCM production heat (SCMEI, booked to natural gas). The old MAC-allocation machinery for this element is retired. The content lever reduces Total Cement Demand directly. CNBEIR gives model-run builds BAT intensity, so fleet-average intensity improves through turnover in BAU and policy alike; the new-build levelized cost uses the BAT operating cost
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Industry - BAU
@@ -95526,7 +95864,6 @@ Revenue changes for fuel-supplying cash flow entities should be the same after a
 1,249,248,235,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 ///---\\\
 :L<%^E!@
-1:indstcarbontax.vdfx
 4:Time
 5:Thermal Battery Energy Service[Industry Category,Industrial Process]
 6:a1
@@ -95696,7 +96033,6 @@ Revenue changes for fuel-supplying cash flow entities should be the same after a
 6:wind
 6:wood products 16
 6:Year2025
-9:indstcarbontax
 19:80,13
 24:2025
 25:2050
