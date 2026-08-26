@@ -162,14 +162,18 @@ for pw in PATHWAYS:
 write("CPRS", "CPRS.csv", rows)
 
 # ---------------- CPPL: Cement Pathway Campaign Length ----------------
-# DRAFT: 35 years between kiln shell/drive overhaul decisions (Princeton NZA
-# kiln-life convention; no public authoritative campaign source - the
-# weakest-sourced parameter set, see Cement_Breakout_Research_Notes.md).
-# Alternative chemistry 30 (matches its shorter CPAL). DISTINCT from CPAL
-# asset life per the steel P23 lesson.
-cppl = {"dry kiln with precalciner": 35, "dry kiln with CCS": 35,
-        "electric kiln": 35, "alternative chemistry cement": 30}
-rows = [["Unit: years between kiln overhaul decisions (DRAFT NZA 35-yr convention; weakest-sourced parameter - verify before release)", "Campaign Length"]]
+# MEAN years between kiln shell/drive overhaul decisions, used as the mean of
+# the distributed (third-order delay) decision recurrence (Q4 decision-curve
+# change, 2026-08-26). 25 yr = ECRA-INFORMED BUT UNCONFIRMED (ECRA: most
+# original equipment replaced after 20-30 years; snippet-tier; no public
+# authoritative campaign source - the weakest-sourced parameter set, see
+# Cement_Breakout_Research_Notes.md). The prior 35-yr NZA pulse convention is
+# the sensitivity comparator. Uniform across pathways pending data (alt
+# chemistry previously rode its shorter CPAL). DISTINCT from CPAL asset life
+# per the steel P23 lesson.
+cppl = {"dry kiln with precalciner": 25, "dry kiln with CCS": 25,
+        "electric kiln": 25, "alternative chemistry cement": 25}
+rows = [["Unit: mean years between kiln overhaul decisions (25 = ECRA-informed 20-30 band midpoint-high, UNCONFIRMED; weakest-sourced parameter - verify before release)", "Campaign Length"]]
 for pw in PATHWAYS:
     rows.append([pw, cppl[pw]])
 write("CPPL", "CPPL.csv", rows)
@@ -228,10 +232,11 @@ write("CPCC", "CPCC.csv", rows)
 # Princeton NZA Annex K's kiln retirement age (EIA IDM's 30-yr assumption
 # "extended by 5", matching the observed ~36-yr fleet age); NO source exists
 # for 40-yr or vintage-differentiated lives. CPAL aligned to the anchor:
-# 35/35/35/30. Note CPAL (asset life) and CPPL (campaign length) currently
-# COINCIDE at these values - they remain separate inputs (steel P23 lesson)
-# because for cement the overhaul campaign plausibly IS the economic life;
-# revisit if kiln-level campaign data ever arrives.
+# 35/35/35/30. Since the Q4 decision-curve change (2026-08-26) CPAL no longer
+# retires stock (model-run capacity retires via campaign-end decisions like
+# the preexisting fleet); it remains the greenfield amortization window in
+# the choice cost, distinct from CPPL's 25-yr mean campaign (steel P23
+# lesson). Revisit if kiln-level campaign data ever arrives.
 life = {"dry kiln with precalciner": 35, "dry kiln with CCS": 35,
         "electric kiln": 35, "alternative chemistry cement": 30}
 rows = [["Unit: years economic asset life (35 = NZA Annex K / EIA-IDM+5 anchor, the only public source; alt chem 30 judgment)", "Asset Life"]]
