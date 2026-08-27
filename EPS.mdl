@@ -4458,6 +4458,27 @@ BAU CCS Subsidy per Unit Output for Dispatch by Vintage[Electricity Source,Model
 	~	$/(MW*hr)
 	~		|
 
+BAU Cement Absorbable Share of Decision Capacity=
+	MIN(1,
+	  ZIDZ(
+	    BAU Cement Spare Capacity Headroom,
+	    SYCCU Start Year Cement Capacity Utilization
+	    * SUM(
+	        (
+	          BAU Cement Capacity Facing Overhaul Decision by Pathway[Cement Production Pathway!\
+		]
+	          + BAU Cement Model Run Capacity Facing Overhaul Decision by Pathway[Cement Production Pathway!\
+		]
+	        )
+	        * (1 - BAU Cement Last Year Overhaul Share by Pathway[Cement Production Pathway!\
+		])
+	      )
+	  ))
+	~	Dmnl
+	~	BAU twin of Cement Absorbable Share of Decision Capacity (see the \
+		policy twin for the expected-retiring-volume rationale).
+	|
+
 BAU Cement Capacity Facing Overhaul Decision by Pathway[Cement Production Pathway]=
 	MIN(
 	  BAU Preexisting Clinker Production Capacity by Pathway[Cement Production Pathway],
@@ -4499,6 +4520,27 @@ BAU Cement Energy Intensity Multiplier by Pathway[Cement Production Pathway]=
 	  * (1 - CNBEIR Cement New Build Energy Intensity Ratio[Cement Production Pathway])
 	~	Dmnl
 	~	BAU twin of Cement Energy Intensity Multiplier by Pathway.
+	|
+
+BAU Cement Fleet Marginal Operating Cost per Ton=
+	ZIDZ(
+	  SUM(
+	    BAU Clinker Production Capacity by Pathway[Cement Production Pathway!]
+	    * BAU Cement Pathway Operating Cost per Ton[Cement Production Pathway!]
+	  ),
+	  SUM(BAU Clinker Production Capacity by Pathway[Cement Production Pathway!])
+	)
+	~	$/metric ton
+	~	BAU twin of Cement Fleet Marginal Operating Cost per Ton.
+	|
+
+BAU Cement Last Year Overhaul Share by Pathway[Cement Production Pathway]= DELAY FIXED(
+	BAU Cement Overhaul Share at Decision[Cement Production Pathway],
+	1,
+	1)
+	~	Dmnl
+	~	BAU twin of Cement Last Year Overhaul Share by Pathway (see the \
+		policy twin for the expected-retiring-volume rationale).
 	|
 
 BAU Cement Model Run Capacity Facing Overhaul Decision by Pathway[Cement Production Pathway]=
@@ -4592,12 +4634,12 @@ BAU Cement Overhaul Share at Decision[Cement Production Pathway]=
 	  CRSW Cement Overhaul Shareweight
 	  * (
 	      MAX(BAU Cement Overhaul Continuation Cost per Ton[Cement Production Pathway], 0.01)
-	      / MAX(BAU Average New Clinker Capacity Cost per Ton, 0.01)
+	      / MAX(BAU Cement Replacement Alternative Cost per Ton, 0.01)
 	    ) ^ IELC Industrial Equipment Logit Coefficient,
 	  CRSW Cement Overhaul Shareweight
 	  * (
 	      MAX(BAU Cement Overhaul Continuation Cost per Ton[Cement Production Pathway], 0.01)
-	      / MAX(BAU Average New Clinker Capacity Cost per Ton, 0.01)
+	      / MAX(BAU Cement Replacement Alternative Cost per Ton, 0.01)
 	    ) ^ IELC Industrial Equipment Logit Coefficient
 	  + 1
 	)
@@ -4669,6 +4711,18 @@ BAU Cement Process Emissions Carbon Tax Rate=
 	)
 	~	$/metric ton CO2e
 	~	BAU twin of Cement Process Emissions Carbon Tax Rate.
+	|
+
+BAU Cement Replacement Alternative Cost per Ton=
+	BAU Cement Absorbable Share of Decision Capacity
+	* MIN(
+	    BAU Cement Fleet Marginal Operating Cost per Ton,
+	    BAU Average New Clinker Capacity Cost per Ton)
+	+ (1 - BAU Cement Absorbable Share of Decision Capacity)
+	  * BAU Average New Clinker Capacity Cost per Ton
+	~	$/metric ton
+	~	BAU twin of Cement Replacement Alternative Cost per Ton (see the \
+		policy twin for the slack-market and MIN rationale).
 	|
 
 BAU Cement Residual Feedstock Use[Industrial Fuel]=
@@ -4765,6 +4819,18 @@ BAU Cement Residual Process CO2=
 		carbonate sources), staying on the exogenous BPE series. SYNC NOTE: \
 		the first two factors duplicate the main branch of BAU Process \
 		Emissions after GDP and Fuel Production Adjustment - mirror edits.
+	|
+
+BAU Cement Spare Capacity Headroom=
+	QUANTUM(
+	  MAX(0,
+	    SUM(BAU Clinker Production Capacity by Pathway[Cement Production Pathway!])
+	    * SYCCU Start Year Cement Capacity Utilization
+	    - BAU Total Clinker Demand),
+	  10000)
+	~	metric tons/Year
+	~	BAU twin of Cement Spare Capacity Headroom (see the policy twin for \
+		the quantization rationale).
 	|
 
 BAU Cement Total Capacity Overhauled by Pathway[Cement Production Pathway]=
@@ -25052,6 +25118,46 @@ CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway,In
 		release.
 	|
 
+Cement Absorbable Share of Decision Capacity=
+	MIN(1,
+	  ZIDZ(
+	    Cement Spare Capacity Headroom,
+	    SYCCU Start Year Cement Capacity Utilization
+	    * SUM(
+	        (
+	          Cement Capacity Facing Overhaul Decision by Pathway[Cement Production Pathway!\
+		]
+	          + Cement Model Run Capacity Facing Overhaul Decision by Pathway[Cement Production Pathway!\
+		]
+	        )
+	        * (1 - Cement Last Year Overhaul Share by Pathway[Cement Production Pathway!])
+	      )
+	  ))
+	~	Dmnl
+	~	The fraction of this year's EXPECTED RETIRING capacity whose \
+		production could be absorbed by the rest of the fleet's spare \
+		capacity (headroom over the expected retiring volume's production \
+		capability, capped at 1; expected retiring = facing capacity times \
+		last year's retire fraction, a state, so no algebraic loop). \
+		Weights the replacement alternative cost between the fleet's \
+		marginal operating cost (slack market - the historical closure \
+		mode: 1982, 2009-13, the wet-kiln exits) and the greenfield \
+		levelized cost (tight market). Sized to the expected RETIRING \
+		volume, not the whole facing block, per adversarial review \
+		2026-08-27 finding A3: scaling to the whole block made the retire \
+		price track exogenous cohort size (74 percent price jump when the \
+		2036 cohort doubles) instead of economics. The one-year lag forms \
+		a damped negative feedback (more retirement -> bigger expected \
+		volume next year -> less absorbable -> dearer alternative -> less \
+		retirement), equilibrating retirements to the rate at which demand \
+		decline opens headroom. No same-year loop: demand responds to \
+		costs only via Last Year passthrough chains, and capacity is a \
+		beginning-of-year stock. CAUTION (review finding A3 aggravator): \
+		headroom is a small difference of two large DRAFT-sourced numbers \
+		(SYCCU, BCD) - small calibration errors move the absorbable share \
+		a lot; revisit at the data pass.
+	|
+
 Cement Capacity Facing Overhaul Decision by Pathway[Cement Production Pathway]=
 	MIN(
 	  Preexisting Clinker Production Capacity by Pathway[Cement Production Pathway],
@@ -25211,6 +25317,22 @@ Cement Fuel CO2 Emissions Intensity[Industrial Fuel]=
 		here is the safe form (steel P2-A lesson, in the KB gotchas).
 	|
 
+Cement Fleet Marginal Operating Cost per Ton=
+	ZIDZ(
+	  SUM(
+	    Clinker Production Capacity by Pathway[Cement Production Pathway!]
+	    * Cement Pathway Operating Cost per Ton[Cement Production Pathway!]
+	  ),
+	  SUM(Clinker Production Capacity by Pathway[Cement Production Pathway!])
+	)
+	~	$/metric ton
+	~	Capacity-weighted average operating cost of the surviving fleet: the \
+		cost at which spare capacity can absorb a retiring kiln's output \
+		(sunk capital, marginal operating cost only). Capacity-weighted \
+		rather than production-weighted to avoid a same-year loop through \
+		this year's decision retirements.
+	|
+
 Cement Fuel Feedstock Share[Industrial Fuel]= INITIAL(
 	ZIDZ(
 	  BIFU BAU Industrial Fuel Use as Feedstock[cement and other nonmetallic minerals 239\
@@ -25250,6 +25372,24 @@ Cement Fuel Wiring Mask[Industrial Fuel]= INITIAL(
 		energy and break start-year neutrality, so they stay module-internal \
 		pending a team decision on refreshing 239's BAU fuel composition \
 		(documented in Cement_1b_Carveout_Memo.md).
+	|
+
+Cement Last Year Overhaul Share by Pathway[Cement Production Pathway]= DELAY FIXED(
+	Cement Overhaul Share at Decision[Cement Production Pathway],
+	1,
+	1)
+	~	Dmnl
+	~	Last year's overhaul share, used to size the EXPECTED retiring \
+		volume in the absorbable-share denominator without an algebraic \
+		loop (adversarial review 2026-08-27, finding A3: dividing headroom \
+		by the WHOLE facing block made the retire price a function of \
+		exogenous cohort size - the 2036 cohort doubling raised the \
+		alternative cost 74 percent with no economic change - because the \
+		~99 percent of the block that overhauls was counted against the \
+		slack). Initialized at 1 (expected retirement zero) so the start \
+		year prices the greenfield comparison, matching prior behavior. \
+		Standalone because delay functions should not be nested (KB \
+		gotcha).
 	|
 
 Cement Model Run Capacity Facing Overhaul Decision by Pathway[Cement Production Pathway]=
@@ -25471,23 +25611,25 @@ Cement Overhaul Share at Decision[Cement Production Pathway]=
 	  CRSW Cement Overhaul Shareweight
 	  * (
 	      MAX(Cement Overhaul Continuation Cost per Ton[Cement Production Pathway], 0.01)
-	      / MAX(Average New Clinker Capacity Cost per Ton, 0.01)
+	      / MAX(Cement Replacement Alternative Cost per Ton, 0.01)
 	    ) ^ IELC Industrial Equipment Logit Coefficient,
 	  CRSW Cement Overhaul Shareweight
 	  * (
 	      MAX(Cement Overhaul Continuation Cost per Ton[Cement Production Pathway], 0.01)
-	      / MAX(Average New Clinker Capacity Cost per Ton, 0.01)
+	      / MAX(Cement Replacement Alternative Cost per Ton, 0.01)
 	    ) ^ IELC Industrial Equipment Logit Coefficient
 	  + 1
 	)
 	~	Dmnl
 	~	Share of decision-facing capacity that overhauls rather than \
 		retiring: a two-option relative-cost logit (overhaul continuation \
-		cost vs the average new-build cost, same exponent as the pathway \
-		choice), with the CRSW calibration weight on the overhaul branch so \
-		default costs reproduce observed kiln longevity. A deterministic \
-		threshold rule is the logged alternative form, pending team \
-		preference (steel open question 3).
+		cost vs the replacement alternative - a spare-capacity-weighted \
+		blend of fleet marginal cost and greenfield cost since 2026-08-27, \
+		see Cement Replacement Alternative Cost per Ton - at the same \
+		exponent as the pathway choice), with the CRSW calibration weight \
+		on the overhaul branch so default costs reproduce observed kiln \
+		longevity. A deterministic threshold rule is the logged alternative \
+		form, pending team preference (steel open question 3).
 	|
 
 Cement Pathway Capital Recovery Factor[Cement Production Pathway]= INITIAL(
@@ -25724,6 +25866,37 @@ Cement Generic Process Energy by Fuel and Process[electricity if,industrial proc
 		this residual natively and never reach the module's share.
 	|
 
+Cement Replacement Alternative Cost per Ton=
+	Cement Absorbable Share of Decision Capacity
+	* MIN(
+	    Cement Fleet Marginal Operating Cost per Ton,
+	    Average New Clinker Capacity Cost per Ton)
+	+ (1 - Cement Absorbable Share of Decision Capacity)
+	  * Average New Clinker Capacity Cost per Ton
+	~	$/metric ton
+	~	The cost of the RETIRE alternative in the overhaul-or-replace \
+		decision: a spare-capacity-weighted blend of the fleet's marginal \
+		operating cost (a slack market absorbs the retiring kiln's output \
+		with sunk capital) and the greenfield levelized cost (a tight \
+		market must build). Replaces the greenfield-only counterfactual \
+		(2026-08-27, Dan-approved): the Fredonia elasticity test showed a \
+		greenfield-only alternative is priced ~2x the real slack-market \
+		alternative, so no plausible continuation-side cost shock could \
+		ever flip the decision - the model could not reproduce observed \
+		closure waves (1982, 2009-13, the wet-kiln exits), all of which \
+		happened into spare capacity. Recovers the greenfield comparison \
+		exactly when capacity is tight (absorbable share 0). The MIN on \
+		the absorbable leg (adversarial review 2026-08-27, finding A4): a \
+		rational operator exits into whichever alternative is cheaper, so \
+		when a strong carbon tax pushes the fleet's marginal cost above a \
+		clean pathway's levelized cost, the retiring kiln's alternative is \
+		the new build - without the MIN, the blend would price retirement \
+		ABOVE the best alternative and bias toward overhaul exactly in the \
+		scenarios this change was built for. Cement-only for now; steel \
+		port after this design is validated (see Steel_Portbacks_Prompt.md \
+		item 11).
+	|
+
 Cement Residual Share of Process Energy[industrial process end use]= INITIAL(
 	ZIDZ(
 	  SUM(
@@ -25769,6 +25942,28 @@ Cement SCM Production Energy This Year=
 		this back; otherwise the lever would contaminate its \
 		alternative-fuels invariant with a negative term). Zero at defaults \
 		and in BAU.
+	|
+
+Cement Spare Capacity Headroom=
+	QUANTUM(
+	  MAX(0,
+	    SUM(Clinker Production Capacity by Pathway[Cement Production Pathway!])
+	    * SYCCU Start Year Cement Capacity Utilization
+	    - Total Clinker Demand),
+	  10000)
+	~	metric tons/Year
+	~	Production the surviving fleet could deliver beyond this year's \
+		clinker demand (nameplate at target utilization minus demand, \
+		floored at zero): the slack a retiring kiln's output can be \
+		absorbed into. Beginning-of-year capacity stocks; demand's only \
+		cost responses are Last Year passthrough chains, so no same-year \
+		loop back from the overhaul decision. QUANTUM (10 kt/yr bins, \
+		0.014 percent of demand - far below any economics, far above \
+		float noise): headroom is a small difference of two ~69 Mt \
+		quantities, and the retirement controller drives it to zero at \
+		equilibrium, where un-quantized policy/BAU float noise diverges \
+		and leaks sub-0.1 percent phantom deltas into the exports (house \
+		quantization convention, same rationale as QSfCF/QSfP).
 	|
 
 Cement Start Year Module Energy Use by Fuel Type[Industrial Fuel]= INITIAL(
@@ -30820,11 +31015,18 @@ CPPL Cement Pathway Campaign Length[Cement Production Pathway]=
 		annuitization window of the overhaul capital-recovery factor \
 		(Phase 3b) - DISTINCT from CPAL asset life (steel P23 lesson: \
 		conflating them overstates greenfield capital). Set to 25 years \
-		with the Q4 decision-curve change (2026-08-26): ECRA-INFORMED BUT \
-		UNCONFIRMED (ECRA reports most original equipment replaced after \
-		20-30 years; snippet-tier source; no public authoritative campaign \
-		data exists - weakest-sourced cement parameter, see research \
-		notes). The prior 35-year pulse convention (Princeton NZA \
+		with the Q4 decision-curve change (2026-08-26); SOURCED 2026-08-27 \
+		from full documents: IEA commentary (Levi, Fernandez Pales, Gul, \
+		20 Jul 2020, "Aligning investment and innovation in heavy \
+		industries...") gives 25-year investment cycles for cement kilns \
+		("the story is similar to blast furnaces") against 40-year typical \
+		plant lifetimes; ECRA/CSI Technology Papers 2017 p.9 (verbatim) \
+		describes ROLLING equipment turnover - "often after 20 or 30 years \
+		most of the original equipment has been replaced" - over a 30-50 \
+		year kiln life, which supports the DISTRIBUTED (curve) recurrence \
+		form specifically rather than a discrete pulse. No kiln-campaign- \
+		specific statistic exists in either source; the 25-yr mean is the \
+		IEA cycle figure. The prior 35-year pulse convention (Princeton NZA \
 		kiln-life) is the sensitivity comparator. NOTE a documented \
 		convention tension: the CPRS first-decision schedule remains \
 		NZA-verified data built on the 35-year convention; re-authoring it \
@@ -57640,7 +57842,13 @@ Percent Change in Production due to Material Efficiency by Industry Category[Ind
 		efficiency component back OUT of Change in Nonenergy Industry Revenue due \
 		to Production Changes, because the economic accounting is booked directly \
 		via Change in Output due to Material Efficiency (supplier side) and Direct \
-		Production Cost Savings (buyer side).
+		Production Cost Savings (buyer side).  The 239 branch subtracts the \
+		cement-content lever's component (injected into the Material Efficiency \
+		Improvement matrix for the DOLLAR booking only): the lever's physical cut \
+		is carried at full strength, cement-only, by Total Cement Demand's \
+		(1 - lever) factor, so folding the diluted 239-wide percent into the \
+		physical chain would double-count cement and wrongly shrink the \
+		lime/ceramics residual (2026-08-27).
 	|
 
 Percent Change in Production due to Policies[Industry Category] :EXCEPT:         [energy industries within industry category
@@ -85761,7 +85969,7 @@ Kiln overhaul-or-replace decisions at campaign end (endogenous; age-cohort sched
 10,31,Cement Overhaul Share at Decision,1140,640,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
 10,32,Cement Capacity Overhauled by Pathway,360,730,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
 10,33,Cement Capacity Retired at Overhaul Decision by Pathway,620,730,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
-12,34,0,1140,730,200,60,3,135,0,12,-1,3,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+12,34,0,1620,640,200,60,3,135,0,12,-1,3,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 Overhauled capacity re-enters the decision pool as a distributed curve around the mean campaign length (DELAY3 recurrence, Q4); model-run capacity joins the pool through the same chain (bottom row) instead of decaying by asset life; retired capacity exits production same-year and is replaced through the pathway logit
 12,35,0,620,930,640,25,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 New-build pathway choice (relative-cost logit; pre-commercial pathways gated by CPSW)
