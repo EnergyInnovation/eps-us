@@ -25277,6 +25277,47 @@ Cement Carveout Share of Process CO2= INITIAL(
 		DATA (init-stable), same convention as the energy carveout shares.
 	|
 
+Cement Content Lever Component of 239 Output Change=
+	-Cement Content Reduction in 239 Product Requirements
+	* SUM(
+	    TIOT Total Input Output Table[ISIC 239,Industry Category ISIC Code!]
+	    * BAU Output by ISIC Code by Year[Industry Category ISIC Code!]
+	  )
+	* BAU Domestic Content Share of Consumption by ISIC Code from Exogenous Data[ISIC 239\
+		]
+	~	$
+	~	The cement-content lever's contribution to Change in Output due to \
+		Material Efficiency by ISIC Code[ISIC 239], computed with the same \
+		formula the material-efficiency machinery applies to the injected \
+		matrix term. Used ONLY to divide the content component back OUT of \
+		the PHYSICAL production-percent fold-in (Percent Change in \
+		Production due to Material Efficiency by Industry Category[239]): \
+		the lever's physical cut is carried at full strength and cement- \
+		only by the (1 - lever) factor on Total Cement Demand, so folding \
+		the diluted 239-wide percent into the physical chain would both \
+		double-count cement and wrongly shrink the lime/ceramics residual. \
+		The DOLLAR booking stays in (supplier revenue loss via the IO \
+		injection; buyer cost savings, price index, and passthrough via \
+		the savings-share chain).
+	|
+
+Cement Content Reduction in 239 Product Requirements=
+	Percent Reduction in Cement Content of Concrete This Year
+	* CSoIO Cement Share of Industry 239 Output
+	~	Dmnl
+	~	The cement-content-of-concrete lever expressed as a material- \
+		efficiency improvement in 239 PRODUCT terms: buyers need x percent \
+		less cement, which is CSoIO of the 239 product they buy, applied \
+		uniformly across buying industries (construction dominates 239's \
+		sales; buyer heterogeneity beyond the value share is not modeled). \
+		Injected into the Material Efficiency Improvement matrix's ISIC 239 \
+		source row so the supplier revenue loss, buyer cost savings, buyer \
+		price index, and passthrough all book through the standard \
+		machinery (2026-08-27, Dan-approved: the lever was PHYSICAL-ONLY \
+		before this - GDP and jobs did not respond; adversarial-review \
+		finding 2 of the levers block).
+	|
+
 Cement Energy Intensity Multiplier by Pathway[Cement Production Pathway]=
 	1
 	- New Build Share of Clinker Production by Pathway[Cement Production Pathway]
@@ -31205,6 +31246,24 @@ CSpULApYbP CO2 Sequestered per Unit Land Area per Year by Policy[Land Use Policy
 	)
 	~	g pollutant/acre
 	~		|
+
+CSoIO Cement Share of Industry 239 Output=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/CSoIO/CSoIO.csv',
+	   ',',
+	   'B2'
+	)
+	~	Dmnl
+	~	Cement's share of industry 239's (cement and other nonmetallic \
+		minerals) total output by VALUE - used to scale the cement-content- \
+		of-concrete lever's tonnage cut into a reduction in buyers' \
+		requirements for 239 product in the IO dollar chain (the lever cuts \
+		cement purchases only; lime, glass wool, concrete products, and \
+		ceramics sales are untouched). DRAFT 0.21 (USGS MCS cement value of \
+		shipments over BEA gross output of nonmetallic mineral products) - \
+		verify before release. Distinct from the module's physical \
+		carve-out shares (energy, process CO2), which are computed INITIALs.
+	|
 
 Cumulative Battery Capacity Deployed=
 	Cumulative EV Battery Capacity Deployed as of Last Year
@@ -47318,9 +47377,14 @@ Material Efficiency Improvement[Source ISIC Code,Target ISIC Code] :EXCEPT: [Sou
 		,Industry Category ISIC Code]=
 	0 ~~|
 Material Efficiency Improvement[Source ISIC Code,Industry Category ISIC Code] :EXCEPT:\
-		 [Fossil and Energy Utility Source ISIC Code,Industry Category ISIC Code]=
+		 [Fossil and Energy Utility Source ISIC Code,Industry Category ISIC Code],[ISIC 239\
+		,Industry Category ISIC Code]=
 	Percent Reduction in Nonenergy Intermediate Inputs from Material Efficiency This Year\
 		[Industry Category] ~~|
+Material Efficiency Improvement[ISIC 239,Industry Category ISIC Code]=
+	Percent Reduction in Nonenergy Intermediate Inputs from Material Efficiency This Year\
+		[Industry Category]
+	+ Cement Content Reduction in 239 Product Requirements ~~|
 Material Efficiency Improvement[Fossil and Energy Utility Source ISIC Code,Industry Category ISIC Code\
 		]=
 	0
@@ -47335,7 +47399,13 @@ Material Efficiency Improvement[Fossil and Energy Utility Source ISIC Code,Indus
 		Industrial Fuel Use and already enter the industry expense passthrough \
 		price signal, so a nonzero energy row here would double count.  Targets \
 		outside the Industry Categories are zero (the policy applies to industries \
-		only).
+		only).  The ISIC 239 source row additionally carries the cement-content- \
+		of-concrete lever (buyers need less cement per unit of their output - a \
+		SUPPLIER-specified improvement, scaled by CSoIO to 239-product terms), so \
+		that lever's buyer savings and supplier revenue loss book through this \
+		standard machinery; its PHYSICAL cut is carried by the cement module and \
+		divided back out of the production-percent fold-in - see Cement Content \
+		Lever Component of 239 Output Change (2026-08-27).
 	|
 
 Material Efficiency Intermediate Cost Savings Share by ISIC Code[ISIC Code]=
@@ -52391,7 +52461,8 @@ nonroad vehicle type:
 	~	
 	~		|
 
-Normalized Change in Amount Spent on Industry Fuels[Industry Category ISIC Code]=
+Normalized Change in Amount Spent on Industry Fuels[Industry Category ISIC Code] :EXCEPT:\
+		 [ISIC 239]=
 	ZIDZ(
 	      SUM(Amount Spent on Industry Fuels[Industry Category, Industrial Fuel!])
 	      + Amount Spent on Thermal Battery Grid Charging Electricity[Industry Category]\
@@ -52405,11 +52476,40 @@ Normalized Change in Amount Spent on Industry Fuels[Industry Category ISIC Code]
 	      + BAU Amount Spent on Thermal Battery Grid Charging Electricity[Industry Category\
 		],
 	      BAU Output by ISIC Code by Year[Industry Category ISIC Code]
+	    ) ~~|
+Normalized Change in Amount Spent on Industry Fuels[ISIC 239]=
+	ZIDZ(
+	      SUM(Amount Spent on Industry Fuels[cement and other nonmetallic minerals 239, Industrial Fuel!\
+		])
+	      + Amount Spent on Thermal Battery Grid Charging Electricity[cement and other nonmetallic minerals 239\
+		],
+	      BAU Output by ISIC Code by Year[ISIC 239]
+	      * (1 + Percent Change in Production due to Policies[cement and other nonmetallic minerals 239\
+		])
+	      * (1 - Cement Content Reduction in 239 Product Requirements)
+	    )
+
+	    - ZIDZ(
+	      SUM(BAU Amount Spent on Industry Fuels[cement and other nonmetallic minerals 239, Industrial Fuel!\
+		])
+	      + BAU Amount Spent on Thermal Battery Grid Charging Electricity[cement and other nonmetallic minerals 239\
+		],
+	      BAU Output by ISIC Code by Year[ISIC 239]
 	    )
 	~	Dmnl
 	~	Includes thermal battery grid charging purchases on both sides: they are \
 		energy purchases affecting industrial unit costs exactly as fuel purchases \
-		do, even though thermal battery charging is outside Industrial Fuel Use.
+		do, even though thermal battery charging is outside Industrial Fuel Use. \
+		The 239 branch scales the policy-case output denominator by the \
+		cement-content lever's VALUE cut (1 - lever x CSoIO): the lever's \
+		physical cut is deliberately excluded from Percent Change in Production \
+		due to Policies (see Cement Content Lever Component of 239 Output \
+		Change), so without this factor the numerator's fuel spending falls with \
+		cement tonnage while the output denominator does not, and the whole \
+		tonnage cut reads as a spurious per-unit fuel-cost saving (adversarial \
+		review 2026-08-27, finding B4). The remaining decline in fuel cost per \
+		dollar of 239 output under the lever is the genuine composition effect \
+		(cement is energy-intensive relative to its value share).
 	|
 
 Normalized Change in Industrial Nonfuel Expenditures[Industry Category ISIC Code]=
@@ -57825,11 +57925,18 @@ Percent Change in Production Due to Macroeconomic Feedbacks[Industry Category]=
 	~		|
 
 Percent Change in Production due to Material Efficiency by Industry Category[Industry Category\
-		]=
+		] :EXCEPT: [cement and other nonmetallic minerals 239]=
 	ZIDZ(
 	  Change in Output due to Material Efficiency by ISIC Code[Industry Category ISIC Code\
 		],
 	  BAU Output by ISIC Code by Year[Industry Category ISIC Code]
+	) ~~|
+Percent Change in Production due to Material Efficiency by Industry Category[cement and other nonmetallic minerals 239\
+		]=
+	ZIDZ(
+	  Change in Output due to Material Efficiency by ISIC Code[ISIC 239]
+	  - Cement Content Lever Component of 239 Output Change,
+	  BAU Output by ISIC Code by Year[ISIC 239]
 	)
 	~	Dmnl
 	~	The percent reduction in a supplying industry's production caused by \
@@ -58121,15 +58228,18 @@ Percent Reduction in Cement Content of Concrete=
 		(which swaps binder composition) and from material efficiency \
 		(which reduces concrete volume). Literature supports roughly 10-20% \
 		technical potential; rides the indst cement measures implementation \
-		schedule. SCOPE (adversarial review, 2026-08-26): this lever is \
-		PHYSICAL-ONLY in this version - the tonnage cut correctly drives \
-		energy, emissions, and capacity need, and the unit-cost machinery \
-		is normalized to ignore it, but the buyer's avoided cement purchase \
-		and 239's lost revenue are NOT booked (the dollar-side chain never \
-		sees the cut), so GDP/jobs output under this lever is not \
-		meaningful. Full economic booking (a cement-targeted material- \
-		efficiency entry in the IO chain, like Material Efficiency \
-		Improvement) is a logged team design decision.
+		schedule. ECONOMICS (2026-08-27, Dan-approved): booked as a \
+		cement-targeted material-efficiency entry - the lever is injected \
+		into the Material Efficiency Improvement matrix's ISIC 239 source \
+		row (scaled by CSoIO to 239-product terms), so the buyer's avoided \
+		cement purchase, 239's lost revenue, the buyer price index, and \
+		the passthrough all book through the standard machinery and \
+		GDP/jobs respond; the PHYSICAL cut is carried cement-only at full \
+		strength by Total Cement Demand's (1 - lever) factor and divided \
+		back out of the production-percent fold-in (see Cement Content \
+		Lever Component of 239 Output Change). The unit-cost capex \
+		normalization remains on pre-lever demand (adversarial-review \
+		finding 1).
 	|
 
 Percent Reduction in Cement Content of Concrete This Year=
@@ -86104,6 +86214,23 @@ The cement-measures lever (Fraction of Cement Measures Achieved, on the indst ce
 10,156,BAU Cement Model Run Capacity Facing Overhaul Decision by Pathway,360,2910,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
 10,157,BAU Cement Model Run Capacity Overhauled by Pathway,620,2910,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
 10,158,BAU Cement Total Capacity Overhauled by Pathway,880,2910,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,159,Cement Fleet Marginal Operating Cost per Ton,880,730,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,160,Cement Spare Capacity Headroom,1140,730,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,161,Cement Absorbable Share of Decision Capacity,1400,730,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,162,Cement Replacement Alternative Cost per Ton,1140,840,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,163,BAU Cement Fleet Marginal Operating Cost per Ton,1140,2910,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,164,BAU Cement Spare Capacity Headroom,1400,2910,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,165,BAU Cement Absorbable Share of Decision Capacity,1140,3000,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,166,BAU Cement Replacement Alternative Cost per Ton,1400,3000,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+12,167,0,1700,820,200,70,3,135,0,12,-1,3,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+Retire alternative = spare-capacity-weighted blend of fleet marginal cost and greenfield cost (Dan, 2026-08-27): greenfield-only pricing could never reproduce observed closure waves - 1982 and 2009-13 closures exited into slack capacity, not new builds (Fredonia test). Recovers the pure greenfield comparison when the market is tight. Cement-only pending validation, then port to steel.
+10,168,CSoIO Cement Share of Industry 239 Output,620,3400,75,30,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,169,Cement Content Lever Component of 239 Output Change,100,3490,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,170,Cement Content Reduction in 239 Product Requirements,360,3490,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+12,171,0,880,3490,240,60,3,135,0,12,-1,3,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
+Content lever economics (Dan, 2026-08-27): the lever is injected into the Material Efficiency Improvement matrix's ISIC 239 source row (x CSoIO), so buyer savings, 239 revenue loss, price index, and passthrough book through the standard machinery and GDP/jobs respond; the physical cut stays cement-only on Total Cement Demand and is divided back out of the production-percent fold-in
+10,172,Cement Last Year Overhaul Share by Pathway,1400,840,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,173,BAU Cement Last Year Overhaul Share by Pathway,1660,2910,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Industry - BAU

@@ -392,4 +392,20 @@ for pw in PATHWAYS:
     rows.append([pw] + [cnbeir[pw]] * len(YEARS))
 write("CNBEIR", "CNBEIR.csv", rows)
 
-print("\nDone. 17 input CSVs written under", ROOT)
+# ---------------- CSoIO: Cement Share of Industry 239 Output ----------------
+# Cement's share of industry 239's (nonmetallic mineral products) total
+# output by VALUE, used to scale the cement-content-of-concrete lever's
+# tonnage cut into 239-product terms for the IO dollar booking (Material
+# Efficiency Improvement injection, 2026-08-27). DRAFT 0.154 = USGS MCS
+# cement value of shipments (~$16B, 2023, from memory - VERIFY) / the
+# MODEL'S OWN BAU Output[ISIC 239] = $103.978B (InputData/io-model/
+# BObIC.csv). Adversarial review finding B2 (2026-08-27): an external BEA
+# NAICS-327 denominator is wrong for this model - EPS carries Glass (ISIC
+# 231) as a separate Industry Category, so model-239 excludes glass, and
+# the share must be consistent with the IO row it scales. Verify the USGS
+# numerator against MCS 2026 before release.
+rows = [["Unit: dimensionless (DRAFT 0.154 = USGS cement value of shipments ~$16B / model BAU Output[ISIC 239] $103.98B per BObIC.csv - verify numerator before release)", "Share"],
+        ["cement share of 239 output", 0.154]]
+write("CSoIO", "CSoIO.csv", rows)
+
+print("\nDone. 18 input CSVs written under", ROOT)
