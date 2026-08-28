@@ -142,9 +142,19 @@ write("SYCCU", "SYCCU.csv", rows)
 # over installs ~2000-2010, approximated as 4.7 Mt/yr over 2036-2045.
 # Decision OUTCOME stays endogenous. Upgrade path: PCA Plant Information
 # Summary kiln-level data (proprietary - EI access needed).
-def cprs(pw, y):
-    if pw != "dry kiln with precalciner":
-        return 0
+# SMOOTHING (Dan-directed 2026-08-28): campaign timing is not exact - ECRA
+# (2017, p.9) puts kiln component replacement at rolling 20-30 yr cycles, so
+# a hard install+35 convention produces artificial step edges (the 2036-39
+# retirement-wave spike under carbon-tax runs is an artifact of the mesa).
+# Each cohort-year's mass is therefore convolved with a +/-5-yr TRIANGULAR
+# kernel (weights 1..6..1 / 36; the +/-5 half-width mirrors the 20-30 yr
+# campaign range around its mean). Mass conservation is exact: kernel mass
+# that would land before 2026 is renormalized onto the >=2026 support
+# (pre-2026 decisions are already embedded in the USGS 2025 capacity the
+# stock initializes from, so pushing mass earlier would double-count).
+# Values rounded to 1,000 t with the residual placed on the peak year,
+# keeping the fleet total exact (pre-2000 49.6 Mt + post-2000 47.0 Mt).
+def cprs_raw(y):
     total = 0
     # pre-2000 cohort: 7%/yr of 49.6 Mt from 2026 until the 49.6 exhausts
     # (14 x 3.47 = 48.58; remainder 1.02 in 2040)
@@ -156,7 +166,33 @@ def cprs(pw, y):
     if 2036 <= y <= 2045:
         total += 4_700_000
     return total
-rows = [["Unit: metric tons/year nameplate reaching campaign-end decision (NZA Annex K cohorts confirmed exact; pre-2000 at NZA 7%/yr from 2026, post-2000 35-yr staggered 2036-45)"] + YEARS]
+
+KERNEL = {d: (6 - abs(d)) / 36.0 for d in range(-5, 6)}
+YMIN = 2026   # no decisions before 2026 (pre-start turnover already in the stock)
+
+def smooth_schedule(raw):
+    out = {y: 0.0 for y in YEARS}
+    for ys, mass in raw.items():
+        if mass == 0:
+            continue
+        support = {d: w for d, w in KERNEL.items()
+                   if YMIN <= ys + d <= YEARS[-1]}
+        scale = 1.0 / sum(support.values())   # renormalize onto in-window support
+        for d, w in support.items():
+            out[ys + d] += mass * w * scale
+    return out
+
+raw = {y: cprs_raw(y) for y in YEARS}
+sm = smooth_schedule(raw)
+assert abs(sum(sm.values()) - sum(raw.values())) < 1e-6
+rounded = {y: round(v / 1000.0) * 1000 for y, v in sm.items()}
+peak = max(rounded, key=rounded.get)
+rounded[peak] += int(round(sum(raw.values()) - sum(rounded.values())))
+assert sum(rounded.values()) == sum(raw.values())
+
+def cprs(pw, y):
+    return rounded[y] if pw == "dry kiln with precalciner" else 0
+rows = [["Unit: metric tons/year nameplate reaching campaign-end decision (NZA Annex K cohorts confirmed exact; pre-2000 at NZA 7%/yr from 2026 and post-2000 35-yr staggered 2036-45; both convolved with a +/-5-yr triangular campaign-timing kernel per ECRA 20-30 yr cycles; cohort mass conserved exactly)"] + YEARS]
 for pw in PATHWAYS:
     rows.append([pw] + [cprs(pw, y) for y in YEARS])
 write("CPRS", "CPRS.csv", rows)
