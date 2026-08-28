@@ -4461,27 +4461,6 @@ BAU CCS Subsidy per Unit Output for Dispatch by Vintage[Electricity Source,Model
 	~	$/(MW*hr)
 	~		|
 
-BAU Cement Absorbable Share of Decision Capacity=
-	MIN(1,
-	  ZIDZ(
-	    BAU Cement Spare Capacity Headroom,
-	    SYCCU Start Year Cement Capacity Utilization
-	    * SUM(
-	        (
-	          BAU Cement Capacity Facing Overhaul Decision by Pathway[Cement Production Pathway\
-		!]
-	          + BAU Cement Model Run Capacity Facing Overhaul Decision by Pathway[Cement Production Pathway\
-		!]
-	        )
-	        * (1 - BAU Cement Last Year Overhaul Share by Pathway[Cement Production Pathway\
-		!])
-	      )
-	  ))
-	~	Dmnl
-	~	BAU twin of Cement Absorbable Share of Decision Capacity (see the policy \
-		twin for the expected-retiring-volume rationale).
-	|
-
 BAU Cement Capacity Facing Overhaul Decision by Pathway[Cement Production Pathway]=
 	MIN(
 	  BAU Preexisting Clinker Production Capacity by Pathway[Cement Production Pathway],
@@ -4631,16 +4610,6 @@ BAU Cement Generic Process Energy by Fuel and Process[electricity if,industrial 
 		here.
 	|
 
-BAU Cement Last Year Overhaul Share by Pathway[Cement Production Pathway]= DELAY FIXED\
-		(
-	BAU Cement Overhaul Share at Decision[Cement Production Pathway],
-	1,
-	1)
-	~	Dmnl
-	~	BAU twin of Cement Last Year Overhaul Share by Pathway (see the policy \
-		twin for the expected-retiring-volume rationale).
-	|
-
 BAU Cement Model Run Capacity Facing Overhaul Decision by Pathway[Cement Production Pathway\
 		]=
 	MIN(
@@ -4723,7 +4692,7 @@ BAU Cement Overhaul Continuation Cost per Ton[Cement Production Pathway]=
 	CRCC Cement Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway\
 		]
 	* Cement Overhaul Capital Recovery Factor[Cement Production Pathway]
-	/ SYCCU Start Year Cement Capacity Utilization
+	/ MAX(0.05, MIN(CUUB Cement Utilization Upper Bound, BAU Cement Fleet Utilization))
 	+ BAU Cement Pathway Operating Cost per Ton[Cement Production Pathway]
 	~	$/metric ton
 	~	BAU twin of Cement Overhaul Continuation Cost per Ton.
@@ -4816,11 +4785,12 @@ BAU Cement Process Emissions Carbon Tax Rate=
 	|
 
 BAU Cement Replacement Alternative Cost per Ton=
-	BAU Cement Absorbable Share of Decision Capacity
+	(1 - BAU Cement Replacement Blend Weight)
 	* MIN(
-	    BAU Cement Fleet Marginal Operating Cost per Ton,
+	    BAU Cement Fleet Marginal Operating Cost per Ton
+	    + BAU Cement Tightness Operating Adder per Ton,
 	    BAU Average New Clinker Capacity Cost per Ton)
-	+ (1 - BAU Cement Absorbable Share of Decision Capacity)
+	+ BAU Cement Replacement Blend Weight
 	  * BAU Average New Clinker Capacity Cost per Ton
 	~	$/metric ton
 	~	BAU twin of Cement Replacement Alternative Cost per Ton (see the policy \
@@ -5304,7 +5274,7 @@ BAU Clinker Production by Pathway[Cement Production Pathway]=
 	  - BAU Model Run Clinker Capacity Retirements by Pathway[Cement Production Pathway]
 	  + BAU New Clinker Production Capacity by Pathway[Cement Production Pathway]
 	)
-	* SYCCU Start Year Cement Capacity Utilization
+	* CUUB Cement Utilization Upper Bound
 	* MIN(
 	    1,
 	    ZIDZ(
@@ -5317,7 +5287,7 @@ BAU Clinker Production by Pathway[Cement Production Pathway]=
 		!])
 	        + SUM(BAU New Clinker Production Capacity by Pathway[Cement Production Pathway\
 		!])
-	      ) * SYCCU Start Year Cement Capacity Utilization
+	      ) * CUUB Cement Utilization Upper Bound
 	    )
 	  )
 	~	metric tons/Year
@@ -14023,6 +13993,7 @@ BAU Preliminary New Clinker Production Capacity by Pathway[Cement Production Pat
 		=
 	BAU Share of New Clinker Production Capacity by Pathway[Cement Production Pathway]
 	* BAU Unmet Clinker Production Capacity Need
+	* BAU Cement Replacement Blend Weight
 	/ SYCCU Start Year Cement Capacity Utilization
 	~	metric tons/Year
 	~	BAU twin of Preliminary New Clinker Production Capacity by Pathway. Unlike \
@@ -25157,45 +25128,6 @@ CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway,In
 		electricity-only placeholders - verify before release.
 	|
 
-Cement Absorbable Share of Decision Capacity=
-	MIN(1,
-	  ZIDZ(
-	    Cement Spare Capacity Headroom,
-	    SYCCU Start Year Cement Capacity Utilization
-	    * SUM(
-	        (
-	          Preexisting Cement Capacity Facing Overhaul Decision by Pathway[Cement Production Pathway\
-		!]
-	          + Cementmaking Capacity Installed During Model Run Facing Overhaul Decision by Pathway\
-		[Cement Production Pathway!]
-	        )
-	        * (1 - Cement Last Year Overhaul Share by Pathway[Cement Production Pathway!\
-		])
-	      )
-	  ))
-	~	Dmnl
-	~	The fraction of this year's EXPECTED RETIRING capacity whose production \
-		could be absorbed by the rest of the fleet's spare capacity (headroom over \
-		the expected retiring volume's production capability, capped at 1; \
-		expected retiring = facing capacity times last year's retire fraction, a \
-		state, so no algebraic loop). Weights the replacement alternative cost \
-		between the fleet's marginal operating cost (slack market - the historical \
-		closure mode: 1982, 2009-13, the wet-kiln exits) and the greenfield \
-		levelized cost (tight market). Sized to the expected RETIRING volume, not \
-		the whole facing block, per adversarial review 2026-08-27 finding A3: \
-		scaling to the whole block made the retire price track exogenous cohort \
-		size (74 percent price jump when the 2036 cohort doubles) instead of \
-		economics. The one-year lag forms a damped negative feedback (more \
-		retirement -> bigger expected volume next year -> less absorbable -> \
-		dearer alternative -> less retirement), equilibrating retirements to the \
-		rate at which demand decline opens headroom. No same-year loop: demand \
-		responds to costs only via Last Year passthrough chains, and capacity is a \
-		beginning-of-year stock. CAUTION (review finding A3 aggravator): headroom \
-		is a small difference of two large DRAFT-sourced numbers (SYCCU, BCD) - \
-		small calibration errors move the absorbable share a lot; revisit at the \
-		data pass.
-	|
-
 Cement Capacity Retired at Overhaul Decision by Pathway[Cement Production Pathway]=
 	Preexisting Cement Capacity Facing Overhaul Decision by Pathway[Cement Production Pathway\
 		]
@@ -25522,19 +25454,6 @@ Cement Generic Process Energy by Fuel and Process[electricity if,industrial proc
 		residual natively and never reach the module's share.
 	|
 
-Cement Last Year Overhaul Share by Pathway[Cement Production Pathway]= DELAY FIXED(
-	Cement Overhaul Share at Decision[Cement Production Pathway],
-	1,
-	1)
-	~	Dmnl
-	~	Last year's overhaul share, used to size the EXPECTED retiring volume in \
-		the absorbable-share denominator without an algebraic loop (adversarial \
-		review 2026-08-27, finding A3: dividing headroom by the WHOLE facing block \
-		made the retire price a function of exogenous cohort size - the 2036 \
-		cohort doubling raised the alternative cost 74 percent with no economic \
-		change - because the
-	|
-
 Cement Module Energy as Share of Generic Energy by Fuel[Industrial Fuel]=
 	ZIDZ(
 	  Cement Module Energy Use by Fuel Type[Industrial Fuel],
@@ -25683,14 +25602,18 @@ Cement Overhaul Continuation Cost per Ton[Cement Production Pathway]=
 	CRCC Cement Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway\
 		]
 	* Cement Overhaul Capital Recovery Factor[Cement Production Pathway]
-	/ SYCCU Start Year Cement Capacity Utilization
+	/ MAX(0.05, MIN(CUUB Cement Utilization Upper Bound, Cement Fleet Utilization))
 	+ Cement Pathway Operating Cost per Ton[Cement Production Pathway]
 	~	$/metric ton
 	~	Cost per ton of overhauling and running one more campaign: overhaul \
-		capital annuitized at the industry WACC over the campaign (Phase 3b; per \
-		ton produced via the utilization gross-up) plus operating cost including \
-		carbon exposure. Compared against the cost of replacement capacity in the \
-		overhaul-vs-replace choice.
+		capital annuitized at the industry WACC over the campaign (Phase 3b) per \
+		ton produced at the fleet's ACTUAL utilization (tightness activation \
+		2026-08-28 - was the frozen SYCCU norm), clamped to [0.05, CUUB]: a \
+		slack fleet spreads the overhaul annuity over fewer tons, raising \
+		per-ton continuation cost and retirement pressure smoothly as \
+		utilization sags - the low-tail retirement channel. Plus operating cost \
+		including carbon exposure. Compared against the cost of replacement \
+		capacity in the overhaul-vs-replace choice.
 	|
 
 Cement Overhaul Share at Decision[Cement Production Pathway]=
@@ -25857,19 +25780,25 @@ Cement Production Pathway:
 	|
 
 Cement Replacement Alternative Cost per Ton=
-	Cement Absorbable Share of Decision Capacity
+	(1 - Cement Replacement Blend Weight)
 	* MIN(
-	    Cement Fleet Marginal Operating Cost per Ton,
+	    Cement Fleet Marginal Operating Cost per Ton
+	    + Cement Tightness Operating Adder per Ton,
 	    Average New Clinker Capacity Cost per Ton)
-	+ (1 - Cement Absorbable Share of Decision Capacity)
+	+ Cement Replacement Blend Weight
 	  * Average New Clinker Capacity Cost per Ton
 	~	$/metric ton
 	~	The cost of the RETIRE alternative in the overhaul-or-replace decision: a \
-		spare-capacity-weighted blend of the fleet's marginal operating cost (a \
-		slack market absorbs the retiring kiln's output with sunk capital) and the \
-		greenfield levelized cost (a tight market must build). Replaces the \
-		greenfield-only counterfactual (2026-08-27, Dan-approved): the Fredonia \
-		elasticity test showed a greenfield-only alternative is priced
+		tightness-weighted blend of the fleet's marginal operating cost (a slack \
+		market absorbs the retiring kiln's output with sunk capital) plus the \
+		congestion adder, and the greenfield levelized cost (a tight market must \
+		build). The smooth CRBWvT curve replaced the headroom-based absorbable \
+		share (2026-08-28, tightness activation, Dan-approved design memo): the \
+		absorbable share flipped to zero at the headroom floor (the 2036 \
+		overhaul-share cliff), while the curve responds as the fleet APPROACHES \
+		the band edges. The MIN keeps a slack market from ever pricing \
+		absorption above greenfield. History: replaced the greenfield-only \
+		counterfactual 2026-08-27 (Fredonia elasticity test).
 	|
 
 Cement Replacement Blend Weight=
@@ -25938,8 +25867,12 @@ Cement Spare Capacity Headroom=
 	    - Total Clinker Demand),
 	  10000)
 	~	metric tons/Year
-	~	Production the surviving fleet could deliver beyond this year's clinker \
-		demand (nameplate at target utilization minus demand, floored at zero): \
+	~	DIAGNOSTIC ONLY since the tightness activation (2026-08-28): retired \
+		from the decision chain (the absorbable share it fed was replaced by \
+		the smooth Cement Replacement Blend Weight), kept because slack over \
+		the SYCCU norm remains a useful output. Production the surviving fleet \
+		could deliver beyond this year's clinker demand \
+		(nameplate at target utilization minus demand, floored at zero): \
 		the slack a retiring kiln's output can be absorbed into. Beginning-of-year \
 		capacity stocks; demand's only cost responses are Last Year passthrough \
 		chains, so no same-year loop back from the overhaul decision. QUANTUM (10 \
@@ -29757,7 +29690,7 @@ Clinker Production by Pathway[Cement Production Pathway]=
 	  - Model Run Clinker Capacity Retirements by Pathway[Cement Production Pathway]
 	  + New Clinker Production Capacity by Pathway[Cement Production Pathway]
 	)
-	* SYCCU Start Year Cement Capacity Utilization
+	* CUUB Cement Utilization Upper Bound
 	* MIN(
 	    1,
 	    ZIDZ(
@@ -29770,16 +29703,20 @@ Clinker Production by Pathway[Cement Production Pathway]=
 		!])
 	        + SUM(New Clinker Production Capacity by Pathway[Cement Production Pathway!]\
 		)
-	      ) * SYCCU Start Year Cement Capacity Utilization
+	      ) * CUUB Cement Utilization Upper Bound
 	    )
 	  )
 	~	metric tons/Year
 	~	Production by pathway: nameplate capacity net of this year's decision \
 		retirements (both the preexisting and the model-run pools - Q4) plus this \
-		year's new builds (same-year commissioning), at the target utilization, \
-		rationed uniformly when demand falls short. Realized utilization is \
-		emergent. No resource-cap analog exists in the logit (the SCM cap acts on \
-		the clinker ratio upstream).
+		year's new builds (same-year commissioning), flexing up to the top of \
+		the utilization envelope (CUUB - tightness activation 2026-08-28 \
+		replaced the frozen SYCCU ceiling so the fleet absorbs demand swings \
+		with utilization before capacity; uniform rate across pathways per the \
+		2026-08-28 design decision, merit-order deferred), rationed uniformly \
+		when demand falls short. Realized utilization is emergent. No \
+		resource-cap analog exists in the logit (the SCM cap acts on the \
+		clinker ratio upstream).
 	|
 
 Clinker Production Capacity Added During Model Run by Pathway[Cement Production Pathway\
@@ -31300,14 +31237,15 @@ CUUB Cement Utilization Upper Bound=
 	)
 	~	Dmnl
 	~	Upper bound of the region's historical cement fleet utilization envelope \
-		(nameplate basis) - the utilization at which fleet tightness reads 1, \
-		the retire alternative is priced entirely at greenfield cost, and \
-		demand beyond it flows to same-year new builds. Replaces SYCCU as the \
-		fleet's flex ceiling on activation of the tightness structure (SYCCU \
-		remains the initialization and new-build sizing anchor). Regional \
-		anchors staged in Cement_Utilization_Regional_Anchors (US: 0.85, the \
-		2005 USGS 'full practicable capacity'). Sustained operation AT this \
-		bound is a normal regime (tight growth markets), not an edge case.
+		(nameplate basis) - the utilization at which fleet tightness reads 1 \
+		and the retire alternative is priced entirely at greenfield cost. On \
+		activation of the tightness structure it became the fleet's PRODUCTION \
+		flex ceiling (incumbents run up to CUUB when demand outpaces capacity); \
+		SYCCU remains the initialization, build-trigger, and new-build sizing \
+		norm. Regional anchors staged in Cement_Utilization_Regional_Anchors \
+		(US: 0.85, the 2005 USGS 'full practicable capacity'). Sustained \
+		operation AT this bound is a normal regime (tight growth markets), not \
+		an edge case.
 	|
 
 CSpULApYbP CO2 Sequestered per Unit Land Area per Year by Policy[Land Use Policy]=
@@ -59655,12 +59593,22 @@ Preexisting Industrial Equipment Fuel Type Shares in Electricity Equivalent Adju
 Preliminary New Clinker Production Capacity by Pathway[Cement Production Pathway]=
 	Share of New Clinker Production Capacity by Pathway[Cement Production Pathway]
 	* Unmet Clinker Production Capacity Need
+	* Cement Replacement Blend Weight
 	/ SYCCU Start Year Cement Capacity Utilization
 	~	metric tons/Year
 	~	Logit allocation of needed new clinker capacity (nameplate: the production \
-		gap grossed up by the target utilization). No secondary availability cap \
-		applies (unlike steel's scrap-EAF cap), so this is also the final \
-		allocation - see New Clinker Production Capacity by Pathway below.
+		gap grossed up by the SYCCU sizing norm), damped by the tightness blend \
+		weight (activation 2026-08-28): a slack market absorbs part of the gap \
+		into existing spare capacity (production flexes up to CUUB) instead of \
+		building, a tight market builds the full gap. The gap is positive only \
+		when utilization exceeds SYCCU, where the Hill blend weight is already \
+		near 1 (US: 0.80 at the start-year anchor rising to 1 at the envelope \
+		top), so this is a mild damper that gives utilization a working margin \
+		around the norm rather than welding it there - the interior-equilibrium \
+		mechanism (capacity gap widens until damped builds balance \
+		retirements). No secondary availability cap applies (unlike steel's \
+		scrap-EAF cap), so this is also the final allocation - see New Clinker \
+		Production Capacity by Pathway below.
 	|
 
 Present Value Discount and Lifetime Window Denominator[Industry Category,Industrial Process\
@@ -70476,8 +70424,12 @@ Unmet Clinker Production Capacity Need=
 	~	metric tons/Year
 	~	Demand (production units) not servable this year by surviving nameplate \
 		capacity net of this year's decision retirements (both the preexisting and \
-		the model-run pools - Q4), at the target utilization; drives same-year \
-		replacement builds via the pathway logit.
+		the model-run pools - Q4), at the SYCCU sizing norm - the capacity gap \
+		the market builds toward. The tightness activation (2026-08-28) kept \
+		this trigger at the norm (production itself flexes up to CUUB, and the \
+		blend weight damps how much of this gap is built - see Preliminary New \
+		Clinker Production Capacity); drives same-year replacement builds via \
+		the pathway logit.
 	|
 
 Unmet Electricity Demand After Elec Portfolio Std Dispatch[Electricity Timeslice,Hour\
@@ -86305,11 +86257,9 @@ The cement-measures lever (Fraction of Cement Measures Achieved, on the indst ce
 10,133,BAU Cement Total Capacity Overhauled by Pathway,1032,4153,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
 10,134,Cement Fleet Marginal Operating Cost per Ton,1262,841,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
 10,135,Cement Spare Capacity Headroom,1522,841,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
-10,136,Cement Absorbable Share of Decision Capacity,1782,841,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
 10,137,Cement Replacement Alternative Cost per Ton,1522,956,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
 10,138,BAU Cement Fleet Marginal Operating Cost per Ton,1292,4153,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
 10,139,BAU Cement Spare Capacity Headroom,1552,4153,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
-10,140,BAU Cement Absorbable Share of Decision Capacity,1292,4268,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
 10,141,BAU Cement Replacement Alternative Cost per Ton,1552,4268,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
 12,142,0,2082,1361,200,70,3,135,0,12,-1,3,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 Retire alternative = spare-capacity-weighted blend of fleet marginal cost and greenfield cost (Dan, 2026-08-27): greenfield-only pricing could never reproduce observed closure waves - 1982 and 2009-13 closures exited into slack capacity, not new builds (Fredonia test). Recovers the pure greenfield comparison when the market is tight. Cement-only pending validation, then port to steel.
@@ -86318,8 +86268,6 @@ Retire alternative = spare-capacity-weighted blend of fleet marginal cost and gr
 10,145,Cement Content Reduction in 239 Product Requirements,512,5068,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
 12,146,0,1032,5298,240,60,3,135,0,12,-1,3,0,0,-1--1--1,255-255-128,|12||0-0-0,0,0,0,0,0,0
 Content lever economics (Dan, 2026-08-27): the lever is injected into the Material Efficiency Improvement matrix's ISIC 239 source row (x CSoIO), so buyer savings, 239 revenue loss, price index, and passthrough book through the standard machinery and GDP/jobs respond; the physical cut stays cement-only on Total Cement Demand and is divided back out of the production-percent fold-in
-10,147,Cement Last Year Overhaul Share by Pathway,1782,956,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
-10,148,BAU Cement Last Year Overhaul Share by Pathway,1812,4153,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
 10,149,RPfFISCC Repayment Period for Financed Industry Sector Capital Costs,512,3073,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,150,RPfFISCC Repayment Period for Financed Industry Sector Capital Costs,1292,3073,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,151,Annuity Factor by Industry Fuel and Process,252,3073,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -86340,9 +86288,6 @@ Content lever economics (Dan, 2026-08-27): the lever is injected into the Materi
 10,166,CPCC Cement Pathway Capital Cost per Unit Annual Capacity,-8,3953,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,167,CRCC Cement Overhaul Capital Cost per Unit Annual Capacity,-8,4123,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,168,SoICETAF Share of Industry Capital Expenditures That Are Financed,252,4268,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,169,BAU Cement Capacity Facing Overhaul Decision by Pathway,1292,4353,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,170,BAU Cement Model Run Capacity Facing Overhaul Decision by Pathway,1032,4268,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,171,SYCCU Start Year Cement Capacity Utilization,1032,4353,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,172,CPRS Cement Preexisting Capacity Overhaul Decision Schedule,-8,3578,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,173,BAU Cement Capacity Facing Overhaul Decision by Pathway,1812,3578,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,174,BAU Cement Capacity Overhauled by Pathway,-8,3493,94,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -86352,7 +86297,6 @@ Content lever economics (Dan, 2026-08-27): the lever is injected into the Materi
 10,178,BAU Cement Pathway Operating Cost per Ton,1292,4068,94,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,179,BAU Clinker Production Capacity by Pathway,1032,4068,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,180,Cement Generic Process Energy by Fuel and Process,-8,3863,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,181,BAU Cement Overhaul Share at Decision,1812,4068,85,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,182,BAU Clinker Production Capacity Added During Model Run by Pathway,772,4238,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,183,BAU Cement Overhaul Share at Decision,772,4328,85,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,184,CPPL Cement Pathway Campaign Length,-8,4213,80,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -86368,7 +86312,6 @@ Content lever economics (Dan, 2026-08-27): the lever is injected into the Materi
 10,194,Cement New Build Process CO2 Intensity per Ton by Pathway,1812,4868,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,195,CRCC Cement Overhaul Capital Cost per Unit Annual Capacity,-268,3578,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,196,Cement Overhaul Capital Recovery Factor,-8,3403,89,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,197,SYCCU Start Year Cement Capacity Utilization,-268,3493,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,198,BAU Cement Replacement Alternative Cost per Ton,1812,3493,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,199,CRSW Cement Overhaul Shareweight,1552,3348,73,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,200,IELC Industrial Equipment Logit Coefficient,2072,3578,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -86393,7 +86336,6 @@ Content lever economics (Dan, 2026-08-27): the lever is injected into the Materi
 10,219,BAU Clinker Production Capacity Added During Model Run by Pathway,1552,3233,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,220,BAU Preexisting Clinker Production Capacity by Pathway,2072,3463,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,221,BAU Total Clinker Demand,-398,3808,55,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,222,SYCCU Start Year Cement Capacity Utilization,992,3993,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,223,CPSW Cement Pathway Shareweight,2072,3343,71,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,224,BAU Cement Model Run Capacity Facing Overhaul Decision by Pathway,1812,3318,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,225,BAU Cement Capacity Retired at Overhaul Decision by Pathway,1032,5038,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -86409,11 +86351,7 @@ Content lever economics (Dan, 2026-08-27): the lever is injected into the Materi
 10,235,SYCCU Start Year Cement Capacity Utilization,-528,3983,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,236,BAU Cement Capacity Retired at Overhaul Decision by Pathway,1812,3233,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,237,BAU Total Clinker Demand,2332,3463,55,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,238,SYCCU Start Year Cement Capacity Utilization,1812,3113,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,239,BAU Total Clinker Demand,2202,4098,55,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,240,Preexisting Cement Capacity Facing Overhaul Decision by Pathway,2042,841,96,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,241,Cementmaking Capacity Installed During Model Run Facing Overhaul Decision by Pathway,2042,756,113,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,242,SYCCU Start Year Cement Capacity Utilization,2042,926,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,243,Preexisting Clinker Production Capacity by Pathway,274,460,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,244,Cement Overhaul Share at Decision,510,775,75,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,245,CPPL Cement Pathway Campaign Length,1110,419,80,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -86441,11 +86379,9 @@ Content lever economics (Dan, 2026-08-27): the lever is injected into the Materi
 10,267,CEIbPaF Cement Energy Intensity by Pathway and Fuel,512,5183,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,268,Cement Fuel CO2 Emissions Intensity,-8,4953,80,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,269,Cement Fuel Feedstock Share,512,5303,62,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,270,SYCCU Start Year Cement Capacity Utilization,1108,592,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,271,IELC Industrial Equipment Logit Coefficient,1101,657,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,272,IELC Industrial Equipment Logit Coefficient,1292,1513,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,273,Cement New Build Operating Cost per Ton,512,1828,89,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,274,SYCCU Start Year Cement Capacity Utilization,-8,1598,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,275,Cement Fuel Feedstock Share,-8,1513,62,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,276,Cement Process CO2 Intensity per Ton by Pathway,-8,1683,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,277,Cement Process Emissions Carbon Tax Rate,252,1828,92,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -86461,7 +86397,6 @@ Content lever economics (Dan, 2026-08-27): the lever is injected into the Materi
 10,287,Cement Capacity Retired at Overhaul Decision by Pathway,1032,1798,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,288,Clinker Production Capacity by Pathway,772,1798,87,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,289,Model Run Clinker Capacity Retirements by Pathway,1292,1798,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,290,SYCCU Start Year Cement Capacity Utilization,1552,1713,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,291,Total Clinker Demand,1032,2003,46,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,292,Fraction of Additional Clinker Substitution This Year,155,-70,75,30,8,130,0,5,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
 10,293,Fraction of Cement Measures Achieved This Year,-8,4778,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -86503,7 +86438,6 @@ Content lever economics (Dan, 2026-08-27): the lever is injected into the Materi
 1,329,26,28,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,330,27,137,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,331,28,30,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,332,28,147,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,333,29,24,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,334,29,129,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,335,33,37,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
@@ -86590,16 +86524,10 @@ Content lever economics (Dan, 2026-08-27): the lever is injected into the Materi
 1,416,132,130,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,417,132,133,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,418,134,137,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,419,135,136,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,420,136,137,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,421,137,28,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,422,138,141,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,423,139,140,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,424,140,141,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,425,143,145,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,426,145,144,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,427,147,136,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,428,148,140,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,429,149,70,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,430,150,73,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,431,151,69,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -86620,9 +86548,6 @@ Content lever economics (Dan, 2026-08-27): the lever is injected into the Materi
 1,446,166,107,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,447,167,107,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,448,168,107,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,449,169,140,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,450,170,140,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,451,171,140,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,452,172,84,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,453,173,88,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,454,174,83,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -86634,7 +86559,6 @@ Content lever economics (Dan, 2026-08-27): the lever is injected into the Materi
 1,460,178,138,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,461,179,97,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,462,179,138,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,463,181,148,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,464,182,131,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,465,183,132,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,466,184,130,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -86653,7 +86577,6 @@ Content lever economics (Dan, 2026-08-27): the lever is injected into the Materi
 1,479,194,122,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,480,195,85,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,481,196,85,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,482,197,85,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,483,198,87,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,484,199,87,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,485,200,87,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -86679,7 +86602,6 @@ Content lever economics (Dan, 2026-08-27): the lever is injected into the Materi
 1,505,219,81,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,506,220,81,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,507,221,97,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,508,222,97,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,509,223,92,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,510,224,80,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,511,225,120,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -86695,11 +86617,7 @@ Content lever economics (Dan, 2026-08-27): the lever is injected into the Materi
 1,521,235,95,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,522,236,82,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,523,237,82,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,524,238,82,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,525,239,98,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,526,240,136,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,527,241,136,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,528,242,136,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,529,243,25,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,530,244,29,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,531,244,128,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -86738,13 +86656,10 @@ Content lever economics (Dan, 2026-08-27): the lever is injected into the Materi
 1,564,267,125,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,565,268,125,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,566,269,125,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,567,270,26,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,568,271,28,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,569,6,35,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
 1,570,272,39,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,571,273,37,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,572,274,37,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,573,274,41,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,574,275,36,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,575,276,36,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,576,277,36,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -86760,7 +86675,6 @@ Content lever economics (Dan, 2026-08-27): the lever is injected into the Materi
 1,586,287,44,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,587,288,44,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,588,289,44,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,589,290,44,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,590,291,44,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,591,291,45,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,592,292,9,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -86922,6 +86836,64 @@ We track the capacity of preexisting clinker production equipment alongside that
 1,747,22,24,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,748,22,126,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,749,245,23,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
+10,750,Cement Fleet Utilization,1782,841,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,751,Cement Fleet Tightness,1782,956,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,752,CULB Cement Utilization Lower Bound,2042,841,75,30,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,753,CUUB Cement Utilization Upper Bound,2042,926,75,30,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,754,Cement Replacement Blend Weight,1782,1071,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,755,CRBWvT Cement Replacement Blend Weight vs Tightness,2302,1071,75,30,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,756,Cement Tightness Operating Adder per Ton,1782,1186,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,757,CTOAvT Cement Tightness Operating Adder vs Tightness,2302,1186,75,30,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,758,CUUB Cement Utilization Upper Bound,1108,592,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,759,CUUB Cement Utilization Upper Bound,1552,1713,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,760,SYCCU Start Year Cement Capacity Utilization,-8,1598,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,761,BAU Cement Fleet Utilization,1292,4268,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,762,BAU Cement Fleet Tightness,1812,4153,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,763,BAU Cement Replacement Blend Weight,1812,4383,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,764,BAU Cement Tightness Operating Adder per Ton,1812,4498,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,765,CULB Cement Utilization Lower Bound,2072,4268,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,766,CUUB Cement Utilization Upper Bound,2072,4383,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,767,CRBWvT Cement Replacement Blend Weight vs Tightness,2072,4498,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,768,CTOAvT Cement Tightness Operating Adder vs Tightness,2072,4613,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,769,CUUB Cement Utilization Upper Bound,-268,3493,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,770,CUUB Cement Utilization Upper Bound,992,3993,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,771,SYCCU Start Year Cement Capacity Utilization,1812,3113,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,772,285,750,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,773,253,750,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,774,750,751,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,775,752,751,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,776,753,751,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,777,751,754,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,778,755,754,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,779,751,756,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,780,757,756,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,781,27,756,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,782,754,137,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,783,756,137,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,784,750,26,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,785,758,26,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,786,759,44,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,787,760,41,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,788,239,761,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,789,216,761,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,790,761,762,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,791,765,762,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,792,766,762,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,793,762,763,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,794,767,763,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,795,762,764,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,796,768,764,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,797,212,764,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,798,763,141,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,799,764,141,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,800,761,85,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,801,769,85,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,802,770,97,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,803,771,82,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,804,Cement Replacement Blend Weight,252,1828,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,805,BAU Cement Replacement Blend Weight,252,3923,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,806,804,42,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,807,805,95,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Industry - BAU
