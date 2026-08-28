@@ -4539,6 +4539,29 @@ BAU Cement Fleet Marginal Operating Cost per Ton=
 	~	BAU twin of Cement Fleet Marginal Operating Cost per Ton.
 	|
 
+BAU Cement Fleet Tightness=
+	MIN(1, MAX(0,
+	  ZIDZ(
+	    BAU Cement Fleet Utilization - CULB Cement Utilization Lower Bound,
+	    CUUB Cement Utilization Upper Bound - CULB Cement Utilization Lower Bound
+	  )))
+	~	Dmnl
+	~	BAU twin of Cement Fleet Tightness (see the policy twin for the design \
+		rationale).
+	|
+
+BAU Cement Fleet Utilization=
+	QUANTUM(
+	  ZIDZ(
+	    BAU Total Clinker Demand,
+	    SUM(BAU Clinker Production Capacity by Pathway[Cement Production Pathway!])
+	  ),
+	  0.0001)
+	~	Dmnl
+	~	BAU twin of Cement Fleet Utilization (see the policy twin for the basis \
+		and quantization rationale).
+	|
+
 BAU Cement Generic Process Energy by Fuel and Process[Industrial Fuel,industrial process end use\
 		] :EXCEPT: [electricity if,industrial process end use]=
 	ZIDZ(
@@ -4804,6 +4827,13 @@ BAU Cement Replacement Alternative Cost per Ton=
 		twin for the slack-market and MIN rationale).
 	|
 
+BAU Cement Replacement Blend Weight=
+	CRBWvT Cement Replacement Blend Weight vs Tightness[dry kiln with precalciner](
+	  BAU Cement Fleet Tightness)
+	~	Dmnl
+	~	BAU twin of Cement Replacement Blend Weight.
+	|
+
 BAU Cement Residual Feedstock Use[Industrial Fuel]=
 	BIFU BAU Industrial Fuel Use as Feedstock[cement and other nonmetallic minerals 239,\
 		Industrial Fuel]
@@ -4841,6 +4871,14 @@ BAU Cement Spare Capacity Headroom=
 	~	metric tons/Year
 	~	BAU twin of Cement Spare Capacity Headroom (see the policy twin for the \
 		quantization rationale).
+	|
+
+BAU Cement Tightness Operating Adder per Ton=
+	CTOAvT Cement Tightness Operating Adder vs Tightness[dry kiln with precalciner](
+	  BAU Cement Fleet Tightness)
+	* BAU Average New Clinker Capacity Cost per Ton
+	~	$/metric ton
+	~	BAU twin of Cement Tightness Operating Adder per Ton.
 	|
 
 BAU Cement Total Capacity Overhauled by Pathway[Cement Production Pathway]=
@@ -25313,6 +25351,41 @@ Cement Fleet Marginal Operating Cost per Ton=
 		retirements.
 	|
 
+Cement Fleet Tightness=
+	MIN(1, MAX(0,
+	  ZIDZ(
+	    Cement Fleet Utilization - CULB Cement Utilization Lower Bound,
+	    CUUB Cement Utilization Upper Bound - CULB Cement Utilization Lower Bound
+	  )))
+	~	Dmnl
+	~	Where the fleet sits inside the region's historical utilization envelope \
+		(0 = at the lower bound CULB, 1 = at the upper bound CUUB), clamped to \
+		0..1. One dimensionless index drives the replacement blend weight and \
+		the congestion adder, so decision costs shift smoothly as the fleet \
+		APPROACHES the band edges rather than only upon hitting them, and both \
+		tails are normal operating regimes (sustained 0 = chronic overcapacity, \
+		sustained 1 = tight growth market). Design memo: \
+		Cement_Utilization_Tightness_Design.md.
+	|
+
+Cement Fleet Utilization=
+	QUANTUM(
+	  ZIDZ(
+	    Total Clinker Demand,
+	    SUM(Clinker Production Capacity by Pathway[Cement Production Pathway!])
+	  ),
+	  0.0001)
+	~	Dmnl
+	~	This year's clinker demand over the fleet's beginning-of-year nameplate \
+		capacity, gross of this year's decisions (same no-same-year-loop basis \
+		as the retirement decision pool: capacity is a beginning-of-year stock \
+		and demand responds to costs only via Last Year chains). The utilization \
+		the incumbent fleet would run at if it alone served demand - the state \
+		variable of the tightness structure. QUANTUM carries the 10 kt headroom \
+		convention onto the ratio scale (1e-4 of utilization = 10 kt on a ~100 \
+		Mt fleet).
+	|
+
 Cement Fuel CO2 Emissions Intensity[Industrial Fuel]=
 	CO2 Emissions Intensity by Fuel for All Fuels[industrial fuel within all fuels]
 	~	g CO2/BTU
@@ -25799,6 +25872,19 @@ Cement Replacement Alternative Cost per Ton=
 		elasticity test showed a greenfield-only alternative is priced
 	|
 
+Cement Replacement Blend Weight=
+	CRBWvT Cement Replacement Blend Weight vs Tightness[dry kiln with precalciner](
+	  Cement Fleet Tightness)
+	~	Dmnl
+	~	Greenfield weight in the retire-alternative cost blend, read off the \
+		tightness curve: 0 at the bottom of the utilization envelope (a slack \
+		market absorbs a retiring kiln's output with sunk capital), 1 at the top \
+		(a tight market must build). Replaces the headroom-based absorbable \
+		share on activation of the tightness structure - the smooth curve makes \
+		the blend respond as the fleet approaches the band edges instead of \
+		flipping at a headroom floor.
+	|
+
 Cement Residual Share of Process Energy[industrial process end use]= INITIAL(
 	ZIDZ(
 	  SUM(
@@ -25877,6 +25963,21 @@ Cement Start Year Module Energy Use by Fuel Type[Industrial Fuel]= INITIAL(
 		costs and electricity prices. Differs from the running module's start-year \
 		energy only by the sub-0.01 percent gap between start-year demand and \
 		SYCPbP.
+	|
+
+Cement Tightness Operating Adder per Ton=
+	CTOAvT Cement Tightness Operating Adder vs Tightness[dry kiln with precalciner](
+	  Cement Fleet Tightness)
+	* Average New Clinker Capacity Cost per Ton
+	~	$/metric ton
+	~	Congestion premium on serving demand from a tight incumbent fleet \
+		(deferred maintenance, marginal tons at import parity), entering the \
+		slack branch of the replacement alternative so incumbents serve \
+		transient spikes expensively before greenfield enters. SHADOW DECISION \
+		COST ONLY - books no dollars to any Cash Flow Entity (design decision \
+		2026-08-28). Zero by default pending sourced regional import-parity \
+		premia; saturates (does not diverge) near tightness 1 by construction \
+		of the lookup.
 	|
 
 Cement Total Capacity Overhauled by Pathway[Cement Production Pathway]=
@@ -31034,6 +31135,26 @@ CRbQ Capacity Retirements before Quantization[Electricity Source]:=
 	~	MW
 	~		|
 
+CRBWvT Cement Replacement Blend Weight vs Tightness[dry kiln with precalciner]=
+	GET DIRECT LOOKUPS(
+	   'InputData/indst/CRBW/CRBWvT.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	Dmnl
+	~	Replacement blend weight (the greenfield share of the retire-alternative \
+		cost) vs fleet tightness tau. Normalized-logit (Hill) form w = tau^p / \
+		(tau^p + k*(1-tau)^p): endpoints pin exactly (w(0)=0 slack market, \
+		w(1)=1 tight market); p = steepness (shared judgment parameter, \
+		default 2, sensitivity-tested); k = midpoint shifter solved per region \
+		so w at the start-year tightness reproduces the calibrated overhaul \
+		blend. Curve SHAPE is input data, not code - regenerate with \
+		Cement_Utilization_Regional_Anchors/make_region_files.py. The \
+		artificial single-element subscript follows the CSCCCMvSoECBtY \
+		workaround: SDEverywhere cannot handle lookups without subscripts.
+	|
+
 CRCC Cement Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway]\
 		=
 	GET DIRECT CONSTANTS(
@@ -31135,6 +31256,58 @@ CSoIO Cement Share of Industry 239 Output=
 		nonmetallic mineral products) - verify before release. Distinct from the \
 		module's physical carve-out shares (energy, process CO2), which are \
 		computed INITIALs.
+	|
+
+CTOAvT Cement Tightness Operating Adder vs Tightness[dry kiln with precalciner]=
+	GET DIRECT LOOKUPS(
+	   'InputData/indst/CTOA/CTOAvT.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	Dmnl
+	~	Congestion-adder multiplier (on Average New Clinker Capacity Cost per \
+		Ton) vs fleet tightness. ZERO at all tightness values by default - the \
+		structure ships inactive pending sourced regional import-parity premia \
+		(Cement_Utilization_Tightness_Design.md sec 2/7.2). Populated curves \
+		must saturate at a finite import-parity-like level near tightness 1, \
+		never diverge. The artificial single-element subscript follows the \
+		CSCCCMvSoECBtY workaround: SDEverywhere cannot handle lookups without \
+		subscripts.
+	|
+
+CULB Cement Utilization Lower Bound=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/CULB/CULB.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Dmnl
+	~	Lower bound of the region's historical cement fleet utilization envelope \
+		(nameplate basis) - the utilization at which fleet tightness reads 0 and \
+		the retire alternative is priced entirely at the fleet's marginal \
+		operating cost. Regional anchors staged in \
+		Cement_Utilization_Regional_Anchors (US: 0.49, the 2009 clinker-basis \
+		trough, USGS). Sustained operation AT this bound is a normal regime \
+		(chronic-overcapacity markets), not an edge case.
+	|
+
+CUUB Cement Utilization Upper Bound=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/CUUB/CUUB.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Dmnl
+	~	Upper bound of the region's historical cement fleet utilization envelope \
+		(nameplate basis) - the utilization at which fleet tightness reads 1, \
+		the retire alternative is priced entirely at greenfield cost, and \
+		demand beyond it flows to same-year new builds. Replaces SYCCU as the \
+		fleet's flex ceiling on activation of the tightness structure (SYCCU \
+		remains the initialization and new-build sizing anchor). Regional \
+		anchors staged in Cement_Utilization_Regional_Anchors (US: 0.85, the \
+		2005 USGS 'full practicable capacity'). Sustained operation AT this \
+		bound is a normal regime (tight growth markets), not an edge case.
 	|
 
 CSpULApYbP CO2 Sequestered per Unit Land Area per Year by Policy[Land Use Policy]=
