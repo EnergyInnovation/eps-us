@@ -49,57 +49,13 @@ def write(folder, name, rows):
     print("wrote", p)
 
 
-# ---------------- BCD: BAU Cement Demand ----------------
-# Phase 4 verification (2026-08-25): 84.0 Mt CONFIRMED (USGS MCS2026:
-# portland+blended 82.0 + masonry 2.1; 2021-25 series 91.0/91.2/89.7/85.0/
-# 84.0). No physical tonnage forecast exists: AEO2026 Table 29 (cement AND
-# lime, suptab_29.xlsx, "Counterfactual Baseline") implies ~+0.5-0.6%/yr in
-# shipments-$ and process-CO2 proxies to 2050. Held FLAT as the deliberate
-# simplification (the proxies bundle lime and are not tonnage); the AEO-
-# consistent alternative (~97 Mt by 2050) is documented for team choice.
-rows = [["Unit: metric tons/year (VERIFIED 84 MMT 2025, USGS MCS2026; held flat - AEO2026 Table 29 proxies imply ~+0.5%/yr, team choice documented)"] + YEARS,
-        ["BAU Cement Demand"] + [84_000_000] * len(YEARS)]
-write("BCD", "BCD.csv", rows)
-
-# ---------------- BCtCR: BAU Clinker to Cement Ratio ----------------
-# VERIFIED 2026-08-25 (Phase 4): 0.8214 = USGS MCS2026 2025 domestic clinker
-# production (69 Mt) over cement production (84 Mt). Imported clinker
-# (~0.66 Mt) deliberately EXCLUDED (module demand basis = domestically
-# produced clinker; including imports made the module build capacity to
-# "replace" imports). The WRI-cited 0.88 is RECONCILED: same USGS series,
-# older vintage - the domestic ratio fell 0.8749/0.8716/0.8560/0.8471/0.8214
-# over 2021-2025 (PLC/Type IL adoption; USGS: blended cement = 63% of 2025
-# shipments, 95% of it Type IL). A flat ratio therefore overstates future
-# clinker: DRAFT BAU trajectory declines linearly 0.8214 (2025) -> 0.78
-# (2035), flat after (judgment: the market-driven PLC transition largely
-# completes; PCA's 0.75-by-2050 roadmap figure is a target, not BAU - team
-# review item). 2025 value unchanged so the start year stays balanced.
-def bctcr(y):
-    if y <= 2025:
-        return 0.8214
-    if y >= 2035:
-        return 0.78
-    return round(0.8214 + (0.78 - 0.8214) * (y - 2025) / 10, 5)
-rows = [["Unit: dimensionless (VERIFIED 2025 = USGS 69/84 domestic basis; declining to 0.78 by 2035 per 2021-25 PLC trend, judgment - see generator comments)"] + YEARS,
-        ["BAU Clinker to Cement Ratio"] + [bctcr(y) for y in YEARS]]
-write("BCtCR", "BCtCR.csv", rows)
-
-# ---------------- MASCM: Maximum Annual SCM Supply for Cement ----------------
-# Phase 4 build-up (2026-08-25, sources per verification dossier): fly ash
-# used in concrete 14.6 Mt (ACAA 2024 survey, DIRECT) + CCPs to blended
-# cement/clinker feed 5.3 Mt (ACAA - possible overlap with the concrete
-# figure, flagged) + GGBFS <~4.8 Mt (USGS slag MCS: 16 Mt total slag sales,
-# GGBFS <30% of tonnage, heavily import-dependent) + natural pozzolans ~1-2
-# Mt (capacity ~2 Mt, NPA via secondary) = ~22 Mt current. Structurally
-# DECLINING: fly ash falls with coal retirements (partially offset by pond
-# harvesting), GGBFS falls with BF closures and rides imports. DRAFT
-# trajectory: 22 Mt (2025) declining linearly to 15 Mt (2050). Non-binding
-# at default blending levels; binds only under aggressive SCM policies.
-def mascm(y):
-    return round(22_000_000 + (15_000_000 - 22_000_000) * max(0, y - 2025) / 25)
-rows = [["Unit: metric tons/year (Phase 4 build-up: ~22 MMT current from ACAA fly ash + USGS GGBFS + pozzolans, declining to 15 by 2050 - see generator comments)"] + YEARS,
-        ["Maximum Annual SCM Supply for Cement"] + [mascm(y) for y in YEARS]]
-write("MASCM", "MASCM.csv", rows)
+# ---------------- BCD, BCtCR, BFoCDMbNI, MACtCR: NOT generated here ----------------
+# Since 2026-09-28 (section-1 demand restructure) these four inputs are built
+# by their own workbooks (InputData/indst/<ACRONYM>/*.xlsx, Region-selector
+# pattern) and the CSVs are exported from those workbooks. BCD is apparent
+# consumption on the AEO cement-and-lime shipments index; BCtCR is the blend
+# ratio; BFoCDMbNI is the net-import share of clinker demand; MACtCR (minimum
+# achievable ratio) replaced PACS and MASCM. Do not regenerate them here.
 
 # ---------------- SYCPbP: Start Year Clinker Production by Pathway ----------------
 # DRAFT: all start-year (2025) clinker production attributed to the dry
@@ -378,21 +334,6 @@ rows = [["Unit: g CO2/metric ton clinker net of pathway-integral capture (DRAFT:
 for pw in PATHWAYS:
     rows.append([pw, ccf[pw]])
 write("CCF", "CCF.csv", rows)
-
-# ---------------- PACS: Potential Additional Clinker Substitution ----------------
-# Levers block (2026-08-26). Clinker-to-cement ratio points achievable at
-# full deployment of the clinker-substitution (SCM) lever beyond the BAU
-# trajectory: BAU already declines 0.8214 -> 0.78 by 2035 (PLC transition);
-# policy-driven SCM blending (calcined clay/LC3, slag cement, expanded
-# blended-cement specs like ASTM C595 ternary blends) can plausibly take
-# the US ratio toward ~0.65 (GCCA 2050 global roadmap targets 0.52-0.58;
-# PCA roadmap ~0.75 is nearer-term). DRAFT 0.13 = 0.78 - 0.65, a
-# conservative US judgment. The MASCM supply cap binds the implied SCM
-# tonnage endogenously, so PACS is a technical-potential ceiling, not a
-# supply claim. Verify before release.
-rows = [["Unit: dimensionless ratio points (DRAFT 0.13 = BAU 0.78 endpoint minus ~0.65 achievable; GCCA/PCA roadmaps - verify before release)", "Value"],
-        ["Potential Additional Clinker Substitution", 0.13]]
-write("PACS", "PACS.csv", rows)
 
 # ---------------- SCMEI: SCM Production Energy per Ton of Substitution ----------------
 # Levers block (2026-08-26). Thermal energy to produce one ton of the
