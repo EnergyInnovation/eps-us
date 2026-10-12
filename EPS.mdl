@@ -1336,7 +1336,7 @@ Annual Financing Repayment for Newly Purchased Cement Pathway Equipment=
 	  )
 	  + SUM(
 	      Total Clinker Capacity Overhauled by Pathway[Cement Production Pathway!]
-	      * CRCC Cement Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway\
+	      * CPCaOC Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway\
 		!]
 	    )
 	)
@@ -1364,7 +1364,7 @@ Annual Financing Repayment for Newly Purchased Cement Pathway Equipment at Unsub
 	  )
 	  + SUM(
 	      Total Clinker Capacity Overhauled by Pathway[Cement Production Pathway!]
-	      * CRCC Cement Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway\
+	      * CPCaOC Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway\
 		!]
 	    )
 	)
@@ -2912,7 +2912,7 @@ BAU Annual Financing Repayment for Newly Purchased Cement Pathway Equipment=
 	  )
 	  + SUM(
 	      BAU Total Clinker Capacity Overhauled by Pathway[Cement Production Pathway!]
-	      * CRCC Cement Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway\
+	      * CPCaOC Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway\
 		!]
 	    )
 	)
@@ -4461,24 +4461,46 @@ BAU CCS Subsidy per Unit Output for Dispatch by Vintage[Electricity Source,Model
 	~	$/(MW*hr)
 	~		|
 
+BAU Cement Carbon Tax Rebate Rate on Captured CO2 by Emissions Type[process emissions]=
+	0 ~~|
+BAU Cement Carbon Tax Rebate Rate on Captured CO2 by Emissions Type[energy related emissions]=
+	BCTR BAU Carbon Tax Rate[industry sector]
+	* BFoICStCT BAU Fraction of Industry Category Subject to Carbon Tax[cement and other nonmetallic minerals 239]
+	~	$/metric ton CO2e
+	~	BAU twin of Cement Carbon Tax Rebate Rate on Captured CO2 by Emissions \
+		Type (BAU tax rate and coverage).
+	|
+
 BAU Cement CCS Capture Operating Cost per Ton of Clinker[Cement Production Pathway]=
-	Cement CCS Captured Process CO2 per Ton of Clinker[Cement Production Pathway] / Grams per Metric Ton CO2e
-	* (
-	    CC CCS Total OM Cost per Industry Ton Sequestered[cement and other nonmetallic minerals 239\
-		,process emissions]
-	    + CCSTaSC CCS Transportation and Storage Costs
-	    - CCSTaSC CCS Transportation and Storage Subsidies
-	    - BCS BAU Industry CCS Subsidy
-	  )
+	SUM(
+	  Cement CCS Captured CO2 per Ton of Clinker by Emissions Type[Cement Production Pathway,Emissions Type!]
+	  / Grams per Metric Ton CO2e
+	  * (
+	      CC CCS Total OM Cost per Industry Ton Sequestered[cement and other nonmetallic minerals 239,Emissions Type!]
+	      + CCSTaSC CCS Transportation and Storage Costs
+	      - CCSTaSC CCS Transportation and Storage Subsidies
+	      - BCS BAU Industry CCS Subsidy
+	      - BAU Cement Carbon Tax Rebate Rate on Captured CO2 by Emissions Type[Emissions Type!]
+	    )
+	)
 	+ SUM(
-	    CC Energy Use per Ton Industry CO2 Sequestered[cement and other nonmetallic minerals 239\
-		,Industrial Fuel!,process emissions]
-	    * Cement CCS Captured Process CO2 per Ton of Clinker[Cement Production Pathway]
-	    * BAU Industrial Fuel Cost per Unit Energy[cement and other nonmetallic minerals 239\
-		,Industrial Fuel!])
+	    CC Energy Use per Ton Industry CO2 Sequestered[cement and other nonmetallic minerals 239,Industrial Fuel!,Emissions Type!]
+	    * Cement CCS Captured CO2 per Ton of Clinker by Emissions Type[Cement Production Pathway,Emissions Type!]
+	    * BAU Industrial Fuel Cost per Unit Energy[cement and other nonmetallic minerals 239,Industrial Fuel!]
+	  )
 	~	$/metric ton
 	~	BAU twin of Cement CCS Capture Operating Cost per Ton of Clinker (BAU fuel \
-		costs, BAU subsidies only - the same terms as BAU Value of CCS).
+		costs, BAU subsidies and the BAU carbon tax rebate rate; no R&D lever).
+	|
+
+BAU Cement Combustion CO2 Captured by Pathway Capture=
+	SUM(
+	  BAU Clinker Production by Pathway[Cement Production Pathway!]
+	  * BAU Cement Energy Intensity Multiplier by Pathway[Cement Production Pathway!]
+	  * Cement CCS Captured Combustion CO2 per Ton of Clinker[Cement Production Pathway!]
+	)
+	~	g CO2
+	~	BAU twin of Cement Combustion CO2 Captured by Pathway Capture.
 	|
 
 BAU Cement Energy Intensity Multiplier by Pathway[Cement Production Pathway]=
@@ -4676,6 +4698,31 @@ BAU Cement Kiln Fuel Mix Index[Industrial Fuel]=
 		is unchanged; the 2025 carve-out is untouched.
 	|
 
+BAU Cement Kiln Combustion CO2 Emissions=
+	SUM(
+	  BAU Clinker Production by Pathway[Cement Production Pathway!]
+	  * BAU Cement Energy Intensity Multiplier by Pathway[Cement Production Pathway!]
+	  * Cement Kiln Combustion CO2 per Ton of Clinker by Pathway[Cement Production Pathway!]
+	)
+	~	g CO2
+	~	BAU twin of Cement Kiln Combustion CO2 Emissions.
+	|
+
+BAU Cement Module Change in CO2 Captured by Emissions Type[Emissions Type]=
+	BAU Cement Module CO2 Captured by Emissions Type[Emissions Type]
+	- BAU Last Year Cement Module CO2 Captured by Emissions Type[Emissions Type]
+	~	g CO2
+	~	BAU twin of Cement Module Change in CO2 Captured by Emissions Type.
+	|
+
+BAU Cement Module CO2 Captured by Emissions Type[process emissions]=
+	BAU Cement Process CO2 Captured by Pathway Capture ~~|
+BAU Cement Module CO2 Captured by Emissions Type[energy related emissions]=
+	BAU Cement Combustion CO2 Captured by Pathway Capture
+	~	g CO2
+	~	BAU twin of Cement Module CO2 Captured by Emissions Type.
+	|
+
 BAU Cement Module Energy Use by Fuel Type[Industrial Fuel]=
 	SUM(
 	  BAU Clinker Production by Pathway[Cement Production Pathway!]
@@ -4730,7 +4777,7 @@ BAU Cement New Build Operating Cost per Ton of Clinker[Cement Production Pathway
 	|
 
 BAU Cement Overhaul Continuation Cost per Ton of Clinker[Cement Production Pathway]=
-	CRCC Cement Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway\
+	CPCaOC Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway\
 		]
 	* Cement Overhaul Capital Recovery Factor[Cement Production Pathway]
 	/ MAX(0.05, MIN(CUUB Cement Utilization Upper Bound, BAU Cement Expected Utilization for Investment Decisions\
@@ -4846,8 +4893,7 @@ BAU Cement Process Emissions Carbon Tax Rate=
 BAU Cement Replacement Alternative Cost per Ton of Clinker=
 	(1 - BAU Cement Replacement Blend Weight)
 	* MIN(
-	    BAU Cement Fleet Marginal Operating Cost per Ton of Clinker
-	    + BAU Cement Tightness Operating Adder per Ton of Clinker,
+	    BAU Cement Fleet Marginal Operating Cost per Ton of Clinker,
 	    BAU Average New Clinker Capacity Cost per Ton of Clinker)
 	+ BAU Cement Replacement Blend Weight
 	  * BAU Average New Clinker Capacity Cost per Ton of Clinker
@@ -4901,14 +4947,6 @@ BAU Cement Spare Capacity Headroom=
 	~	metric tons/Year
 	~	BAU twin of Cement Spare Capacity Headroom (see the policy twin for the \
 		quantization rationale).
-	|
-
-BAU Cement Tightness Operating Adder per Ton of Clinker=
-	CTOAvT Cement Tightness Operating Adder vs Tightness[average summer day](
-	  BAU Cement Fleet Tightness)
-	* BAU Average New Clinker Capacity Cost per Ton of Clinker
-	~	$/metric ton
-	~	BAU twin of Cement Tightness Operating Adder per Ton of Clinker.
 	|
 
 BAU CES Costs for ACP Compliance[RPS]=
@@ -10211,6 +10249,14 @@ BAU Last Year Clinker Production Capacity Added During Model Run by Pathway[Ceme
 		by Pathway.
 	|
 
+BAU Last Year Cement Module CO2 Captured by Emissions Type[Emissions Type]= DELAY FIXED (
+	BAU Cement Module CO2 Captured by Emissions Type[Emissions Type],
+	1,
+	0)
+	~	g CO2
+	~	BAU twin of Last Year Cement Module CO2 Captured by Emissions Type.
+	|
+
 BAU Last Year Clinker Production Capacity by Pathway[Cement Production Pathway]=
 	BAU Last Year Preexisting Clinker Production Capacity by Pathway[Cement Production Pathway\
 		]
@@ -12743,7 +12789,7 @@ BAU New Industrial Equipment Capital Cost[cement and other nonmetallic minerals 
 	  )
 	+ SUM(
 	    BAU Total Clinker Capacity Overhauled by Pathway[Cement Production Pathway!]
-	    * CRCC Cement Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway\
+	    * CPCaOC Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway\
 		!]
 	  )
 	~	$
@@ -17145,17 +17191,23 @@ BAU This Year DR Capacity by Provider[nonenergy industries]=
 	~	MW
 	~		|
 
-BAU This Year Energy Related Pollutants Sequestered by Industry Sector[Industry Category\
-		,Pollutant] :EXCEPT: [Industry Category,CO2]=
+BAU This Year Energy Related Pollutants Sequestered by Industry Sector[Industry Category,Pollutant] :EXCEPT: [Industry Category,CO2]=
 	0 ~~|
-BAU This Year Energy Related Pollutants Sequestered by Industry Sector[Industry Category\
-		,CO2]=
-	SUM(BAU Industrial Sector Energy Related Emissions before CCS[Industrial Fuel!,Industry Category\
-		,CO2])
-	* BAU Fraction of CO2 Captured by Industry[Industry Category,energy related emissions\
-		]
+BAU This Year Energy Related Pollutants Sequestered by Industry Sector[Industry Category,CO2] :EXCEPT: [cement and other nonmetallic minerals 239,CO2]=
+	SUM(BAU Industrial Sector Energy Related Emissions before CCS[Industrial Fuel!,Industry Category,CO2])
+	* BAU Fraction of CO2 Captured by Industry[Industry Category,energy related emissions] ~~|
+BAU This Year Energy Related Pollutants Sequestered by Industry Sector[cement and other nonmetallic minerals 239,CO2]=
+	MAX(
+	  0,
+	  SUM(BAU Industrial Sector Energy Related Emissions before CCS[Industrial Fuel!,cement and other nonmetallic minerals 239,CO2])
+	  - BAU Cement Kiln Combustion CO2 Emissions
+	)
+	* BAU Fraction of CO2 Captured by Industry[cement and other nonmetallic minerals 239,energy related emissions]
+	+ BAU Cement Combustion CO2 Captured by Pathway Capture
 	~	g pollutant
-	~		|
+	~	BAU twin of This Year Energy Related Pollutants Sequestered by Industry \
+		Sector (same cement split).
+	|
 
 BAU This Year Financing Repayments for Cement Pathway Equipment=
 	BAU Last Year Financing Repayments for Cement Pathway Equipment
@@ -17286,24 +17338,31 @@ BAU This Year Increase in Pollutants Sequestered by Hydrogen Sector[Pollutant]=
 	~	g pollutant
 	~		|
 
-BAU This Year Increase in Pollutants Sequestered by Industry Sector[Industry Category\
-		,Pollutant,Emissions Type]=
+BAU This Year Increase in Pollutants Sequestered by Industry Sector[Industry Category,Pollutant,Emissions Type] :EXCEPT: [cement and other nonmetallic minerals 239,CO2,Emissions Type]=
 	IF THEN ELSE(
 	  Time = INITIAL TIME,
-	
 	  0,
-	
 	  MAX(
 	    0,
-	
-	    BAU This Year Pollutants Sequestered by Industry Sector[Industry Category,Pollutant\
-		,Emissions Type]
-	    - BAU Last Year Pollutants Sequestered by Industry Sector[Industry Category,Pollutant\
-		,Emissions Type]
+	    BAU This Year Pollutants Sequestered by Industry Sector[Industry Category,Pollutant,Emissions Type]
+	    - BAU Last Year Pollutants Sequestered by Industry Sector[Industry Category,Pollutant,Emissions Type]
+	  )
+	) ~~|
+BAU This Year Increase in Pollutants Sequestered by Industry Sector[cement and other nonmetallic minerals 239,CO2,Emissions Type]=
+	IF THEN ELSE(
+	  Time = INITIAL TIME,
+	  0,
+	  MAX(
+	    0,
+	    BAU This Year Pollutants Sequestered by Industry Sector[cement and other nonmetallic minerals 239,CO2,Emissions Type]
+	    - BAU Last Year Pollutants Sequestered by Industry Sector[cement and other nonmetallic minerals 239,CO2,Emissions Type]
+	    - BAU Cement Module Change in CO2 Captured by Emissions Type[Emissions Type]
 	  )
 	)
 	~	g pollutant
-	~		|
+	~	BAU twin of This Year Increase in Pollutants Sequestered by Industry \
+		Sector (same cement exclusion).
+	|
 
 BAU This Year Low Carbon Hydrogen Cost=
 	ZIDZ(
@@ -19933,8 +19992,9 @@ BCtCR BAU Clinker to Cement Ratio:INTERPOLATE::=
 		cement assumed to carry the same ratio. Converts cement demand into \
 		clinker demand. The clinker-substitution lever lowers it toward MACtCR in \
 		the policy case. US: USGS data for 2021-2025 (0.892 falling to 0.829 as \
-		Type IL cement spreads), then a straight-line decline to 0.79 in 2035 \
-		(judgment), flat after.
+		Type IL cement spreads), then a product-mix projection (USGS cement \
+		shipments by type x PCA clinker contents, scaled to 2025): 0.820 in 2030, \
+		0.813 in 2035, 0.809 in 2050.
 	|
 
 BCTR BAU Carbon Tax Rate[Sectors]:INTERPOLATE::=
@@ -25002,12 +25062,15 @@ CCF Calcination CO2 Factor by Pathway[Cement Production Pathway]=
 	~	Net calcination (process) CO2 released per metric ton of clinker by \
 		pathway: the carbonate-decomposition chemistry, net of any capture \
 		integral to the pathway. Dry kiln with precalciner and electric kiln \
-		510,000 g/t (EPA GHGI calcination factor; electrification changes \
-		combustion, not chemistry); dry kiln with CCS 51,000 g/t at 90 percent \
-		capture (the captured 459,000 g/t is priced - capital, O&M, transport and \
-		storage, energy and 45Q - from the CCS sector's industry-239 inputs, see \
-		Cement CCS Captured Process CO2 per Ton of Clinker); alternative chemistry \
-		cement 0 (non-carbonate binder).
+		510,071 g/t (EPA GHGI calcination factor; electrification changes \
+		combustion, not chemistry); dry kiln with CCS 25,504 g/t at 95 percent \
+		capture (NETL 2023 cement CCS baseline and US FEED studies; the captured \
+		484,567 g/t is priced - capital, O&M, transport and storage, energy and \
+		45Q - from the CCS sector's industry-239 inputs, see Cement CCS Captured \
+		Process CO2 per Ton of Clinker). The same capture share is applied to the \
+		kiln's fuel CO2 (Cement Pathway CO2 Capture Fraction), since the capture \
+		unit treats the whole kiln flue gas; alternative chemistry cement 0 \
+		(non-carbonate binder).
 	|
 
 CCP CO2 Capture Potential by Electricity Source[Electricity Source]=
@@ -25343,12 +25406,16 @@ CEIbPaF Cement Energy Intensity by Pathway and Fuel[Cement Production Pathway,In
 	~	BTU/metric ton
 	~	Final energy per metric ton of clinker by production pathway and fuel \
 		(kiln boundary). Conventional kilns: DOE Bandwidth Study 2017 thermal \
-		energy (about 3.43 MMBtu/t) split by the PCA 2023 fuel mix, plus PCA-based \
+		energy (about 3.43 MMBtu/t) split by the PCA 2023 fuel mix (coal and \
+		petroleum coke divided by the MECS 2022 ratio), plus MECS 2022 plant \
 		electricity; petroleum coke is split between petroleum diesel and heavy or \
 		residual fuel oil, and alternative fuels ride biomass. The dry kiln with \
 		CCS row is kiln only - the capture unit's energy comes from the CCS \
-		sector's CC Energy Use per Ton Industry CO2 Sequestered. Electric kiln and \
-		alternative chemistry cement are electricity-only engineering estimates.
+		sector's CC Energy Use per Ton Industry CO2 Sequestered. Electric kiln \
+		4,398,176 BTU/t (CemZero 2018 and Quevedo Parra and Romano 2023 kiln heat \
+		plus ordinary plant electricity) and alternative chemistry cement \
+		4,565,177 BTU/t (Lu et al. 2024; Prancevic et al. 2026), both \
+		electricity-only.
 	|
 
 Cement Alternative Fuel Fossil CO2 Emissions Intensity=
@@ -25435,49 +25502,104 @@ Cement Carveout Share of Process CO2= INITIAL(
 		energy carveout shares.
 	|
 
+Cement Carbon Tax Rebate Rate on Captured CO2 by Emissions Type[process emissions]=
+	0 ~~|
+Cement Carbon Tax Rebate Rate on Captured CO2 by Emissions Type[energy related emissions]=
+	Carbon Tax Rate[industry sector]
+	* Fraction of Industry Category Subject to Carbon Tax[cement and other nonmetallic minerals 239]
+	~	$/metric ton CO2e
+	~	Carbon tax handed back per ton of CO2 captured by the cement CCS pathway, \
+		by emissions type. Kiln-fuel combustion CO2 is taxed when the fuel is \
+		burned, so its capture earns the industry carbon tax rate times industry \
+		239's coverage, the same terms as Industry Sector Carbon Tax Rebate due to \
+		CCS. Captured process CO2 earns nothing here: the process carbon tax is \
+		charged on emissions after capture, so those tons were never taxed.
+	|
+
 Cement CCS Capture Operating Cost per Ton of Clinker[Cement Production Pathway]=
-	Cement CCS Captured Process CO2 per Ton of Clinker[Cement Production Pathway] / Grams per Metric Ton CO2e
-	* (
-	    CC CCS Total OM Cost per Industry Ton Sequestered[cement and other nonmetallic minerals 239\
-		,process emissions]
-	    + CCSTaSC CCS Transportation and Storage Costs
-	    - Industrial CCS Transportation and Storage Subsidy
-	    - Industry Sector CCS Subsidy by Industry Category[cement and other nonmetallic minerals 239\
-		]
-	  )
+	SUM(
+	  Cement CCS Captured CO2 per Ton of Clinker by Emissions Type[Cement Production Pathway,Emissions Type!]
+	  / Grams per Metric Ton CO2e
+	  * (
+	      CC CCS Total OM Cost per Industry Ton Sequestered[cement and other nonmetallic minerals 239,Emissions Type!]
+	      + CCSTaSC CCS Transportation and Storage Costs
+	      - Industrial CCS Transportation and Storage Subsidy
+	      - Industry Sector CCS Subsidy by Industry Category[cement and other nonmetallic minerals 239]
+	      - Cement Carbon Tax Rebate Rate on Captured CO2 by Emissions Type[Emissions Type!]
+	    )
+	)
 	+ SUM(
-	    CC Energy Use per Ton Industry CO2 Sequestered[cement and other nonmetallic minerals 239\
-		,Industrial Fuel!,process emissions]
-	    * Cement CCS Captured Process CO2 per Ton of Clinker[Cement Production Pathway]
-	    * Industrial Fuel Cost per Unit Energy[cement and other nonmetallic minerals 239\
-		,Industrial Fuel!])
+	    CC Energy Use per Ton Industry CO2 Sequestered[cement and other nonmetallic minerals 239,Industrial Fuel!,Emissions Type!]
+	    * Cement CCS Captured CO2 per Ton of Clinker by Emissions Type[Cement Production Pathway,Emissions Type!]
+	    * Industrial Fuel Cost per Unit Energy[cement and other nonmetallic minerals 239,Industrial Fuel!]
+	  )
 	  * (1 - RnD CCS Fuel Use Perc Reduction This Year)
 	~	$/metric ton
 	~	What running the capture unit adds to a CCS kiln's cost per ton of \
-		clinker, priced entirely from the CCS sector's inputs: capture O&M, \
-		transport and storage net of any transport-and-storage subsidy, less the \
-		45Q-type subsidy, plus the capture unit's energy at this year's fuel \
-		prices (after the CCS fuel-use R&D lever). Subsidies use the same \
-		variables as the generic industry Value of CCS, so a non-BAU subsidy \
-		REPLACES the BAU one rather than adding to it (2026-10-02). A decision \
-		cost only - the cash flows for these items are booked by the generic CCS \
-		machinery from the captured tons. Zero for pathways without capture.
+		clinker, for each kind of captured CO2: capture O&M, transport and storage \
+		net of any transport-and-storage subsidy, less the 45Q-type subsidy and, \
+		for captured kiln-fuel CO2, the carbon tax handed back on it, plus the \
+		capture unit's energy at this year's fuel prices (after the CCS fuel-use \
+		R&D lever). O&M and capture energy use the CCS sector's industry 239 \
+		inputs by emissions type, because that is how the CCS sector books their \
+		cash flows from the captured tons. A decision cost only. Zero for pathways \
+		without capture.
 	|
 
-Cement CCS Captured Process CO2 per Ton of Clinker[Cement Production Pathway] :EXCEPT:\
-		 [dry kiln with CCS]=
+Cement CCS Captured CO2 per Ton of Clinker by Emissions Type[Cement Production Pathway,process emissions]=
+	Cement CCS Captured Process CO2 per Ton of Clinker[Cement Production Pathway] ~~|
+Cement CCS Captured CO2 per Ton of Clinker by Emissions Type[Cement Production Pathway,energy related emissions]=
+	Cement CCS Captured Combustion CO2 per Ton of Clinker[Cement Production Pathway]
+	~	g CO2/metric ton
+	~	CO2 captured per ton of clinker on each pathway, split the way the CCS \
+		sector books it: process emissions (calcination and the fuel carbon the \
+		module books as process CO2) and energy-related emissions (kiln-fuel \
+		combustion). Prices the capture equipment and the capture operating cost.
+	|
+
+Cement CCS Captured Combustion CO2 per Ton of Clinker[Cement Production Pathway]=
+	Cement Pathway CO2 Capture Fraction[Cement Production Pathway]
+	* Cement Kiln Combustion CO2 per Ton of Clinker by Pathway[Cement Production Pathway]
+	~	g CO2/metric ton
+	~	Kiln-fuel combustion CO2 captured per ton of clinker on the CCS pathway: \
+		the capture share times the kiln's combustion CO2. Zero for the other \
+		pathways. Sizes the capture equipment, O&M, capture energy, transport and \
+		storage cost and subsidy for these tons, priced from the CCS sector's \
+		energy-related industry inputs, and earns the carbon tax rebate on \
+		captured combustion CO2.
+	|
+
+Cement CCS Captured Process CO2 per Ton of Clinker[Cement Production Pathway] :EXCEPT: [dry kiln with CCS]=
 	0 ~~|
 Cement CCS Captured Process CO2 per Ton of Clinker[dry kiln with CCS]=
 	CCF Calcination CO2 Factor by Pathway[dry kiln with precalciner]
 	- CCF Calcination CO2 Factor by Pathway[dry kiln with CCS]
+	+ Cement Pathway CO2 Capture Fraction[dry kiln with CCS]
+	  * Cement Fuel Carbon Booked as Process CO2 per Ton of Clinker by Pathway[dry kiln with CCS]
 	~	g CO2/metric ton
-	~	Process CO2 captured per ton of clinker on the CCS pathway: the gap \
-		between the uncaptured calcination factor (dry kiln) and the CCS pathway's \
-		net factor (CCF, 90 percent capture). Zero for the other pathways. Sizes \
-		the capture equipment, its O&M, energy, transport-and-storage cost and \
-		45Q-type subsidy, all taken from the CCS sector's inputs (reconciliation \
-		2026-10-01). Scope is process CO2 only, matching CCF's netting and the \
-		combustion-only rebate.
+	~	CO2 the CCS pathway captures per ton of clinker from the CO2 the module \
+		books as process emissions: the calcination gap between the uncaptured \
+		factor (dry kiln with precalciner) and the CCS pathway's net factor (CCF), \
+		plus the same capture share of the kiln fuel carbon booked as process CO2. \
+		Zero for the other pathways. Sizes the capture equipment, O&M, capture \
+		energy, transport and storage cost and subsidy for these tons, all priced \
+		from the CCS sector's process-emissions industry inputs. Captured \
+		combustion CO2 is in Cement CCS Captured Combustion CO2 per Ton of \
+		Clinker.
+	|
+
+Cement Combustion CO2 Captured by Pathway Capture=
+	SUM(
+	  Clinker Production by Pathway[Cement Production Pathway!]
+	  * Cement Energy Intensity Multiplier by Pathway[Cement Production Pathway!]
+	  * Cement CCS Captured Combustion CO2 per Ton of Clinker[Cement Production Pathway!]
+	)
+	~	g CO2
+	~	Kiln-fuel combustion CO2 captured this year by the module's CCS pathway. \
+		Added to industry 239's sequestered energy-related CO2 in the CCS sector, \
+		so the emissions netting, transport and storage, subsidies, capture O&M, \
+		capture energy and the carbon tax rebate are booked once by the CCS sector \
+		(the module books the capture capital itself).
 	|
 
 Cement Content Lever Component of 239 Output Change=
@@ -25637,6 +25759,22 @@ Cement Fleet Utilization=
 		incumbent fleet would run at if it alone served demand - the state \
 		variable of the tightness structure. QUANTUM carries the 10 kt headroom \
 		convention onto the ratio scale (1e-4 of utilization = 10 kt on a
+	|
+
+Cement Fuel Carbon Booked as Process CO2 per Ton of Clinker by Pathway[Cement Production Pathway]=
+	SUM(
+	  Cement Energy Intensity by Pathway and Fuel This Year[Cement Production Pathway,Industrial Fuel!]
+	  * Cement Fuel Feedstock Share[Industrial Fuel!]
+	  * Cement Fuel CO2 Emissions Intensity[Industrial Fuel!]
+	)
+	+ Cement Fuel Carbon Correction per Ton of Clinker by Pathway[Cement Production Pathway]
+	~	g CO2/metric ton
+	~	Kiln fuel carbon per ton of clinker that the module books with its process \
+		CO2 rather than in industry 239's fuel accounts, before any capture: the \
+		carbon in petcoke carried on the residual-oil feedstock element (feedstock \
+		does not combust in the generic accounting), the petcoke emission-factor \
+		correction, and the fossil share of the alternative fuels. Fleet-intensity \
+		basis.
 	|
 
 Cement Fuel Carbon Correction per Ton of Clinker by Pathway[Cement Production Pathway\
@@ -25815,6 +25953,59 @@ Cement Module Energy as Share of Generic Energy by Fuel[Industrial Fuel]=
 		Cement Fuel Present in Industry 239 Input Data).
 	|
 
+Cement Kiln Combustion CO2 per Ton of Clinker by Pathway[Cement Production Pathway]=
+	SUM(
+	  Cement Energy Intensity by Pathway and Fuel This Year[Cement Production Pathway,Industrial Fuel!]
+	  * (1 - Cement Fuel Feedstock Share[Industrial Fuel!])
+	  * Boolean Cement Fuel Present in Industry 239 Input Data[Industrial Fuel!]
+	  * Industrial Fuel Pollutant Emissions Intensities This Year[cement and other nonmetallic minerals 239,CO2,Industrial Fuel!]
+	)
+	~	g CO2/metric ton
+	~	CO2 per ton of clinker from burning kiln fuel, as industry 239's fuel \
+		accounts book it: the module's energy-purpose fuel (not the feedstock \
+		share, and only fuels present in the 239 data) times 239's fuel emission \
+		factors. Fleet-intensity basis. The fuel carbon the module books as \
+		process CO2 is in Cement Fuel Carbon Booked as Process CO2 per Ton of \
+		Clinker by Pathway instead.
+	|
+
+Cement Kiln Combustion CO2 Emissions=
+	SUM(
+	  Clinker Production by Pathway[Cement Production Pathway!]
+	  * Cement Energy Intensity Multiplier by Pathway[Cement Production Pathway!]
+	  * Cement Kiln Combustion CO2 per Ton of Clinker by Pathway[Cement Production Pathway!]
+	)
+	~	g CO2
+	~	CO2 from burning kiln fuel in the module's kilns this year, before any \
+		capture, as industry 239's fuel accounts book it (clinker production times \
+		combustion CO2 per ton, with the module's energy intensity multiplier). \
+		The CCS sector takes it out of 239's energy-related emissions before \
+		applying the generic capture fraction, so cement kilns are captured only \
+		through the module's CCS pathway, as with process CO2.
+	|
+
+Cement Module Change in CO2 Captured by Emissions Type[Emissions Type]=
+	Cement Module CO2 Captured by Emissions Type[Emissions Type]
+	- Last Year Cement Module CO2 Captured by Emissions Type[Emissions Type]
+	~	g CO2
+	~	Change since last year in the CO2 captured by the cement module's CCS \
+		pathway, by emissions type. The CCS sector takes it out of industry 239's \
+		growth in sequestered CO2 before sizing new capture equipment spending, \
+		because the module pays for its capture equipment in its own capital \
+		costs.
+	|
+
+Cement Module CO2 Captured by Emissions Type[process emissions]=
+	Cement Process CO2 Captured by Pathway Capture ~~|
+Cement Module CO2 Captured by Emissions Type[energy related emissions]=
+	Cement Combustion CO2 Captured by Pathway Capture
+	~	g CO2
+	~	CO2 captured this year by the cement module's CCS pathway, by emissions \
+		type. The CCS sector subtracts it when working out industry 239's new \
+		capture capacity, because the module already pays for this capture \
+		equipment in its own capital costs.
+	|
+
 Cement Module Energy Use by Fuel Type[Industrial Fuel]=
 	SUM(
 	  Clinker Production by Pathway[Cement Production Pathway!]
@@ -25913,26 +26104,19 @@ Cement New Build Operating Cost per Ton of Clinker[Cement Production Pathway]=
 		the CNBEIR factor - mirror edits.
 	|
 
-Cement New Build Process CO2 Intensity per Ton of Clinker by Pathway[Cement Production Pathway\
-		]=
+Cement New Build Process CO2 Intensity per Ton of Clinker by Pathway[Cement Production Pathway]=
 	CCF Calcination CO2 Factor by Pathway[Cement Production Pathway]
 	+ CNBEIR Cement New Build Energy Intensity Ratio[Cement Production Pathway]
-	  * SUM(
-	      Cement Energy Intensity by Pathway and Fuel This Year[Cement Production Pathway\
-		,Industrial Fuel!]
-	      * Cement Fuel Feedstock Share[Industrial Fuel!]
-	      * Cement Fuel CO2 Emissions Intensity[Industrial Fuel!]
-	    )
-	+ CNBEIR Cement New Build Energy Intensity Ratio[Cement Production Pathway]
-	  * Cement Fuel Carbon Correction per Ton of Clinker by Pathway[Cement Production Pathway\
-		]
+	  * (1 - Cement Pathway CO2 Capture Fraction[Cement Production Pathway])
+	  * Cement Fuel Carbon Booked as Process CO2 per Ton of Clinker by Pathway[Cement Production Pathway]
 	~	g CO2/metric ton
-	~	Process CO2 per ton of clinker for a NEW-BUILD plant: calcination \
-		chemistry (CCF, invariant to kiln efficiency) plus the feedstock- booked \
-		fuel carbon (petcoke) scaled by the new-build intensity ratio, since a BAT \
-		kiln burns proportionally less petcoke. Used in the new-build operating \
-		cost so the carbon-tax netting (which IS CNBEIR-scaled in the fuel term) \
-		and the process-CO2 term stay consistent - without this,
+	~	Process CO2 per ton of clinker for a new-build plant after any pathway \
+		capture: calcination (CCF, which does not depend on kiln efficiency) plus \
+		the uncaptured share of the kiln fuel carbon booked as process CO2, scaled \
+		by the new-build energy intensity ratio because a \
+		best-available-technology kiln burns proportionally less fuel. Used in the \
+		new-build operating cost, so its carbon tax term matches the CNBEIR-scaled \
+		fuel term.
 	|
 
 Cement Overhaul Capital Recovery Factor[Cement Production Pathway]= INITIAL(
@@ -25954,7 +26138,7 @@ Cement Overhaul Capital Recovery Factor[Cement Production Pathway]= INITIAL(
 	|
 
 Cement Overhaul Continuation Cost per Ton of Clinker[Cement Production Pathway]=
-	CRCC Cement Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway\
+	CPCaOC Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway\
 		]
 	* Cement Overhaul Capital Recovery Factor[Cement Production Pathway]
 	/ MAX(0.05, MIN(CUUB Cement Utilization Upper Bound, Cement Expected Utilization for Investment Decisions\
@@ -26000,20 +26184,21 @@ Cement Overhaul Share at Decision[Cement Production Pathway]=
 		logged alternative form, pending team preference (steel open question 3).
 	|
 
-Cement Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment[Cement Production Pathway\
-		]=
-	CPCC Cement Pathway Capital Cost per Unit Annual Capacity[Cement Production Pathway]
-	+ Cement CCS Captured Process CO2 per Ton of Clinker[Cement Production Pathway]
+Cement Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment[Cement Production Pathway]=
+	CPCaOC New Build Capital Cost per Unit Annual Capacity[Cement Production Pathway]
+	+ SUM(Cement CCS Captured CO2 per Ton of Clinker by Emissions Type[Cement Production Pathway,Emissions Type!])
 	  / Grams per Metric Ton CO2e
-	  * CC Capital Cost of Eqpt to Sequester One Ton of Industry CO2 per Year[cement and other nonmetallic minerals 239\
-		,process emissions]
+	  * CC Capital Cost of Eqpt to Sequester One Ton of Industry CO2 per Year[cement and other nonmetallic minerals 239,process emissions]
 	~	$/(metric tons/Year)
 	~	Greenfield capital per ton per year of clinker capacity including, for the \
-		CCS pathway, the capture equipment priced from the CCS sector's capital \
-		cost per ton of CO2 captured per year for industry 239. Replaces the \
-		plant-level NZA figure that put capture at roughly five times the CCS \
-		sector's per-ton cost (reconciliation 2026-10-01). Used by the levelized \
-		pathway cost and by the module's capital and financing cash flows.
+		CCS pathway, the capture equipment, priced from the CCS sector's capital \
+		cost per ton of CO2 captured per year for industry 239's process \
+		emissions. That figure is the cement-plant capture cost, which covers the \
+		kiln's whole flue gas, so it applies to both the captured process CO2 and \
+		the captured kiln-fuel CO2 (one capture unit on one stack). Used by the \
+		levelized pathway cost and by the module's capital and financing cash \
+		flows; the CCS sector leaves these tons out of its own capture-equipment \
+		spending so the equipment is paid for once.
 	|
 
 Cement Pathway Capital Recovery Factor[Cement Production Pathway]= INITIAL(
@@ -26101,6 +26286,23 @@ Cement Pathway Operating Cost per Ton of Clinker[Cement Production Pathway]=
 		Shared by the new-build levelized cost and the overhaul continuation cost.
 	|
 
+Cement Pathway CO2 Capture Fraction[Cement Production Pathway] :EXCEPT: [dry kiln with CCS]=
+	0 ~~|
+Cement Pathway CO2 Capture Fraction[dry kiln with CCS]=
+	ZIDZ(
+	  CCF Calcination CO2 Factor by Pathway[dry kiln with precalciner]
+	  - CCF Calcination CO2 Factor by Pathway[dry kiln with CCS],
+	  CCF Calcination CO2 Factor by Pathway[dry kiln with precalciner]
+	)
+	~	Dmnl
+	~	Share of the kiln's CO2 that the CCS pathway's capture unit catches, read \
+		from CCF: the gap between the uncaptured calcination factor (dry kiln with \
+		precalciner) and the CCS pathway's net factor, as a share of the \
+		uncaptured factor. A post-combustion capture unit treats the whole kiln \
+		flue gas, so the same share applies to calcination CO2 and to the CO2 from \
+		burning kiln fuel. Zero for pathways without capture.
+	|
+
 Cement Petroleum Coke CO2 Emissions Intensity=
 	0.10241
 	~	g CO2/BTU
@@ -26157,27 +26359,18 @@ Cement Process CO2 Emissions=
 		the lime and other-minerals residual.
 	|
 
-Cement Process CO2 Intensity per Ton of Clinker by Pathway[Cement Production Pathway]\
-		=
+Cement Process CO2 Intensity per Ton of Clinker by Pathway[Cement Production Pathway]=
 	CCF Calcination CO2 Factor by Pathway[Cement Production Pathway]
-	+ SUM(
-	    Cement Energy Intensity by Pathway and Fuel This Year[Cement Production Pathway,\
-		Industrial Fuel!]
-	    * Cement Fuel Feedstock Share[Industrial Fuel!]
-	    * Cement Fuel CO2 Emissions Intensity[Industrial Fuel!]
-	  )
-	+ Cement Fuel Carbon Correction per Ton of Clinker by Pathway[Cement Production Pathway\
-		]
+	+ (1 - Cement Pathway CO2 Capture Fraction[Cement Production Pathway])
+	  * Cement Fuel Carbon Booked as Process CO2 per Ton of Clinker by Pathway[Cement Production Pathway]
 	~	g CO2/metric ton
-	~	Per ton of clinker, the CO2 the module books itself (net of pathway \
-		capture): calcination (CCF), the carbon in petcoke that rides the \
-		residual-oil FEEDSTOCK chain (feedstock does not combust in the generic \
-		accounting), the petcoke emission-factor correction on both petroleum \
-		elements (petcoke emits at 102 kg/MMBtu, the carrier fuels at 74-75), and \
-		the fossil-derived share of alternative fuels (biomass-labelled, not added \
-		to 239, so its CO2 would otherwise vanish). Used in the operating-cost \
-		carbon-tax term and, with captured tons added back, in the gross process \
-		emissions.
+	~	Process CO2 per ton of clinker that the kiln still emits after any pathway \
+		capture: calcination (CCF, already net of capture for the CCS pathway) \
+		plus the uncaptured share of the kiln fuel carbon booked as process CO2 \
+		(petcoke feedstock carbon, petcoke emission-factor correction, fossil \
+		alternative fuels). Used in the operating-cost carbon tax term and, with \
+		captured tons added back, in the gross process emissions. Fleet-intensity \
+		basis.
 	|
 
 Cement Process Emissions Carbon Tax Rate=
@@ -26211,23 +26404,18 @@ Cement Production Pathway:
 Cement Replacement Alternative Cost per Ton of Clinker=
 	(1 - Cement Replacement Blend Weight)
 	* MIN(
-	    Cement Fleet Marginal Operating Cost per Ton of Clinker
-	    + Cement Tightness Operating Adder per Ton of Clinker,
+	    Cement Fleet Marginal Operating Cost per Ton of Clinker,
 	    Average New Clinker Capacity Cost per Ton of Clinker)
 	+ Cement Replacement Blend Weight
 	  * Average New Clinker Capacity Cost per Ton of Clinker
 	~	$/metric ton
 	~	The cost of the RETIRE alternative in the overhaul-or-replace decision: a \
 		tightness-weighted blend of the fleet's marginal operating cost (a slack \
-		market absorbs the retiring kiln's output with sunk capital) plus the \
-		congestion adder, and the greenfield levelized cost (a tight market must \
-		build). The smooth CRBWvT curve replaced the headroom-based absorbable \
-		share (2026-08-28, tightness activation, Dan-approved design memo): the \
-		absorbable share flipped to zero at the headroom floor (the 2036 \
-		overhaul-share cliff), while the curve responds as the fleet APPROACHES \
-		the band edges. The MIN keeps a slack market from ever pricing absorption \
-		above greenfield. History: replaced the greenfield-only counterfactual \
-		2026-08-27 (Fredonia elasticity test).
+		market absorbs the retiring kiln's output with sunk capital) and the \
+		new-build levelized cost (a tight market must build). The blend weight \
+		comes from the CRBWvT curve, which responds smoothly as the fleet \
+		approaches either edge of its historical utilization range. The MIN keeps \
+		a slack market from ever pricing absorption above new-build cost.
 	|
 
 Cement Replacement Blend Weight=
@@ -26326,20 +26514,6 @@ Cement Start Year Module Energy Use by Fuel Type[Industrial Fuel]= INITIAL(
 		costs and electricity prices. Differs from the running module's start-year \
 		energy only by the sub-0.01 percent gap between start-year demand and \
 		SYCPbP.
-	|
-
-Cement Tightness Operating Adder per Ton of Clinker=
-	CTOAvT Cement Tightness Operating Adder vs Tightness[average summer day](
-	  Cement Fleet Tightness)
-	* Average New Clinker Capacity Cost per Ton of Clinker
-	~	$/metric ton
-	~	Congestion premium on serving demand from a tight incumbent fleet \
-		(deferred maintenance, marginal tons at import parity), entering the slack \
-		branch of the replacement alternative so incumbents serve transient spikes \
-		expensively before greenfield enters. SHADOW DECISION COST ONLY - books no \
-		dollars to any Cash Flow Entity (design decision 2026-08-28). Zero by \
-		default pending sourced regional import-parity premia; saturates (does not \
-		diverge) near tightness 1 by construction of the lookup.
 	|
 
 Cement Utilization Smoothing Time=
@@ -30132,7 +30306,7 @@ CNBEIR Cement New Build Energy Intensity Ratio[Cement Production Pathway]:INTERP
 	~	Dmnl
 	~	Ratio of new-build energy intensity to the fleet-typical CEIbPaF values, \
 		by pathway, applied to capacity built during the model run. Dry kiln with \
-		precalciner and dry kiln with CCS 0.802: DOE Bandwidth Study \
+		precalciner and dry kiln with CCS 0.8023: DOE Bandwidth Study \
 		best-available thermal intensity (2.9 GJ/t, about 2.75 MMBtu/t) over the \
 		fleet-typical 3.43 MMBtu/t. Electric kiln and alternative chemistry cement \
 		1.0, because their CEIbPaF values already describe new technology. Held \
@@ -31327,24 +31501,26 @@ CPAL Cement Pathway Asset Life[Cement Production Pathway]=
 		Distinct from CPPL campaign length, which sets the overhaul recurrence and \
 		the overhaul annualization. Does not drive retirement: capacity built \
 		during the run retires through the same campaign-end overhaul-or-replace \
-		decisions as the preexisting fleet. US: 35 years (Princeton Net-Zero \
-		America kiln life) for conventional, CCS, and electric kilns; 30 years for \
-		alternative chemistry cement (judgment).
+		decisions as the preexisting fleet. US: 30 years for all pathways (NETL \
+		2023 cement capital-recovery period; book and techno-economic lives \
+		cluster at 20-30 years, physical kiln lives at 35-50+).
 	|
 
-CPCC Cement Pathway Capital Cost per Unit Annual Capacity[Cement Production Pathway]=
+CPCaOC New Build Capital Cost per Unit Annual Capacity[Cement Production Pathway]=
 	GET DIRECT CONSTANTS(
-	   'InputData/indst/_cement/CPCC/CPCC.csv',
+	   'InputData/indst/_cement/CPCaOC/CPCaOC-new.csv',
 	   ',',
 	   'B2*'
 	)
 	~	$/(metric tons/Year)
 	~	Greenfield capital cost per metric ton of annual clinker capacity by \
-		pathway, kiln only, in 2012 USD. Dry kiln with precalciner from ECRA/IEA \
-		cost ranges (250); dry kiln with CCS is the same kiln (250), with its \
-		capture equipment added from the CCS sector's capital cost in Cement \
-		Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment; \
-		electric kiln (300) and alternative chemistry cement (400) are judgment.
+		pathway, kiln only, in 2012 USD. Dry kiln with precalciner 255.21 \
+		(ECRA/IEA cost ranges, corroborated by the CemZero reference plant); dry \
+		kiln with CCS is the same kiln (255.21), with its capture equipment added \
+		from the CCS sector's capital cost in Cement Pathway Capital Cost per Unit \
+		Annual Capacity Including Capture Equipment; electric kiln 299.21 (CemZero \
+		2018 plasma-kiln plant) and alternative chemistry cement 502.34 (high end \
+		of DOE Liftoff 2023 greenfield range).
 	|
 
 CPPL Cement Pathway Campaign Length[Cement Production Pathway]=
@@ -31394,9 +31570,11 @@ CPSW Cement Pathway Shareweight[Cement Production Pathway]:INTERPOLATE::=
 	~	Dmnl
 	~	Entry-gate shareweights by cement production pathway: 0 until a pathway is \
 		commercially available and 1 after, so commercialization timing is set in \
-		the data. US gates (judgment): dry kiln with precalciner in all years; dry \
-		kiln with CCS from 2030; alternative chemistry cement from 2033; electric \
-		kiln from 2035.
+		the data. Values between 0 and 1 phase a newly available pathway in. US \
+		(judgment from DOE Liftoff readiness, IEA guide, and project status as of \
+		2026): dry kiln with precalciner in all years; dry kiln with CCS opens \
+		2031, full weight 2033; alternative chemistry cement opens 2034, full \
+		2037; electric kiln opens 2035, full 2039.
 	|
 
 CpUDSC Cost per Unit Distributed Solar Capacity:INTERPOLATE::=
@@ -31447,18 +31625,19 @@ CRBWvT Cement Replacement Blend Weight vs Tightness[average summer day]=
 		handle unsubscripted lookups; the curve is the same for every pathway.
 	|
 
-CRCC Cement Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway]\
+CPCaOC Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway]\
 		=
 	GET DIRECT CONSTANTS(
-	   'InputData/indst/_cement/CRCC/CRCC.csv',
+	   'InputData/indst/_cement/CPCaOC/CPCaOC-overhaul.csv',
 	   ',',
 	   'B2*'
 	)
 	~	$/(metric tons/Year)
 	~	Capital cost to overhaul a kiln (shell/drive/controls rebuild) for one \
 		more campaign, per metric ton of annual capacity, by pathway, in 2012 USD. \
-		Set at 10 percent of the CPCC greenfield cost (judgment; no public source \
-		reports kiln overhaul costs).
+		US: about 14 percent of the new-build cost, built up from component \
+		retrofit costs (ECRA/CSI 2017, ENERGY STAR 2013, EPA 2010 cement NESHAP); \
+		read from the same workbook as the new-build cost so the two stay aligned.
 	|
 
 CRDT CCS Retrofit Deployment Time[Industry Category,Emissions Type]=
@@ -31489,11 +31668,12 @@ CRSW Cement Overhaul Shareweight[Cement Production Pathway]:INTERPOLATE::=
 	~	Dmnl
 	~	Calibration weight on the overhaul branch of the overhaul-vs-replace \
 		choice, capturing stickiness not in the cost comparison (site integration, \
-		quarry co-location, permitting). US: 0.129678 for all pathways and years, \
+		quarry co-location, permitting). US: 0.097704 for all pathways and years, \
 		calibrated so the BAU average overhaul share of dry-kiln capacity reaching \
-		a decision over 2026-2050 is about 0.485 (a mean retirement age of roughly \
-		49 years at a 25-year campaign). Re-solve if CPCC, CRCC, CPPL, or IELC \
-		change.
+		a decision over 2026-2050 is 0.485 (a mean retirement age of about 49 \
+		years at a 25-year campaign, consistent with the 36-year average fleet age \
+		in Princeton Net-Zero America Annex K). Re-solve if the CPCaOC capital \
+		costs, CPPL, or IELC change.
 	|
 
 CSCCCMvSoECBtY Capacity Cost Multiplier vs Share of Existing Capacity Built This Year\
@@ -31548,10 +31728,27 @@ CSoIO Cement Share of Industry 239 Output=
 		lever's tonnage cut into a reduction in buyers' requirements for 239 \
 		product in the IO dollar chain (the lever cuts cement purchases only; \
 		lime, glass wool, concrete products, and ceramics sales are untouched). US \
-		0.116: USGS 2023 cement value of shipments, deflated to 2012 USD with the \
+		0.1159: USGS 2023 cement value of shipments, deflated to 2012 USD with the \
 		CPI-U, over the model's BAU 2025 output for ISIC 239 (2012 USD). Distinct \
 		from the module's physical carve-out shares (energy, process CO2), which \
 		are computed INITIALs.
+	|
+
+CSPAbY Clinker Substitution Potential Available by Year:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/indst/_cement/CSPAbY/CSPAbY.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	Dmnl
+	~	Share of the long-run clinker substitution potential (the gap between the \
+		BAU clinker ratio and MACtCR) that supplementary cementitious material \
+		supply can support in each year: 0 through 2025, 0.4 in 2030, 0.7 in 2040, \
+		1.0 in 2050 (EI judgment based on the build-out of calcined clay supply \
+		and harvested fly ash; for the US this caps the reachable ratio at about \
+		0.75 in 2030 and 0.70 in 2040). Caps the clinker-substitution lever so an \
+		early full-deployment schedule cannot outrun SCM supply.
 	|
 
 CSpULApYbP CO2 Sequestered per Unit Land Area per Year by Policy[Land Use Policy]=
@@ -31562,23 +31759,6 @@ CSpULApYbP CO2 Sequestered per Unit Land Area per Year by Policy[Land Use Policy
 	)
 	~	g pollutant/acre
 	~		|
-
-CTOAvT Cement Tightness Operating Adder vs Tightness[average summer day]=
-	GET DIRECT LOOKUPS(
-	   'InputData/indst/_cement/CTOA/CTOAvT.csv',
-	   ',',
-	   '1',
-	   'B2'
-	)
-	~	Dmnl
-	~	Congestion-adder multiplier (on Average New Clinker Capacity Cost per Ton \
-		of Clinker) vs fleet tightness - a shadow decision cost that books no cash \
-		flows. US: zero through the normal operating band (tau below 0.7, so BAU \
-		is untouched), then a quadratic ramp to 0.31 at tau=1, about 19-21 dollars \
-		per ton on the reference cost, the central import-parity congestion \
-		premium (research range 0-50 dollars per ton). The subscript element \
-		(average summer day) is a placeholder - see CRBWvT.
-	|
 
 CULB Cement Utilization Lower Bound=
 	GET DIRECT CONSTANTS(
@@ -37807,21 +37987,22 @@ Fraction New Components by Quality Level[Building Type,Building Component,Buildi
 	~		|
 
 Fraction of Additional Clinker Substitution This Year=
-	Fraction of Cement Measures Achieved This Year
-	* 
-	MAX(
+	MIN(
+	  Fraction of Cement Measures Achieved This Year,
+	  CSPAbY Clinker Substitution Potential Available by Year
+	)
+	* MAX(
 	  0,
 	  BCtCR BAU Clinker to Cement Ratio
 	  - MACtCR Minimum Achievable Clinker to Cement Ratio
 	)
 	~	Dmnl
 	~	Policy-driven reduction of the clinker-to-cement ratio below its BAU \
-		trajectory this year: the cement-measures lever (on the indst cement \
-		measures implementation schedule) times the gap between the BAU ratio and \
-		the minimum achievable ratio MACtCR. At full implementation the ratio \
-		reaches MACtCR. The former MASCM tonnage cap and PACS ratio-points \
-		potential were folded into MACtCR on 2026-09-28 (the cap never bound in \
-		the US build and needed country-specific SCM supply data).
+		trajectory this year: the gap between the BAU ratio and the minimum \
+		achievable ratio MACtCR, times the cement-measures lever (on the indst \
+		cement measures implementation schedule), capped by the share of that gap \
+		SCM supply can support this year (CSPAbY). At full implementation and full \
+		supply the ratio reaches MACtCR.
 	|
 
 Fraction of Additional Demand Response Potential Achieved=
@@ -37905,16 +38086,17 @@ Fraction of Buildings Owned by Entity after Allocation to Energy Supplier Entiti
 Fraction of Cement Measures Achieved=
 	0
 	~	Dmnl [0,1,0.05]
-	~	Policy lever, repurposed with the cement breakout (2026-08-26): the \
-		fraction of the gap between the BAU clinker-to-cement ratio and the \
-		minimum achievable ratio (MACtCR) closed at full implementation - \
-		policy-driven SCM blending (calcined clay, slag, blended-cement specs) \
-		that lowers the ratio below its BAU trajectory. The former MAC-allocation \
-		machinery for this element is retired (see Reduction Achieved by Marginal \
-		Cost Excluding Carbon Tax Driven Reductions and Process Emissions Abated \
-		due to Carbon Tax by Marginal Cost); the mechanistic response now lives in \
-		the cement pathway module via Fraction of Additional Clinker Substitution \
-		This Year.
+	~	Policy lever (clinker substitution): the share of the long-run clinker \
+		substitution potential achieved at full implementation. Covers \
+		supplementary cementitious materials (calcined clay, slag, fly ash, \
+		natural pozzolans, extra limestone) replacing clinker wherever they are \
+		blended - in the cement at the cement plant or added at the concrete plant \
+		- since the clinker saved per unit of binder is the same. The potential is \
+		the gap between the BAU clinker-to-cement ratio (BCtCR) and the minimum \
+		achievable ratio (MACtCR); how fast it can be reached is capped by SCM \
+		supply (CSPAbY). Mix optimization that reduces binder per cubic meter \
+		belongs to Percent Reduction in Cement Content of Concrete, not here. \
+		Rides the indst cement measures implementation schedule.
 	|
 
 Fraction of Cement Measures Achieved This Year=
@@ -46339,6 +46521,14 @@ Last Year Clinker Production Capacity Added During Model Run by Pathway[Cement P
 		Pathway. Renamed 2026-09-29 to the standard Last Year level convention.
 	|
 
+Last Year Cement Module CO2 Captured by Emissions Type[Emissions Type]= DELAY FIXED (
+	Cement Module CO2 Captured by Emissions Type[Emissions Type],
+	1,
+	0)
+	~	g CO2
+	~	Last year's value of Cement Module CO2 Captured by Emissions Type.
+	|
+
 Last Year Clinker Production Capacity by Pathway[Cement Production Pathway]=
 	Last Year Preexisting Clinker Production Capacity by Pathway[Cement Production Pathway\
 		]
@@ -47568,10 +47758,12 @@ MACtCR Minimum Achievable Clinker to Cement Ratio=
 	~	The clinker-to-cement ratio reachable at full deployment of the \
 		clinker-substitution lever (aggressive SCM blending: calcined clay/LC3, \
 		slag cement, expanded blended-cement specs). The lever's potential each \
-		year is the gap between the BAU ratio (BCtCR) and this floor, so the same \
-		lever definition works where the BAU ratio differs. SCM supply limits are \
-		reflected in the value chosen. US: 0.65 (judgment informed by PCA and GCCA \
-		roadmaps).
+		year is the gap between the BAU ratio (BCtCR) and this floor, capped by \
+		the SCM supply ramp (CSPAbY), so the same lever definition works where the \
+		BAU ratio differs. It counts SCMs wherever they are blended (in the cement \
+		or at the concrete plant); mix optimization belongs to the separate \
+		cement-content lever. SCM supply limits are reflected in the value chosen. \
+		US: 0.65 (judgment informed by PCA and GCCA roadmaps).
 	|
 
 MaMHEIaE Maximum Hourly Exports=
@@ -49105,7 +49297,7 @@ Model Run Clinker Capacity Overhauled by Pathway[Cement Production Pathway]=
 	~	metric tons/Year
 	~	Model-run capacity that overhauls at its campaign-end decision. Stays in \
 		the model-run stock and reenters the decision pool as a distributed curve \
-		one mean campaign later; its overhaul capital (CRCC) is booked with the \
+		one mean campaign later; its overhaul capital (CPCaOC overhaul cost) is booked with the \
 		preexisting pool's via Total Clinker Capacity Overhauled by Pathway.
 	|
 
@@ -51582,7 +51774,7 @@ New Industrial Equipment Capital Cost[cement and other nonmetallic minerals 239]
 	  )
 	+ SUM(
 	    Total Clinker Capacity Overhauled by Pathway[Cement Production Pathway!]
-	    * CRCC Cement Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway\
+	    * CPCaOC Overhaul Capital Cost per Unit Annual Capacity[Cement Production Pathway\
 		!]
 	  )
 	~	$
@@ -58654,22 +58846,25 @@ Percent Reduction in BAU Subsidies This Year[All Fuels]=
 Percent Reduction in Cement Content of Concrete=
 	0
 	~	Dmnl [0,0.2,0.01]
-	~	Policy lever: fraction by which the cement (binder) content per cubic \
-		meter of concrete is reduced at constant concrete demand and performance - \
-		admixture optimization, aggregate gradation, mix design QA, longer cure \
-		times. Distinct from clinker substitution (which swaps binder composition) \
-		and from material efficiency (which reduces concrete volume). Literature \
-		supports roughly 10-20% technical potential; rides the indst cement \
-		measures implementation schedule. ECONOMICS (2026-08-27, Dan-approved): \
-		booked as a cement-targeted material-efficiency entry - the lever is \
-		injected into the Material Efficiency Improvement matrix's ISIC 239 source \
-		row (scaled by CSoIO to 239-product terms), so the buyer's avoided cement \
-		purchase, 239's lost revenue, the buyer price index, and the passthrough \
-		all book through the standard machinery and GDP/jobs respond; the PHYSICAL \
-		cut is carried cement-only at full strength by Total Cement Demand's (1 - \
-		lever) factor and divided back out of the production-percent fold-in (see \
-		Cement Content Lever Component of 239 Output Change). The unit-cost capex \
-		normalization remains on pre-lever demand (adversarial-review finding 1).
+	~	Policy lever (cement content): fraction by which the binder content per \
+		cubic meter of concrete is reduced at constant concrete demand and \
+		performance through mix optimization - admixtures, aggregate gradation, \
+		mix design quality control, longer cure times. It does not include \
+		replacing cement with SCMs, which belongs to the clinker-substitution \
+		lever (Fraction of Cement Measures Achieved), so the two levers do not \
+		overlap; their effects multiply (less cement per cubic meter, less clinker \
+		per ton of cement). Distinct also from material efficiency, which reduces \
+		concrete volume. Literature supports roughly 10-20% technical potential; \
+		rides the indst cement measures implementation schedule. Economics: booked \
+		as a cement-targeted material-efficiency entry, injected into the Material \
+		Efficiency Improvement matrix's ISIC 239 source row (scaled by CSoIO to \
+		239-product terms), so the buyer's avoided cement purchase, 239's lost \
+		revenue, the buyer price index, and the passthrough all book through the \
+		standard machinery. The physical cut is carried cement-only at full \
+		strength by Total Cement Demand's (1 - lever) factor and divided back out \
+		of the production-percent fold-in (see Cement Content Lever Component of \
+		239 Output Change). The unit-cost capex normalization stays on pre-lever \
+		demand.
 	|
 
 Percent Reduction in Cement Content of Concrete This Year=
@@ -63704,10 +63899,11 @@ SCMEI SCM Production Energy per Ton of Substitution=
 	~	BTU/metric ton
 	~	Thermal energy required to produce one metric ton of the marginal \
 		supplementary cementitious material displacing clinker under the \
-		substitution lever, booked to natural gas. Dominated by calcined clay, \
-		about 2,000,000 BTU per ton to calcine; byproduct SCMs (fly ash, slag, \
-		natural pozzolans) need essentially none. US: 1,000,000 BTU per ton, \
-		assuming a half calcined clay, half byproduct blend (judgment).
+		substitution lever, booked to natural gas. US: 1,242,825 BTU per ton for a \
+		marginal mix of 50 percent calcined clay (2.3 GJ/t), 15 percent limestone, \
+		15 percent fly ash (mostly harvested, dried), 15 percent slag and 5 \
+		percent natural pozzolan (judgment informed by USGS, DOE and RILEM \
+		sources).
 	|
 
 SCoC Social Cost of Carbon:INTERPOLATE::=
@@ -68020,17 +68216,26 @@ This Year DR Capacity by Provider[nonenergy industries]=
 	~	MW
 	~		|
 
-This Year Energy Related Pollutants Sequestered by Industry Sector[Industry Category,\
-		Pollutant] :EXCEPT:  [Industry Category,CO2]=
+This Year Energy Related Pollutants Sequestered by Industry Sector[Industry Category,Pollutant] :EXCEPT:  [Industry Category,CO2]=
 	0 ~~|
-This Year Energy Related Pollutants Sequestered by Industry Sector[Industry Category,\
-		CO2]=
-	SUM(Industrial Sector Energy Related Emissions before CCS[Industrial Fuel!,Industry Category\
-		,CO2])
-	* Fraction of CO2 Captured by Industry Category[Industry Category,energy related emissions\
-		]
+This Year Energy Related Pollutants Sequestered by Industry Sector[Industry Category,CO2] :EXCEPT: [cement and other nonmetallic minerals 239,CO2]=
+	SUM(Industrial Sector Energy Related Emissions before CCS[Industrial Fuel!,Industry Category,CO2])
+	* Fraction of CO2 Captured by Industry Category[Industry Category,energy related emissions] ~~|
+This Year Energy Related Pollutants Sequestered by Industry Sector[cement and other nonmetallic minerals 239,CO2]=
+	MAX(
+	  0,
+	  SUM(Industrial Sector Energy Related Emissions before CCS[Industrial Fuel!,cement and other nonmetallic minerals 239,CO2])
+	  - Cement Kiln Combustion CO2 Emissions
+	)
+	* Fraction of CO2 Captured by Industry Category[cement and other nonmetallic minerals 239,energy related emissions]
+	+ Cement Combustion CO2 Captured by Pathway Capture
 	~	g pollutant
-	~		|
+	~	Energy-related pollutants captured and sequestered by each industry this \
+		year: energy-related CO2 times the industry's capture fraction. For \
+		industry 239 the generic fraction applies only to fuel CO2 outside the \
+		cement module's kilns, and the module's own CCS-pathway capture of \
+		kiln-fuel CO2 is added as tons, matching the process-emissions treatment.
+	|
 
 This Year Financing Repayments for Cement Pathway Equipment=
 	Last Year Financing Repayments for Cement Pathway Equipment
@@ -68247,24 +68452,34 @@ This Year Increase in Pollutants Sequestered by Hydrogen Sector[Pollutant]=
 	~	g pollutant
 	~		|
 
-This Year Increase in Pollutants Sequestered by Industry Sector[Industry Category,Pollutant\
-		,Emissions Type]=
+This Year Increase in Pollutants Sequestered by Industry Sector[Industry Category,Pollutant,Emissions Type] :EXCEPT: [cement and other nonmetallic minerals 239,CO2,Emissions Type]=
 	IF THEN ELSE(
 	  Time = INITIAL TIME,
-	
 	  0,
-	
 	  MAX(
 	    0,
-	
-	    This Year Pollutants Sequestered by Industry Sector[Industry Category,Pollutant,\
-		Emissions Type]
-	    - Last Year Pollutants Sequestered by Industry Sector[Industry Category,Pollutant\
-		,Emissions Type]
+	    This Year Pollutants Sequestered by Industry Sector[Industry Category,Pollutant,Emissions Type]
+	    - Last Year Pollutants Sequestered by Industry Sector[Industry Category,Pollutant,Emissions Type]
+	  )
+	) ~~|
+This Year Increase in Pollutants Sequestered by Industry Sector[cement and other nonmetallic minerals 239,CO2,Emissions Type]=
+	IF THEN ELSE(
+	  Time = INITIAL TIME,
+	  0,
+	  MAX(
+	    0,
+	    This Year Pollutants Sequestered by Industry Sector[cement and other nonmetallic minerals 239,CO2,Emissions Type]
+	    - Last Year Pollutants Sequestered by Industry Sector[cement and other nonmetallic minerals 239,CO2,Emissions Type]
+	    - Cement Module Change in CO2 Captured by Emissions Type[Emissions Type]
 	  )
 	)
 	~	g pollutant
-	~		|
+	~	Growth in each industry's sequestered pollutants since last year, which \
+		sizes new capture equipment spending in CCS New Capital Eqpt Cost by \
+		Industry. For industry 239, the CO2 captured by the cement module's CCS \
+		pathway is left out, because the module pays for that capture equipment in \
+		its own capital costs.
+	|
 
 This Year Low Carbon Hydrogen Cost=
 	ZIDZ(
@@ -68889,7 +69104,7 @@ Total Clinker Capacity Overhauled by Pathway[Cement Production Pathway]=
 	~	metric tons/Year
 	~	All capacity overhauling at campaign-end decisions this year, from both \
 		the preexisting and the model-run pools (Q4) - the basis for overhaul \
-		capital (CRCC) in the module capital-cost and financing equations.
+		capital (CPCaOC overhaul cost) in the module capital-cost and financing equations.
 	|
 
 Total Clinker Capacity Retired by Pathway[Cement Production Pathway]=
@@ -86742,7 +86957,6 @@ CO2 per Ton of Clinker
 10,98,Cement Fuel Feedstock Share,4038,508,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,99,Cement New Build Process CO2 Intensity per Ton of Clinker by Pathway,4298,508,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,100,CNBEIR Cement New Build Energy Intensity Ratio,4298,646,75,27,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
-10,101,Cement Energy Intensity by Pathway and Fuel This Year,4558,416,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,102,Cement Energy Intensity by Pathway and Fuel This Year,3778,412,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,103,CO2 Emissions Intensity by Fuel for All Fuels,3778,37,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 10,104,BIFU BAU Industrial Fuel Use as Feedstock,3778,738,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
@@ -86755,16 +86969,10 @@ CO2 per Ton of Clinker
 1,111,89,93,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,112,91,93,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,113,95,97,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,114,98,97,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,115,93,97,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,116,100,99,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,117,98,99,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,118,93,99,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,119,95,96,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,120,101,99,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,121,102,93,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,122,103,94,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,123,101,97,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,124,104,98,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
 1,125,105,98,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
 1,126,106,98,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
@@ -86779,7 +86987,7 @@ Operating Costs per Ton of Clinker
 10,134,Cement Energy Intensity by Pathway and Fuel This Year,6054,554,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,135,Cement Fuel Feedstock Share,5872,554,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,136,Industrial Fuel Carbon Tax Amount per Unit Energy,5690,554,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,137,Cement CCS Captured Process CO2 per Ton of Clinker,5248,439,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,137,Cement CCS Captured CO2 per Ton of Clinker by Emissions Type,5248,439,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,138,Grams per Metric Ton CO2e,5118,669,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
 10,139,CC CCS Total OM Cost per Industry Ton Sequestered,5378,669,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 10,140,CCSTaSC CCS Transportation and Storage Costs,4988,439,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
@@ -86831,7 +87039,7 @@ Operating Costs per Ton of Clinker
 Choosing Pathways for New Kilns
 12,186,0,103,1797,120,34,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 Pathways with zero CPSW shareweight (not yet commercial) get no share and are left out of the minimum-cost reference.
-10,187,CPCC Cement Pathway Capital Cost per Unit Annual Capacity,-937,1360,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,187,CPCaOC New Build Capital Cost per Unit Annual Capacity,-937,1360,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
 10,188,Cement Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment,-937,1498,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,189,Cement Pathway Levelized Cost per Ton of Clinker,-677,1498,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
 10,190,Cement Pathway Capital Recovery Factor,-677,1648,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
@@ -86842,7 +87050,7 @@ Pathways with zero CPSW shareweight (not yet commercial) get no share and are le
 10,195,Share of New Clinker Production Capacity by Pathway,103,1498,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,196,Average New Clinker Capacity Cost per Ton of Clinker,103,1648,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,197,Cement Pathway Levelized Cost per Ton of Clinker,-157,1648,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,198,Cement CCS Captured Process CO2 per Ton of Clinker,-1197,1648,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,198,Cement CCS Captured CO2 per Ton of Clinker by Emissions Type,-1197,1648,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,199,Grams per Metric Ton CO2e,-1197,1383,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
 10,200,CC Capital Cost of Eqpt to Sequester One Ton of Industry CO2 per Year,-1197,1498,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 10,201,CUUB Cement Utilization Upper Bound,-677,1360,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
@@ -86879,11 +87087,9 @@ The replacement alternative blends fleet marginal cost (running spare kilns hard
 10,230,CPPL Cement Pathway Campaign Length,838,1459,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
 10,231,Cement Overhaul Capital Recovery Factor,1098,1459,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,232,Cement Overhaul Continuation Cost per Ton of Clinker,1358,1459,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,233,CRCC Cement Overhaul Capital Cost per Unit Annual Capacity,1358,1344,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,233,CPCaOC Overhaul Capital Cost per Unit Annual Capacity,1358,1344,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
 10,234,Cement Fleet Marginal Operating Cost per Ton of Clinker,1098,1642,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,235,Cement Replacement Alternative Cost per Ton of Clinker,1358,1642,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,236,Cement Tightness Operating Adder per Ton of Clinker,1098,1781,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,237,CTOAvT Cement Tightness Operating Adder vs Tightness,838,1781,75,27,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
 10,238,Cement Overhaul Share at Decision,1618,1545,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
 10,239,CRSW Cement Overhaul Shareweight,1618,1396,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
 10,240,CUUB Cement Utilization Upper Bound,1098,1344,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
@@ -86899,11 +87105,9 @@ The replacement alternative blends fleet marginal cost (running spare kilns hard
 10,250,Average New Clinker Capacity Cost per Ton of Clinker,1358,1545,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,251,IELC Industrial Equipment Logit Coefficient,1878,1430,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 1,252,230,231,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
-1,253,237,236,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,254,233,232,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,255,231,232,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,256,234,235,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,257,236,235,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,258,239,238,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,259,232,238,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,260,235,238,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -86914,8 +87118,6 @@ The replacement alternative blends fleet marginal cost (running spare kilns hard
 1,265,244,231,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
 1,266,245,234,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,267,246,234,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,268,247,236,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,269,248,236,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,270,249,235,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,271,250,235,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,272,251,238,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -87186,19 +87388,19 @@ Cement new-build and overhaul capital is added to industry 239's capital costs o
 10,526,New Clinker Production Capacity by Pathway,-1067,8350,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,527,Cement Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment,-807,8350,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,528,Total Clinker Capacity Overhauled by Pathway,-1197,8235,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,529,CRCC Cement Overhaul Capital Cost per Unit Annual Capacity,-1197,8062,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,529,CPCaOC Overhaul Capital Cost per Unit Annual Capacity,-1197,8062,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 10,530,SoICETAF Share of Industry Capital Expenditures That Are Financed,-937,8465,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 10,531,BAU Annuity Factor by Industry Fuel and Process,-937,8598,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,532,New Clinker Production Capacity by Pathway,-1067,8886,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,533,Cement Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment,-807,8886,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,534,Total Clinker Capacity Overhauled by Pathway,-1197,8771,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,535,CRCC Cement Overhaul Capital Cost per Unit Annual Capacity,-1197,8598,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,535,CPCaOC Overhaul Capital Cost per Unit Annual Capacity,-1197,8598,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 10,536,SoICETAF Share of Industry Capital Expenditures That Are Financed,-937,9001,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 10,537,BAU Annuity Factor by Industry Fuel and Process,-937,9120,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,538,BAU New Clinker Production Capacity by Pathway,-1067,9408,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,539,Cement Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment,-807,9408,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,540,BAU Total Clinker Capacity Overhauled by Pathway,-1197,9293,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,541,CRCC Cement Overhaul Capital Cost per Unit Annual Capacity,-1197,9120,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,541,CPCaOC Overhaul Capital Cost per Unit Annual Capacity,-1197,9120,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 10,542,SoICETAF Share of Industry Capital Expenditures That Are Financed,-937,9523,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 10,543,One Year,-716,7959,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
 10,544,One Year,-716,8488,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
@@ -87260,9 +87462,6 @@ The content lever enters the material-efficiency matrix's 239 row (x CSoIO), so 
 1,598,592,590,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,599,593,590,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,600,594,589,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,601,Cement Fuel CO2 Emissions Intensity,4297,412,65,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,602,601,97,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,603,601,99,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,604,Preexisting Clinker Capacity Retirements by Pathway,3891,1280,78,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,605,604,308,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,606,Clinker Production Capacity Added During Model Run by Pathway,-913,2251,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -87270,344 +87469,405 @@ The content lever enters the material-efficiency matrix's 239 row (x CSoIO), so 
 10,608,Clinker Production Capacity by Pathway,-1164,2359,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,609,608,313,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,610,327,311,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,611,BAU Total Cement Demand,-892,4296,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,612,BAU Total Clinker Demand,-372,4296,75,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,613,BAU Domestic Clinker Demand,-112,4296,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,614,BAU Domestic Cement Production,-372,4147,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,615,BFoCDMbNI BAU Fraction of Clinker Demand Met by Net Imports,-112,4147,75,34,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,616,BAU Clinker to Cement Ratio,-372,4446,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,617,BCtCR BAU Clinker to Cement Ratio,-632,4584,75,20,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-1,618,615,614,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,619,616,612,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,620,617,616,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,621,612,613,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,622,615,613,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,623,BAU Last Year Clinker Production Capacity by Pathway,578,4140,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,624,BAU Cement Fleet Utilization,838,4140,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,625,BAU Cement Fleet Tightness,1098,4140,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,626,BAU Cement Replacement Blend Weight,1358,4140,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,627,CULB Cement Utilization Lower Bound,1098,4002,75,27,8,2,0,5,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,628,CUUB Cement Utilization Upper Bound,1098,4301,75,27,8,2,0,5,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,629,CRBWvT Cement Replacement Blend Weight vs Tightness,1358,4002,75,27,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,630,BAU Cement Spare Capacity Headroom,578,4301,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,631,BAU Cement Expected Utilization for Investment Decisions,838,4301,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,632,SYCCU Start Year Cement Capacity Utilization,578,4439,75,27,8,2,0,5,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,633,Cement Utilization Smoothing Time,838,4439,75,20,8,2,0,5,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,634,BAU Last Year Preexisting Clinker Production Capacity by Pathway,578,4002,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,635,BAU Last Year Clinker Production Capacity Added During Model Run by Pathway,318,4140,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,636,BAU Domestic Clinker Demand,318,4301,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,637,BAU Domestic Clinker Demand,838,4002,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,638,623,630,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,639,632,630,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,640,623,624,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,641,624,631,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,642,633,631,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,643,632,631,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,644,624,625,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,645,627,625,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,646,628,625,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,647,629,626,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,648,625,626,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,649,634,623,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,650,635,623,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,651,636,630,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,652,637,624,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,653,BAU Cement CCS Capture Operating Cost per Ton of Clinker,5248,4519,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,654,BAU Cement Process Emissions Carbon Tax Rate,5690,4232,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,655,BAU Cement Pathway Operating Cost per Ton of Clinker,5690,4381,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,656,BAU Cement New Build Operating Cost per Ton of Clinker,5690,4657,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,657,BAU Industrial Fuel Cost per Unit Energy,5508,4519,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,658,Cement Energy Intensity by Pathway and Fuel This Year,6054,4519,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,659,Cement Fuel Feedstock Share,5872,4519,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,660,BAU Industrial Fuel Carbon Tax Amount per Unit Energy,5690,4519,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,661,Cement CCS Captured Process CO2 per Ton of Clinker,5248,4404,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,662,Grams per Metric Ton CO2e,5118,4634,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,663,CC CCS Total OM Cost per Industry Ton Sequestered,5378,4634,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,664,CCSTaSC CCS Transportation and Storage Costs,4988,4404,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,665,CC Energy Use per Ton Industry CO2 Sequestered,5248,4749,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,666,CNBEIR Cement New Build Energy Intensity Ratio,5560,4772,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,667,Cement New Build Process CO2 Intensity per Ton of Clinker by Pathway,5820,4772,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,668,Grams per Metric Ton CO2e,5690,4887,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,669,BAU Cement Process Emissions Carbon Tax Rate,6080,4715,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,670,Cement Process CO2 Intensity per Ton of Clinker by Pathway,5950,4266,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,671,Grams per Metric Ton CO2e,5430,4209,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-1,672,654,655,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,673,653,655,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,674,653,656,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,675,657,653,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,676,658,656,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,677,657,656,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,678,659,656,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,679,660,656,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,680,658,655,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,681,657,655,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,682,659,655,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,683,660,655,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,684,661,653,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,685,662,653,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,686,663,653,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,687,664,653,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,688,665,653,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,689,666,656,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,690,667,656,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,691,668,656,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,692,669,656,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,693,670,655,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,694,671,655,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,695,Cement Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment,-937,5463,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,696,BAU Cement Pathway Levelized Cost per Ton of Clinker,-677,5463,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,697,Cement Pathway Capital Recovery Factor,-677,5613,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,698,BAU Minimum Eligible Cement Pathway Cost per Ton of Clinker,-417,5325,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,699,CPSW Cement Pathway Shareweight,-417,5187,75,20,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,700,BAU Cement Pathway Choice Weight,-157,5463,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,701,BAU Share of New Clinker Production Capacity by Pathway,103,5463,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,702,BAU Average New Clinker Capacity Cost per Ton of Clinker,103,5613,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,703,BAU Cement Pathway Levelized Cost per Ton of Clinker,-157,5613,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,704,CUUB Cement Utilization Upper Bound,-677,5325,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,705,BAU Cement Expected Utilization for Investment Decisions,-937,5613,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,706,BAU Cement New Build Operating Cost per Ton of Clinker,-417,5613,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,707,IELC Industrial Equipment Logit Coefficient,-157,5291,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-1,708,695,696,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,709,697,696,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,710,696,698,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,711,699,698,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,712,699,700,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,713,696,700,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,714,698,700,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,715,700,701,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,716,701,702,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,717,703,702,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,718,704,696,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,719,705,696,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,720,706,696,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,721,707,700,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,722,Cement Overhaul Capital Recovery Factor,1098,5424,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,723,BAU Cement Overhaul Continuation Cost per Ton of Clinker,1358,5424,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,724,CRCC Cement Overhaul Capital Cost per Unit Annual Capacity,1358,5309,75,27,8,2,0,5,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,725,BAU Cement Fleet Marginal Operating Cost per Ton of Clinker,1098,5607,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,726,BAU Cement Replacement Alternative Cost per Ton of Clinker,1358,5607,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,727,BAU Cement Tightness Operating Adder per Ton of Clinker,1098,5746,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,728,CTOAvT Cement Tightness Operating Adder vs Tightness,838,5746,75,27,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,729,BAU Cement Overhaul Share at Decision,1618,5510,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,730,CRSW Cement Overhaul Shareweight,1618,5361,75,20,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,731,CUUB Cement Utilization Upper Bound,1098,5309,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,732,BAU Cement Expected Utilization for Investment Decisions,1618,5194,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,733,BAU Cement Pathway Operating Cost per Ton of Clinker,1098,5194,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,734,BAU Last Year Clinker Production Capacity by Pathway,838,5570,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,735,BAU Cement Pathway Operating Cost per Ton of Clinker,838,5643,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,736,BAU Cement Fleet Tightness,838,5861,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,737,BAU Average New Clinker Capacity Cost per Ton of Clinker,1098,5861,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,738,BAU Cement Replacement Blend Weight,1358,5712,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,739,BAU Average New Clinker Capacity Cost per Ton of Clinker,1358,5510,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,740,IELC Industrial Equipment Logit Coefficient,1878,5395,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-1,741,728,727,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,742,724,723,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,743,722,723,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,744,725,726,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,745,727,726,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,746,730,729,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,747,723,729,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,748,726,729,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,749,731,723,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,750,732,723,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,751,733,723,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,752,734,725,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,753,735,725,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,754,736,727,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,755,737,727,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,756,738,726,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,757,739,726,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,758,740,729,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,759,CPRS Cement Preexisting Capacity Overhaul Decision Schedule,2698,5201,75,34,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,760,BAU Preexisting Clinker Capacity Reentering Decision Pool by Pathway,2438,5339,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,761,BAU Preexisting Clinker Capacity Facing Overhaul Decision by Pathway,2698,5339,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,762,BAU Preexisting Clinker Capacity Overhauled by Pathway,2958,5339,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,763,BAU Model Run Clinker Capacity Reaching Campaign End by Pathway,2438,5523,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,764,BAU Model Run Clinker Capacity Facing Overhaul Decision by Pathway,2698,5523,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,765,BAU Model Run Clinker Capacity Overhauled by Pathway,2958,5523,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,766,BAU Total Clinker Capacity Overhauled by Pathway,3218,5431,75,27,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,767,BAU Cement Overhaul Share at Decision,2958,5431,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,768,BAU New Clinker Production Capacity by Pathway,2234,5523,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,769,BAU Model Run Clinker Capacity Overhauled by Pathway,2438,5638,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,770,CPPL Cement Pathway Campaign Length,2438,5431,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,771,BAU Preexisting Clinker Capacity Overhauled by Pathway,2438,5201,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,772,BAU Last Year Preexisting Clinker Production Capacity by Pathway,2958,5201,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,773,BAU Last Year Clinker Production Capacity Added During Model Run by Pathway,2698,5651,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,774,759,761,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,775,760,761,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,776,763,764,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,777,761,762,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,778,764,765,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,779,762,766,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,780,765,766,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,781,767,762,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,782,767,765,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,783,768,763,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,784,769,763,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,785,770,763,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,786,771,760,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,787,770,760,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,788,772,761,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,789,773,764,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,790,SYCPbP Start Year Clinker Production by Pathway,4126,5865,75,27,8,2,0,5,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,791,BAU Total Clinker Capacity Retired by Pathway,3891,5342,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,792,BAU Unmet Clinker Production Capacity Need,3891,5481,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,793,BAU Preexisting Clinker Production Capacity by Pathway,4570,5757,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,794,BAU Clinker Production Capacity Added During Model Run by Pathway,4570,5602,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,795,BAU Clinker Production Capacity by Pathway,4804,5674,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,796,BAU Share of Clinker Production Capacity Built During Model Run,-913,6324,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,797,BAU Clinker Production by Pathway,5026,5674,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,798,BAU Unserved Clinker Demand This Year,5286,5674,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,799,BAU Last Year Preexisting Clinker Production Capacity by Pathway,4344,5873,75,34,3,3,0,0,0,0,0,0,0,0,0,0,0,0
-12,800,48,4693,5873,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,801,803,800,4,0,0,22,0,0,0,-1--1--1,,1|(4629,5873)|
-1,802,803,799,100,0,0,22,0,0,0,-1--1--1,,1|(4491,5873)|
-11,803,0,4570,5873,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,804,BAU Preexisting Clinker Capacity Retirements by Pathway,4570,5908,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-10,805,BAU Last Year Clinker Production Capacity Added During Model Run by Pathway,4344,5446,75,34,3,3,0,0,0,0,0,0,0,0,0,0,0,0
-12,806,48,4018,5446,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,807,809,805,4,0,0,22,0,0,0,-1--1--1,,1|(4201,5446)|
-1,808,809,806,100,0,0,22,0,0,0,-1--1--1,,1|(4075,5446)|
-11,809,0,4128,5446,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,810,BAU New Clinker Production Capacity by Pathway,4128,5481,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-12,811,48,4680,5446,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,812,814,811,4,0,0,22,0,0,0,-1--1--1,,1|(4623,5446)|
-1,813,814,805,100,0,0,22,0,0,0,-1--1--1,,1|(4491,5446)|
-11,814,0,4570,5446,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,815,BAU Model Run Clinker Capacity Retirements by Pathway,4570,5481,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-10,816,SYCCU Start Year Cement Capacity Utilization,3891,5602,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,817,BAU Domestic Clinker Demand,3674,5602,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,818,BAU Last Year Clinker Production Capacity by Pathway,3674,5481,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,819,BAU Domestic Clinker Demand,5026,5543,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,820,SYCCU Start Year Cement Capacity Utilization,4126,5735,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,821,BAU Share of New Clinker Production Capacity by Pathway,4126,5602,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,822,BAU Cement Replacement Blend Weight,4128,5342,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,823,BAU Preexisting Clinker Capacity Facing Overhaul Decision by Pathway,4804,5907,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,824,BAU Preexisting Clinker Capacity Overhauled by Pathway,4570,6023,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,825,BAU Model Run Clinker Capacity Facing Overhaul Decision by Pathway,4570,5342,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,826,BAU Model Run Clinker Capacity Overhauled by Pathway,4344,5342,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,827,CUUB Cement Utilization Upper Bound,5026,5849,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,828,BAU Model Run Clinker Capacity Retirements by Pathway,3674,5342,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,829,790,799,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
-1,830,791,792,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,831,799,793,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,832,804,793,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,833,805,794,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,834,815,794,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,835,793,795,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,836,794,795,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,837,795,797,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,838,797,798,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,839,816,810,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,840,817,792,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,841,818,792,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,842,816,792,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,843,819,797,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,844,820,799,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
-1,845,819,798,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,846,821,810,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,847,792,810,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,848,822,810,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,849,823,804,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,850,824,804,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,851,825,815,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,852,826,815,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,853,827,797,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,854,828,791,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,855,BAU Cement Energy Intensity Multiplier by Pathway,-913,6449,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,856,BAU Cement Module Energy Use by Fuel Type,-913,6598,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,857,BAU Cement Process CO2 Emissions,-913,6759,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,858,BAU Cement Process CO2 Captured by Pathway Capture,-913,6920,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,859,BAU Clinker Production by Pathway,-1173,6759,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,860,Cement Process CO2 Intensity per Ton of Clinker by Pathway,-653,6690,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,861,Cement CCS Captured Process CO2 per Ton of Clinker,-653,6840,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,862,Cement Energy Intensity by Pathway and Fuel This Year,-1175,6598,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,863,CNBEIR Cement New Build Energy Intensity Ratio,-1175,6449,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-1,864,855,856,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,865,859,857,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,866,860,857,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,867,861,857,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,868,859,856,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,869,862,856,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,870,859,858,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,871,861,858,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,872,796,855,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,873,863,855,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,874,BAU Cement Module Fuel Added to Industry 239 Energy Use by Fuel Type,1395,6530,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,875,BAU Cement Module Fuel Added to Industry 239 Feedstock Use by Fuel Type,1395,6806,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,876,BAU Cement Generic Process Energy by Fuel and Process,1655,7036,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,877,Start Year Energy Intensity of Industrial Production in Electricity Equivalent,1915,6944,75,48,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,878,BAU Cement Module Energy Use by Fuel Type,1135,6668,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,879,Cement Fuel Feedstock Share,1395,6668,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,880,Boolean Cement Fuel Present in Industry 239 Input Data,1135,6530,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,881,BAU Cement Module Energy Use by Fuel Type,1655,6806,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,882,BAU Cement Module Energy Use by Fuel Type,2227,6461,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,883,BAU Output from Industrial Equipment Installed During Model Run,1655,6921,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,884,BAU Last Year Industrial Equipment Fuel Type Shares in Electricity Equivalent by Vintage,1525,7151,75,48,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,885,BAU Output from New Industrial Equipment,1395,6921,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,886,BAU Energy Intensity of Industrial Production by Fuel and Process for New Equipment in Electricity Equivalent,1915,6806,75,55,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,887,BAU Output from Preexisting Industrial Equipment,1655,7266,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,888,PIFURfE Percentage Industry Fuel Use Reduction for Electricity,2045,7093,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-1,889,877,876,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,890,878,874,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,891,879,874,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,892,880,874,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,893,878,875,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,894,879,875,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,895,883,876,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,896,884,876,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,897,885,876,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,898,886,876,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,899,887,876,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,900,888,876,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,901,BAU Preexisting Clinker Capacity Retirements by Pathway,3891,5245,78,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,902,901,791,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,903,BAU Clinker Production Capacity Added During Model Run by Pathway,-913,6216,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,904,903,796,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,905,BAU Clinker Production Capacity by Pathway,-1164,6324,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,906,905,796,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,907,810,794,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,908,BAU Net Clinker Imports,-112,4411,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,909,BCS BAU Industry CCS Subsidy,4988,4519,75,27,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,910,CCSTaSC CCS Transportation and Storage Subsidies,4988,4289,75,27,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,911,BCTR BAU Carbon Tax Rate,5690,4117,75,27,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,912,BEPEfCT Boolean Exempt Process Emissions from Carbon Tax,5430,4117,75,27,8,2,0,5,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,913,BFoICStCT BAU Fraction of Industry Category Subject to Carbon Tax,5430,4347,75,27,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,914,BPTbCP BAU Industry Pollutants Taxed by Carbon Pricing,5950,4117,75,27,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,915,BAU Last Year Energy Intensity of Industrial Production in Electricity Equivalent by Vintage,1395,7036,75,27,8,2,0,5,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,916,BAU Share of New Industrial Equipment Allocated by Fuel Type in Electricity Equivalent,1915,7266,75,27,8,2,0,5,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,917,Start Year BAU Fuel Type Shares in Electricity Equivalent,1135,6921,75,27,8,2,0,5,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-12,918,0,-655,3875,647,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,940,CSPAbY Clinker Substitution Potential Available by Year,-892,757,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+1,941,940,14,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,942,Cement Fuel Carbon Booked as Process CO2 per Ton of Clinker by Pathway,4038,324,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,943,Cement Pathway CO2 Capture Fraction,4558,324,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,944,Cement Kiln Combustion CO2 per Ton of Clinker by Pathway,4038,876,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,945,Cement CCS Captured Combustion CO2 per Ton of Clinker,4298,876,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,946,Cement CCS Captured CO2 per Ton of Clinker by Emissions Type,4558,876,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,947,Cement Carbon Tax Rebate Rate on Captured CO2 by Emissions Type,5690,37,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,948,Cement Kiln Combustion CO2 Emissions,-913,3340,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,949,Cement Combustion CO2 Captured by Pathway Capture,-913,3478,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,950,Cement Fuel Carbon Booked as Process CO2 per Ton of Clinker by Pathway,4558,37,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,951,Industrial Fuel Pollutant Emissions Intensities This Year,3778,876,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,952,Boolean Cement Fuel Present in Industry 239 Input Data,4038,990,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,953,Cement Energy Intensity by Pathway and Fuel This Year,3778,990,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,954,Cement Fuel Feedstock Share,4298,990,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,955,Cement Pathway CO2 Capture Fraction,4298,738,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,956,Cement CCS Captured Process CO2 per Ton of Clinker,4558,738,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,957,Cement Carbon Tax Rebate Rate on Captured CO2 by Emissions Type,4940,650,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,958,Clinker Production by Pathway,-1173,3409,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,959,Cement Energy Intensity Multiplier by Pathway,-653,3201,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,960,Cement Kiln Combustion CO2 per Ton of Clinker by Pathway,-653,3340,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,961,Cement CCS Captured Combustion CO2 per Ton of Clinker,-653,3478,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,962,94,942,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,963,93,942,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,964,102,942,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,965,98,942,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,966,942,97,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,967,942,99,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,968,950,96,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,969,95,943,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,970,943,96,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,971,943,97,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,972,943,99,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,973,951,944,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,974,952,944,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,975,953,944,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,976,954,944,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,977,944,945,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,978,955,945,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,979,945,946,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,980,956,946,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,981,957,129,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,982,152,947,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,983,153,947,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,984,958,948,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,985,958,949,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,986,959,948,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,987,959,949,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,988,960,948,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,989,961,949,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,990,BAU Total Cement Demand,-892,4296,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,991,BAU Total Clinker Demand,-372,4296,75,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,992,BAU Domestic Clinker Demand,-112,4296,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,993,BAU Domestic Cement Production,-372,4147,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,994,BFoCDMbNI BAU Fraction of Clinker Demand Met by Net Imports,-112,4147,75,34,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,995,BAU Clinker to Cement Ratio,-372,4446,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,996,BCtCR BAU Clinker to Cement Ratio,-632,4584,75,20,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+1,997,994,993,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,998,995,991,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,999,996,995,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1000,991,992,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1001,994,992,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1002,BAU Last Year Clinker Production Capacity by Pathway,578,4140,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1003,BAU Cement Fleet Utilization,838,4140,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1004,BAU Cement Fleet Tightness,1098,4140,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1005,BAU Cement Replacement Blend Weight,1358,4140,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1006,CULB Cement Utilization Lower Bound,1098,4002,75,27,8,2,0,5,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1007,CUUB Cement Utilization Upper Bound,1098,4301,75,27,8,2,0,5,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1008,CRBWvT Cement Replacement Blend Weight vs Tightness,1358,4002,75,27,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,1009,BAU Cement Spare Capacity Headroom,578,4301,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1010,BAU Cement Expected Utilization for Investment Decisions,838,4301,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1011,SYCCU Start Year Cement Capacity Utilization,578,4439,75,27,8,2,0,5,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1012,Cement Utilization Smoothing Time,838,4439,75,20,8,2,0,5,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1013,BAU Last Year Preexisting Clinker Production Capacity by Pathway,578,4002,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1014,BAU Last Year Clinker Production Capacity Added During Model Run by Pathway,318,4140,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1015,BAU Domestic Clinker Demand,318,4301,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1016,BAU Domestic Clinker Demand,838,4002,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1017,1002,1009,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1018,1011,1009,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1019,1002,1003,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1020,1003,1010,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1021,1012,1010,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1022,1011,1010,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1023,1003,1004,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1024,1006,1004,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1025,1007,1004,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1026,1008,1005,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1027,1004,1005,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1028,1013,1002,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1029,1014,1002,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1030,1015,1009,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1031,1016,1003,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1032,BAU Cement CCS Capture Operating Cost per Ton of Clinker,5248,4519,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1033,BAU Cement Process Emissions Carbon Tax Rate,5690,4232,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1034,BAU Cement Pathway Operating Cost per Ton of Clinker,5690,4381,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1035,BAU Cement New Build Operating Cost per Ton of Clinker,5690,4657,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1036,BAU Industrial Fuel Cost per Unit Energy,5508,4519,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1037,Cement Energy Intensity by Pathway and Fuel This Year,6054,4519,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1038,Cement Fuel Feedstock Share,5872,4519,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1039,BAU Industrial Fuel Carbon Tax Amount per Unit Energy,5690,4519,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1040,Cement CCS Captured CO2 per Ton of Clinker by Emissions Type,5248,4404,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1041,Grams per Metric Ton CO2e,5118,4634,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,1042,CC CCS Total OM Cost per Industry Ton Sequestered,5378,4634,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1043,CCSTaSC CCS Transportation and Storage Costs,4988,4404,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,1044,CC Energy Use per Ton Industry CO2 Sequestered,5248,4749,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1045,CNBEIR Cement New Build Energy Intensity Ratio,5560,4772,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,1046,Cement New Build Process CO2 Intensity per Ton of Clinker by Pathway,5820,4772,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1047,Grams per Metric Ton CO2e,5690,4887,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,1048,BAU Cement Process Emissions Carbon Tax Rate,6080,4715,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1049,Cement Process CO2 Intensity per Ton of Clinker by Pathway,5950,4266,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1050,Grams per Metric Ton CO2e,5430,4209,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+1,1051,1033,1034,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1052,1032,1034,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1053,1032,1035,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1054,1036,1032,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1055,1037,1035,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1056,1036,1035,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1057,1038,1035,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1058,1039,1035,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1059,1037,1034,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1060,1036,1034,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1061,1038,1034,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1062,1039,1034,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1063,1040,1032,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1064,1041,1032,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1065,1042,1032,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1066,1043,1032,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1067,1044,1032,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1068,1045,1035,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1069,1046,1035,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1070,1047,1035,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1071,1048,1035,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1072,1049,1034,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1073,1050,1034,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1074,Cement Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment,-937,5463,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1075,BAU Cement Pathway Levelized Cost per Ton of Clinker,-677,5463,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,1076,Cement Pathway Capital Recovery Factor,-677,5613,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1077,BAU Minimum Eligible Cement Pathway Cost per Ton of Clinker,-417,5325,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1078,CPSW Cement Pathway Shareweight,-417,5187,75,20,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,1079,BAU Cement Pathway Choice Weight,-157,5463,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1080,BAU Share of New Clinker Production Capacity by Pathway,103,5463,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1081,BAU Average New Clinker Capacity Cost per Ton of Clinker,103,5613,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1082,BAU Cement Pathway Levelized Cost per Ton of Clinker,-157,5613,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1083,CUUB Cement Utilization Upper Bound,-677,5325,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1084,BAU Cement Expected Utilization for Investment Decisions,-937,5613,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1085,BAU Cement New Build Operating Cost per Ton of Clinker,-417,5613,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1086,IELC Industrial Equipment Logit Coefficient,-157,5291,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,1087,1074,1075,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1088,1076,1075,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1089,1075,1077,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1090,1078,1077,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1091,1078,1079,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1092,1075,1079,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1093,1077,1079,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1094,1079,1080,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1095,1080,1081,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1096,1082,1081,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1097,1083,1075,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1098,1084,1075,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1099,1085,1075,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1100,1086,1079,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1101,Cement Overhaul Capital Recovery Factor,1098,5424,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1102,BAU Cement Overhaul Continuation Cost per Ton of Clinker,1358,5424,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1103,CPCaOC Overhaul Capital Cost per Unit Annual Capacity,1358,5309,75,27,8,2,0,5,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1104,BAU Cement Fleet Marginal Operating Cost per Ton of Clinker,1098,5607,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1105,BAU Cement Replacement Alternative Cost per Ton of Clinker,1358,5607,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1106,BAU Cement Overhaul Share at Decision,1618,5510,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,1107,CRSW Cement Overhaul Shareweight,1618,5361,75,20,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,1108,CUUB Cement Utilization Upper Bound,1098,5309,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1109,BAU Cement Expected Utilization for Investment Decisions,1618,5194,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1110,BAU Cement Pathway Operating Cost per Ton of Clinker,1098,5194,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1111,BAU Last Year Clinker Production Capacity by Pathway,838,5570,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1112,BAU Cement Pathway Operating Cost per Ton of Clinker,838,5643,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1113,BAU Average New Clinker Capacity Cost per Ton of Clinker,1098,5861,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1114,BAU Cement Replacement Blend Weight,1358,5712,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1115,BAU Average New Clinker Capacity Cost per Ton of Clinker,1358,5510,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1116,IELC Industrial Equipment Logit Coefficient,1878,5395,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,1117,1103,1102,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1118,1101,1102,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1119,1104,1105,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1120,1107,1106,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1121,1102,1106,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1122,1105,1106,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1123,1108,1102,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1124,1109,1102,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1125,1110,1102,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1126,1111,1104,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1127,1112,1104,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1128,1114,1105,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1129,1115,1105,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1130,1116,1106,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1131,CPRS Cement Preexisting Capacity Overhaul Decision Schedule,2698,5201,75,34,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,1132,BAU Preexisting Clinker Capacity Reentering Decision Pool by Pathway,2438,5339,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1133,BAU Preexisting Clinker Capacity Facing Overhaul Decision by Pathway,2698,5339,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1134,BAU Preexisting Clinker Capacity Overhauled by Pathway,2958,5339,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1135,BAU Model Run Clinker Capacity Reaching Campaign End by Pathway,2438,5523,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1136,BAU Model Run Clinker Capacity Facing Overhaul Decision by Pathway,2698,5523,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1137,BAU Model Run Clinker Capacity Overhauled by Pathway,2958,5523,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1138,BAU Total Clinker Capacity Overhauled by Pathway,3218,5431,75,27,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,1139,BAU Cement Overhaul Share at Decision,2958,5431,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1140,BAU New Clinker Production Capacity by Pathway,2234,5523,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1141,BAU Model Run Clinker Capacity Overhauled by Pathway,2438,5638,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1142,CPPL Cement Pathway Campaign Length,2438,5431,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1143,BAU Preexisting Clinker Capacity Overhauled by Pathway,2438,5201,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1144,BAU Last Year Preexisting Clinker Production Capacity by Pathway,2958,5201,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1145,BAU Last Year Clinker Production Capacity Added During Model Run by Pathway,2698,5651,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1146,1131,1133,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1147,1132,1133,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1148,1135,1136,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1149,1133,1134,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1150,1136,1137,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1151,1134,1138,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1152,1137,1138,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1153,1139,1134,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1154,1139,1137,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1155,1140,1135,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1156,1141,1135,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1157,1142,1135,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1158,1143,1132,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1159,1142,1132,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1160,1144,1133,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1161,1145,1136,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1162,SYCPbP Start Year Clinker Production by Pathway,4126,5865,75,27,8,2,0,5,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1163,BAU Total Clinker Capacity Retired by Pathway,3891,5342,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1164,BAU Unmet Clinker Production Capacity Need,3891,5481,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1165,BAU Preexisting Clinker Production Capacity by Pathway,4570,5757,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1166,BAU Clinker Production Capacity Added During Model Run by Pathway,4570,5602,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1167,BAU Clinker Production Capacity by Pathway,4804,5674,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,1168,BAU Share of Clinker Production Capacity Built During Model Run,-913,6324,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1169,BAU Clinker Production by Pathway,5026,5674,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,1170,BAU Unserved Clinker Demand This Year,5286,5674,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1171,BAU Last Year Preexisting Clinker Production Capacity by Pathway,4344,5873,75,34,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,1172,48,4693,5873,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,1173,1175,1172,4,0,0,22,0,0,0,-1--1--1,,1|(4629,5873)|
+1,1174,1175,1171,100,0,0,22,0,0,0,-1--1--1,,1|(4491,5873)|
+11,1175,0,4570,5873,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,1176,BAU Preexisting Clinker Capacity Retirements by Pathway,4570,5908,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,1177,BAU Last Year Clinker Production Capacity Added During Model Run by Pathway,4344,5446,75,34,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,1178,48,4018,5446,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,1179,1181,1177,4,0,0,22,0,0,0,-1--1--1,,1|(4201,5446)|
+1,1180,1181,1178,100,0,0,22,0,0,0,-1--1--1,,1|(4075,5446)|
+11,1181,0,4128,5446,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,1182,BAU New Clinker Production Capacity by Pathway,4128,5481,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,1183,48,4680,5446,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,1184,1186,1183,4,0,0,22,0,0,0,-1--1--1,,1|(4623,5446)|
+1,1185,1186,1177,100,0,0,22,0,0,0,-1--1--1,,1|(4491,5446)|
+11,1186,0,4570,5446,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,1187,BAU Model Run Clinker Capacity Retirements by Pathway,4570,5481,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,1188,SYCCU Start Year Cement Capacity Utilization,3891,5602,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1189,BAU Domestic Clinker Demand,3674,5602,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1190,BAU Last Year Clinker Production Capacity by Pathway,3674,5481,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1191,BAU Domestic Clinker Demand,5026,5543,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1192,SYCCU Start Year Cement Capacity Utilization,4126,5735,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1193,BAU Share of New Clinker Production Capacity by Pathway,4126,5602,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1194,BAU Cement Replacement Blend Weight,4128,5342,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1195,BAU Preexisting Clinker Capacity Facing Overhaul Decision by Pathway,4804,5907,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1196,BAU Preexisting Clinker Capacity Overhauled by Pathway,4570,6023,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1197,BAU Model Run Clinker Capacity Facing Overhaul Decision by Pathway,4570,5342,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1198,BAU Model Run Clinker Capacity Overhauled by Pathway,4344,5342,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1199,CUUB Cement Utilization Upper Bound,5026,5849,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1200,BAU Model Run Clinker Capacity Retirements by Pathway,3674,5342,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1201,1162,1171,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
+1,1202,1163,1164,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1203,1171,1165,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1204,1176,1165,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1205,1177,1166,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1206,1187,1166,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1207,1165,1167,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1208,1166,1167,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1209,1167,1169,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1210,1169,1170,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1211,1188,1182,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1212,1189,1164,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1213,1190,1164,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1214,1188,1164,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1215,1191,1169,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1216,1192,1171,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
+1,1217,1191,1170,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1218,1193,1182,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1219,1164,1182,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1220,1194,1182,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1221,1195,1176,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1222,1196,1176,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1223,1197,1187,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1224,1198,1187,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1225,1199,1169,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1226,1200,1163,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1227,BAU Cement Energy Intensity Multiplier by Pathway,-913,6449,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1228,BAU Cement Module Energy Use by Fuel Type,-913,6598,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,1229,BAU Cement Process CO2 Emissions,-913,6759,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,1230,BAU Cement Process CO2 Captured by Pathway Capture,-913,6920,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1231,BAU Clinker Production by Pathway,-1173,6759,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1232,Cement Process CO2 Intensity per Ton of Clinker by Pathway,-653,6690,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1233,Cement CCS Captured Process CO2 per Ton of Clinker,-653,6840,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1234,Cement Energy Intensity by Pathway and Fuel This Year,-1175,6598,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1235,CNBEIR Cement New Build Energy Intensity Ratio,-1175,6449,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+1,1236,1227,1228,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1237,1231,1229,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1238,1232,1229,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1239,1233,1229,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1240,1231,1228,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1241,1234,1228,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1242,1231,1230,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1243,1233,1230,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1244,1168,1227,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1245,1235,1227,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1246,BAU Cement Module Fuel Added to Industry 239 Energy Use by Fuel Type,1395,6530,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1247,BAU Cement Module Fuel Added to Industry 239 Feedstock Use by Fuel Type,1395,6806,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1248,BAU Cement Generic Process Energy by Fuel and Process,1655,7036,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1249,Start Year Energy Intensity of Industrial Production in Electricity Equivalent,1915,6944,75,48,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1250,BAU Cement Module Energy Use by Fuel Type,1135,6668,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1251,Cement Fuel Feedstock Share,1395,6668,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1252,Boolean Cement Fuel Present in Industry 239 Input Data,1135,6530,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1253,BAU Cement Module Energy Use by Fuel Type,1655,6806,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1254,BAU Cement Module Energy Use by Fuel Type,2227,6461,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1255,BAU Output from Industrial Equipment Installed During Model Run,1655,6921,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1256,BAU Last Year Industrial Equipment Fuel Type Shares in Electricity Equivalent by Vintage,1525,7151,75,48,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1257,BAU Output from New Industrial Equipment,1395,6921,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1258,BAU Energy Intensity of Industrial Production by Fuel and Process for New Equipment in Electricity Equivalent,1915,6806,75,55,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1259,BAU Output from Preexisting Industrial Equipment,1655,7266,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1260,PIFURfE Percentage Industry Fuel Use Reduction for Electricity,2045,7093,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,1261,1249,1248,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1262,1250,1246,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1263,1251,1246,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1264,1252,1246,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1265,1250,1247,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1266,1251,1247,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1267,1255,1248,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1268,1256,1248,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1269,1257,1248,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1270,1258,1248,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1271,1259,1248,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1272,1260,1248,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1273,BAU Preexisting Clinker Capacity Retirements by Pathway,3891,5245,78,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1274,1273,1163,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1275,BAU Clinker Production Capacity Added During Model Run by Pathway,-913,6216,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1276,1275,1168,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1277,BAU Clinker Production Capacity by Pathway,-1164,6324,73,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1278,1277,1168,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1279,1182,1166,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1280,BAU Cement Carbon Tax Rebate Rate on Captured CO2 by Emissions Type,5690,4002,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1281,BAU Cement Kiln Combustion CO2 Emissions,-913,7305,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1282,BAU Cement Combustion CO2 Captured by Pathway Capture,-913,7443,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1283,BAU Cement Carbon Tax Rebate Rate on Captured CO2 by Emissions Type,4940,4615,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1284,BAU Clinker Production by Pathway,-1173,7374,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1285,BAU Cement Energy Intensity Multiplier by Pathway,-653,7166,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1286,Cement Kiln Combustion CO2 per Ton of Clinker by Pathway,-653,7305,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1287,Cement CCS Captured Combustion CO2 per Ton of Clinker,-653,7443,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1288,1283,1032,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1289,1284,1281,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1290,1284,1282,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1291,1285,1281,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1292,1285,1282,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1293,1286,1281,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1294,1287,1282,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1295,BAU Net Clinker Imports,-112,4411,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1296,BCS BAU Industry CCS Subsidy,4988,4519,75,27,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,1297,CCSTaSC CCS Transportation and Storage Subsidies,4988,4289,75,27,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,1298,BCTR BAU Carbon Tax Rate,5690,4117,75,27,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,1299,BEPEfCT Boolean Exempt Process Emissions from Carbon Tax,5430,4117,75,27,8,2,0,5,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1300,BFoICStCT BAU Fraction of Industry Category Subject to Carbon Tax,5430,4347,75,27,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,1301,BPTbCP BAU Industry Pollutants Taxed by Carbon Pricing,5950,4117,75,27,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,1302,BAU Last Year Energy Intensity of Industrial Production in Electricity Equivalent by Vintage,1395,7036,75,27,8,2,0,5,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1303,BAU Share of New Industrial Equipment Allocated by Fuel Type in Electricity Equivalent,1915,7266,75,27,8,2,0,5,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1304,Start Year BAU Fuel Type Shares in Electricity Equivalent,1135,6921,75,27,8,2,0,5,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1305,BFoICStCT BAU Fraction of Industry Category Subject to Carbon Tax,5430,4002,75,27,8,2,0,5,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+12,1306,0,-655,3875,647,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 BAU Cement and Clinker Demand
-12,919,0,903,3875,690,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,1307,0,903,3875,690,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 BAU Kiln Fleet Utilization and Tightness
-12,920,0,5534,3875,651,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,1308,0,5534,3875,651,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 BAU Operating Costs per Ton of Clinker
-12,921,0,-525,5067,777,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,1309,0,-525,5067,777,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 BAU Choosing Pathways for New Kilns
-12,922,0,1228,5067,755,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,1310,0,1228,5067,755,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 BAU Overhauling or Replacing Kilns at Campaign End
-12,923,0,2763,5067,560,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,1311,0,2763,5067,560,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 BAU Kilns Reaching Campaign End
-12,924,0,4525,5067,982,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,1312,0,4525,5067,982,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 BAU Clinker Capacity Stocks, New Builds, and Production
-12,925,0,-837,6120,465,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,1313,0,-837,6120,465,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 BAU Cement Energy Use and Process CO2 Emissions
-12,926,0,1811,6120,781,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,1314,0,1811,6120,781,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 BAU Adding Cement Fuel Use to Industry 239
-1,927,611,612,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,928,611,614,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,929,909,653,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,930,910,653,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,931,911,654,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,932,912,654,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,933,913,654,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,934,914,654,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,935,915,876,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,936,916,876,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,937,917,876,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,938,613,908,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,939,612,908,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,1315,990,991,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,1316,990,993,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,1317,1296,1032,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,1318,1297,1032,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,1319,1298,1033,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,1320,1299,1033,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,1321,1300,1033,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,1322,1301,1033,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,1323,1302,1248,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,1324,1303,1248,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,1325,1304,1248,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,1326,1298,1280,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,1327,1305,1280,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,1328,992,1295,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,1329,991,1295,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Industry - BAU
@@ -89091,13 +89351,13 @@ Thermal Battery Costs
 1,1050,1049,345,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 10,1051,Cement Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment,12024,3506,92,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,1052,1051,345,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-10,1053,CRCC Cement Overhaul Capital Cost per Unit Annual Capacity,12024,3506,92,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1053,CPCaOC Overhaul Capital Cost per Unit Annual Capacity,12024,3506,92,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,1054,1053,345,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 10,1055,Total Clinker Capacity Overhauled by Pathway,12024,3231,81,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,1056,1055,346,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 10,1057,Cement Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment,12024,3231,92,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,1058,1057,346,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-10,1059,CRCC Cement Overhaul Capital Cost per Unit Annual Capacity,12024,3231,92,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1059,CPCaOC Overhaul Capital Cost per Unit Annual Capacity,12024,3231,92,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,1060,1059,346,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 10,1061,New Clinker Production Capacity by Pathway,12024,3231,83,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,1062,1061,346,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
@@ -91308,6 +91568,36 @@ or average profit over 2 years or something in case fuel prices jump around
 1,600,599,117,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,601,BAU Cement Process CO2 Captured by Pathway Capture,-396,3686,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,602,601,117,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,603,Cement Kiln Combustion CO2 Emissions,-211,1718,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,604,Cement Combustion CO2 Captured by Pathway Capture,-441,1764,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,605,BAU Cement Kiln Combustion CO2 Emissions,-166,3488,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,606,BAU Cement Combustion CO2 Captured by Pathway Capture,-396,3534,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,607,Cement Module Change in CO2 Captured by Emissions Type,1000,1970,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,608,Last Year Cement Module CO2 Captured by Emissions Type,1130,1850,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,609,Cement Module CO2 Captured by Emissions Type,1260,1970,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,610,Cement Process CO2 Captured by Pathway Capture,1330,1850,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,611,Cement Combustion CO2 Captured by Pathway Capture,1460,1970,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,612,BAU Cement Module Change in CO2 Captured by Emissions Type,1000,3803,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,613,BAU Last Year Cement Module CO2 Captured by Emissions Type,1130,3683,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,614,BAU Cement Module CO2 Captured by Emissions Type,1260,3803,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,615,BAU Cement Process CO2 Captured by Pathway Capture,1330,3683,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,616,BAU Cement Combustion CO2 Captured by Pathway Capture,1460,3803,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,617,603,111,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,618,604,111,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,619,605,118,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,620,606,118,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,621,610,609,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,622,611,609,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,623,609,608,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,624,609,607,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,625,608,607,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,626,607,65,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,627,615,614,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,628,616,614,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,629,614,613,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,630,614,612,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,631,613,612,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,632,612,69,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Geoengineering
