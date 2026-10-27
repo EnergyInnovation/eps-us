@@ -4587,6 +4587,56 @@ BAU Cement Carbon Tax Rebate Rate on Captured CO2 by Emissions Type[energy relat
 		Type (BAU tax rate and coverage).
 	|
 
+BAU Cement Carbonatable CO2 Added by Vintage[Modeled Vintage,Cement Use]=
+	IF THEN ELSE(
+	  This Year Modeled Vintage Flag[Modeled Vintage] = 1,
+	  BAU Cement Carbonatable CO2 Placed This Year[Cement Use],
+	  0
+	)
+	~	g CO2/Year
+	~	BAU twin of Cement Carbonatable CO2 Added by Vintage.
+	|
+
+BAU Cement Carbonatable CO2 in Place by Vintage[Modeled Vintage,Cement Use]= INTEG (
+	BAU Cement Carbonatable CO2 Added by Vintage[Modeled Vintage,Cement Use],
+		Start Year Cement Carbonatable CO2 in Place by Vintage[Modeled Vintage,Cement Use])
+	~	g CO2
+	~	BAU twin of Cement Carbonatable CO2 in Place by Vintage.
+	|
+
+BAU Cement Carbonatable CO2 per Ton of Clinker Consumed=
+	(1 - BFoCDMbNI BAU Fraction of Clinker Demand Met by Net Imports)
+	* IF THEN ELSE(
+	    SUM(BAU Clinker Production by Pathway[Cement Production Pathway!]) > 0,
+	    SUM(BAU Clinker Production by Pathway[Cement Production Pathway!]
+	      * CCUP Carbonatable CO2 per Ton of Clinker by Pathway[Cement Production Pathway!])
+	    / SUM(BAU Clinker Production by Pathway[Cement Production Pathway!]),
+	    CCUP Carbonatable CO2 per Ton of Clinker by Pathway[dry kiln with precalciner]
+	  )
+	+ BFoCDMbNI BAU Fraction of Clinker Demand Met by Net Imports
+	  * CCUP Carbonatable CO2 per Ton of Clinker by Pathway[dry kiln with precalciner]
+	~	g CO2/metric ton
+	~	BAU twin of Cement Carbonatable CO2 per Ton of Clinker Consumed.
+	|
+
+BAU Cement Carbonatable CO2 Placed This Year[Cement Use]=
+	BAU Total Clinker Demand
+	* BAU Cement Carbonatable CO2 per Ton of Clinker Consumed
+	* CCUP Share of Cement by Use[Cement Use](Dimensionless Time)
+	~	g CO2/Year
+	~	BAU twin of Cement Carbonatable CO2 Placed This Year.
+	|
+
+BAU Cement Carbonation CO2 Uptake=
+	SUM(
+	  BAU Cement Carbonatable CO2 in Place by Vintage[Modeled Vintage!,Cement Use!]
+	  * (Cement Carbonation Cumulative Uptake Fraction[Modeled Vintage!,Cement Use!]
+	     - Cement Carbonation Cumulative Uptake Fraction One Year Earlier[Modeled Vintage!,Cement Use!])
+	)
+	~	g CO2
+	~	BAU twin of Cement Carbonation CO2 Uptake.
+	|
+
 BAU Cement CCS Capture Operating Cost per Ton of Clinker[Cement Production Pathway] :EXCEPT:\
 		 [electric kiln with CCS]=
 	SUM(
@@ -9033,6 +9083,8 @@ BAU Geoengineering Sector Pollutant Emissions[CO2]=
 		!]
 	)
 	- BAU CO2 Captured via DAC in Grams
+	- BAU Cement Carbonation CO2 Uptake
+	  * BICCUiT Boolean Include Cement Carbonation Uptake in Totals
 	~	g pollutant
 	~		|
 
@@ -21159,6 +21211,21 @@ BHRaSYC Start Year Electricity Generation Capacity by Vintage[Electricity Source
 	~	MW
 	~		|
 
+BICCUiT Boolean Include Cement Carbonation Uptake in Totals=
+	GET DIRECT CONSTANTS(
+	   'InputData/ctrl-settings/BICCUiT/BICCUiT.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Dmnl [0,1,1]
+	~	When this is off (the default), the CO2 that concrete and mortar take \
+		back up from the air (Cement Carbonation CO2 Uptake) is reported on its \
+		own and does not change any emissions total, consistent with national \
+		inventories, which do not yet count it. When on, the uptake is booked \
+		as carbon dioxide removal in the geoengineering sector and lowers total \
+		emissions.
+	|
+
 BIEEI BAU Industrial Equipment Efficiency Improvement[Industrial Process,electricity if\
 		]:INTERPOLATE::=
 	GET DIRECT DATA(
@@ -25604,6 +25671,72 @@ CCTS Cement CCfD Two Sided Share=
 		strike. See the About tab of the workbook in its folder.
 	|
 
+CCUP Carbonatable CO2 per Ton of Clinker by Pathway[Cement Production Pathway]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/_cement/CCUP/CCUP-potential.csv',
+	   ',',
+	   'B2*'
+	)
+	~	g CO2/metric ton
+	~	CO2 that the lime (calcium oxide) in one ton of clinker could take back \
+		up from the air if all of it carbonated. This is the same chemistry as \
+		calcination run in reverse, so for conventional clinker it equals the \
+		calcination CO2 - including on the capture pathways, because capturing \
+		the kiln's CO2 does not change the lime in the clinker. Alternative \
+		chemistry cement is set to zero. The uptake shares in CCUP are \
+		fractions of this amount.
+	|
+
+CCUP End of Life Uptake Share by Use[Cement Use]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/_cement/CCUP/CCUP-eol-share.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Dmnl
+	~	Share of the carbonatable CO2 taken up when the cement is demolished \
+		and crushed (and in its later reuse or landfill), booked as a one-year \
+		pulse in the year the in-service period ends. Zero for mortar, whose \
+		uptake is complete during use.
+	|
+
+CCUP In Service Uptake Share by Use[Cement Use]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/_cement/CCUP/CCUP-inservice-share.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Dmnl
+	~	Share of the carbonatable CO2 taken up during the in-service period. \
+		Uptake follows the square root of age (carbonation advances inward by \
+		diffusion), reaching this share at the end of the in-service period.
+	|
+
+CCUP In Service Uptake Time by Use[Cement Use]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/_cement/CCUP/CCUP-inservice-time.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Year
+	~	Years over which the in-service uptake builds up: the service life for \
+		concrete, and the time for mortar to carbonate through.
+	|
+
+CCUP Share of Cement by Use[Cement Use]=
+	GET DIRECT LOOKUPS(
+	   'InputData/indst/_cement/CCUP/CCUP-use-share.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	Dmnl
+	~	Share of the cement used in a given year that goes into each end use. \
+		A lookup by calendar year, so the same input splits both the cement \
+		already in place before the model starts (at the year it was used) and \
+		the cement used during the model run.
+	|
+
 CCUS Electricity Source:
 	hard coal w CCS es,
 	natural gas combined cycle w CCS es,
@@ -25935,6 +26068,100 @@ Cement Carbon Tax Rebate Rate on Captured CO2 by Emissions Type[energy related e
 		239's coverage, the same terms as Industry Sector Carbon Tax Rebate due to \
 		CCS. Captured process CO2 earns nothing here: the process carbon tax is \
 		charged on emissions after capture, so those tons were never taxed.
+	|
+
+Cement Carbonatable CO2 Added by Vintage[Modeled Vintage,Cement Use]=
+	IF THEN ELSE(
+	  This Year Modeled Vintage Flag[Modeled Vintage] = 1,
+	  Cement Carbonatable CO2 Placed This Year[Cement Use],
+	  0
+	)
+	~	g CO2/Year
+	~	Carbonatable CO2 added to each vintage: this year's cement goes into this \
+		year's vintage and nothing is added to any other.
+	|
+
+Cement Carbonatable CO2 in Place by Vintage[Modeled Vintage,Cement Use]= INTEG (
+	Cement Carbonatable CO2 Added by Vintage[Modeled Vintage,Cement Use],
+		Start Year Cement Carbonatable CO2 in Place by Vintage[Modeled Vintage,Cement Use])
+	~	g CO2
+	~	Carbonatable CO2 in the cement in place, by year of use (vintage) and \
+		end use. Each year's cement fills its own vintage and stays there; the \
+		share already taken up is tracked by the uptake fractions, not drawn \
+		down here.
+	|
+
+Cement Carbonatable CO2 per Ton of Clinker Consumed=
+	(1 - Fraction of Clinker Demand Met by Net Imports)
+	* IF THEN ELSE(
+	    SUM(Clinker Production by Pathway[Cement Production Pathway!]) > 0,
+	    SUM(Clinker Production by Pathway[Cement Production Pathway!]
+	      * CCUP Carbonatable CO2 per Ton of Clinker by Pathway[Cement Production Pathway!])
+	    / SUM(Clinker Production by Pathway[Cement Production Pathway!]),
+	    CCUP Carbonatable CO2 per Ton of Clinker by Pathway[dry kiln with precalciner]
+	  )
+	+ Fraction of Clinker Demand Met by Net Imports
+	  * CCUP Carbonatable CO2 per Ton of Clinker by Pathway[dry kiln with precalciner]
+	~	g CO2/metric ton
+	~	Average carbonatable CO2 per ton of clinker in the cement used this \
+		year: domestic clinker weighted by this year's production pathways, \
+		imported clinker assumed conventional.
+	|
+
+Cement Carbonatable CO2 Placed This Year[Cement Use]=
+	Total Clinker Demand
+	* Cement Carbonatable CO2 per Ton of Clinker Consumed
+	* CCUP Share of Cement by Use[Cement Use](Dimensionless Time)
+	~	g CO2/Year
+	~	Carbonatable CO2 in the cement used in the region this year, by end use. \
+		Consumption basis (includes imports), because concrete takes up CO2 \
+		where it is used. Falls with clinker substitution, lower cement content \
+		of concrete, and material efficiency; unchanged by kiln carbon capture.
+	|
+
+Cement Carbonation CO2 Uptake=
+	SUM(
+	  Cement Carbonatable CO2 in Place by Vintage[Modeled Vintage!,Cement Use!]
+	  * (Cement Carbonation Cumulative Uptake Fraction[Modeled Vintage!,Cement Use!]
+	     - Cement Carbonation Cumulative Uptake Fraction One Year Earlier[Modeled Vintage!,Cement Use!])
+	)
+	~	g CO2
+	~	CO2 taken back up from the air this year by all concrete and mortar in \
+		place (natural carbonation), from cement used both before and during \
+		the model run. Counts against total emissions, in the geoengineering \
+		sector, only when BICCUiT is on; otherwise it is a separate output only.
+	|
+
+Cement Carbonation Cumulative Uptake Fraction One Year Earlier[Modeled Vintage,Cement Use]=
+	CCUP In Service Uptake Share by Use[Cement Use]
+	* MIN(1, SQRT(XIDZ(MAX(0, Modeled Vintage Age[Modeled Vintage] - One Year), CCUP In Service Uptake Time by Use[Cement Use], 1)))
+	+ IF THEN ELSE(
+	    MAX(0, Modeled Vintage Age[Modeled Vintage] - One Year) >= CCUP In Service Uptake Time by Use[Cement Use],
+	    CCUP End of Life Uptake Share by Use[Cement Use],
+	    0
+	  )
+	~	Dmnl
+	~	Cement Carbonation Cumulative Uptake Fraction evaluated one year \
+		earlier in each vintage's life; the difference between the two is this \
+		year's uptake. SYNC NOTE: mirrors Cement Carbonation Cumulative Uptake \
+		Fraction - mirror edits.
+	|
+
+Cement Carbonation Cumulative Uptake Fraction[Modeled Vintage,Cement Use]=
+	CCUP In Service Uptake Share by Use[Cement Use]
+	* MIN(1, SQRT(XIDZ(Modeled Vintage Age[Modeled Vintage], CCUP In Service Uptake Time by Use[Cement Use], 1)))
+	+ IF THEN ELSE(
+	    Modeled Vintage Age[Modeled Vintage] >= CCUP In Service Uptake Time by Use[Cement Use],
+	    CCUP End of Life Uptake Share by Use[Cement Use],
+	    0
+	  )
+	~	Dmnl
+	~	Share of a vintage's carbonatable CO2 taken up by its current age: the \
+		in-service share times the square root of age over the in-service time \
+		(capped at the full in-service share), plus the end-of-life share once \
+		the in-service time has passed. The same in the BAU and policy cases. \
+		SYNC NOTE: Cement Carbonation Cumulative Uptake Fraction One Year \
+		Earlier repeats this formula at an age one year lower - mirror edits.
 	|
 
 Cement Carveout Share of Energy by Fuel[Industrial Fuel]= INITIAL(
@@ -27779,6 +28006,17 @@ Cement Taxable CO2 after Capture=
 		CO2 through the industry process-emissions tax, kiln fuel through the fuel \
 		carbon tax), used to cap the output-based allocation rebate at what is \
 		paid.
+	|
+
+Cement Use:
+	concrete,
+	mortar
+	~
+	~	End uses of cement that take CO2 back up from the air at very different \
+		speeds: concrete (thick members that carbonate slowly inward from the \
+		surface over their service life, then faster once crushed at \
+		demolition) and mortar (thin layers of masonry mortar, plaster, stucco \
+		and grout that carbonate almost completely within a few years).
 	|
 
 Cement Utilization Smoothing Time=
@@ -41235,6 +41473,8 @@ Geoengineering Sector Pollutant Emissions[CO2]=
 		!]
 	)
 	- CO2 Captured via DAC in Grams
+	- Cement Carbonation CO2 Uptake
+	  * BICCUiT Boolean Include Cement Carbonation Uptake in Totals
 	~	g pollutant
 	~		|
 
@@ -42129,6 +42369,19 @@ GWP Timeframe:
 	one hundred years
 	~	
 	~		|
+
+HCCbV Historical Clinker Consumed by Vintage[Modeled Vintage]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/_cement/HCCbV/HCCbV.csv',
+	   ',',
+	   'B2*'
+	)
+	~	metric tons
+	~	Clinker contained in the cement used in the region in each year before \
+		the model starts (apparent consumption times the clinker ratio). Zero \
+		from the model's start year on, where the model's own cement demand \
+		takes over.
+	|
 
 HCFoTC Hard Cap Fraction of Total Capacity=
 	GET DIRECT CONSTANTS(
@@ -55972,6 +56225,15 @@ Output Carbon Tax on Process Emissions=
 	~		~	:SUPPLEMENTARY 
 	|
 
+Output Cement Carbonation CO2 Uptake=
+	Cement Carbonation CO2 Uptake
+	/ MOU Grams per Large Mass Output Unit Pollutant
+	~	mass output unit
+	~	CO2 taken back up by concrete and mortar this year. Reported whether or \
+		not BICCUiT counts it in the emissions totals.
+	~	:SUPPLEMENTARY
+	|
+
 Output Cement Sector Hydrogen Demand=
 	(
 	  Industrial Fuel Use[hydrogen if,cement and other nonmetallic minerals 239]
@@ -67654,6 +67916,16 @@ Start Year Cargo Dist Transported[Vehicle Type,Cargo Type,Vehicle Technology]= I
 	~	thing*miles
 	~		|
 
+Start Year Cement Carbonatable CO2 in Place by Vintage[Modeled Vintage,Cement Use]=
+	HCCbV Historical Clinker Consumed by Vintage[Modeled Vintage]
+	* CCUP Carbonatable CO2 per Ton of Clinker by Pathway[dry kiln with precalciner]
+	* CCUP Share of Cement by Use[Cement Use](Modeled Vintage to Year Mapping[Modeled Vintage])
+	~	g CO2
+	~	Carbonatable CO2 in the cement used before the model starts, by year of \
+		use and end use. Historical clinker is conventional clinker. Shared by \
+		the BAU and policy cases.
+	|
+
 Start Year Cement Kiln Fuel Group Energy in Industry 239 Data[Industrial Fuel]= INITIAL\
 		(
 	BAU Cement Kiln Fuel Group Energy in Industry 239 Data[Industrial Fuel])
@@ -76498,6 +76770,7 @@ S
 10,68,GRA for Industry Clean Materials Support,1696,1081,75,30,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
 12,69,0,1788,1081,12,16,3,135,0,12,-1,2,0,0,-1--1--1,255-128-192,|16||0-0-0,0,0,0,0,0,0
 S
+10,70,BICCUiT Boolean Include Cement Carbonation Uptake in Totals,235,112,75,30,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Policy Implementation Schedule
@@ -96329,6 +96602,124 @@ Use breakdown in Beerling paper to distribute?
 1,153,120,151,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,154,Change in Amount Spent on Geoengineering Fuels,600,1022,75,30,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,155,154,20,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,156,0,1904,1795,1490,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
+Cement Carbonation: CO2 Taken Back Up by Concrete and Mortar
+12,157,0,1904,2852,1490,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
+BAU Cement Carbonation
+12,158,0,844,1945,430,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Carbonatable CO2 in the Cement Used This Year
+10,159,Cement Carbonatable CO2 per Ton of Clinker Consumed,779,2187,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,160,Cement Carbonatable CO2 Placed This Year,1039,2187,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,161,CCUP Carbonatable CO2 per Ton of Clinker by Pathway,779,2072,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,162,CCUP Share of Cement by Use,1039,2072,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,163,Fraction of Clinker Demand Met by Net Imports,779,2302,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,164,Clinker Production by Pathway,519,2187,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
+10,165,Total Clinker Demand,1039,2244,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,166,Dimensionless Time,1169,2129,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,167,161,159,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,168,159,160,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,169,162,160,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,170,163,159,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,171,164,159,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,172,165,160,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,173,166,160,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,174,0,1969,1945,475,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Cement in Place by Year of Use
+10,175,Start Year Cement Carbonatable CO2 in Place by Vintage,2080,2320,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,176,HCCbV Historical Clinker Consumed by Vintage,1820,2320,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,177,Cement Carbonatable CO2 in Place by Vintage,2080,2205,75,30,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,178,48,1749,2205,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,179,181,177,4,0,0,22,0,0,0,-1--1--1,,1|(1932,2205)|
+1,180,181,178,100,0,0,22,0,0,0,-1--1--1,,1|(1804,2205)|
+11,181,0,1859,2205,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,182,Cement Carbonatable CO2 Added by Vintage,1859,2237,75,20,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,183,CCUP Carbonatable CO2 per Ton of Clinker by Pathway,2080,2435,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,184,CCUP Share of Cement by Use,2340,2205,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,185,Modeled Vintage to Year Mapping,1820,2435,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,186,This Year Modeled Vintage Flag,1859,2065,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,187,Cement Carbonatable CO2 Placed This Year,1599,2237,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,188,175,177,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,189,176,175,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,190,183,175,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,191,184,175,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,192,185,175,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,193,186,182,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,194,187,182,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,195,0,3030,1945,365,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Carbonation Uptake This Year
+10,196,Cement Carbonation Cumulative Uptake Fraction,3030,2187,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,197,Cement Carbonation Cumulative Uptake Fraction One Year Earlier,3030,2302,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,198,Cement Carbonation CO2 Uptake,3290,2187,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,199,CCUP In Service Uptake Share by Use,3030,2072,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,200,CCUP In Service Uptake Time by Use,2770,2187,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,201,CCUP End of Life Uptake Share by Use,2770,2302,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,202,CCUP In Service Uptake Share by Use,3030,2417,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,203,Modeled Vintage Age,2770,2417,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,204,One Year,2770,2244,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,205,CCUP In Service Uptake Time by Use,3290,2417,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,206,Modeled Vintage Age,2770,2072,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,207,CCUP End of Life Uptake Share by Use,3290,2072,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,208,Cement Carbonatable CO2 in Place by Vintage,3290,2302,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,209,199,196,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,210,200,196,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,211,201,197,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,212,196,198,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,213,197,198,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,214,202,197,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,215,203,197,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,216,204,197,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,217,205,197,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,218,206,196,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,219,207,196,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,220,208,198,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,221,0,844,3002,430,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+BAU Carbonatable CO2 in the Cement Used This Year
+10,222,BAU Cement Carbonatable CO2 per Ton of Clinker Consumed,779,3244,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,223,BAU Cement Carbonatable CO2 Placed This Year,1039,3244,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,224,CCUP Carbonatable CO2 per Ton of Clinker by Pathway,779,3129,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,225,CCUP Share of Cement by Use,1039,3129,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,226,BFoCDMbNI BAU Fraction of Clinker Demand Met by Net Imports,779,3359,75,34,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,227,BAU Clinker Production by Pathway,519,3244,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
+10,228,BAU Total Clinker Demand,1039,3359,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,229,Dimensionless Time,1299,3129,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,230,222,223,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,231,226,222,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,232,227,222,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,233,224,222,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,234,228,223,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,235,225,223,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,236,229,223,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,237,0,1969,3002,475,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+BAU Cement in Place by Year of Use
+10,238,BAU Cement Carbonatable CO2 in Place by Vintage,2080,3263,75,30,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,239,48,1749,3263,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,240,242,238,4,0,0,22,0,0,0,-1--1--1,,1|(1932,3263)|
+1,241,242,239,100,0,0,22,0,0,0,-1--1--1,,1|(1804,3263)|
+11,242,0,1859,3263,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,243,BAU Cement Carbonatable CO2 Added by Vintage,1859,3302,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,244,Start Year Cement Carbonatable CO2 in Place by Vintage,2080,3378,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,245,This Year Modeled Vintage Flag,1859,3129,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,246,BAU Cement Carbonatable CO2 Placed This Year,1859,3417,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,247,245,243,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,248,246,243,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,249,244,238,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,250,0,3030,3002,365,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+BAU Carbonation Uptake This Year
+10,251,BAU Cement Carbonation CO2 Uptake,3290,3244,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,252,Cement Carbonation Cumulative Uptake Fraction,3030,3244,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,253,Cement Carbonation Cumulative Uptake Fraction One Year Earlier,3030,3359,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,254,BAU Cement Carbonatable CO2 in Place by Vintage,3290,3129,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,255,254,251,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,256,252,251,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,257,253,251,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,258,Cement Carbonation CO2 Uptake,1530,140,55,30,8,2,0,7,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
+1,259,258,11,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,260,BICCUiT Boolean Include Cement Carbonation Uptake in Totals,1530,300,55,38,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,261,260,11,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,262,BAU Cement Carbonation CO2 Uptake,2790,160,75,30,8,2,0,7,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
+1,263,262,99,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,264,BICCUiT Boolean Include Cement Carbonation Uptake in Totals,2790,290,75,30,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,265,264,99,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Fuels
@@ -102391,6 +102782,11 @@ Consider an "energy consuming" subrange for buildings to omit envelope when you 
 1,2072,2071,1629,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 10,2073,Change in This Year Grid Battery Storage excluding Hybrid Batteries in MW,10808,3845,86,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,2074,2073,1632,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,2075,Cement Carbonation CO2 Uptake,2614,3735,75,30,8,2,0,7,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
+10,2076,Output Cement Carbonation CO2 Uptake,2776,3735,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,2077,MOU Grams per Large Mass Output Unit Pollutant,2776,3640,75,30,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,2078,2075,2076,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,2079,2077,2076,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Debugging Assistance
