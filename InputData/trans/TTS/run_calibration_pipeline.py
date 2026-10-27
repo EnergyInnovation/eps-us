@@ -126,7 +126,12 @@ def update_calibration_csv():
         sys.exit(1)
 
     # ---- Parse the .tsv ----
-    years = list(range(INITIAL_YEAR, FINAL_YEAR + 1))
+    # Computed (non-data) variables are not saved at INITIAL TIME, so their exported
+    # columns run INITIAL_YEAR+1..FINAL_YEAR, one fewer than a data variable's
+    # INITIAL_YEAR..FINAL_YEAR (verified 2026-09-04; see KB vehicle-sales-logit.md).
+    # Align each row by its own column count so cost/demand years are labeled correctly.
+    years_full = list(range(INITIAL_YEAR, FINAL_YEAR + 1))
+    years_shifted = list(range(INITIAL_YEAR + 1, FINAL_YEAR + 1))
     cost_data = {}   # (vt_label, tech, year) -> cost_per_mile
     demand_data = {} # (vt_label, year) -> new_vehicle_demand
 
@@ -137,7 +142,8 @@ def update_calibration_csv():
                 continue
             var_full = row[0]
             # row[1] is run name; row[2:] are values for each year
-            values = row[2:]
+            values = [v for v in row[2:] if v != ""]
+            years = years_full if len(values) >= len(years_full) else years_shifted
 
             var, vt, ct, tech = parse_vensim_variable(var_full)
 
@@ -162,6 +168,15 @@ def update_calibration_csv():
                             demand_data[(vt_label, y)] = float(values[i])
                         except ValueError:
                             pass
+
+    # The export has no INITIAL_YEAR row for computed variables; anchor the
+    # INITIAL_YEAR target to the first available year's values.
+    for (vt_label, tech, y) in list(cost_data.keys()):
+        if y == INITIAL_YEAR + 1 and (vt_label, tech, INITIAL_YEAR) not in cost_data:
+            cost_data[(vt_label, tech, INITIAL_YEAR)] = cost_data[(vt_label, tech, y)]
+    for (vt_label, y) in list(demand_data.keys()):
+        if y == INITIAL_YEAR + 1 and (vt_label, INITIAL_YEAR) not in demand_data:
+            demand_data[(vt_label, INITIAL_YEAR)] = demand_data[(vt_label, y)]
 
     # ---- Read existing calibration_parameters.csv ----
     with open(CALIB_CSV, "r", newline="", encoding="utf-8-sig") as f:
