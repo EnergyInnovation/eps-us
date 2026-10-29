@@ -146,7 +146,14 @@ ngdri_decisions = {2040: 2_440_000,                       # Cliffs Toledo HBI (2
 def sprs(pw, y):
     if pw == "traditional BF BOF": return round(bf_decisions.get(y, 0) * SCALE_BF)
     if pw == "natural gas DRI": return ngdri_decisions.get(y, 0)
-    if pw == "scrap EAF": return 2_740_000  # 68.4 Mt nameplate fleet / ~25 yr rebuild cycle
+    if pw == "scrap EAF":
+        # 68.4 Mt nameplate fleet / ~25 yr rebuild cycle, spread over exactly one
+        # campaign (2025-2049) so the whole start-year fleet decides once; from
+        # 2050 the DELAY FIXED recurrence carries the relined 2025 cohort back,
+        # so a nonzero 2050 schedule row would double-decide ~2.7 Mt (review
+        # finding, 2026-09-25). Years before the start year are irrelevant to
+        # the model and zeroed for consistency.
+        return 2_740_000 if 2025 <= y <= 2049 else 0
     return 0
 rows = [["Unit: metric tons/year of nameplate capacity reaching a reline-or-replace decision (DRAFT from GEM GIST June 2026 V1; decision outcome is endogenous)"] + YEARS]
 for pw in PATHWAYS:
