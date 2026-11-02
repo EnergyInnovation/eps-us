@@ -17180,7 +17180,7 @@ BAU Steel Capacity Retired at Reline Decision by Pathway[Steel Production Pathwa
 BAU Steel Module Energy Use by Fuel Type[Industrial Fuel]=
 	SUM(
 	  BAU Steel Production by Pathway[Steel Production Pathway!]
-	  * SEIbPaF Steel Energy Intensity by Pathway and Fuel[Steel Production Pathway!\
+	  * Steel Energy Intensity by Pathway and Fuel with BAU Trend[Steel Production Pathway!\
 		,Industrial Fuel]
 	)
 	~	BTU/Year
@@ -17249,7 +17249,7 @@ BAU Steel Pathway Clean Heat Production Subsidy Amount Paid=
 
 BAU Steel Pathway Clean Heat Production Subsidy per Ton[Steel Production Pathway]=
 	SUM(
-	  SEIbPaF Steel Energy Intensity by Pathway and Fuel[Steel Production Pathway,Industrial Fuel!]
+	  Steel Energy Intensity by Pathway and Fuel with BAU Trend[Steel Production Pathway,Industrial Fuel!]
 	  * (1 - Steel Fuel Feedstock Share[Industrial Fuel!])
 	  * BCHSR BAU Clean Heat Production Subsidy Rate[heat above 1000 C]
 	  * IFTQfS Industrial Fuel Types Qualifying for Clean Heat Production Subsidy[Industrial Fuel!]
@@ -17282,7 +17282,7 @@ BAU Steel Pathway Levelized Cost per Ton[Steel Production Pathway]=
 
 BAU Steel Pathway Operating Cost per Ton[Steel Production Pathway]=
 	SUM(
-	  SEIbPaF Steel Energy Intensity by Pathway and Fuel[Steel Production Pathway,Industrial Fuel!]
+	  Steel Energy Intensity by Pathway and Fuel with BAU Trend[Steel Production Pathway,Industrial Fuel!]
 	  * (
 	    BAU Industrial Fuel Cost per Unit Energy[iron and steel 241,Industrial Fuel!]
 	    - Steel Fuel Feedstock Share[Industrial Fuel!]
@@ -17293,6 +17293,7 @@ BAU Steel Pathway Operating Cost per Ton[Steel Production Pathway]=
 	  / Grams per Metric Ton CO2e
 	  * BAU Steel Process Emissions Carbon Tax Rate
 	- BAU Steel Pathway Clean Heat Production Subsidy per Ton[Steel Production Pathway]
+	+ Steel Pathway Non Energy Operating Cost per Ton[Steel Production Pathway]
 	~	$/metric ton
 	~	BAU twin of Steel Pathway Operating Cost per Ton.
 	|
@@ -27115,9 +27116,9 @@ Cement Border Fee Revenue=
 	Cement Border Fee per Ton Imported * Cement Imports in Cement Tons
 	~	$
 	~	Border fee collected this year on imported cement. Booked as \
-		carbon-tax-type government revenue, paid by foreign exporters (a \
-		simplification: in practice part of the fee passes to domestic cement \
-		buyers).
+		carbon-tax-type government revenue, paid by domestic cement buyers \
+		(nonenergy industries), the same convention as the steel border fee: \
+		the importer passes the fee through to the purchaser.
 	|
 
 Cement Calcined Clay Needed This Year=
@@ -42867,7 +42868,7 @@ Furnace Energy Shifted per Ton by Pathway and Destination[Steel Production Pathw
 
 Furnace Energy Shifted per Ton by Pathway Destination and Fuel[Steel Production Pathway,Furnace Fuel Shift Destination,Industrial Fuel]=
 	Fraction of Fossil Furnace Energy Shifted This Year
-	* SEIbPaF Steel Energy Intensity by Pathway and Fuel[Steel Production Pathway,Industrial Fuel]
+	* Steel Energy Intensity by Pathway and Fuel with BAU Trend[Steel Production Pathway,Industrial Fuel]
 	* SFIS Steel Furnace Injectable Fuel Share[Industrial Fuel]
 	* Steel Furnace Fossil Fuel Flag[Industrial Fuel]
 	* Steel Pathway Fuel Shift Eligibility[Steel Production Pathway]
@@ -49302,14 +49303,13 @@ Industry Sector Change in Government Subsidy Payments by ISIC Code[ISIC 64T66]=
 
 Industry Sector Change in Miscellaneous Expenditures by Entity[Cash Flow Entity] :EXCEPT:\
 		        [nonenergy industries],
-[coal suppliers],[natural gas and petroleum suppliers],[foreign entities]=
+[coal suppliers],[natural gas and petroleum suppliers]=
 	0 ~~|
-Industry Sector Change in Miscellaneous Expenditures by Entity[foreign entities]=
-	Cement Border Fee Revenue ~~|
 Industry Sector Change in Miscellaneous Expenditures by Entity[nonenergy industries]=
 	SUM(Change in Miscellaneous Expenditures by Industry[nonenergy industries within industry category\
 		!])
 	+ Low Carbon Steel Procurement Premium Paid by Buyers
+	+ Cement Border Fee Revenue
 	+ Steel Border Fee Revenue ~~|
 Industry Sector Change in Miscellaneous Expenditures by Entity[coal suppliers]=
 	Change in Miscellaneous Expenditures by Industry[coal mining 05] ~~|
@@ -68720,6 +68720,19 @@ Salvageable Curtailed Capacity by Hour for Hybrid Power Plants[Electricity Sourc
 	~	Dmnl
 	~		|
 
+SBEIT Steel BAU Energy Intensity Improvement Rate[Steel Production Pathway,Industrial Fuel]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/SBEIT/SBEIT.csv',
+	   ',',
+	   'B2'
+	)
+	~	1/Year
+	~	Fraction of energy per ton of crude steel removed each year in the BAU \
+		case for each pathway and fuel, holding the route fixed (equipment turnover \
+		and relines at their normal pace). Zero reproduces AEO, which assumes no \
+		within-route improvement for steel.
+	|
+
 Schedule Netting Credit from Economic Retirements[Electricity Source]= INTEG (
 	Change in Schedule Netting Credit from Economic Retirements[Electricity Source],
 		0)
@@ -69757,6 +69770,28 @@ SIEI Steel Import CO2 Intensity=
 		across the import mix. See the About tab of the workbook in its folder.
 	|
 
+SIFIbP Steel Iron Feed Intensity by Pathway[Steel Production Pathway,Steel Iron Feed]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/SIFIbP/SIFIbP.csv',
+	   ',',
+	   'B2'
+	)
+	~	metric tons/metric ton
+	~	Tons of each iron-bearing feed per ton of crude steel by pathway (for \
+		scrap EAF, the scrap charge matches SSCT).
+	|
+
+SIFP Steel Iron Feed Price[Steel Iron Feed]:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/indst/SIFP/SIFP.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	$/metric ton
+	~	Delivered price of each iron-bearing feed (2012 dollars).
+	|
+
 Slope of Line Approaching Future Elec Portfolio Percentages by Year[Future Year,Clean Elec Requirement\
 		]=
 	IF THEN ELSE(
@@ -69848,6 +69883,18 @@ Smoothing Time for Passthrough Expense Impacts on Industrial Production=
 	4
 	~	Year [2,5,1]
 	~		|
+
+SNFPC Steel Non Fuel Process CO2 per Ton by Pathway[Steel Production Pathway]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/SNFPC/SNFPC.csv',
+	   ',',
+	   'B2*'
+	)
+	~	metric tons CO2/metric ton
+	~	Process CO2 per ton of crude steel from carbon other than the feedstock \
+		fuels: EAF electrodes and charge carbon (EAF routes), flux, and sinter and \
+		pellet production (blast furnace routes).
+	|
 
 SoBCaICbIC Share of Buildings Capital and Installation Costs by ISIC Code[urban residential\
 		,Building Component,ISIC Code]=
@@ -70392,6 +70439,19 @@ SPISFY Precomputed Schedule Table[Schedule9,foresight policy element,Future Year
 	)
 	~	Dmnl
 	~		|
+
+SPOC Steel Pathway Other Operating Cost per Ton[Steel Production Pathway]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/SPOC/SPOC.csv',
+	   ',',
+	   'B2*'
+	)
+	~	$/metric ton
+	~	Non-energy operating cost per ton of crude steel by pathway, other than \
+		iron-bearing feed: fluxes and alloys, electrodes and refractories, labor, \
+		and non-energy operations and maintenance. Energy and carbon costs are \
+		costed separately from the fuel use.
+	|
 
 SPPL Steel Pathway Plant Lifetime[Steel Production Pathway]=
 	GET DIRECT CONSTANTS(
@@ -71138,7 +71198,7 @@ Steel Demand before Border Fee Import Response=
 
 Steel Energy Intensity by Pathway and Fuel after Furnace Fuel Shift[Steel Production Pathway,Industrial Fuel]=
 	MAX(0,
-	  SEIbPaF Steel Energy Intensity by Pathway and Fuel[Steel Production Pathway,Industrial Fuel]
+	  Steel Energy Intensity by Pathway and Fuel with BAU Trend[Steel Production Pathway,Industrial Fuel]
 	  - Furnace Energy Shifted Away per Ton by Pathway and Fuel[Steel Production Pathway,Industrial Fuel]
 	  + SUM(Furnace Energy Shifted per Ton by Pathway and Destination[Steel Production Pathway,Furnace Fuel Shift Destination!]
 	        * Furnace Fuel Shift Destination Fuel Flag[Furnace Fuel Shift Destination!,Industrial Fuel])
@@ -71151,6 +71211,20 @@ Steel Energy Intensity by Pathway and Fuel after Furnace Fuel Shift[Steel Produc
 		combustion and feedstock energy, process and combustion CO2 intensities, \
 		operating cost); the BAU branch reads SEIbPaF directly. Equals SEIbPaF \
 		with the lever off.
+	|
+
+Steel Energy Intensity by Pathway and Fuel with BAU Trend[Steel Production Pathway,Industrial Fuel]=
+	SEIbPaF Steel Energy Intensity by Pathway and Fuel[Steel Production Pathway,Industrial Fuel]
+	* (1 - SBEIT Steel BAU Energy Intensity Improvement Rate[Steel Production Pathway,Industrial Fuel])
+	  ^ (Time - INITIAL TIME)
+	~	BTU/metric ton
+	~	Energy per ton of crude steel by pathway and fuel after the BAU efficiency \
+		trend: the start-year intensity (SEIbPaF) declining at the SBEIT rate from \
+		the start year. Every use of the pathway energy intensities (module energy \
+		use, feedstock and combustion energy per ton, process CO2 per ton, operating \
+		costs) reads this variable, so the trend lowers fuel use, feedstock-carbon \
+		process CO2 and energy costs together. The relined-furnace standard lever \
+		multiplies this, so it stays an increment over the baseline.
 	|
 
 Steel Energy Intensity Multiplier by Pathway[Steel Production Pathway]=
@@ -71297,6 +71371,16 @@ Steel Intensity Standard Share Floor by Pathway[Steel Production Pathway]=
 	~	The intensity standard's floor on new capacity, assigned to the cheapest \
 		qualifying pathway. Joins the mandate machinery (Steel Capacity Share \
 		Floor by Pathway).
+	|
+
+Steel Iron Feed:
+	iron ore,
+	DR grade pellets,
+	scrap
+	~
+	~	Iron-bearing feed materials whose purchase costs differ across steel \
+		production pathways. Iron ore covers sinter feed, blast furnace pellets and \
+		lump; DR grade pellets are the higher-grade pellets direct reduction needs.
 	|
 
 Steel Module Energy Use by Fuel Type[Industrial Fuel]=
@@ -71540,10 +71624,9 @@ Steel Pathway Levelized Cost per Ton[Steel Production Pathway]=
 	~	New-build pathway choice cost: the cost before clean production support \
 		less the per-ton value an investor expects from the carbon contract for \
 		difference, the low-carbon production tax credit and the low-carbon \
-		procurement premium on that pathway. Non-energy variable costs (ore, \
-		scrap, labor) are omitted: shared components cancel in the cost-ratio \
-		logit; pathway-differential ones are a logged refinement (2026-09-25 \
-		review finding 4).
+		procurement premium on that pathway. Non-energy operating costs (iron \
+		feed, labor, fluxes, electrodes, O&M) are in the operating cost \
+		(2026-10-29, review finding 4).
 	|
 
 Steel Pathway Levelized Cost per Ton before Clean Production Support[Steel Production Pathway]=
@@ -71584,6 +71667,20 @@ Steel Pathway Main Fuel Flag[scrap EAF,electricity if]=
 		industrial heat qualification data (IFTQfS) onto pathways. Entered in Vensim, 2026-10-16.
 	|
 
+Steel Pathway Non Energy Operating Cost per Ton[Steel Production Pathway]=
+	SPOC Steel Pathway Other Operating Cost per Ton[Steel Production Pathway]
+	+ SUM(
+	    SIFIbP Steel Iron Feed Intensity by Pathway[Steel Production Pathway,Steel Iron Feed!]
+	    * SIFP Steel Iron Feed Price[Steel Iron Feed!]
+	  )
+	~	$/metric ton
+	~	Non-energy operating cost per ton of crude steel by pathway: iron-bearing \
+		feed at its price plus the other operating costs. Shared by the policy \
+		and BAU operating costs (no lever moves it yet; a scrap price response \
+		would act on the scrap price here). Enters the pathway choice only: \
+		like iron ore purchases today, these costs are not booked as cash flows.
+	|
+
 Steel Pathway Operating Cost per Ton[Steel Production Pathway]=
 	SUM(
 	  Steel Combustion Energy per Ton by Pathway and Fuel[Steel Production Pathway,Industrial Fuel!]
@@ -71603,8 +71700,10 @@ Steel Pathway Operating Cost per Ton[Steel Production Pathway]=
 	  * Steel Process Emissions Carbon Tax Rate
 	  * Marginal Carbon Price Factor for Steel
 	- Steel Pathway Clean Heat Production Subsidy per Ton[Steel Production Pathway]
+	+ Steel Pathway Non Energy Operating Cost per Ton[Steel Production Pathway]
 	~	$/metric ton
-	~	Non-capital cost per ton by pathway (policy case): fuel burned for energy \
+	~	Non-capital cost per ton by pathway (policy case): non-energy operating \
+		cost (iron feed, labor, fluxes, electrodes, O&M), plus fuel burned for energy \
 		at the delivered fuel cost with its carbon tax scaled by Marginal Carbon \
 		Price Factor for Steel, feedstock fuel at the delivered cost net of the \
 		fuel-price carbon tax (feedstock carbon is priced through the process term \
@@ -71733,20 +71832,23 @@ Steel Process CO2 Emissions=
 
 Steel Process CO2 Intensity per Ton by Pathway[Steel Production Pathway]=
 	SUM(
-	  SEIbPaF Steel Energy Intensity by Pathway and Fuel[Steel Production Pathway,Industrial Fuel!\
+	  Steel Energy Intensity by Pathway and Fuel with BAU Trend[Steel Production Pathway,Industrial Fuel!\
 		]
 	  * Steel Fuel Feedstock Share[Industrial Fuel!]
 	  * Steel Fuel CO2 Emissions Intensity[Industrial Fuel!]
 	)
+	+ SNFPC Steel Non Fuel Process CO2 per Ton by Pathway[Steel Production Pathway]
+	  * Grams per Metric Ton CO2e
 	~	g CO2/metric ton
 	~	Process CO2 per ton of crude steel by pathway: the carbon in feedstock \
 		fuels (coking coal, reduction gas), released during reduction chemistry \
 		and byproduct-gas combustion rather than in the fuel-combustion \
 		accounting. Carbon retained in the steel product (~0.1-1 percent) is \
-		deliberately not netted out (team default). Flux calcination CO2 (small) \
-		is not yet represented - Phase 2 refinement. Cross-check: start-year \
-		feedstock carbon reproduces the GHGI iron and steel plus met coke \
-		process-CO2 anchor (40.7 MMT, 2022) within a few percent.
+		deliberately not netted out (team default). SNFPC adds the carbon that \
+		is not in the feedstock fuels (EAF electrodes and charge carbon, flux, \
+		sinter and pellets), so the start year matches the US inventory iron and \
+		steel plus metallurgical coke process CO2 (46.7 Mt in 2024) within 1.4 \
+		percent.
 	|
 
 Steel Process CO2 Intensity per Ton by Pathway after Furnace Fuel Shift[Steel Production Pathway]=
@@ -71754,11 +71856,13 @@ Steel Process CO2 Intensity per Ton by Pathway after Furnace Fuel Shift[Steel Pr
 	  Steel Feedstock Energy per Ton by Pathway and Fuel[Steel Production Pathway,Industrial Fuel!]
 	  * Steel Fuel CO2 Emissions Intensity[Industrial Fuel!]
 	)
+	+ SNFPC Steel Non Fuel Process CO2 per Ton by Pathway[Steel Production Pathway]
+	  * Grams per Metric Ton CO2e
 	~	g CO2/metric ton
 	~	Policy-case process CO2 per ton of crude steel by pathway: the carbon in \
-		the feedstock fuels after the furnace fuel shift lever. Equals Steel \
-		Process CO2 Intensity per Ton by Pathway (the BAU-data value) with the \
-		lever off.
+		the feedstock fuels after the furnace fuel shift lever, plus the \
+		non-fuel process carbon (SNFPC). Equals Steel Process CO2 Intensity per \
+		Ton by Pathway (the BAU-data value) with the lever off.
 	|
 
 Steel Process Emissions Carbon Tax Rate=
@@ -97034,7 +97138,7 @@ Shifting Blast Furnace Fuels and Energy per Ton
 10,60,Steel Furnace Fossil Fuel Flag,2095,692,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
 10,61,SFFSR Steel Furnace Fuel Shift Recipient Fractions,2095,347,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
 10,62,Fraction of Fossil Furnace Energy Shifted This Year,1835,462,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,63,SEIbPaF Steel Energy Intensity by Pathway and Fuel,1835,692,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,63,Steel Energy Intensity by Pathway and Fuel with BAU Trend,1835,692,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 10,64,BIFU BAU Industrial Fuel Use as Feedstock,2615,807,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
 10,65,BIFU BAU Industrial Fuel Use for Energy,2355,807,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
 10,66,BAU Percentage Fuel Use by Industrial Process with Fallback Data,2875,807,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -97043,1037 +97147,1057 @@ Shifting Blast Furnace Fuels and Energy per Ton
 1,69,49,50,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,70,50,51,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,71,50,52,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,72,57,53,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,73,52,53,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,74,51,53,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,75,58,53,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,76,53,55,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,77,54,55,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,78,53,56,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,79,54,56,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,80,62,50,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,81,63,50,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,82,61,50,1,0,0,0,0,128,0,-1--1--1,,1|(2005,462)|
-1,83,64,54,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,84,65,54,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,85,66,54,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,86,0,3955,220,755,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+1,72,52,53,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,73,51,53,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,74,58,53,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,75,53,55,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,76,54,55,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,77,53,56,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,78,54,56,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,79,62,50,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,80,63,50,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,81,61,50,1,0,0,0,0,128,0,-1--1--1,,1|(2005,462)|
+1,82,64,54,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,83,65,54,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,84,66,54,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,85,0,3955,220,755,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Steel Pathway CO2 Intensities and Operating Cost per Ton
-10,87,Steel Fuel CO2 Emissions Intensity,3305,577,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,88,Steel Process CO2 Intensity per Ton by Pathway,3565,577,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,89,Steel Combustion CO2 Intensity per Ton by Pathway,3825,577,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,90,Steel Process CO2 Intensity per Ton by Pathway after Furnace Fuel Shift,3565,692,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,91,Steel Total Direct CO2 Intensity per Ton by Pathway,3825,692,75,27,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,92,Steel Pathway Operating Cost per Ton,4085,692,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,93,Steel Process Emissions Carbon Tax Rate,4085,807,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,94,Steel Pathway Clean Heat Production Subsidy per Ton,4345,692,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,95,Steel Combustion Energy per Ton by Pathway and Fuel,4085,577,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,96,Industrial Fuel Cost per Unit Energy,4345,577,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,97,Marginal Carbon Price Factor for Steel,3825,807,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,98,Industrial Fuel Carbon Tax Amount per Unit Energy,4345,807,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,99,Steel Feedstock Energy per Ton by Pathway and Fuel,3825,462,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,100,Steel Process CO2 Intensity per Ton by Pathway after Furnace Fuel Shift,4345,462,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,101,Grams per Metric Ton CO2e,3825,922,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,102,Steel Pathway Clean Heat Production Subsidy per Ton,4345,922,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,103,Does Carbon Tax Exempt Process Emissions This Year,4085,922,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,104,Carbon Tax Rate,3825,1037,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,105,Fraction of Industry Category Subject to Carbon Tax,4345,1037,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,106,Industry Pollutants Taxed by Carbon Pricing,3565,922,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,107,Clean Industrial Heat Subsidy Rate by Fuel Type,4605,577,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,108,Steel Pathway Clean Heat Investment Credit Qualification,4605,462,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,109,SEIbPaF Steel Energy Intensity by Pathway and Fuel,3565,462,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,110,Steel Fuel Feedstock Share,3305,462,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,111,Steel Fuel CO2 Emissions Intensity,3565,347,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,112,CO2 Emissions Intensity by Fuel for All Fuels,3305,692,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,113,Steel Feedstock Energy per Ton by Pathway and Fuel,3565,807,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,114,87,88,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,115,87,90,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,116,90,91,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,117,89,91,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,118,93,92,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,119,95,92,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,120,96,92,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,121,97,92,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,122,98,92,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,123,99,92,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,124,100,92,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,125,101,92,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,86,Steel Fuel CO2 Emissions Intensity,3305,577,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,87,Steel Process CO2 Intensity per Ton by Pathway,3565,577,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,88,Steel Combustion CO2 Intensity per Ton by Pathway,3825,577,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,89,Steel Process CO2 Intensity per Ton by Pathway after Furnace Fuel Shift,3565,692,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,90,Steel Total Direct CO2 Intensity per Ton by Pathway,3825,692,75,27,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,91,Steel Pathway Operating Cost per Ton,4085,692,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,92,Steel Process Emissions Carbon Tax Rate,4085,807,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,93,Steel Pathway Clean Heat Production Subsidy per Ton,4345,692,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,94,Steel Combustion Energy per Ton by Pathway and Fuel,4085,577,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,95,Industrial Fuel Cost per Unit Energy,4345,577,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,96,Marginal Carbon Price Factor for Steel,3825,807,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,97,Industrial Fuel Carbon Tax Amount per Unit Energy,4345,807,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,98,Steel Feedstock Energy per Ton by Pathway and Fuel,3825,462,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,99,Steel Process CO2 Intensity per Ton by Pathway after Furnace Fuel Shift,4345,462,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,100,Grams per Metric Ton CO2e,3825,922,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,101,Steel Pathway Clean Heat Production Subsidy per Ton,4345,922,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,102,Does Carbon Tax Exempt Process Emissions This Year,4085,922,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,103,Carbon Tax Rate,3825,1037,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,104,Fraction of Industry Category Subject to Carbon Tax,4345,1037,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,105,Industry Pollutants Taxed by Carbon Pricing,3565,922,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,106,Clean Industrial Heat Subsidy Rate by Fuel Type,4605,577,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,107,Steel Pathway Clean Heat Investment Credit Qualification,4605,462,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,108,Steel Energy Intensity by Pathway and Fuel with BAU Trend,3565,462,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,109,Steel Fuel Feedstock Share,3305,462,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,110,Steel Fuel CO2 Emissions Intensity,3565,347,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,111,CO2 Emissions Intensity by Fuel for All Fuels,3305,692,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,112,Steel Feedstock Energy per Ton by Pathway and Fuel,3565,807,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,113,86,87,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,114,86,89,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,115,89,90,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,116,88,90,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,117,92,91,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,118,94,91,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,119,95,91,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,120,96,91,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,121,97,91,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,122,98,91,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,123,99,91,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,124,100,91,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,125,101,91,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,126,102,92,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,127,103,93,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,128,104,93,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,129,105,93,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,130,106,93,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,131,95,94,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,132,107,94,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,133,108,94,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,134,109,88,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,135,110,88,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,136,95,89,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,137,111,89,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,138,112,87,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,139,113,90,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,140,0,5555,220,625,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+1,127,103,92,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,128,104,92,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,129,105,92,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,130,94,93,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,131,106,93,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,132,107,93,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,133,108,87,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,134,109,87,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,135,94,88,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,136,110,88,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,137,111,86,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,138,112,89,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,139,0,5555,220,625,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Steel Pathway Capital Cost, Subsidies and Cost of Capital
-10,141,Steel Pathway Capital Cost per Unit Annual Capacity after RnD,5815,699,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,142,Steel Pathway Clean Heat Investment Credit Qualification,5295,584,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,143,Steel Pathway Clean Heat Investment Credit Rate,5555,584,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,144,Steel Pathway Capital Subsidy Rate,5815,584,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,145,Steel Pathway Capital Cost per Unit Annual Capacity after Subsidy,6075,584,75,34,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,146,Steel Pathway Qualifies for Clean Capital Support,5295,699,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,147,Steel Pathway Cost of Capital,5555,699,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,148,Steel Pathway Capital Recovery Factor,5815,814,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,149,SPAL Steel Pathway Asset Life,5815,929,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,150,SPCC Steel Pathway Capital Cost per Unit Annual Capacity,5815,469,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,151,BSPCS BAU Steel Pathway Capital Subsidy,5815,354,75,27,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
-10,152,Steel Pathway Main Fuel Flag,5295,469,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,153,Perc Subsidy for Clean Industrial Heat Equipment This Year,5555,469,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,154,BCHSR BAU Clean Heat Investment Subsidy Rate,5295,354,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,155,BCoISC Weighted Average Cost of Capital by Industry,5555,814,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,156,Perc Decrease in Cost of Capital for Clean Steel Pathway Capital This Year,5295,814,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,157,Perc Subsidy for Steel Pathway Capital Cost This Year,5555,354,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,158,RnD Steel Pathway Capital Cost Perc Reduction This Year,6075,929,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,159,IFTQfS Industrial Fuel Types Qualifying for Clean Heat Investment Subsidy,5035,584,75,41,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,160,One Year,5555,929,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-1,161,152,142,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,162,142,143,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,163,146,147,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,164,143,144,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,165,147,148,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,166,149,148,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,167,141,145,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,168,144,145,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,169,153,143,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,170,154,143,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,171,155,147,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,172,156,147,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,173,151,144,1,0,0,0,0,128,0,-1--1--1,,1|(5725,469)|
-1,174,157,144,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,175,150,141,1,0,0,0,0,128,0,-1--1--1,,1|(5725,584)|
+10,140,Steel Pathway Capital Cost per Unit Annual Capacity after RnD,5815,699,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,141,Steel Pathway Clean Heat Investment Credit Qualification,5295,584,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,142,Steel Pathway Clean Heat Investment Credit Rate,5555,584,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,143,Steel Pathway Capital Subsidy Rate,5815,584,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,144,Steel Pathway Capital Cost per Unit Annual Capacity after Subsidy,6075,584,75,34,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,145,Steel Pathway Qualifies for Clean Capital Support,5295,699,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,146,Steel Pathway Cost of Capital,5555,699,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,147,Steel Pathway Capital Recovery Factor,5815,814,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,148,SPAL Steel Pathway Asset Life,5815,929,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,149,SPCC Steel Pathway Capital Cost per Unit Annual Capacity,5815,469,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,150,BSPCS BAU Steel Pathway Capital Subsidy,5815,354,75,27,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,151,Steel Pathway Main Fuel Flag,5295,469,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,152,Perc Subsidy for Clean Industrial Heat Equipment This Year,5555,469,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,153,BCHSR BAU Clean Heat Investment Subsidy Rate,5295,354,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,154,BCoISC Weighted Average Cost of Capital by Industry,5555,814,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,155,Perc Decrease in Cost of Capital for Clean Steel Pathway Capital This Year,5295,814,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,156,Perc Subsidy for Steel Pathway Capital Cost This Year,5555,354,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,157,RnD Steel Pathway Capital Cost Perc Reduction This Year,6075,929,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,158,IFTQfS Industrial Fuel Types Qualifying for Clean Heat Investment Subsidy,5035,584,75,41,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,159,One Year,5555,929,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+1,160,151,141,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,161,141,142,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,162,145,146,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,163,142,143,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,164,146,147,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,165,148,147,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,166,140,144,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,167,143,144,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,168,152,142,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,169,153,142,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,170,154,146,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,171,155,146,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,172,150,143,1,0,0,0,0,128,0,-1--1--1,,1|(5725,469)|
+1,173,156,143,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,174,149,140,1,0,0,0,0,128,0,-1--1--1,,1|(5725,584)|
+1,175,157,140,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,176,158,141,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,177,159,142,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,178,160,148,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,179,0,6765,220,365,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+1,177,159,147,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,178,0,6765,220,365,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Steel Pathway Levelized Cost per Ton
-10,180,Steel Pathway Levelized Cost per Ton before Clean Production Support,6765,469,75,34,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,181,Minimum Eligible Steel Pathway Cost per Ton before Clean Production Support,7025,584,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,182,Steel Clean Production Support in Pathway Choice per Ton,6765,584,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,183,Steel Pathway Levelized Cost per Ton,7025,469,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,184,Steel Pathway Capital Cost per Unit Annual Capacity after Subsidy,6765,354,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,185,Steel Pathway Capital Recovery Factor,6505,469,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,186,SYSCU Start Year Steel Capacity Utilization,6505,354,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,187,Steel Pathway Operating Cost per Ton,7025,354,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,188,Steel CCfD Levelized Cost Reduction per Ton by Pathway,6765,699,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,189,Low Carbon Steel Credit Levelized Cost Reduction per Ton by Pathway,6505,584,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,190,Low Carbon Steel Procurement Levelized Cost Reduction per Ton by Pathway,6505,699,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,191,Steel Pathway Shareweight after Moratorium,7025,699,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,192,180,183,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,193,182,183,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,194,180,181,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,195,184,180,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,196,185,180,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,197,186,180,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,198,187,180,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,199,188,182,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,200,189,182,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,201,190,182,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,202,191,181,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,203,0,625,1224,625,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,179,Steel Pathway Levelized Cost per Ton before Clean Production Support,6765,469,75,34,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,180,Minimum Eligible Steel Pathway Cost per Ton before Clean Production Support,7025,584,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,181,Steel Clean Production Support in Pathway Choice per Ton,6765,584,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,182,Steel Pathway Levelized Cost per Ton,7025,469,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,183,Steel Pathway Capital Cost per Unit Annual Capacity after Subsidy,6765,354,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,184,Steel Pathway Capital Recovery Factor,6505,469,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,185,SYSCU Start Year Steel Capacity Utilization,6505,354,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,186,Steel Pathway Operating Cost per Ton,7025,354,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,187,Steel CCfD Levelized Cost Reduction per Ton by Pathway,6765,699,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,188,Low Carbon Steel Credit Levelized Cost Reduction per Ton by Pathway,6505,584,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,189,Low Carbon Steel Procurement Levelized Cost Reduction per Ton by Pathway,6505,699,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,190,Steel Pathway Shareweight after Moratorium,7025,699,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,191,179,182,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,192,181,182,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,193,179,180,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,194,183,179,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,195,184,179,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,196,185,179,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,197,186,179,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,198,187,181,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,199,188,181,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,200,189,181,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,201,190,180,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,202,0,625,1224,625,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Choosing Pathways for New Steel Capacity
-12,204,0,625,1827,170,41,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,203,0,625,1827,170,41,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 Pathways whose shareweight is zero (not yet commercial, or barred by the reline moratorium) get no cost-driven share; a mandate, procurement or intensity-standard floor can still assign them capacity.
-10,205,Minimum Eligible Steel Pathway Cost per Ton,365,1574,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,206,Steel Pathway Choice Weight,625,1574,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,207,Cost Driven Share of New Steel Production Capacity by Pathway,885,1574,75,27,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,208,Steel Capacity Share Floor by Pathway,625,1689,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,209,Mandated Share of New Steel Capacity by Pathway,885,1689,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,210,Share of New Steel Production Capacity by Pathway,1145,1574,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,211,SPSW Steel Pathway Shareweight,365,1344,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
-10,212,Steel Pathway Shareweight after Moratorium,365,1459,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,213,Minimum Share of New Steel Capacity by Pathway This Year,365,1689,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,214,Low Carbon Steel Procurement Share Floor by Pathway,365,1804,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,215,Steel Intensity Standard Share Floor by Pathway,885,1804,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,216,Steel Pathway Levelized Cost per Ton,625,1459,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,217,IELC Industrial Equipment Logit Coefficient,885,1459,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,218,Fraction of Steel Pathway Relines and New Builds Barred This Year,105,1459,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-1,219,211,212,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,220,212,205,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,221,212,206,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,204,Minimum Eligible Steel Pathway Cost per Ton,365,1574,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,205,Steel Pathway Choice Weight,625,1574,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,206,Cost Driven Share of New Steel Production Capacity by Pathway,885,1574,75,27,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,207,Steel Capacity Share Floor by Pathway,625,1689,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,208,Mandated Share of New Steel Capacity by Pathway,885,1689,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,209,Share of New Steel Production Capacity by Pathway,1145,1574,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,210,SPSW Steel Pathway Shareweight,365,1344,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,211,Steel Pathway Shareweight after Moratorium,365,1459,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,212,Minimum Share of New Steel Capacity by Pathway This Year,365,1689,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,213,Low Carbon Steel Procurement Share Floor by Pathway,365,1804,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,214,Steel Intensity Standard Share Floor by Pathway,885,1804,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,215,Steel Pathway Levelized Cost per Ton,625,1459,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,216,IELC Industrial Equipment Logit Coefficient,885,1459,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,217,Fraction of Steel Pathway Relines and New Builds Barred This Year,105,1459,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+1,218,210,211,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,219,211,204,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,220,211,205,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,221,204,205,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,222,205,206,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,223,206,207,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,223,207,208,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,224,208,209,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,225,209,210,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,226,207,210,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,227,213,208,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,228,214,208,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,229,215,208,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,230,216,206,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,231,217,206,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,232,218,212,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,233,216,205,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,234,0,2355,1224,885,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+1,225,206,209,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,226,212,207,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,227,213,207,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,228,214,207,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,229,215,205,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,230,216,205,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,231,217,211,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,232,215,204,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,233,0,2355,1224,885,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Relining or Replacing Capacity at Campaign End
-12,235,0,1887,2094,150,55,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,234,0,1887,2094,150,55,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 Capacity relined this year faces the next reline decision one campaign (SPPL) later. The furnace performance standard forces below-standard capacity to decide early; the reline moratorium caps the reline share, so the barred share retires and is replaced.
-10,236,Average New Steel Capacity Cost per Ton,2615,1818,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,237,Steel Reline Capital Cost per Unit Annual Capacity after RnD,2355,1818,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,238,Steel Reline Capital Recovery Factor,2355,1588,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,239,Steel Reline Continuation Cost per Ton,2615,1588,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,240,Steel Reline Share at Decision,2875,1933,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,241,Steel Capacity Relined One Campaign Ago by Pathway,1835,1703,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,242,Below Standard Steel Capacity Reaching Scheduled Decision by Pathway,2095,1818,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,243,Steel Capacity Facing Reline Decision by Pathway,2875,1588,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,244,Steel Capacity Relined by Pathway,3135,1703,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,245,Steel Capacity Retired at Reline Decision by Pathway,3135,1818,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,246,SSBS Steel Share of Start Year Capacity Below Standard,2095,1588,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,247,SPPL Steel Pathway Plant Lifetime,1835,1588,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,248,SPRS Steel Preexisting Capacity Reline Decision Schedule,2875,1473,75,34,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
-10,249,SRSW Steel Reline Shareweight,2615,1933,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
-10,250,SRCC Steel Reline Capital Cost per Unit Annual Capacity,2355,2048,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,251,Cost Driven Steel Reline Share at Decision,2875,1818,75,27,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,252,Below Standard Preexisting Steel Capacity Not Yet Decided,2355,1703,75,34,3,3,0,0,0,0,0,0,0,0,0,0,0,0
-12,253,48,2686,1703,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,254,256,253,4,0,0,22,0,0,0,-1--1--1,,1|(2631,1703)|
-1,255,256,252,100,0,0,22,0,0,0,-1--1--1,,1|(2503,1703)|
-11,256,0,2576,1703,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,257,Below Standard Steel Capacity Forced to Decide by Pathway,2576,1742,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-10,258,Below Standard Preexisting Steel Capacity Not Yet Decided,2095,1703,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,259,SPRS Steel Preexisting Capacity Reline Decision Schedule,2095,1933,75,34,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,260,Preexisting Steel Production Capacity by Pathway,1835,1818,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,261,Steel Pathway Cost of Capital,2355,1530,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,262,SPPL Steel Pathway Plant Lifetime,2095,1473,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,263,One Year,2615,1473,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,264,SYSCU Start Year Steel Capacity Utilization,2875,1358,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,265,Steel Pathway Operating Cost per Ton,2355,1358,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,266,Percent Improvement in Relined Furnace Energy Intensity This Year,2095,1358,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,267,SYSPbP Start Year Steel Production by Pathway,2875,1703,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,268,SYSCU Start Year Steel Capacity Utilization,2355,1933,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,269,Cost Driven Share of New Steel Production Capacity by Pathway,2875,2048,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,270,Steel Pathway Levelized Cost per Ton,3135,1933,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,271,Preexisting Steel Production Capacity by Pathway,3135,1473,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,272,Steel Capacity Relined One Campaign Ago by Pathway,3135,1358,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,273,Steel Capacity Relined by Pathway,1575,1703,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,274,RnD Steel Pathway Capital Cost Perc Reduction This Year,2615,2048,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,275,Fraction of Below Standard Steel Capacity Forced to Decide Each Year This Year,2576,1397,75,41,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,276,IELC Industrial Equipment Logit Coefficient,3135,1588,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,277,Fraction of Steel Pathway Relines and New Builds Barred This Year,3135,2048,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-1,278,247,241,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,279,241,242,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,280,242,252,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,281,246,252,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,282,250,237,1,0,0,0,0,128,0,-1--1--1,,1|(2445,1933)|
-1,283,252,257,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,284,237,239,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,285,238,239,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,286,248,243,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,287,257,243,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,288,249,251,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,289,239,251,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,290,236,251,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,291,251,240,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,292,243,244,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,293,240,244,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,294,243,245,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,295,240,245,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,296,258,242,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,297,259,242,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,298,260,242,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,299,261,238,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,300,262,238,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,235,Average New Steel Capacity Cost per Ton,2615,1818,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,236,Steel Reline Capital Cost per Unit Annual Capacity after RnD,2355,1818,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,237,Steel Reline Capital Recovery Factor,2355,1588,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,238,Steel Reline Continuation Cost per Ton,2615,1588,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,239,Steel Reline Share at Decision,2875,1933,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,240,Steel Capacity Relined One Campaign Ago by Pathway,1835,1703,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,241,Below Standard Steel Capacity Reaching Scheduled Decision by Pathway,2095,1818,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,242,Steel Capacity Facing Reline Decision by Pathway,2875,1588,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,243,Steel Capacity Relined by Pathway,3135,1703,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,244,Steel Capacity Retired at Reline Decision by Pathway,3135,1818,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,245,SSBS Steel Share of Start Year Capacity Below Standard,2095,1588,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,246,SPPL Steel Pathway Plant Lifetime,1835,1588,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,247,SPRS Steel Preexisting Capacity Reline Decision Schedule,2875,1473,75,34,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,248,SRSW Steel Reline Shareweight,2615,1933,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,249,SRCC Steel Reline Capital Cost per Unit Annual Capacity,2355,2048,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,250,Cost Driven Steel Reline Share at Decision,2875,1818,75,27,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,251,Below Standard Preexisting Steel Capacity Not Yet Decided,2355,1703,75,34,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,252,48,2686,1703,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,253,255,252,4,0,0,22,0,0,0,-1--1--1,,1|(2631,1703)|
+1,254,255,251,100,0,0,22,0,0,0,-1--1--1,,1|(2503,1703)|
+11,255,0,2576,1703,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,256,Below Standard Steel Capacity Forced to Decide by Pathway,2576,1742,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,257,Below Standard Preexisting Steel Capacity Not Yet Decided,2095,1703,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,258,SPRS Steel Preexisting Capacity Reline Decision Schedule,2095,1933,75,34,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,259,Preexisting Steel Production Capacity by Pathway,1835,1818,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,260,Steel Pathway Cost of Capital,2355,1530,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,261,SPPL Steel Pathway Plant Lifetime,2095,1473,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,262,One Year,2615,1473,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,263,SYSCU Start Year Steel Capacity Utilization,2875,1358,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,264,Steel Pathway Operating Cost per Ton,2355,1358,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,265,Percent Improvement in Relined Furnace Energy Intensity This Year,2095,1358,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,266,SYSPbP Start Year Steel Production by Pathway,2875,1703,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,267,SYSCU Start Year Steel Capacity Utilization,2355,1933,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,268,Cost Driven Share of New Steel Production Capacity by Pathway,2875,2048,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,269,Steel Pathway Levelized Cost per Ton,3135,1933,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,270,Preexisting Steel Production Capacity by Pathway,3135,1473,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,271,Steel Capacity Relined One Campaign Ago by Pathway,3135,1358,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,272,Steel Capacity Relined by Pathway,1575,1703,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,273,RnD Steel Pathway Capital Cost Perc Reduction This Year,2615,2048,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,274,Fraction of Below Standard Steel Capacity Forced to Decide Each Year This Year,2576,1397,75,41,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,275,IELC Industrial Equipment Logit Coefficient,3135,1588,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,276,Fraction of Steel Pathway Relines and New Builds Barred This Year,3135,2048,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+1,277,246,240,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,278,240,241,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,279,241,251,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,280,245,251,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,281,249,236,1,0,0,0,0,128,0,-1--1--1,,1|(2445,1933)|
+1,282,251,256,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,283,236,238,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,284,237,238,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,285,247,242,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,286,256,242,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,287,248,250,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,288,238,250,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,289,235,250,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,290,250,239,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,291,242,243,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,292,239,243,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,293,242,244,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,294,239,244,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,295,257,241,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,296,258,241,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,297,259,241,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,298,260,237,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,299,261,237,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,300,262,237,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,301,263,238,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,302,264,239,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,303,265,239,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,304,266,239,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,305,267,252,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,306,268,252,1,0,0,0,0,128,0,-1--1--1,,1|(2445,1818)|
-1,307,269,236,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,308,270,236,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,309,271,243,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,310,272,243,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,311,273,241,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,312,274,237,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,313,275,257,1,0,0,0,0,128,0,-1--1--1,,1|(2486,1569)|
-1,314,276,251,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,315,277,240,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,316,0,4195,1224,735,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+1,302,264,238,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,303,265,238,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,304,266,251,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,305,267,251,1,0,0,0,0,128,0,-1--1--1,,1|(2445,1818)|
+1,306,268,235,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,307,269,235,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,308,270,242,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,309,271,242,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,310,272,240,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,311,273,236,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,312,274,256,1,0,0,0,0,128,0,-1--1--1,,1|(2486,1569)|
+1,313,275,250,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,314,276,239,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,315,0,4195,1224,735,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Relining to the Efficiency Standard
-10,317,Steel Energy Intensity Multiplier by Pathway,4566,1592,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,318,Preexisting Steel Capacity Relined Under Standard by Pathway,4046,1477,75,34,3,3,0,0,0,0,0,0,0,0,0,0,0,0
-12,319,48,3715,1477,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,320,322,318,4,0,0,22,0,0,0,-1--1--1,,1|(3898,1477)|
-1,321,322,319,100,0,0,22,0,0,0,-1--1--1,,1|(3770,1477)|
-11,322,0,3825,1477,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,323,Steel Capacity Relined Under Standard This Year by Pathway,3825,1523,75,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-12,324,48,4377,1477,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,325,327,324,4,0,0,22,0,0,0,-1--1--1,,1|(4322,1477)|
-1,326,327,318,100,0,0,22,0,0,0,-1--1--1,,1|(4194,1477)|
-11,327,0,4267,1477,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,328,Steel Capacity Relined Under Standard Retiring by Pathway,4267,1523,75,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-10,329,Steel Capacity Relined by Pathway,3825,1351,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,330,Percent Improvement in Relined Furnace Energy Intensity This Year,3825,1638,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,331,Preexisting Steel Capacity Relined Under Standard by Pathway,3565,1523,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,332,Preexisting Steel Production Capacity by Pathway,3565,1638,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,333,Percent Improvement in Relined Furnace Energy Intensity This Year,4566,1477,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,334,Preexisting Steel Capacity Relined Under Standard by Pathway,4566,1707,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,335,Steel Production Capacity by Pathway,4826,1477,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,336,Preexisting Steel Capacity Retirements by Pathway,4267,1351,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,337,Preexisting Steel Production Capacity by Pathway,4267,1638,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,338,318,328,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,339,329,323,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,340,330,323,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,341,331,323,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,342,332,323,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,343,333,317,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,344,334,317,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,345,335,317,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,346,336,328,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,347,337,328,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,348,0,6296,1224,1145,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,316,Steel Energy Intensity Multiplier by Pathway,4566,1592,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,317,Preexisting Steel Capacity Relined Under Standard by Pathway,4046,1477,75,34,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,318,48,3715,1477,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,319,321,317,4,0,0,22,0,0,0,-1--1--1,,1|(3898,1477)|
+1,320,321,318,100,0,0,22,0,0,0,-1--1--1,,1|(3770,1477)|
+11,321,0,3825,1477,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,322,Steel Capacity Relined Under Standard This Year by Pathway,3825,1523,75,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,323,48,4377,1477,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,324,326,323,4,0,0,22,0,0,0,-1--1--1,,1|(4322,1477)|
+1,325,326,317,100,0,0,22,0,0,0,-1--1--1,,1|(4194,1477)|
+11,326,0,4267,1477,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,327,Steel Capacity Relined Under Standard Retiring by Pathway,4267,1523,75,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,328,Steel Capacity Relined by Pathway,3825,1351,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,329,Percent Improvement in Relined Furnace Energy Intensity This Year,3825,1638,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,330,Preexisting Steel Capacity Relined Under Standard by Pathway,3565,1523,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,331,Preexisting Steel Production Capacity by Pathway,3565,1638,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,332,Percent Improvement in Relined Furnace Energy Intensity This Year,4566,1477,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,333,Preexisting Steel Capacity Relined Under Standard by Pathway,4566,1707,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,334,Steel Production Capacity by Pathway,4826,1477,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,335,Preexisting Steel Capacity Retirements by Pathway,4267,1351,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,336,Preexisting Steel Production Capacity by Pathway,4267,1638,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,337,317,327,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,338,328,322,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,339,329,322,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,340,330,322,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,341,331,322,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,342,332,316,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,343,333,316,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,344,334,316,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,345,335,327,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,346,336,327,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,347,0,6296,1224,1145,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Building New Capacity and Producing Steel
-10,349,Unmet Steel Production Capacity Need,5516,1484,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,350,Preliminary New Steel Production Capacity by Pathway,5776,1484,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,351,Scrap EAF New Capacity Headroom,7076,1599,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,352,Additional Preexisting Steel Capacity Retired for Capacity Replacement,6296,1714,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,353,Steel Production Capacity by Pathway,6816,1599,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,354,Steel Production by Pathway,7076,1484,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,355,Unserved Steel Demand This Year,7336,1484,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,356,MASSfS Maximum Annual Scrap Supply for Steel,7076,1829,75,27,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
-10,357,SYSPbP Start Year Steel Production by Pathway,5516,1599,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,358,SYSCU Start Year Steel Capacity Utilization,5516,1369,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,359,Maximum Annual Scrap Supply for Steel after Policy,7076,1714,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,360,SSCT Steel Scrap Charge per Ton of Scrap EAF Steel,6816,1829,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,361,Preexisting Steel Production Capacity by Pathway,5516,1714,75,30,3,3,0,0,0,0,0,0,0,0,0,0,0,0
-12,362,48,5847,1714,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,363,365,362,4,0,0,22,0,0,0,-1--1--1,,1|(5792,1714)|
-1,364,365,361,100,0,0,22,0,0,0,-1--1--1,,1|(5664,1714)|
-11,365,0,5737,1714,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,366,Preexisting Steel Capacity Retirements by Pathway,5737,1753,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-10,367,Steel Production Capacity Added During Model Run by Pathway,6296,1484,75,34,3,3,0,0,0,0,0,0,0,0,0,0,0,0
-12,368,48,5965,1484,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,369,371,367,4,0,0,22,0,0,0,-1--1--1,,1|(6148,1484)|
-1,370,371,368,100,0,0,22,0,0,0,-1--1--1,,1|(6020,1484)|
-11,371,0,6075,1484,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,372,New Steel Production Capacity by Pathway,6075,1516,75,20,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-12,373,48,6627,1484,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,374,376,373,4,0,0,22,0,0,0,-1--1--1,,1|(6572,1484)|
-1,375,376,367,100,0,0,22,0,0,0,-1--1--1,,1|(6444,1484)|
-11,376,0,6517,1484,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,377,Model Run Steel Capacity Retirements by Pathway,6517,1523,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-10,378,Steel Capacity Retired at Reline Decision by Pathway,7076,1369,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,379,New Steel Production Capacity by Pathway,6816,1484,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,380,SYSCU Start Year Steel Capacity Utilization,6816,1369,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,381,Total Steel Demand,7336,1369,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,382,Total Steel Demand,5256,1484,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,383,Steel Production Capacity by Pathway,5256,1369,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,384,Steel Capacity Retired at Reline Decision by Pathway,5256,1599,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,385,Preexisting Steel Production Capacity by Pathway,6296,1599,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,386,Steel Capacity Retired at Reline Decision by Pathway,6296,1829,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,387,Steel Capacity Replacement Ratio This Year,6036,1714,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,388,Steel Capacity Retired at Reline Decision by Pathway,5737,1581,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,389,Additional Preexisting Steel Capacity Retired for Capacity Replacement,5737,1868,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,390,Scrap EAF New Capacity Headroom,6075,1344,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,391,Steel Pathway Choice Weight,6075,1631,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,392,Preexisting Steel Production Capacity by Pathway,6816,1714,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,393,Steel Production Capacity Added During Model Run by Pathway,6556,1599,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,394,SYSCU Start Year Steel Capacity Utilization,7336,1714,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,395,Steel Capacity Retired at Reline Decision by Pathway,7336,1829,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,396,SYSCU Start Year Steel Capacity Utilization,5516,1829,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,397,Share of New Steel Production Capacity by Pathway,5776,1369,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,398,SPAL Steel Pathway Asset Life,6517,1351,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,399,Perc Change in Steel Scrap Supply This Year,6816,1944,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-1,400,358,349,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,401,357,361,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,402,349,350,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,403,358,350,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,404,350,372,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,405,372,352,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,406,367,377,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,407,353,354,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,408,359,351,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,409,360,351,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,410,353,351,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,411,356,359,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,412,354,355,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,413,378,354,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,414,379,354,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,415,380,354,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,416,381,354,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,417,382,349,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,418,383,349,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,419,384,349,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,420,385,352,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,421,386,352,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,422,387,352,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,423,388,366,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,424,389,366,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,425,390,372,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,426,391,372,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,427,392,353,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,428,393,353,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,429,394,351,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,430,395,351,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,431,396,361,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,432,397,350,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,433,398,377,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,434,399,359,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,435,381,355,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,436,0,495,2309,495,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,348,Unmet Steel Production Capacity Need,5516,1484,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,349,Preliminary New Steel Production Capacity by Pathway,5776,1484,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,350,Scrap EAF New Capacity Headroom,7076,1599,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,351,Additional Preexisting Steel Capacity Retired for Capacity Replacement,6296,1714,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,352,Steel Production Capacity by Pathway,6816,1599,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,353,Steel Production by Pathway,7076,1484,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,354,Unserved Steel Demand This Year,7336,1484,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,355,MASSfS Maximum Annual Scrap Supply for Steel,7076,1829,75,27,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,356,SYSPbP Start Year Steel Production by Pathway,5516,1599,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,357,SYSCU Start Year Steel Capacity Utilization,5516,1369,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,358,Maximum Annual Scrap Supply for Steel after Policy,7076,1714,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,359,SSCT Steel Scrap Charge per Ton of Scrap EAF Steel,6816,1829,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,360,Preexisting Steel Production Capacity by Pathway,5516,1714,75,30,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,361,48,5847,1714,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,362,364,361,4,0,0,22,0,0,0,-1--1--1,,1|(5792,1714)|
+1,363,364,360,100,0,0,22,0,0,0,-1--1--1,,1|(5664,1714)|
+11,364,0,5737,1714,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,365,Preexisting Steel Capacity Retirements by Pathway,5737,1753,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,366,Steel Production Capacity Added During Model Run by Pathway,6296,1484,75,34,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,367,48,5965,1484,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,368,370,366,4,0,0,22,0,0,0,-1--1--1,,1|(6148,1484)|
+1,369,370,367,100,0,0,22,0,0,0,-1--1--1,,1|(6020,1484)|
+11,370,0,6075,1484,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,371,New Steel Production Capacity by Pathway,6075,1516,75,20,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,372,48,6627,1484,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,373,375,372,4,0,0,22,0,0,0,-1--1--1,,1|(6572,1484)|
+1,374,375,366,100,0,0,22,0,0,0,-1--1--1,,1|(6444,1484)|
+11,375,0,6517,1484,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,376,Model Run Steel Capacity Retirements by Pathway,6517,1523,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,377,Steel Capacity Retired at Reline Decision by Pathway,7076,1369,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,378,New Steel Production Capacity by Pathway,6816,1484,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,379,SYSCU Start Year Steel Capacity Utilization,6816,1369,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,380,Total Steel Demand,7336,1369,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,381,Total Steel Demand,5256,1484,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,382,Steel Production Capacity by Pathway,5256,1369,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,383,Steel Capacity Retired at Reline Decision by Pathway,5256,1599,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,384,Preexisting Steel Production Capacity by Pathway,6296,1599,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,385,Steel Capacity Retired at Reline Decision by Pathway,6296,1829,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,386,Steel Capacity Replacement Ratio This Year,6036,1714,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,387,Steel Capacity Retired at Reline Decision by Pathway,5737,1581,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,388,Additional Preexisting Steel Capacity Retired for Capacity Replacement,5737,1868,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,389,Scrap EAF New Capacity Headroom,6075,1344,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,390,Steel Pathway Choice Weight,6075,1631,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,391,Preexisting Steel Production Capacity by Pathway,6816,1714,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,392,Steel Production Capacity Added During Model Run by Pathway,6556,1599,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,393,SYSCU Start Year Steel Capacity Utilization,7336,1714,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,394,Steel Capacity Retired at Reline Decision by Pathway,7336,1829,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,395,SYSCU Start Year Steel Capacity Utilization,5516,1829,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,396,Share of New Steel Production Capacity by Pathway,5776,1369,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,397,SPAL Steel Pathway Asset Life,6517,1351,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,398,Perc Change in Steel Scrap Supply This Year,6816,1944,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+1,399,357,348,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,400,356,360,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,401,348,349,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,402,357,349,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,403,349,371,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,404,371,351,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,405,366,376,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,406,352,353,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,407,358,350,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,408,359,350,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,409,352,350,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,410,355,358,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,411,353,354,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,412,377,353,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,413,378,353,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,414,379,353,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,415,380,353,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,416,381,348,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,417,382,348,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,418,383,348,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,419,384,351,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,420,385,351,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,421,386,351,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,422,387,365,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,423,388,365,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,424,389,371,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,425,390,371,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,426,391,352,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,427,392,352,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,428,393,350,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,429,394,350,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,430,395,360,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,431,396,349,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,432,397,376,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,433,398,358,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,434,380,354,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,435,0,495,2309,495,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Steel Energy Use and CO2 Emissions
-12,437,0,625,3087,170,41,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,436,0,625,3087,170,41,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 These outputs replace iron and steel's process energy, feedstock use and process CO2 in the generic industry chain (Industry - Main), upstream of the waste heat recovery and process efficiency multipliers.
-10,438,Steel Module Energy Use by Fuel Type,365,2788,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,439,Steel Module Energy Use Ratio to Existing Structure,625,2788,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,440,Steel Energy Use Process Shares,365,2558,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,441,Steel Process CO2 Emissions,365,2673,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,442,Steel Combustion CO2 Emissions,365,2903,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,443,Steel Fleet CO2 Intensity,625,2673,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,444,Start Year Steel Fleet CO2 Intensity,625,2558,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,445,Last Year Steel Fleet CO2 Intensity,885,2673,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,446,Steel Production by Pathway,365,2615,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,447,Steel Process CO2 Intensity per Ton by Pathway after Furnace Fuel Shift,105,2673,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,448,Steel Energy Intensity Multiplier by Pathway,105,2558,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,449,Steel Production by Pathway,365,2730,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,450,Steel Energy Intensity by Pathway and Fuel after Furnace Fuel Shift,105,2788,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,451,Steel Energy Intensity Multiplier by Pathway,105,2903,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,452,Steel Production by Pathway,365,2960,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,453,Steel Combustion CO2 Intensity per Ton by Pathway,105,3018,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,454,SYSPbP Start Year Steel Production by Pathway,625,2443,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,455,Steel Total Direct CO2 Intensity per Ton by Pathway,365,2443,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,456,Grams per Metric Ton CO2e,885,2443,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,457,Grams per Metric Ton CO2e,885,2730,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,458,BAU Percentage Fuel Use by Industrial Process with Fallback Data,105,2443,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,459,Industrial Fuel Use for Energy Purposes,625,2903,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-1,460,441,443,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,461,442,443,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,462,438,439,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,463,443,445,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,464,444,445,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,465,446,441,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,466,447,441,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,467,448,441,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,468,449,438,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,469,450,438,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,470,451,438,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,471,452,442,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,472,453,442,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,473,451,442,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,474,454,444,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,475,455,444,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,476,456,444,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,477,446,443,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,478,457,443,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,479,458,440,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,480,459,439,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,481,0,1835,2309,625,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,437,Steel Module Energy Use by Fuel Type,365,2788,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,438,Steel Module Energy Use Ratio to Existing Structure,625,2788,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,439,Steel Energy Use Process Shares,365,2558,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,440,Steel Process CO2 Emissions,365,2673,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,441,Steel Combustion CO2 Emissions,365,2903,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,442,Steel Fleet CO2 Intensity,625,2673,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,443,Start Year Steel Fleet CO2 Intensity,625,2558,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,444,Last Year Steel Fleet CO2 Intensity,885,2673,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,445,Steel Production by Pathway,365,2615,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,446,Steel Process CO2 Intensity per Ton by Pathway after Furnace Fuel Shift,105,2673,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,447,Steel Energy Intensity Multiplier by Pathway,105,2558,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,448,Steel Production by Pathway,365,2730,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,449,Steel Energy Intensity by Pathway and Fuel after Furnace Fuel Shift,105,2788,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,450,Steel Energy Intensity Multiplier by Pathway,105,2903,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,451,Steel Production by Pathway,365,2960,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,452,Steel Combustion CO2 Intensity per Ton by Pathway,105,3018,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,453,SYSPbP Start Year Steel Production by Pathway,625,2443,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,454,Steel Total Direct CO2 Intensity per Ton by Pathway,365,2443,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,455,Grams per Metric Ton CO2e,885,2443,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,456,Grams per Metric Ton CO2e,885,2730,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,457,BAU Percentage Fuel Use by Industrial Process with Fallback Data,105,2443,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,458,Industrial Fuel Use for Energy Purposes,625,2903,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+1,459,440,442,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,460,441,442,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,461,437,438,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,462,442,444,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,463,443,444,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,464,445,440,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,465,446,440,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,466,447,440,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,467,448,437,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,468,449,437,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,469,450,437,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,470,451,441,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,471,452,441,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,472,450,441,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,473,453,443,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,474,454,443,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,475,455,443,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,476,445,442,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,477,456,442,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,478,457,439,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,479,458,438,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,480,0,1835,2309,625,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Rebating the Carbon Price by Output Based Allocation
-12,482,0,1835,2841,160,34,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,481,0,1835,2841,160,34,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 The pathway choices keep the full carbon price (times the marginal factor); the rebate only lowers the industry's tax bill and government revenue.
-10,483,Steel Benchmark Allowances for Output Based Allocation,1575,2565,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,484,Steel Taxed CO2 for Output Based Allocation,1575,2680,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,485,Industry Sector Carbon Tax Rebate from Output Based Allocation,1835,2565,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,486,Change in Industry Sector Carbon Tax Rebate from Output Based Allocation,2095,2565,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,487,Change in Industry Sector Carbon Tax Rebates,2355,2565,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,488,SABI Steel Allocation Benchmark Intensity,1575,2450,75,27,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
-10,489,BAU Industry Sector Carbon Tax Rebate from Output Based Allocation,2095,2450,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,490,Steel Process CO2 Emissions,1575,2795,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,491,Does Carbon Tax Exempt Process Emissions This Year,1315,2680,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,492,Steel Production by Pathway,1315,2565,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,493,Steel Combustion CO2 Intensity per Ton by Pathway,1315,2795,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,494,Industry Pollutants Taxed by Carbon Pricing,1315,2450,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,495,Grams per Metric Ton CO2e,1835,2737,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,496,Fraction of Steel Carbon Price Rebated by Output Based Allocation This Year,1835,2450,75,41,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,497,Carbon Tax Rate,1835,2680,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,498,Fraction of Industry Category Subject to Carbon Tax,2095,2680,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,499,Change in Industry Sector Carbon Tax Rebate due to CCS,2355,2450,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,500,488,483,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,501,490,484,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,502,491,484,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,503,492,484,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,504,493,484,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,505,494,484,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,506,495,484,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,507,492,483,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,508,0,3565,2309,885,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,482,Steel Benchmark Allowances for Output Based Allocation,1575,2565,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,483,Steel Taxed CO2 for Output Based Allocation,1575,2680,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,484,Industry Sector Carbon Tax Rebate from Output Based Allocation,1835,2565,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,485,Change in Industry Sector Carbon Tax Rebate from Output Based Allocation,2095,2565,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,486,Change in Industry Sector Carbon Tax Rebates,2355,2565,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,487,SABI Steel Allocation Benchmark Intensity,1575,2450,75,27,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,488,BAU Industry Sector Carbon Tax Rebate from Output Based Allocation,2095,2450,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,489,Steel Process CO2 Emissions,1575,2795,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,490,Does Carbon Tax Exempt Process Emissions This Year,1315,2680,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,491,Steel Production by Pathway,1315,2565,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,492,Steel Combustion CO2 Intensity per Ton by Pathway,1315,2795,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,493,Industry Pollutants Taxed by Carbon Pricing,1315,2450,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,494,Grams per Metric Ton CO2e,1835,2737,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,495,Fraction of Steel Carbon Price Rebated by Output Based Allocation This Year,1835,2450,75,41,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,496,Carbon Tax Rate,1835,2680,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,497,Fraction of Industry Category Subject to Carbon Tax,2095,2680,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,498,Change in Industry Sector Carbon Tax Rebate due to CCS,2355,2450,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,499,487,482,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,500,489,483,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,501,490,483,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,502,491,483,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,503,492,483,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,504,493,483,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,505,494,483,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,506,491,482,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,507,0,3565,2309,885,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Contracting for Difference on Abated CO2
-10,509,Steel CCfD Reference CO2 Intensity per Ton,2785,2569,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,510,Steel Pathway Qualifies for CCfD,2785,2684,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,511,Steel CCfD Abatement per Ton by Pathway,3045,2569,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,512,Steel Carbon Price Faced by Pathways,3045,2684,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,513,Steel CCfD Payment per Ton by Pathway,3305,2684,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,514,Steel CCfD Payments,4085,2684,75,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,515,Steel CCfD Levelized Cost Reduction per Ton by Pathway,3565,2684,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,516,Steel Capacity under CCfD Contract by Pathway,3565,2569,75,30,3,3,0,0,0,0,0,0,0,0,0,0,0,0
-12,517,48,3234,2569,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,518,520,516,4,0,0,22,0,0,0,-1--1--1,,1|(3417,2569)|
-1,519,520,517,100,0,0,22,0,0,0,-1--1--1,,1|(3289,2569)|
-11,520,0,3344,2569,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,521,Steel Capacity Entering CCfD Contract by Pathway,3344,2608,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-12,522,48,3896,2569,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,523,525,522,4,0,0,22,0,0,0,-1--1--1,,1|(3841,2569)|
-1,524,525,516,100,0,0,22,0,0,0,-1--1--1,,1|(3713,2569)|
-11,525,0,3786,2569,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,526,Steel Capacity Leaving CCfD Contract by Pathway,3786,2608,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-10,527,Steel Production Capacity by Pathway,4085,2799,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,528,Steel Production by Pathway,3825,2684,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,529,Steel CCfD Payment per Ton by Pathway,4345,2569,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,530,Carbon Tax Rate,3045,2742,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,531,Fraction of Industry Category Subject to Carbon Tax,2785,2799,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,532,Marginal Carbon Price Factor for Steel,3305,2799,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,533,Grams per Metric Ton CO2e,3565,2799,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,534,Steel CCfD Strike Price This Year,3565,2914,75,20,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,535,Boolean Steel CCfD Is Two Sided,3825,2799,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,536,New Steel Production Capacity by Pathway,3344,2436,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,537,Steel CCfD Strike Price This Year,3084,2436,75,20,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,538,Steel CCfD Contract Length,3825,2742,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,539,SPAL Steel Pathway Asset Life,3825,2454,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,540,Steel Total Direct CO2 Intensity per Ton by Pathway,2785,2454,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,541,Steel CCfD Contract Length,4046,2436,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-1,542,509,511,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,543,510,511,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,544,511,513,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,545,512,513,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,546,511,521,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,547,513,515,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,548,521,526,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,549,516,514,1,0,0,0,0,128,0,-1--1--1,,1|(3837,2568)|
-1,550,527,514,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,551,528,514,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,552,529,514,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,553,530,512,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,554,531,512,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,508,Steel CCfD Reference CO2 Intensity per Ton,2785,2569,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,509,Steel Pathway Qualifies for CCfD,2785,2684,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,510,Steel CCfD Abatement per Ton by Pathway,3045,2569,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,511,Steel Carbon Price Faced by Pathways,3045,2684,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,512,Steel CCfD Payment per Ton by Pathway,3305,2684,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,513,Steel CCfD Payments,4085,2684,75,19,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,514,Steel CCfD Levelized Cost Reduction per Ton by Pathway,3565,2684,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,515,Steel Capacity under CCfD Contract by Pathway,3565,2569,75,30,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,516,48,3234,2569,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,517,519,515,4,0,0,22,0,0,0,-1--1--1,,1|(3417,2569)|
+1,518,519,516,100,0,0,22,0,0,0,-1--1--1,,1|(3289,2569)|
+11,519,0,3344,2569,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,520,Steel Capacity Entering CCfD Contract by Pathway,3344,2608,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,521,48,3896,2569,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,522,524,521,4,0,0,22,0,0,0,-1--1--1,,1|(3841,2569)|
+1,523,524,515,100,0,0,22,0,0,0,-1--1--1,,1|(3713,2569)|
+11,524,0,3786,2569,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,525,Steel Capacity Leaving CCfD Contract by Pathway,3786,2608,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,526,Steel Production Capacity by Pathway,4085,2799,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,527,Steel Production by Pathway,3825,2684,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,528,Steel CCfD Payment per Ton by Pathway,4345,2569,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,529,Carbon Tax Rate,3045,2742,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,530,Fraction of Industry Category Subject to Carbon Tax,2785,2799,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,531,Marginal Carbon Price Factor for Steel,3305,2799,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,532,Grams per Metric Ton CO2e,3565,2799,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,533,Steel CCfD Strike Price This Year,3565,2914,75,20,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,534,Boolean Steel CCfD Is Two Sided,3825,2799,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,535,New Steel Production Capacity by Pathway,3344,2436,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,536,Steel CCfD Strike Price This Year,3084,2436,75,20,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,537,Steel CCfD Contract Length,3825,2742,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,538,SPAL Steel Pathway Asset Life,3825,2454,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,539,Steel Total Direct CO2 Intensity per Ton by Pathway,2785,2454,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,540,Steel CCfD Contract Length,4046,2436,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,541,508,510,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,542,509,510,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,543,510,512,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,544,511,512,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,545,510,520,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,546,512,514,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,547,520,525,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,548,515,513,1,0,0,0,0,128,0,-1--1--1,,1|(3837,2568)|
+1,549,526,513,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,550,527,513,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,551,528,513,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,552,529,511,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,553,530,511,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,554,531,511,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,555,532,512,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,556,533,513,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,557,534,513,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,558,535,513,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,559,536,521,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,560,537,521,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,561,538,515,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,562,539,515,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,563,540,509,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,564,540,511,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,565,541,526,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,566,0,5555,2309,885,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+1,556,533,512,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,557,534,512,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,558,535,520,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,559,536,520,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,560,537,514,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,561,538,514,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,562,539,508,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,563,539,510,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,564,540,525,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,565,0,5555,2309,885,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Crediting Low Carbon Steel Production
-10,567,Steel Pathway Scrap Share,4775,2569,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,568,Steel Pathway Qualifies for Low Carbon Credit,5035,2569,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,569,Low Carbon Steel Credit Payments,6075,2684,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,570,Low Carbon Steel Credit Levelized Cost Reduction per Ton by Pathway,5295,2684,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,571,LCST Low Carbon Steel Credit Intensity Threshold,5035,2454,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,572,Steel Capacity in Credit Period by Pathway,5555,2569,75,30,3,3,0,0,0,0,0,0,0,0,0,0,0,0
-12,573,48,5224,2569,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,574,576,572,4,0,0,22,0,0,0,-1--1--1,,1|(5407,2569)|
-1,575,576,573,100,0,0,22,0,0,0,-1--1--1,,1|(5279,2569)|
-11,576,0,5334,2569,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,577,Steel Capacity Entering Credit Period by Pathway,5334,2608,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-12,578,48,5886,2569,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,579,581,578,4,0,0,22,0,0,0,-1--1--1,,1|(5831,2569)|
-1,580,581,572,100,0,0,22,0,0,0,-1--1--1,,1|(5703,2569)|
-11,581,0,5776,2569,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,582,Steel Capacity Leaving Credit Period by Pathway,5776,2608,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-10,583,Steel Production Capacity by Pathway,6075,2799,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,584,Steel Production by Pathway,5815,2684,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,585,Low Carbon Steel Production Tax Credit This Year,6335,2569,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,586,Low Carbon Steel Production Tax Credit This Year,5295,2799,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,587,Low Carbon Steel Credit Duration,5035,2684,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,588,SPAL Steel Pathway Asset Life,5035,2799,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,589,Steel Total Direct CO2 Intensity per Ton by Pathway,4775,2454,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,590,Grams per Metric Ton CO2e,5295,2454,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,591,New Steel Production Capacity by Pathway,5464,2436,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,592,Low Carbon Steel Production Tax Credit This Year,5464,2723,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,593,Low Carbon Steel Credit Duration,5776,2436,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-1,594,571,568,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,595,567,568,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,596,568,570,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,597,568,577,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,598,577,582,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,599,572,569,1,0,0,0,0,128,0,-1--1--1,,1|(5827,2568)|
-1,600,583,569,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,601,584,569,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,566,Steel Pathway Scrap Share,4775,2569,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,567,Steel Pathway Qualifies for Low Carbon Credit,5035,2569,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,568,Low Carbon Steel Credit Payments,6075,2684,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,569,Low Carbon Steel Credit Levelized Cost Reduction per Ton by Pathway,5295,2684,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,570,LCST Low Carbon Steel Credit Intensity Threshold,5035,2454,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,571,Steel Capacity in Credit Period by Pathway,5555,2569,75,30,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,572,48,5224,2569,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,573,575,571,4,0,0,22,0,0,0,-1--1--1,,1|(5407,2569)|
+1,574,575,572,100,0,0,22,0,0,0,-1--1--1,,1|(5279,2569)|
+11,575,0,5334,2569,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,576,Steel Capacity Entering Credit Period by Pathway,5334,2608,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,577,48,5886,2569,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,578,580,577,4,0,0,22,0,0,0,-1--1--1,,1|(5831,2569)|
+1,579,580,571,100,0,0,22,0,0,0,-1--1--1,,1|(5703,2569)|
+11,580,0,5776,2569,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,581,Steel Capacity Leaving Credit Period by Pathway,5776,2608,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,582,Steel Production Capacity by Pathway,6075,2799,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,583,Steel Production by Pathway,5815,2684,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,584,Low Carbon Steel Production Tax Credit This Year,6335,2569,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,585,Low Carbon Steel Production Tax Credit This Year,5295,2799,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,586,Low Carbon Steel Credit Duration,5035,2684,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,587,SPAL Steel Pathway Asset Life,5035,2799,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,588,Steel Total Direct CO2 Intensity per Ton by Pathway,4775,2454,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,589,Grams per Metric Ton CO2e,5295,2454,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,590,New Steel Production Capacity by Pathway,5464,2436,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,591,Low Carbon Steel Production Tax Credit This Year,5464,2723,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,592,Low Carbon Steel Credit Duration,5776,2436,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,593,570,567,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,594,566,567,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,595,567,569,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,596,567,576,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,597,576,581,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,598,571,568,1,0,0,0,0,128,0,-1--1--1,,1|(5827,2568)|
+1,599,582,568,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,600,583,568,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,601,584,568,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,602,585,569,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,603,586,570,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,604,587,570,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,605,588,570,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,606,589,568,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,607,590,568,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,608,591,577,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,609,592,577,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,610,593,582,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,611,0,1145,3288,1145,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+1,603,586,569,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,604,587,569,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,605,588,567,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,606,589,567,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,607,590,576,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,608,591,576,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,609,592,581,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,610,0,1145,3288,1145,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Procuring Low Carbon Steel
-10,612,LSPT Low Carbon Steel Procurement Intensity Threshold,365,3479,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,613,Steel Pathway Qualifies for Low Carbon Procurement,365,3594,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,614,Low Carbon Steel Production,625,3594,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,615,Start Year Low Carbon Steel Production,625,3709,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,616,Last Year Low Carbon Steel Production,885,3594,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,617,Low Carbon Steel Procurement Committed Volume,885,3709,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,618,Low Carbon Steel Procurement Coverage,1145,3594,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,619,Low Carbon Steel Procurement Required Share of New Capacity,1145,3824,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,620,Cheapest Qualifying Steel Pathway Cost for Procurement,1405,3709,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,621,Low Carbon Steel Procurement Share Floor by Pathway,1405,3824,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,622,Low Carbon Steel Procurement Premium per Ton by Pathway,1405,3594,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,623,Low Carbon Steel Procurement Levelized Cost Reduction per Ton by Pathway,1665,3479,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,624,Low Carbon Steel Procurement Premium Paid,1665,3594,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,625,Low Carbon Steel Procurement Premium Paid by Buyers,1925,3594,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,626,Low Carbon Steel Procurement Premium Paid by Government,1925,3709,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,627,Total Steel Demand,885,3824,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,628,Steel Production by Pathway,1665,3709,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,629,Steel Production by Pathway,625,3479,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,630,Unmet Steel Production Capacity Need,1145,3939,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,631,Steel Total Direct CO2 Intensity per Ton by Pathway,365,3709,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,632,Grams per Metric Ton CO2e,105,3594,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,633,Steel Pathway Scrap Share,105,3479,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,634,Steel Pathway Levelized Cost per Ton before Clean Production Support,1665,3824,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,635,Minimum Eligible Steel Pathway Cost per Ton before Clean Production Support,1405,3422,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,636,Steel Pathway Qualifies for Low Carbon Procurement,1145,3709,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,637,Fraction of Steel Demand Purchased under Low Carbon Procurement This Year,625,3824,75,41,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,638,Low Carbon Steel Procurement Coverage,1925,3479,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,639,SYSPbP Start Year Steel Production by Pathway,365,3824,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,640,Share of Low Carbon Steel Premium Paid by Government,2185,3479,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,641,Share of Low Carbon Steel Premium Paid by Government,1925,3824,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,611,LSPT Low Carbon Steel Procurement Intensity Threshold,365,3479,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,612,Steel Pathway Qualifies for Low Carbon Procurement,365,3594,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,613,Low Carbon Steel Production,625,3594,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,614,Start Year Low Carbon Steel Production,625,3709,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,615,Last Year Low Carbon Steel Production,885,3594,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,616,Low Carbon Steel Procurement Committed Volume,885,3709,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,617,Low Carbon Steel Procurement Coverage,1145,3594,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,618,Low Carbon Steel Procurement Required Share of New Capacity,1145,3824,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,619,Cheapest Qualifying Steel Pathway Cost for Procurement,1405,3709,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,620,Low Carbon Steel Procurement Share Floor by Pathway,1405,3824,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,621,Low Carbon Steel Procurement Premium per Ton by Pathway,1405,3594,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,622,Low Carbon Steel Procurement Levelized Cost Reduction per Ton by Pathway,1665,3479,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,623,Low Carbon Steel Procurement Premium Paid,1665,3594,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,624,Low Carbon Steel Procurement Premium Paid by Buyers,1925,3594,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,625,Low Carbon Steel Procurement Premium Paid by Government,1925,3709,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,626,Total Steel Demand,885,3824,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,627,Steel Production by Pathway,1665,3709,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,628,Steel Production by Pathway,625,3479,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,629,Unmet Steel Production Capacity Need,1145,3939,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,630,Steel Total Direct CO2 Intensity per Ton by Pathway,365,3709,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,631,Grams per Metric Ton CO2e,105,3594,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,632,Steel Pathway Scrap Share,105,3479,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,633,Steel Pathway Levelized Cost per Ton before Clean Production Support,1665,3824,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,634,Minimum Eligible Steel Pathway Cost per Ton before Clean Production Support,1405,3422,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,635,Steel Pathway Qualifies for Low Carbon Procurement,1145,3709,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,636,Fraction of Steel Demand Purchased under Low Carbon Procurement This Year,625,3824,75,41,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,637,Low Carbon Steel Procurement Coverage,1925,3479,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,638,SYSPbP Start Year Steel Production by Pathway,365,3824,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,639,Share of Low Carbon Steel Premium Paid by Government,2185,3479,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,640,Share of Low Carbon Steel Premium Paid by Government,1925,3824,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,641,611,612,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,642,612,613,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,643,613,614,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,643,612,614,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,644,613,615,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,645,614,616,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,646,615,616,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,647,617,618,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,645,614,615,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,646,616,617,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,647,615,617,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,648,616,618,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,649,617,619,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,650,616,619,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,651,620,621,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,652,619,621,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,653,618,623,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,654,622,623,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,655,622,624,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,656,624,625,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,657,624,626,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,658,627,617,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,659,628,624,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,660,629,614,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,661,630,619,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,662,631,613,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,663,632,613,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,664,633,613,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,665,634,622,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,666,635,622,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,667,636,622,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,668,637,617,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,669,634,620,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,670,636,620,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,671,636,621,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,672,634,621,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,673,638,624,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,674,639,615,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,649,615,618,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,650,619,620,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,651,618,620,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,652,617,622,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,653,621,622,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,654,621,623,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,655,623,624,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,656,623,625,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,657,626,616,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,658,627,623,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,659,628,613,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,660,629,618,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,661,630,612,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,662,631,612,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,663,632,612,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,664,633,621,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,665,634,621,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,666,635,621,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,667,636,616,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,668,633,619,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,669,635,619,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,670,635,620,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,671,633,620,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,672,637,623,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,673,638,614,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,674,639,624,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,675,640,625,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,676,641,626,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,677,0,3265,3288,755,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,676,0,3265,3288,755,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Meeting a Steel Carbon Intensity Standard
-12,678,0,2875,3928,160,34,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,677,0,2875,3928,160,34,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 Myopic one-year rule: existing production at last year's fleet intensity plus this year's market-driven builds; the shortfall goes to the cheapest pathway below the cap.
-10,679,Steel Cost Driven New Capacity CO2 Intensity,3135,3767,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,680,Steel Pathway Qualifies for Intensity Standard,2615,3652,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,681,Cheapest Qualifying Steel Pathway Cost for Intensity Standard,2875,3652,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,682,Steel Cheapest Qualifying Pathway CO2 Intensity for Standard,3135,3652,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,683,Steel Intensity Standard Required Share of New Capacity,3395,3652,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,684,Steel Intensity Standard Share Floor by Pathway,3655,3652,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,685,Steel Total Direct CO2 Intensity per Ton by Pathway,3135,3537,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,686,Steel Pathway Qualifies for Intensity Standard,2875,3537,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,687,Steel Pathway Levelized Cost per Ton before Clean Production Support,3395,3537,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,688,Grams per Metric Ton CO2e,2875,3767,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,689,Steel CO2 Intensity Standard This Year,3395,3767,75,20,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,690,Unmet Steel Production Capacity Need,3655,3537,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,691,Total Steel Demand,3655,3767,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,692,Last Year Steel Fleet CO2 Intensity,3655,3422,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,693,Steel CO2 Intensity Standard This Year,2615,3537,75,20,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,694,Steel Total Direct CO2 Intensity per Ton by Pathway,2615,3767,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,695,Cost Driven Share of New Steel Production Capacity by Pathway,3135,3882,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,696,Steel Total Direct CO2 Intensity per Ton by Pathway,3395,3882,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,697,Steel Pathway Qualifies for Intensity Standard,3915,3537,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,698,Cheapest Qualifying Steel Pathway Cost for Intensity Standard,3915,3422,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,699,Steel Pathway Levelized Cost per Ton before Clean Production Support,2615,3422,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,678,Steel Cost Driven New Capacity CO2 Intensity,3135,3767,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,679,Steel Pathway Qualifies for Intensity Standard,2615,3652,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,680,Cheapest Qualifying Steel Pathway Cost for Intensity Standard,2875,3652,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,681,Steel Cheapest Qualifying Pathway CO2 Intensity for Standard,3135,3652,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,682,Steel Intensity Standard Required Share of New Capacity,3395,3652,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,683,Steel Intensity Standard Share Floor by Pathway,3655,3652,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,684,Steel Total Direct CO2 Intensity per Ton by Pathway,3135,3537,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,685,Steel Pathway Qualifies for Intensity Standard,2875,3537,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,686,Steel Pathway Levelized Cost per Ton before Clean Production Support,3395,3537,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,687,Grams per Metric Ton CO2e,2875,3767,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,688,Steel CO2 Intensity Standard This Year,3395,3767,75,20,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,689,Unmet Steel Production Capacity Need,3655,3537,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,690,Total Steel Demand,3655,3767,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,691,Last Year Steel Fleet CO2 Intensity,3655,3422,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,692,Steel CO2 Intensity Standard This Year,2615,3537,75,20,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,693,Steel Total Direct CO2 Intensity per Ton by Pathway,2615,3767,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,694,Cost Driven Share of New Steel Production Capacity by Pathway,3135,3882,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,695,Steel Total Direct CO2 Intensity per Ton by Pathway,3395,3882,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,696,Steel Pathway Qualifies for Intensity Standard,3915,3537,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,697,Cheapest Qualifying Steel Pathway Cost for Intensity Standard,3915,3422,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,698,Steel Pathway Levelized Cost per Ton before Clean Production Support,2615,3422,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,699,679,680,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,700,680,681,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,701,681,682,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,702,679,683,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,701,678,682,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,702,681,682,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,703,682,683,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,704,683,684,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,705,685,682,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,706,686,682,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,707,687,682,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,704,684,681,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,705,685,681,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,706,686,681,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,707,687,681,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,708,688,682,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,709,689,683,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,710,690,683,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,711,691,683,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,712,692,683,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,713,693,680,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,714,694,680,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,715,688,680,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,716,695,679,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,717,696,679,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,718,688,679,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,719,697,684,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,720,687,684,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,721,698,684,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,722,699,681,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,723,0,3955,4506,755,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+1,709,689,682,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,710,690,682,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,711,691,682,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,712,692,679,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,713,693,679,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,714,687,679,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,715,694,678,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,716,695,678,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,717,687,678,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,718,696,683,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,719,686,683,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,720,697,683,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,721,698,680,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,722,0,3955,4506,755,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 BAU Steel Pathway CO2 Intensities and Operating Cost per Ton
-10,724,BAU Steel Pathway Operating Cost per Ton,4085,4978,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,725,BAU Steel Process Emissions Carbon Tax Rate,4085,5093,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,726,BAU Steel Pathway Clean Heat Production Subsidy per Ton,4345,4978,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,727,Steel Process CO2 Intensity per Ton by Pathway,3565,4863,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,728,SEIbPaF Steel Energy Intensity by Pathway and Fuel,4085,4863,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,729,BAU Industrial Fuel Cost per Unit Energy,3825,4978,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,730,Steel Fuel Feedstock Share,3825,4863,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,731,BAU Industrial Fuel Carbon Tax Amount per Unit Energy,4345,4863,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,732,Grams per Metric Ton CO2e,3825,5093,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,733,BAU Steel Pathway Clean Heat Production Subsidy per Ton,4345,5093,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,734,Steel Fuel Feedstock Share,4605,4863,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,735,BCHSR BAU Clean Heat Production Subsidy Rate,4605,5093,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,736,IFTQfS Industrial Fuel Types Qualifying for Clean Heat Production Subsidy,4605,4748,75,41,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,737,Steel Pathway Clean Heat Investment Credit Qualification,4605,4978,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,738,BEPEfCT Boolean Exempt Process Emissions from Carbon Tax,4085,5208,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,739,BCTR BAU Carbon Tax Rate,3825,5208,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,740,BFoICStCT BAU Fraction of Industry Category Subject to Carbon Tax,4345,5208,75,34,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,741,BPTbCP BAU Industry Pollutants Taxed by Carbon Pricing,3825,5323,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-1,742,725,724,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,743,728,724,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,744,729,724,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,745,730,724,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,746,731,724,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,747,727,724,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,748,732,724,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,749,733,724,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,750,728,726,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,751,734,726,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,752,735,726,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,753,736,726,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,754,737,726,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,755,738,725,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,756,739,725,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,757,740,725,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,758,741,725,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,759,0,5555,4506,625,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,723,BAU Steel Pathway Operating Cost per Ton,4085,4978,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,724,BAU Steel Process Emissions Carbon Tax Rate,4085,5093,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,725,BAU Steel Pathway Clean Heat Production Subsidy per Ton,4345,4978,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,726,Steel Process CO2 Intensity per Ton by Pathway,3565,4863,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,727,Steel Energy Intensity by Pathway and Fuel with BAU Trend,4085,4863,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,728,BAU Industrial Fuel Cost per Unit Energy,3825,4978,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,729,Steel Fuel Feedstock Share,3825,4863,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,730,BAU Industrial Fuel Carbon Tax Amount per Unit Energy,4345,4863,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,731,Grams per Metric Ton CO2e,3825,5093,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,732,BAU Steel Pathway Clean Heat Production Subsidy per Ton,4345,5093,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,733,Steel Fuel Feedstock Share,4605,4863,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,734,BCHSR BAU Clean Heat Production Subsidy Rate,4605,5093,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,735,IFTQfS Industrial Fuel Types Qualifying for Clean Heat Production Subsidy,4605,4748,75,41,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,736,Steel Pathway Clean Heat Investment Credit Qualification,4605,4978,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,737,BEPEfCT Boolean Exempt Process Emissions from Carbon Tax,4085,5208,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,738,BCTR BAU Carbon Tax Rate,3825,5208,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,739,BFoICStCT BAU Fraction of Industry Category Subject to Carbon Tax,4345,5208,75,34,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,740,BPTbCP BAU Industry Pollutants Taxed by Carbon Pricing,3825,5323,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+1,741,724,723,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,742,727,723,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,743,728,723,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,744,729,723,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,745,730,723,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,746,726,723,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,747,731,723,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,748,732,723,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,749,727,725,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,750,733,725,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,751,734,725,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,752,735,725,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,753,736,725,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,754,737,724,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,755,738,724,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,756,739,724,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,757,740,724,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,758,0,5555,4506,625,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 BAU Steel Pathway Capital Cost, Subsidies and Cost of Capital
-10,760,BAU Steel Pathway Clean Heat Investment Credit Rate,5555,4870,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,761,BAU Steel Pathway Capital Subsidy Rate,5815,4870,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,762,BAU Steel Pathway Capital Cost per Unit Annual Capacity after Subsidy,6075,4870,75,34,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,763,BAU Steel Pathway Capital Recovery Factor,5815,5100,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,764,Steel Pathway Clean Heat Investment Credit Qualification,5295,4870,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,765,SPAL Steel Pathway Asset Life,5815,5215,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,766,SPCC Steel Pathway Capital Cost per Unit Annual Capacity,5815,4755,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,767,BSPCS BAU Steel Pathway Capital Subsidy,5815,4640,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,768,BCoISC Weighted Average Cost of Capital by Industry,5815,4985,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,769,One Year,5555,5100,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,770,BCHSR BAU Clean Heat Investment Subsidy Rate,5555,4755,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,759,BAU Steel Pathway Clean Heat Investment Credit Rate,5555,4870,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,760,BAU Steel Pathway Capital Subsidy Rate,5815,4870,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,761,BAU Steel Pathway Capital Cost per Unit Annual Capacity after Subsidy,6075,4870,75,34,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,762,BAU Steel Pathway Capital Recovery Factor,5815,5100,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,763,Steel Pathway Clean Heat Investment Credit Qualification,5295,4870,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,764,SPAL Steel Pathway Asset Life,5815,5215,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,765,SPCC Steel Pathway Capital Cost per Unit Annual Capacity,5815,4755,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,766,BSPCS BAU Steel Pathway Capital Subsidy,5815,4640,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,767,BCoISC Weighted Average Cost of Capital by Industry,5815,4985,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,768,One Year,5555,5100,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,769,BCHSR BAU Clean Heat Investment Subsidy Rate,5555,4755,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+1,770,759,760,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,771,760,761,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,772,761,762,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,773,768,763,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,774,765,763,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,775,769,763,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,776,770,760,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,777,764,760,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,778,767,761,1,0,0,0,0,128,0,-1--1--1,,1|(5725,4755)|
-1,779,766,762,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,780,0,6765,4506,365,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+1,772,767,762,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,773,764,762,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,774,768,762,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,775,769,759,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,776,763,759,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,777,766,760,1,0,0,0,0,128,0,-1--1--1,,1|(5725,4755)|
+1,778,765,761,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,779,0,6765,4506,365,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 BAU Steel Pathway Levelized Cost per Ton
-10,781,BAU Steel Pathway Levelized Cost per Ton,7025,4755,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,782,BAU Steel Pathway Capital Cost per Unit Annual Capacity after Subsidy,7025,4640,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,783,BAU Steel Pathway Capital Recovery Factor,7025,4870,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,784,SYSCU Start Year Steel Capacity Utilization,6765,4755,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,785,BAU Steel Pathway Operating Cost per Ton,6765,4640,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,786,782,781,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,787,783,781,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,788,784,781,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,789,785,781,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,790,0,625,5510,625,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,780,BAU Steel Pathway Levelized Cost per Ton,7025,4755,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,781,BAU Steel Pathway Capital Cost per Unit Annual Capacity after Subsidy,7025,4640,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,782,BAU Steel Pathway Capital Recovery Factor,7025,4870,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,783,SYSCU Start Year Steel Capacity Utilization,6765,4755,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,784,BAU Steel Pathway Operating Cost per Ton,6765,4640,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,785,781,780,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,786,782,780,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,787,783,780,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,788,784,780,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,789,0,625,5510,625,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 BAU Choosing Pathways for New Steel Capacity
-10,791,BAU Minimum Eligible Steel Pathway Cost per Ton,365,5860,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,792,BAU Steel Pathway Choice Weight,625,5860,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,793,BAU Share of New Steel Production Capacity by Pathway,1145,5860,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,794,SPSW Steel Pathway Shareweight,365,5745,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,795,BAU Steel Pathway Levelized Cost per Ton,625,5745,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,796,IELC Industrial Equipment Logit Coefficient,625,5975,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,790,BAU Minimum Eligible Steel Pathway Cost per Ton,365,5860,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,791,BAU Steel Pathway Choice Weight,625,5860,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,792,BAU Share of New Steel Production Capacity by Pathway,1145,5860,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,793,SPSW Steel Pathway Shareweight,365,5745,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,794,BAU Steel Pathway Levelized Cost per Ton,625,5745,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,795,IELC Industrial Equipment Logit Coefficient,625,5975,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,796,790,791,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,797,791,792,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,798,792,793,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,799,794,792,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,800,795,792,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,801,796,792,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,802,795,791,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,803,794,791,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,804,0,2355,5510,885,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+1,798,793,791,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,799,794,791,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,800,795,791,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,801,794,790,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,802,793,790,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,803,0,2355,5510,885,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 BAU Relining or Replacing Capacity at Campaign End
-10,805,BAU Average New Steel Capacity Cost per Ton,2615,6104,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,806,BAU Steel Reline Capital Recovery Factor,2355,5874,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,807,BAU Steel Reline Continuation Cost per Ton,2615,5874,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,808,BAU Steel Reline Share at Decision,2875,6104,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,809,BAU Steel Capacity Relined One Campaign Ago by Pathway,1835,5989,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,810,BAU Steel Capacity Facing Reline Decision by Pathway,2875,5874,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,811,BAU Steel Capacity Relined by Pathway,3135,5989,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,812,BAU Steel Capacity Retired at Reline Decision by Pathway,3135,6104,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,813,SPPL Steel Pathway Plant Lifetime,1835,5874,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,814,SPRS Steel Preexisting Capacity Reline Decision Schedule,2875,5759,75,34,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,815,SRSW Steel Reline Shareweight,2615,6219,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,816,SRCC Steel Reline Capital Cost per Unit Annual Capacity,2355,6334,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,817,BCoISC Weighted Average Cost of Capital by Industry,2355,5759,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,818,One Year,2355,5989,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,819,SYSCU Start Year Steel Capacity Utilization,2615,5759,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,820,BAU Steel Pathway Operating Cost per Ton,2355,6104,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,821,BAU Preexisting Steel Production Capacity by Pathway,3135,5759,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,822,BAU Steel Capacity Relined One Campaign Ago by Pathway,2875,5989,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,823,BAU Steel Capacity Relined by Pathway,1835,6104,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,824,BAU Share of New Steel Production Capacity by Pathway,2875,6219,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,825,BAU Steel Pathway Levelized Cost per Ton,2875,6334,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,826,IELC Industrial Equipment Logit Coefficient,3135,6219,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,804,BAU Average New Steel Capacity Cost per Ton,2615,6104,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,805,BAU Steel Reline Capital Recovery Factor,2355,5874,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,806,BAU Steel Reline Continuation Cost per Ton,2615,5874,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,807,BAU Steel Reline Share at Decision,2875,6104,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,808,BAU Steel Capacity Relined One Campaign Ago by Pathway,1835,5989,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,809,BAU Steel Capacity Facing Reline Decision by Pathway,2875,5874,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,810,BAU Steel Capacity Relined by Pathway,3135,5989,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,811,BAU Steel Capacity Retired at Reline Decision by Pathway,3135,6104,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,812,SPPL Steel Pathway Plant Lifetime,1835,5874,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,813,SPRS Steel Preexisting Capacity Reline Decision Schedule,2875,5759,75,34,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,814,SRSW Steel Reline Shareweight,2615,6219,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,815,SRCC Steel Reline Capital Cost per Unit Annual Capacity,2355,6334,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,816,BCoISC Weighted Average Cost of Capital by Industry,2355,5759,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,817,One Year,2355,5989,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,818,SYSCU Start Year Steel Capacity Utilization,2615,5759,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,819,BAU Steel Pathway Operating Cost per Ton,2355,6104,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,820,BAU Preexisting Steel Production Capacity by Pathway,3135,5759,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,821,BAU Steel Capacity Relined One Campaign Ago by Pathway,2875,5989,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,822,BAU Steel Capacity Relined by Pathway,1835,6104,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,823,BAU Share of New Steel Production Capacity by Pathway,2875,6219,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,824,BAU Steel Pathway Levelized Cost per Ton,2875,6334,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,825,IELC Industrial Equipment Logit Coefficient,3135,6219,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,826,805,806,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,827,806,807,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,828,807,808,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,829,805,808,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,830,810,811,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,831,808,811,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,832,810,812,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,833,808,812,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,834,817,806,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,835,813,806,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,836,818,806,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,837,816,807,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,838,819,807,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,839,820,807,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,840,821,810,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,841,814,810,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,842,822,810,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,843,823,809,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,844,813,809,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,845,824,805,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,846,825,805,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,847,815,808,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,848,826,808,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,849,0,6296,5510,1145,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+1,828,804,807,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,829,809,810,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,830,807,810,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,831,809,811,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,832,807,811,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,833,816,805,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,834,812,805,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,835,817,805,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,836,815,806,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,837,818,806,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,838,819,806,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,839,820,809,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,840,813,809,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,841,821,809,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,842,822,808,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,843,812,808,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,844,823,804,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,845,824,804,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,846,814,807,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,847,825,807,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,848,0,6296,5510,1145,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 BAU Building New Capacity and Producing Steel
-10,850,BAU Unmet Steel Production Capacity Need,5516,5771,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,851,BAU Preliminary New Steel Production Capacity by Pathway,5776,5771,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,852,BAU Scrap EAF New Capacity Headroom,7076,5886,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,853,BAU Steel Production Capacity by Pathway,6816,5886,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
-10,854,BAU Steel Production by Pathway,7076,5771,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,855,BAU Preexisting Steel Production Capacity by Pathway,5516,6001,75,30,3,3,0,0,0,0,0,0,0,0,0,0,0,0
-12,856,48,5847,6001,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,857,859,856,4,0,0,22,0,0,0,-1--1--1,,1|(5792,6001)|
-1,858,859,855,100,0,0,22,0,0,0,-1--1--1,,1|(5664,6001)|
-11,859,0,5737,6001,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,860,BAU Preexisting Steel Capacity Retirements by Pathway,5737,6047,75,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-10,861,BAU Steel Production Capacity Added During Model Run by Pathway,6296,5771,75,34,3,3,0,0,0,0,0,0,0,0,0,0,0,0
-12,862,48,5965,5771,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,863,865,861,4,0,0,22,0,0,0,-1--1--1,,1|(6148,5771)|
-1,864,865,862,100,0,0,22,0,0,0,-1--1--1,,1|(6020,5771)|
-11,865,0,6075,5771,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,866,BAU New Steel Production Capacity by Pathway,6075,5810,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-12,867,48,6627,5771,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,868,870,867,4,0,0,22,0,0,0,-1--1--1,,1|(6572,5771)|
-1,869,870,861,100,0,0,22,0,0,0,-1--1--1,,1|(6444,5771)|
-11,870,0,6517,5771,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,871,BAU Model Run Steel Capacity Retirements by Pathway,6517,5810,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-10,872,MASSfS Maximum Annual Scrap Supply for Steel,7076,6001,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
-10,873,SYSPbP Start Year Steel Production by Pathway,5516,5886,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,874,SYSCU Start Year Steel Capacity Utilization,5516,5656,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,875,SSCT Steel Scrap Charge per Ton of Scrap EAF Steel,6816,6116,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,876,BAU Total Steel Demand,5256,5771,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,877,BAU Steel Production Capacity by Pathway,5256,5656,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,878,BAU Steel Capacity Retired at Reline Decision by Pathway,5776,5656,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,879,BAU Steel Capacity Retired at Reline Decision by Pathway,7076,5656,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,880,BAU New Steel Production Capacity by Pathway,6816,5771,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,881,SYSCU Start Year Steel Capacity Utilization,6816,5656,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,882,BAU Total Steel Demand,7336,5656,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,883,SYSCU Start Year Steel Capacity Utilization,7336,5771,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,884,BAU Steel Capacity Retired at Reline Decision by Pathway,7336,6001,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,885,BAU Share of New Steel Production Capacity by Pathway,5776,5886,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,886,BAU Scrap EAF New Capacity Headroom,6075,5637,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,887,BAU Steel Pathway Choice Weight,6075,5925,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,888,BAU Preexisting Steel Production Capacity by Pathway,6556,5886,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,889,BAU Steel Production Capacity Added During Model Run by Pathway,6686,6001,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,890,BAU Steel Capacity Retired at Reline Decision by Pathway,5737,6162,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,891,SPAL Steel Pathway Asset Life,6517,5637,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-1,892,850,851,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,893,851,866,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,894,861,871,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,895,853,854,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,896,853,852,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,897,876,850,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,898,877,850,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,899,878,850,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,900,874,850,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,901,879,854,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,902,880,854,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,903,881,854,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,904,882,854,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,905,872,852,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,906,875,852,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,907,883,852,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,908,884,852,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,909,873,855,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,910,874,855,1,0,0,0,0,128,0,-1--1--1,,1|(5386,5828)|
-1,911,885,851,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,912,874,851,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,913,886,866,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,914,887,866,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,915,888,853,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,916,889,853,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,917,890,860,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,918,891,871,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,919,0,495,6595,495,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,849,BAU Unmet Steel Production Capacity Need,5516,5771,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,850,BAU Preliminary New Steel Production Capacity by Pathway,5776,5771,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,851,BAU Scrap EAF New Capacity Headroom,7076,5886,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,852,BAU Steel Production Capacity by Pathway,6816,5886,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
+10,853,BAU Steel Production by Pathway,7076,5771,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,854,BAU Preexisting Steel Production Capacity by Pathway,5516,6001,75,30,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,855,48,5847,6001,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,856,858,855,4,0,0,22,0,0,0,-1--1--1,,1|(5792,6001)|
+1,857,858,854,100,0,0,22,0,0,0,-1--1--1,,1|(5664,6001)|
+11,858,0,5737,6001,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,859,BAU Preexisting Steel Capacity Retirements by Pathway,5737,6047,75,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,860,BAU Steel Production Capacity Added During Model Run by Pathway,6296,5771,75,34,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,861,48,5965,5771,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,862,864,860,4,0,0,22,0,0,0,-1--1--1,,1|(6148,5771)|
+1,863,864,861,100,0,0,22,0,0,0,-1--1--1,,1|(6020,5771)|
+11,864,0,6075,5771,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,865,BAU New Steel Production Capacity by Pathway,6075,5810,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,866,48,6627,5771,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,867,869,866,4,0,0,22,0,0,0,-1--1--1,,1|(6572,5771)|
+1,868,869,860,100,0,0,22,0,0,0,-1--1--1,,1|(6444,5771)|
+11,869,0,6517,5771,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,870,BAU Model Run Steel Capacity Retirements by Pathway,6517,5810,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,871,MASSfS Maximum Annual Scrap Supply for Steel,7076,6001,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,872,SYSPbP Start Year Steel Production by Pathway,5516,5886,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,873,SYSCU Start Year Steel Capacity Utilization,5516,5656,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,874,SSCT Steel Scrap Charge per Ton of Scrap EAF Steel,6816,6116,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,875,BAU Total Steel Demand,5256,5771,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,876,BAU Steel Production Capacity by Pathway,5256,5656,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,877,BAU Steel Capacity Retired at Reline Decision by Pathway,5776,5656,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,878,BAU Steel Capacity Retired at Reline Decision by Pathway,7076,5656,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,879,BAU New Steel Production Capacity by Pathway,6816,5771,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,880,SYSCU Start Year Steel Capacity Utilization,6816,5656,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,881,BAU Total Steel Demand,7336,5656,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,882,SYSCU Start Year Steel Capacity Utilization,7336,5771,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,883,BAU Steel Capacity Retired at Reline Decision by Pathway,7336,6001,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,884,BAU Share of New Steel Production Capacity by Pathway,5776,5886,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,885,BAU Scrap EAF New Capacity Headroom,6075,5637,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,886,BAU Steel Pathway Choice Weight,6075,5925,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,887,BAU Preexisting Steel Production Capacity by Pathway,6556,5886,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,888,BAU Steel Production Capacity Added During Model Run by Pathway,6686,6001,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,889,BAU Steel Capacity Retired at Reline Decision by Pathway,5737,6162,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,890,SPAL Steel Pathway Asset Life,6517,5637,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,891,849,850,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,892,850,865,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,893,860,870,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,894,852,853,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,895,852,851,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,896,875,849,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,897,876,849,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,898,877,849,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,899,873,849,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,900,878,853,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,901,879,853,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,902,880,853,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,903,881,853,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,904,871,851,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,905,874,851,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,906,882,851,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,907,883,851,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,908,872,854,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,909,873,854,1,0,0,0,0,128,0,-1--1--1,,1|(5386,5828)|
+1,910,884,850,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,911,873,850,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,912,885,865,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,913,886,865,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,914,887,852,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,915,888,852,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,916,889,859,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,917,890,870,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,918,0,495,6595,495,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 BAU Steel Energy Use and CO2 Emissions
-10,920,BAU Steel Module Energy Use by Fuel Type,365,7074,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,921,BAU Steel Process CO2 Emissions,365,6959,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
-10,922,BAU Steel Production by Pathway,365,6902,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,923,Steel Process CO2 Intensity per Ton by Pathway,105,6959,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,924,BAU Steel Production by Pathway,365,7189,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,925,SEIbPaF Steel Energy Intensity by Pathway and Fuel,105,7074,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-1,926,922,921,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,927,923,921,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,928,924,920,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,929,925,920,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,930,0,759,7749,759,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,919,BAU Steel Module Energy Use by Fuel Type,365,7074,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,920,BAU Steel Process CO2 Emissions,365,6959,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,921,BAU Steel Production by Pathway,365,6902,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,922,Steel Process CO2 Intensity per Ton by Pathway,105,6959,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,923,BAU Steel Production by Pathway,365,7189,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,924,Steel Energy Intensity by Pathway and Fuel with BAU Trend,105,7074,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,925,921,920,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,926,922,920,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,927,923,919,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,928,924,919,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,929,0,759,7749,759,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Financing Steel Capital Expenditures
-10,931,Steel Pathway Financing Interest Rate,365,8213,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,932,Steel Pathway Financing Annuity Factor by Pathway,625,8213,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,933,Steel Pathway Financing Annuity Factor,365,8328,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,934,Last Year Financing Repayments for Steel Pathway Equipment,1145,8213,75,30,3,3,0,0,0,0,0,0,0,0,0,0,0,0
-12,935,48,814,8213,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,936,938,934,4,0,0,22,0,0,0,-1--1--1,,1|(997,8213)|
-1,937,938,935,100,0,0,22,0,0,0,-1--1--1,,1|(869,8213)|
-11,938,0,924,8213,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,939,Annual Financing Repayment for Newly Purchased Steel Pathway Equipment,924,8259,75,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-12,940,48,1476,8213,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,941,943,940,4,0,0,22,0,0,0,-1--1--1,,1|(1421,8213)|
-1,942,943,934,100,0,0,22,0,0,0,-1--1--1,,1|(1293,8213)|
-11,943,0,1366,8213,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,944,Annual Steel Pathway Equipment Financing Repayments Expiring After Repayment Period,1366,8266,75,41,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-10,945,Last Year Financing Repayments for Steel Pathway Equipment at Unsubsidized Rate,885,8673,75,34,3,3,0,0,0,0,0,0,0,0,0,0,0,0
-12,946,48,554,8673,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,947,949,945,4,0,0,22,0,0,0,-1--1--1,,1|(737,8673)|
-1,948,949,946,100,0,0,22,0,0,0,-1--1--1,,1|(609,8673)|
-11,949,0,664,8673,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,950,Annual Financing Repayment for Newly Purchased Steel Pathway Equipment at Unsubsidized Rate,664,8726,75,41,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-12,951,48,1216,8673,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,952,954,951,4,0,0,22,0,0,0,-1--1--1,,1|(1161,8673)|
-1,953,954,945,100,0,0,22,0,0,0,-1--1--1,,1|(1033,8673)|
-11,954,0,1106,8673,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,955,Annual Steel Pathway Equipment Financing Repayments at Unsubsidized Rate Expiring After Repayment Period,1106,8733,75,48,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-10,956,BAU Last Year Financing Repayments for Steel Pathway Equipment,885,8903,75,34,3,3,0,0,0,0,0,0,0,0,0,0,0,0
-12,957,48,554,8903,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,958,960,956,4,0,0,22,0,0,0,-1--1--1,,1|(737,8903)|
-1,959,960,957,100,0,0,22,0,0,0,-1--1--1,,1|(609,8903)|
-11,960,0,664,8903,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,961,BAU Annual Financing Repayment for Newly Purchased Steel Pathway Equipment,664,8949,75,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-12,962,48,1216,8903,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,963,965,962,4,0,0,22,0,0,0,-1--1--1,,1|(1161,8903)|
-1,964,965,956,100,0,0,22,0,0,0,-1--1--1,,1|(1033,8903)|
-11,965,0,1106,8903,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,966,BAU Annual Steel Pathway Equipment Financing Repayments Expiring After Repayment Period,1106,8956,75,41,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-10,967,New Steel Production Capacity by Pathway,664,8841,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,968,Steel Pathway Capital Cost per Unit Annual Capacity after RnD,404,8726,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,969,Steel Capacity Relined by Pathway,404,8841,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,970,Steel Reline Capital Cost per Unit Annual Capacity after RnD,404,8554,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,971,SoICETAF Share of Industry Capital Expenditures That Are Financed,924,8554,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,972,Steel Pathway Financing Annuity Factor,664,9064,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,973,BAU New Steel Production Capacity by Pathway,404,8949,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,974,SPCC Steel Pathway Capital Cost per Unit Annual Capacity,404,9064,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,975,BAU Steel Capacity Relined by Pathway,924,8777,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,976,SRCC Steel Reline Capital Cost per Unit Annual Capacity,924,9064,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,977,SoICETAF Share of Industry Capital Expenditures That Are Financed,404,9179,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,978,New Steel Production Capacity by Pathway,924,8087,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,979,Steel Pathway Capital Cost per Unit Annual Capacity after RnD,924,8374,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,980,Steel Capacity Relined by Pathway,664,8374,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,981,Steel Reline Capital Cost per Unit Annual Capacity after RnD,664,8087,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,982,SoICETAF Share of Industry Capital Expenditures That Are Financed,1184,8087,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,983,BCoISC Financing Interest Rate by Industry,365,8098,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,984,Perc Decrease in Cost of Capital for Clean Steel Pathway Capital This Year,105,8213,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,985,Steel Pathway Qualifies for Clean Capital Support,105,8098,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,986,BCoISC Financing Interest Rate by Industry,365,8443,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,987,RPfFISCC Repayment Period for Financed Industry Sector Capital Costs,105,8328,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,988,One Year,105,8443,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,989,RPfFISCC Repayment Period for Financed Industry Sector Capital Costs,495,7983,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,990,One Year,235,7868,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,991,One Year,1145,8558,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,992,One Year,1145,8846,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,993,RPfFISCC Repayment Period for Financed Industry Sector Capital Costs,1366,8561,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,994,RPfFISCC Repayment Period for Financed Industry Sector Capital Costs,1106,9071,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,995,One Year,1405,8098,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-1,996,931,932,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,997,932,939,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,998,950,955,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,999,961,966,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1000,939,944,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1001,933,950,1,0,0,0,0,128,0,-1--1--1,,1|(542,8506)|
-1,1002,967,950,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1003,968,950,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1004,969,950,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1005,970,950,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1006,971,950,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1007,972,961,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1008,973,961,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1009,974,961,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1010,975,961,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1011,976,961,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1012,977,961,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1013,978,939,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1014,979,939,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1015,980,939,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1016,981,939,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1017,982,939,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1018,983,931,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1019,984,931,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1020,985,931,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1021,986,933,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1022,987,933,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1023,988,933,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1024,989,932,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1025,990,932,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1026,991,945,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1027,992,956,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1028,993,955,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1029,994,966,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1030,995,934,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1031,993,944,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,1032,0,2363,7749,625,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,930,Steel Pathway Financing Interest Rate,365,8213,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,931,Steel Pathway Financing Annuity Factor by Pathway,625,8213,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,932,Steel Pathway Financing Annuity Factor,365,8328,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,933,Last Year Financing Repayments for Steel Pathway Equipment,1145,8213,75,30,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,934,48,814,8213,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,935,937,933,4,0,0,22,0,0,0,-1--1--1,,1|(997,8213)|
+1,936,937,934,100,0,0,22,0,0,0,-1--1--1,,1|(869,8213)|
+11,937,0,924,8213,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,938,Annual Financing Repayment for Newly Purchased Steel Pathway Equipment,924,8259,75,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,939,48,1476,8213,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,940,942,939,4,0,0,22,0,0,0,-1--1--1,,1|(1421,8213)|
+1,941,942,933,100,0,0,22,0,0,0,-1--1--1,,1|(1293,8213)|
+11,942,0,1366,8213,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,943,Annual Steel Pathway Equipment Financing Repayments Expiring After Repayment Period,1366,8266,75,41,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,944,Last Year Financing Repayments for Steel Pathway Equipment at Unsubsidized Rate,885,8673,75,34,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,945,48,554,8673,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,946,948,944,4,0,0,22,0,0,0,-1--1--1,,1|(737,8673)|
+1,947,948,945,100,0,0,22,0,0,0,-1--1--1,,1|(609,8673)|
+11,948,0,664,8673,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,949,Annual Financing Repayment for Newly Purchased Steel Pathway Equipment at Unsubsidized Rate,664,8726,75,41,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,950,48,1216,8673,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,951,953,950,4,0,0,22,0,0,0,-1--1--1,,1|(1161,8673)|
+1,952,953,944,100,0,0,22,0,0,0,-1--1--1,,1|(1033,8673)|
+11,953,0,1106,8673,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,954,Annual Steel Pathway Equipment Financing Repayments at Unsubsidized Rate Expiring After Repayment Period,1106,8733,75,48,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,955,BAU Last Year Financing Repayments for Steel Pathway Equipment,885,8903,75,34,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,956,48,554,8903,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,957,959,955,4,0,0,22,0,0,0,-1--1--1,,1|(737,8903)|
+1,958,959,956,100,0,0,22,0,0,0,-1--1--1,,1|(609,8903)|
+11,959,0,664,8903,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,960,BAU Annual Financing Repayment for Newly Purchased Steel Pathway Equipment,664,8949,75,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,961,48,1216,8903,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,962,964,961,4,0,0,22,0,0,0,-1--1--1,,1|(1161,8903)|
+1,963,964,955,100,0,0,22,0,0,0,-1--1--1,,1|(1033,8903)|
+11,964,0,1106,8903,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,965,BAU Annual Steel Pathway Equipment Financing Repayments Expiring After Repayment Period,1106,8956,75,41,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,966,New Steel Production Capacity by Pathway,664,8841,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,967,Steel Pathway Capital Cost per Unit Annual Capacity after RnD,404,8726,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,968,Steel Capacity Relined by Pathway,404,8841,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,969,Steel Reline Capital Cost per Unit Annual Capacity after RnD,404,8554,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,970,SoICETAF Share of Industry Capital Expenditures That Are Financed,924,8554,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,971,Steel Pathway Financing Annuity Factor,664,9064,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,972,BAU New Steel Production Capacity by Pathway,404,8949,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,973,SPCC Steel Pathway Capital Cost per Unit Annual Capacity,404,9064,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,974,BAU Steel Capacity Relined by Pathway,924,8777,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,975,SRCC Steel Reline Capital Cost per Unit Annual Capacity,924,9064,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,976,SoICETAF Share of Industry Capital Expenditures That Are Financed,404,9179,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,977,New Steel Production Capacity by Pathway,924,8087,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,978,Steel Pathway Capital Cost per Unit Annual Capacity after RnD,924,8374,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,979,Steel Capacity Relined by Pathway,664,8374,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,980,Steel Reline Capital Cost per Unit Annual Capacity after RnD,664,8087,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,981,SoICETAF Share of Industry Capital Expenditures That Are Financed,1184,8087,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,982,BCoISC Financing Interest Rate by Industry,365,8098,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,983,Perc Decrease in Cost of Capital for Clean Steel Pathway Capital This Year,105,8213,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,984,Steel Pathway Qualifies for Clean Capital Support,105,8098,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,985,BCoISC Financing Interest Rate by Industry,365,8443,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,986,RPfFISCC Repayment Period for Financed Industry Sector Capital Costs,105,8328,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,987,One Year,105,8443,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,988,RPfFISCC Repayment Period for Financed Industry Sector Capital Costs,495,7983,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,989,One Year,235,7868,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,990,One Year,1145,8558,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,991,One Year,1145,8846,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,992,RPfFISCC Repayment Period for Financed Industry Sector Capital Costs,1366,8561,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,993,RPfFISCC Repayment Period for Financed Industry Sector Capital Costs,1106,9071,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,994,One Year,1405,8098,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+1,995,930,931,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,996,931,938,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,997,949,954,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,998,960,965,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,999,938,943,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1000,932,949,1,0,0,0,0,128,0,-1--1--1,,1|(542,8506)|
+1,1001,966,949,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1002,967,949,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1003,968,949,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1004,969,949,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1005,970,949,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1006,971,960,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1007,972,960,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1008,973,960,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1009,974,960,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1010,975,960,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1011,976,960,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1012,977,938,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1013,978,938,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1014,979,938,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1015,980,938,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1016,981,938,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1017,982,930,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1018,983,930,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1019,984,930,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1020,985,932,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1021,986,932,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1022,987,932,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1023,988,931,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1024,989,931,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1025,990,944,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1026,991,955,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1027,992,954,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1028,993,965,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1029,994,933,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1030,992,943,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,1031,0,2363,7749,625,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Government Support Payments for Steel
-12,1033,0,2623,8474,170,41,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+12,1032,0,2623,8474,170,41,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 The CCfD payments, production credit, procurement premium and border fee revenue are computed with their instruments above; all are booked on Industry - Cash Flow and the Input-Output Model view.
-10,1034,Steel Pathway Investment Subsidy Amount Paid,2363,8336,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,1035,BAU Steel Pathway Investment Subsidy Amount Paid,2363,8106,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,1036,Change in Steel Pathway Investment Subsidies Paid,2623,8336,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,1037,Steel Pathway Clean Heat Production Subsidy Amount Paid,2363,8221,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,1038,BAU Steel Pathway Clean Heat Production Subsidy Amount Paid,2363,8451,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,1039,Change in Steel Pathway Clean Heat Production Subsidies Paid,2623,8221,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,1040,Steel Production Support Payments by ISIC Code,2883,8221,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,1041,Low Carbon Steel Procurement Premium Paid by Buyers by ISIC Code,2363,7991,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,1042,BAU Steel Pathway Capital Subsidy Rate,2103,8106,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,1043,SPCC Steel Pathway Capital Cost per Unit Annual Capacity,2103,7991,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,1044,BAU New Steel Production Capacity by Pathway,2623,7991,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,1045,Steel Pathway Capital Subsidy Rate,2103,8336,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,1046,Steel Pathway Capital Cost per Unit Annual Capacity after RnD,2103,8221,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,1047,New Steel Production Capacity by Pathway,2103,8451,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,1048,Steel CCfD Payments,2883,8106,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,1049,Low Carbon Steel Credit Payments,2883,8336,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,1050,Low Carbon Steel Procurement Premium Paid by Government,2623,8106,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,1051,Steel Production by Pathway,1843,8106,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,1052,Steel Pathway Clean Heat Production Subsidy per Ton,1843,8336,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,1053,BAU Steel Production by Pathway,2363,8566,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,1054,BAU Steel Pathway Clean Heat Production Subsidy per Ton,2103,8566,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,1055,Low Carbon Steel Procurement Premium Paid by Buyers,2363,7876,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,1056,1037,1039,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1057,1038,1039,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1058,1034,1036,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1059,1035,1036,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1060,1039,1040,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1061,1042,1035,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1062,1043,1035,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1063,1044,1035,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1064,1045,1034,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1065,1046,1034,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1066,1047,1034,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1067,1048,1040,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1068,1049,1040,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1069,1050,1040,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1070,1051,1037,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1033,Steel Pathway Investment Subsidy Amount Paid,2363,8336,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1034,BAU Steel Pathway Investment Subsidy Amount Paid,2363,8106,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1035,Change in Steel Pathway Investment Subsidies Paid,2623,8336,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1036,Steel Pathway Clean Heat Production Subsidy Amount Paid,2363,8221,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1037,BAU Steel Pathway Clean Heat Production Subsidy Amount Paid,2363,8451,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1038,Change in Steel Pathway Clean Heat Production Subsidies Paid,2623,8221,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1039,Steel Production Support Payments by ISIC Code,2883,8221,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1040,Low Carbon Steel Procurement Premium Paid by Buyers by ISIC Code,2363,7991,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1041,BAU Steel Pathway Capital Subsidy Rate,2103,8106,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1042,SPCC Steel Pathway Capital Cost per Unit Annual Capacity,2103,7991,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1043,BAU New Steel Production Capacity by Pathway,2623,7991,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1044,Steel Pathway Capital Subsidy Rate,2103,8336,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1045,Steel Pathway Capital Cost per Unit Annual Capacity after RnD,2103,8221,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1046,New Steel Production Capacity by Pathway,2103,8451,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1047,Steel CCfD Payments,2883,8106,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1048,Low Carbon Steel Credit Payments,2883,8336,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1049,Low Carbon Steel Procurement Premium Paid by Government,2623,8106,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1050,Steel Production by Pathway,1843,8106,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1051,Steel Pathway Clean Heat Production Subsidy per Ton,1843,8336,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1052,BAU Steel Production by Pathway,2363,8566,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1053,BAU Steel Pathway Clean Heat Production Subsidy per Ton,2103,8566,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1054,Low Carbon Steel Procurement Premium Paid by Buyers,2363,7876,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1055,1036,1038,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1056,1037,1038,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1057,1033,1035,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1058,1034,1035,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1059,1038,1039,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1060,1041,1034,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1061,1042,1034,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1062,1043,1034,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1063,1044,1033,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1064,1045,1033,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1065,1046,1033,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1066,1047,1039,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1067,1048,1039,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1068,1049,1039,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1069,1050,1036,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1070,1051,1036,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1071,1052,1037,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1072,1053,1038,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1073,1054,1038,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1074,1055,1041,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1072,1053,1037,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1073,1054,1040,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1074,SNFPC Steel Non Fuel Process CO2 per Ton by Pathway,3305,807,75,34,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,1075,Grams per Metric Ton CO2e,3305,347,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,1076,SPOC Steel Pathway Other Operating Cost per Ton,4605,692,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,1077,Steel Pathway Non Energy Operating Cost per Ton,4605,807,75,34,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,1078,SIFP Steel Iron Feed Price,4605,922,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,1079,SIFIbP Steel Iron Feed Intensity by Pathway,4605,1037,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,1080,Steel Pathway Non Energy Operating Cost per Ton,3565,5093,75,34,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+1,1081,1074,87,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1082,1074,89,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1083,1075,87,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1084,100,89,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1085,1076,1077,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1086,1078,1077,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1087,1077,91,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1088,1080,723,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1089,1079,1077,1,0,0,0,0,192,0,-1--1--1,,1|(4740,922)|
+10,1090,Steel Energy Intensity by Pathway and Fuel with BAU Trend,2355,347,75,34,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,1091,SBEIT Steel BAU Energy Intensity Improvement Rate,2615,347,75,34,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+1,1092,57,1090,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1093,1091,1090,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1094,1090,53,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Industry - BAU
