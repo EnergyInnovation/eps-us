@@ -12064,6 +12064,21 @@ PolicyElements = (
   (("GRA indst clean materials support","corporate taxes"),
     ("Schedule 1",(2025,1),(2050,1)),
   ),
+  (("GRA border charge revenue","regular spending"),
+    ("Schedule 1",(2025,1),(2050,1)),
+  ),
+  (("GRA border charge revenue","deficit spending"),
+    ("Schedule 1",(2025,1),(2050,1)),
+  ),
+  (("GRA border charge revenue","household taxes"),
+    ("Schedule 1",(2025,1),(2050,1)),
+  ),
+  (("GRA border charge revenue","payroll taxes"),
+    ("Schedule 1",(2025,1),(2050,1)),
+  ),
+  (("GRA border charge revenue","corporate taxes"),
+    ("Schedule 1",(2025,1),(2050,1)),
+  ),
   (("GRA remaining cash flow changes","regular spending"),
     ("Schedule 1",(2025,1),(2050,1)),
   ),
@@ -12534,3 +12549,7 @@ if CheckForScheduleErrors() == 0:
 # clean hydrogen requirement elements. Every schedule copies the sister lever 'hydgn production subsidy'
 # (Schedule 1 only, so all schedules fall back to it). A build or award window is a documented follow-up,
 # not something to encode in a schedule.
+
+# NOTE (2026-11-03): 'GRA border charge revenue' (5 elements: regular spending, deficit spending, household taxes,
+# payroll taxes, corporate taxes) added right after the 'GRA indst clean materials support' elements, for the new
+# 'border charge revenue' Govt Cash Flow Type. Schedules copy the sister GRA elements (Schedule 1 only).
