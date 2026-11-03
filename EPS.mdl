@@ -10142,9 +10142,11 @@ BAU Geoengineering Sector Pollutant Emissions Excluding Captured CO2[Pollutant,I
 
 BAU Green Hydrogen Demand=
 	SUM(BAU Green Hydrogen Demand by Sector[Sectors!])
+	* (1 - BAU Last Year Share of Domestic Hydrogen Use Met by Imports)
 	+ BHEbG BAU Hydrogen Exports by Grade[green hydrogen exports]
 	~	BTU
-	~	Domestic demand for green hydrogen plus green hydrogen exports.
+	~	Domestic demand for green hydrogen not met by imports, plus green \
+		hydrogen exports: what the region's plants must produce in this tier.
 	|
 
 BAU Green Hydrogen Demand by Sector[Sectors]=
@@ -12786,6 +12788,14 @@ BAU Last Year Revenue from CES Credits per Unit Electricity Output by Plant Type
 	~	$/MW
 	~		|
 
+BAU Last Year Share of Domestic Hydrogen Use Met by Imports=
+	DELAY FIXED(
+	  BAU Share of Domestic Hydrogen Use Met by Imports,
+	  1, Initial Share of Domestic Hydrogen Use Met by Imports)
+	~	Dmnl
+	~	Last year's share of hydrogen use supplied by imports. BAU twin.
+	|
+
 BAU Last Year Soft Costs per Unit Capacity[Electricity Source]= DELAY FIXED (
 	CCaMC BAU Soft Costs per Unit Capacity[Electricity Source],
 	1,
@@ -13037,9 +13047,12 @@ BAU Levelized CCS Capital Cost per Hydrogen Sector Ton Sequestered=
 
 BAU Low Carbon Hydrogen Demand=
 	SUM(BAU Low Carbon Hydrogen Demand by Sector[Sectors!])
+	* (1 - BAU Last Year Share of Domestic Hydrogen Use Met by Imports)
 	+ BHEbG BAU Hydrogen Exports by Grade[low carbon hydrogen exports]
 	~	BTU
-	~	Domestic demand for low carbon hydrogen plus low carbon hydrogen exports.
+	~	Domestic demand for low carbon hydrogen not met by imports, plus low \
+		carbon hydrogen exports: what the region's plants must produce in this \
+		tier.
 	|
 
 BAU Low Carbon Hydrogen Demand by Sector[Sectors]=
@@ -17451,6 +17464,15 @@ BAU Share of Daily Expected Output that Can be Shifted by Electricity Timeslice[
 	~	Dmnl
 	~		|
 
+BAU Share of Domestic Hydrogen Use Met by Imports=
+	MIN(1,
+	  ZIDZ(BAU Fuel Production Imports and Exports[hydrogen,imports],
+	    BAU Total Energy Use[hydrogen]))
+	~	Dmnl
+	~	Share of the region's hydrogen use supplied by imports in the fuel trade \
+		ledger. BAU twin.
+	|
+
 BAU Share of Electricity Generation Capacity Built This Year[Electricity Source]=
 	ZIDZ(
 	
@@ -20339,9 +20361,12 @@ BAU Total Final Energy Use by Sector[district heat and hydrogen sector,All Fuels
 
 BAU Total Hydrogen Demand=
 	SUM(BAU Hydrogen Demand by Sector[Sectors!])
+	* (1 - BAU Last Year Share of Domestic Hydrogen Use Met by Imports)
 	+ SUM(BHEbG BAU Hydrogen Exports by Grade[Hydrogen Export Grade!])
 	~	BTU
-	~	Domestic hydrogen demand plus exports.
+	~	Domestic hydrogen demand not met by imports, plus exports: what the \
+		region's hydrogen plants must produce. Imports serve each tier in \
+		proportion to its domestic demand.
 	|
 
 BAU Total Industrial Electricity Demand by Hour Before CCS[Electricity Timeslice,Hour\
@@ -45280,9 +45305,11 @@ Grams Pollutant per Gram CO2e Unit Converter=
 
 Green Hydrogen Demand=
 	SUM(Green Hydrogen Demand by Sector[Sectors!])
+	* (1 - Last Year Share of Domestic Hydrogen Use Met by Imports)
 	+ Hydrogen Exports by Grade[green hydrogen exports]
 	~	BTU
-	~	Domestic demand for green hydrogen plus green hydrogen exports.
+	~	Domestic demand for green hydrogen not met by imports, plus green \
+		hydrogen exports: what the region's plants must produce in this tier.
 	|
 
 Green Hydrogen Demand by Sector[Sectors]=
@@ -51439,6 +51466,19 @@ Initial Output by Industry Category and Process[Industry Category,Industrial Pro
 	~	$
 	~		|
 
+Initial Share of Domestic Hydrogen Use Met by Imports=
+	INITIAL(
+	  MIN(1,
+	    ZIDZ(BFPIaE BAU Fuel Production Imports and Exports[hydrogen,imports],
+	      BFPIaE BAU Fuel Production Imports and Exports[hydrogen,production]
+	      + BFPIaE BAU Fuel Production Imports and Exports[hydrogen,imports]
+	      - BFPIaE BAU Fuel Production Imports and Exports[hydrogen,exports])))
+	~	Dmnl
+	~	Import share of hydrogen use in the first year, from the fuel trade \
+		inputs (BFPIaE) rather than the balanced ledger, so the first year does \
+		not depend on hydrogen production.
+	|
+
 Initial Time Dimensionless=
 	INITIAL TIME / One Year
 	~	Dmnl
@@ -53005,6 +53045,17 @@ Last Year Revenue from CES Credits per Unit Electricity Output by Plant Type[Ele
 	~	$/MW
 	~		|
 
+Last Year Share of Domestic Hydrogen Use Met by Imports=
+	DELAY FIXED(
+	  Share of Domestic Hydrogen Use Met by Imports,
+	  1, Initial Share of Domestic Hydrogen Use Met by Imports)
+	~	Dmnl
+	~	Last year's share of hydrogen use supplied by imports. Lagged because \
+		this year's imports in the fuel trade ledger depend on total hydrogen \
+		use, which includes hydrogen sector fuel use and so depends on this \
+		year's production.
+	|
+
 Last Year Soft Costs per Unit Distributed Solar Capacity=
 	DELAY FIXED(CpUDSC Soft Costs per Unit Distributed Solar Capacity,
 	1,
@@ -53509,9 +53560,12 @@ Low Carbon Clinker Production=
 
 Low Carbon Hydrogen Demand=
 	SUM(Low Carbon Hydrogen Demand by Sector[Sectors!])
+	* (1 - Last Year Share of Domestic Hydrogen Use Met by Imports)
 	+ Hydrogen Exports by Grade[low carbon hydrogen exports]
 	~	BTU
-	~	Domestic demand for low carbon hydrogen plus low carbon hydrogen exports.
+	~	Domestic demand for low carbon hydrogen not met by imports, plus low \
+		carbon hydrogen exports: what the region's plants must produce in this \
+		tier.
 	|
 
 Low Carbon Hydrogen Demand by Sector[Sectors]=
@@ -62126,14 +62180,14 @@ Output Hydrogen Sector Grid Electricity Use=
 
 Output Hydrogen Supplied to Sector by Pathway[Sectors,Hydrogen Production Pathway] :EXCEPT:\
 		 [Sectors,electrolysis with guaranteed clean electricity]=
-	(ZIDZ(Low Carbon Hydrogen Demand by Sector[Sectors], Low Carbon Hydrogen Demand)
+	(ZIDZ(Low Carbon Hydrogen Demand by Sector[Sectors] * (1 - Last Year Share of Domestic Hydrogen Use Met by Imports), Low Carbon Hydrogen Demand)
 	  * (Surviving Capacity Used for Low Carbon Hydrogen Production[Hydrogen Production Pathway\
 		]
 	     + New Low Carbon Hydrogen Production Capacity This Year[Hydrogen Production Pathway\
 		])
-	 + ZIDZ(Hydrogen Demand by Sector[Sectors] - Green Hydrogen Demand by Sector[Sectors\
+	 + ZIDZ((Hydrogen Demand by Sector[Sectors] - Green Hydrogen Demand by Sector[Sectors\
 		]
-	        - Low Carbon Hydrogen Demand by Sector[Sectors], Other Hydrogen Demand)
+	        - Low Carbon Hydrogen Demand by Sector[Sectors]) * (1 - Last Year Share of Domestic Hydrogen Use Met by Imports), Other Hydrogen Demand)
 	  * (Surviving Capacity Used for Other Hydrogen Production[Hydrogen Production Pathway\
 		]
 	     + New Other Hydrogen Production Capacity This Year[Hydrogen Production Pathway]\
@@ -62142,17 +62196,17 @@ Output Hydrogen Supplied to Sector by Pathway[Sectors,Hydrogen Production Pathwa
 	/ BpMMTH BTU per MMT Hydrogen ~~|
 Output Hydrogen Supplied to Sector by Pathway[Sectors,electrolysis with guaranteed clean electricity\
 		]=
-	(ZIDZ(Green Hydrogen Demand by Sector[Sectors], Green Hydrogen Demand)
+	(ZIDZ(Green Hydrogen Demand by Sector[Sectors] * (1 - Last Year Share of Domestic Hydrogen Use Met by Imports), Green Hydrogen Demand)
 	  * (Surviving Capacity Used for Green Hydrogen Production
 	     + New Green Hydrogen Production Capacity This Year)
-	 + ZIDZ(Low Carbon Hydrogen Demand by Sector[Sectors], Low Carbon Hydrogen Demand)
+	 + ZIDZ(Low Carbon Hydrogen Demand by Sector[Sectors] * (1 - Last Year Share of Domestic Hydrogen Use Met by Imports), Low Carbon Hydrogen Demand)
 	  * (Surviving Capacity Used for Low Carbon Hydrogen Production[electrolysis with guaranteed clean electricity\
 		]
 	     + New Low Carbon Hydrogen Production Capacity This Year[electrolysis with guaranteed clean electricity\
 		])
-	 + ZIDZ(Hydrogen Demand by Sector[Sectors] - Green Hydrogen Demand by Sector[Sectors\
+	 + ZIDZ((Hydrogen Demand by Sector[Sectors] - Green Hydrogen Demand by Sector[Sectors\
 		]
-	        - Low Carbon Hydrogen Demand by Sector[Sectors], Other Hydrogen Demand)
+	        - Low Carbon Hydrogen Demand by Sector[Sectors]) * (1 - Last Year Share of Domestic Hydrogen Use Met by Imports), Other Hydrogen Demand)
 	  * (Surviving Capacity Used for Other Hydrogen Production[electrolysis with guaranteed clean electricity\
 		]
 	     + New Other Hydrogen Production Capacity This Year[electrolysis with guaranteed clean electricity\
@@ -71013,6 +71067,18 @@ Share of Distributed Electricity Emissions by Building Type[Building Type,Electr
 	~	Dmnl
 	~		|
 
+Share of Domestic Hydrogen Use Met by Imports=
+	MIN(1,
+	  ZIDZ(Fuel Imports[hydrogen],
+	    Total Energy Use[hydrogen]))
+	~	Dmnl
+	~	Share of the region's hydrogen use supplied by imports in the fuel trade \
+		ledger (Fuel Imports). Imported hydrogen is produced abroad, so its \
+		energy use and emissions are not counted here; this share of domestic \
+		demand is removed from what the region's hydrogen plants must produce, \
+		one year later.
+	|
+
 Share of Electricity Generation Capacity Built This Year[Electricity Source]=
 	ZIDZ(
 	
@@ -78746,9 +78812,12 @@ Total Final Energy Use by Sector[district heat and hydrogen sector,All Fuels]=
 
 Total Hydrogen Demand=
 	SUM(Hydrogen Demand by Sector[Sectors!])
+	* (1 - Last Year Share of Domestic Hydrogen Use Met by Imports)
 	+ SUM(Hydrogen Exports by Grade[Hydrogen Export Grade!])
 	~	BTU
-	~	Domestic hydrogen demand plus exports.
+	~	Domestic hydrogen demand not met by imports, plus exports: what the \
+		region's hydrogen plants must produce. Imports serve each tier in \
+		proportion to its domestic demand.
 	|
 
 Total Industrial Electricity Demand by Hour Before CCS[Electricity Timeslice,Hour,Industry Category\
@@ -104781,12 +104850,12 @@ Hydrogen Exports
 1,1514,1490,1500,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1515,1500,1501,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1516,1488,1501,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,1517,Hydrogen Exports by Grade,2835,-1010,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1517,Hydrogen Exports by Grade,2835,-1050,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,1518,Hydrogen Exports by Grade,2835,-640,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,1519,1517,853,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1520,1517,857,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1521,1518,862,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,1522,BHEbG BAU Hydrogen Exports by Grade,2835,1404,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1522,BHEbG BAU Hydrogen Exports by Grade,2835,1364,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,1523,BHEbG BAU Hydrogen Exports by Grade,2835,1774,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,1524,1522,902,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1525,1522,905,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -104812,6 +104881,42 @@ Hydrogen Exports
 1,1545,1534,1535,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1546,1536,1534,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1547,1537,1534,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,1548,0,8075,-1460,550,24,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Netting Out Hydrogen Imports
+10,1549,Share of Domestic Hydrogen Use Met by Imports,7960,-1215,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1550,Last Year Share of Domestic Hydrogen Use Met by Imports,8220,-1215,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1551,Initial Share of Domestic Hydrogen Use Met by Imports,8220,-1100,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1552,Fuel Imports,7700,-1330,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,1553,Total Energy Use,7700,-1100,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1554,BFPIaE BAU Fuel Production Imports and Exports,8220,-985,75,34,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+1,1555,1552,1549,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1556,1553,1549,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1557,1549,1550,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1558,1551,1550,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1559,1554,1551,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1560,Last Year Share of Domestic Hydrogen Use Met by Imports,2835,-1120,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1561,Last Year Share of Domestic Hydrogen Use Met by Imports,2835,-955,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1562,Last Year Share of Domestic Hydrogen Use Met by Imports,2835,-735,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1563,1560,853,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1564,1561,857,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1565,1562,862,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,1566,0,8075,954,550,24,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Netting Out Hydrogen Imports
+10,1567,BAU Share of Domestic Hydrogen Use Met by Imports,7960,1199,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1568,BAU Last Year Share of Domestic Hydrogen Use Met by Imports,8220,1199,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1569,Initial Share of Domestic Hydrogen Use Met by Imports,8220,1314,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1570,BAU Fuel Production Imports and Exports,7700,1084,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,1571,BAU Total Energy Use,7700,1314,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1572,1570,1567,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1573,1571,1567,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1574,1567,1568,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1575,1569,1568,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1576,BAU Last Year Share of Domestic Hydrogen Use Met by Imports,2835,1287,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1577,BAU Last Year Share of Domestic Hydrogen Use Met by Imports,2835,1455,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1578,BAU Last Year Share of Domestic Hydrogen Use Met by Imports,2835,1690,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1579,1576,902,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1580,1577,905,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1581,1578,909,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Land Use and Forestry
@@ -112179,6 +112284,8 @@ Distributed Generation by Hour
 10,2211,MWh per TWh,13407,10755,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,2212,MWh per TWh,13407,11089,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,2213,MWh per TWh,13407,11710,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,2214,Last Year Share of Domestic Hydrogen Use Met by Imports,26160,1549,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,2215,2214,2196,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Debugging Assistance
