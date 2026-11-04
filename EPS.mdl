@@ -3280,7 +3280,7 @@ BAU Annual Financing Repayment for Newly Purchased Steel Pathway Equipment=
 	* (
 	  SUM(
 	    BAU New Steel Production Capacity by Pathway[Steel Production Pathway!]
-	    * SPCC Steel Pathway Capital Cost per Unit Annual Capacity[Steel Production Pathway!]
+	    * Steel Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment[Steel Production Pathway!]
 	  )
 	  + SUM(
 	      BAU Steel Capacity Relined by Pathway[Steel Production Pathway!]
@@ -3921,6 +3921,19 @@ BAU Binding Peak Hour for Reliability Additions[net peak day electricity timesli
 	)
 	~	Dmnl
 	~		|
+
+BAU Blast Furnace Capacity Share Retrofitted with Capture This Year=
+	MAX(
+	  0,
+	  BAU Cost Effective Share of Blast Furnace Capacity for Capture Retrofit
+	  - BAU Share of Blast Furnace Capacity Retrofitted with Capture
+	)
+	* SoCECRCSiaY Share of Cost Effective CCS Retrofit Construction Started in a Year
+	~	1/Year
+	~	Retrofits started this year: the gap between the cost-effective share \
+		and what is already retrofitted, closed at the same pace the CCS sector \
+		uses for industrial retrofits.
+	|
 
 BAU Blended Industrial Combustion Fuel Cost per Unit Energy[Industry Category]=
 	ZIDZ(
@@ -7018,6 +7031,20 @@ BAU Cost Driven Retirement Gap Excluding Capacity Payment[Electricity Source]=
 		])
 	~	MW
 	~		|
+
+BAU Cost Effective Share of Blast Furnace Capacity for Capture Retrofit=
+	IF THEN ELSE(
+	  BAU Steel Retrofit Net Value of Capture <= 0,
+	  0,
+	  LOOKUP BACKWARD(
+	    SCRSbVoC Steel CCS Retrofit Share by Value of Capture,
+	    BAU Steel Retrofit Net Value of Capture / One Dollar * One Metric Ton CO2e
+	  )
+	)
+	~	Dmnl
+	~	Share of US blast furnace capacity whose capture cost (excluding energy \
+		and transport and storage) is covered by the net value of capture.
+	|
 
 BAU Cost of Capacity Construction before Construction Subsidies[Electricity Source]=
 	BAU New Generation Capacity Excluding Retrofit Capacity[Electricity Source]
@@ -12821,6 +12848,14 @@ BAU Last Year Steel in New Vehicles= DELAY FIXED(
 	~	BAU twin of Last Year Steel in New Vehicles.
 	|
 
+BAU Last Year Steel Module CO2 Captured by Pathway Capture[Emissions Type]= DELAY FIXED (
+	BAU Steel Module CO2 Captured by Pathway Capture[Emissions Type],
+	1,
+	0)
+	~	g CO2/Year
+	~	Last year's capture-route CO2 captured.
+	|
+
 BAU Last Year Subsidies Paid per Unit Electricity Output for Newly Eligible CCS Capacity\
 		[Electricity Source]= INTEG (
 	(BAU Subsidies Paid per Unit Electricity Output for Newly Eligible CCS Capacity[Electricity Source\
@@ -14755,7 +14790,7 @@ BAU New Industrial Equipment Capital Cost[iron and steel 241]=
 	)
 	+ SUM(
 	    BAU New Steel Production Capacity by Pathway[Steel Production Pathway!]
-	    * SPCC Steel Pathway Capital Cost per Unit Annual Capacity[Steel Production Pathway!]
+	    * Steel Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment[Steel Production Pathway!]
 	  )
 	+ SUM(
 	    BAU Steel Capacity Relined by Pathway[Steel Production Pathway!]
@@ -17444,6 +17479,16 @@ BAU Share of Available Capacity Actually Dispatched by Hour[Electricity Timeslic
 	~		~	:SUPPLEMENTARY 
 	|
 
+BAU Share of Blast Furnace Capacity Retrofitted with Capture= INTEG(
+	BAU Blast Furnace Capacity Share Retrofitted with Capture This Year,
+		0)
+	~	Dmnl
+	~	Share of traditional blast furnace capacity fitted with carbon capture. \
+		Retrofitted plants are assumed to retire in the same proportion as the \
+		rest of the blast furnace fleet, so the share carries over; it never \
+		falls (capture equipment is not removed).
+	|
+
 BAU Share of Clinker Production Capacity Built During Model Run[Cement Production Pathway\
 		]=
 	ZIDZ(
@@ -17831,6 +17876,27 @@ BAU Steel Capacity Retired at Reline Decision by Pathway[Steel Production Pathwa
 	~	BAU twin of Steel Capacity Retired at Reline Decision by Pathway.
 	|
 
+BAU Steel Capture Energy Cost per Ton CO2=
+	SUM(
+	  CC Energy Use per Ton Industry CO2 Sequestered[iron and steel 241,Industrial Fuel!,process emissions]
+	  * BAU Industrial Fuel Cost per Unit Energy[iron and steel 241,Industrial Fuel!]
+	)
+	* Grams per Metric Ton CO2e
+	~	$/metric ton CO2e
+	~	Cost of the gas and electricity a capture unit at a steel mill uses per \
+		ton of CO2 captured, at this year's fuel prices (CCS module energy use, \
+		NETL 2023).
+	|
+
+BAU Steel Combustion CO2 Emissions=
+	SUM(
+	  BAU Steel Production by Pathway[Steel Production Pathway!]
+	  * Steel Combustion CO2 Intensity per Ton by Pathway with BAU Trend[Steel Production Pathway!]
+	)
+	~	g CO2/Year
+	~	BAU twin of Steel Combustion CO2 Emissions.
+	|
+
 BAU Steel in New Generating Capacity=
 	SUM(
 	  BAU New Generation Capacity Excluding Retrofit Capacity[Electricity Source!]
@@ -17849,6 +17915,60 @@ BAU Steel in New Vehicles=
 	~	BAU twin of Steel in New Vehicles.
 	|
 
+BAU Steel Module Change in CO2 Captured by Pathway Capture[Emissions Type]=
+	BAU Steel Module CO2 Captured by Pathway Capture[Emissions Type]
+	- BAU Last Year Steel Module CO2 Captured by Pathway Capture[Emissions Type]
+	~	g CO2/Year
+	~	Year-on-year change in capture-route CO2 captured. Subtracted from iron \
+		and steel's increase in sequestered CO2 so the CCS sector does not buy \
+		capture equipment the route's own capital already paid for.
+	|
+
+BAU Steel Module CO2 Captured by Emissions Type[Emissions Type]=
+	BAU Steel Module CO2 Captured by Pathway Capture[Emissions Type]
+	+ BAU Steel Module CO2 Captured by Retrofits[Emissions Type]
+	~	g CO2/Year
+	~	All CO2 the steel module captures this year (capture route plus \
+		retrofits), by emissions type: what iron and steel adds to the CCS \
+		sector's sequestered CO2.
+	|
+
+BAU Steel Module CO2 Captured by Pathway Capture[process emissions]=
+	SUM(
+	  BAU Steel Production by Pathway[Steel Production Pathway!]
+	  * Steel Process CO2 Intensity per Ton by Pathway[Steel Production Pathway!]
+	  * Steel Pathway CO2 Capture Share[Steel Production Pathway!]
+	) ~~|
+BAU Steel Module CO2 Captured by Pathway Capture[energy related emissions]=
+	SUM(
+	  BAU Steel Production by Pathway[Steel Production Pathway!]
+	  * Steel Combustion CO2 Intensity per Ton by Pathway with BAU Trend[Steel Production Pathway!]
+	  * Steel Pathway CO2 Capture Share[Steel Production Pathway!]
+	)
+	~	g CO2/Year
+	~	BAU CO2 captured this year by the blast furnace with carbon capture \
+		route, by emissions type. Added to iron and steel's sequestered CO2 in \
+		the CCS sector, which books transport and storage, subsidies, capture \
+		O&M, capture energy and the carbon tax rebate once; the route's own \
+		capital carries the capture equipment.
+	|
+
+BAU Steel Module CO2 Captured by Retrofits[process emissions]=
+	BAU Steel Production by Pathway[traditional BF BOF]
+	* Steel Process CO2 Intensity per Ton by Pathway[traditional BF BOF]
+	* BAU Share of Blast Furnace Capacity Retrofitted with Capture
+	* SCSoMC Steel Capture Share of Mill CO2 ~~|
+BAU Steel Module CO2 Captured by Retrofits[energy related emissions]=
+	BAU Steel Production by Pathway[traditional BF BOF]
+	* Steel Combustion CO2 Intensity per Ton by Pathway with BAU Trend[traditional BF BOF]
+	* BAU Share of Blast Furnace Capacity Retrofitted with Capture
+	* SCSoMC Steel Capture Share of Mill CO2
+	~	g CO2/Year
+	~	CO2 captured this year at blast furnaces retrofitted with capture, by \
+		emissions type. Retrofit capital, O&M, energy and transport and storage \
+		are all booked by the CCS sector at the CCS module's rates.
+	|
+
 BAU Steel Module Energy Use by Fuel Type[Industrial Fuel]=
 	SUM(
 	  BAU Steel Production by Pathway[Steel Production Pathway!]
@@ -17860,7 +17980,7 @@ BAU Steel Module Energy Use by Fuel Type[Industrial Fuel]=
 	|
 
 BAU Steel Pathway Capital Cost per Unit Annual Capacity after Subsidy[Steel Production Pathway]=
-	SPCC Steel Pathway Capital Cost per Unit Annual Capacity[Steel Production Pathway]
+	Steel Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment[Steel Production Pathway]
 	* (1 - BAU Steel Pathway Capital Subsidy Rate[Steel Production Pathway])
 	~	$/(metric tons/Year)
 	~	BAU twin of Steel Pathway Capital Cost per Unit Annual Capacity after \
@@ -17889,6 +18009,38 @@ BAU Steel Pathway Capital Subsidy Rate[Steel Production Pathway]=
 	)
 	~	Dmnl
 	~	Fraction of the greenfield capital cost of new steel capacity that government pays in the BAU case: the BAU pathway subsidy plus, for qualifying pathways, the BAU clean industrial heat investment credit, capped at the whole cost.
+	|
+
+BAU Steel Pathway Capture Operating Cost per Ton[Steel Production Pathway]=
+	Steel Pathway CO2 Capture Share[Steel Production Pathway]
+	* (
+	    Steel Process CO2 Intensity per Ton by Pathway[Steel Production Pathway] / Grams per Metric Ton CO2e
+	    * (
+	      CC CCS Total OM Cost per Industry Ton Sequestered[iron and steel 241,process emissions]
+	      + CCSTaSC CCS Transportation and Storage Costs
+	      - CCSTaSC CCS Transportation and Storage Subsidies
+	      - BCS BAU Industry CCS Subsidy
+	      + BAU Steel Capture Energy Cost per Ton CO2
+	    )
+	  + Steel Combustion CO2 Intensity per Ton by Pathway with BAU Trend[Steel Production Pathway] / Grams per Metric Ton CO2e
+	    * (
+	      CC CCS Total OM Cost per Industry Ton Sequestered[iron and steel 241,energy related emissions]
+	      + CCSTaSC CCS Transportation and Storage Costs
+	      - CCSTaSC CCS Transportation and Storage Subsidies
+	      - BCS BAU Industry CCS Subsidy
+	      + BAU Steel Capture Energy Cost per Ton CO2
+	      - BCTR BAU Carbon Tax Rate[industry sector]
+	      * BFoICStCT BAU Fraction of Industry Category Subject to Carbon Tax[iron and steel 241]
+	    )
+	)
+	~	$/metric ton
+	~	BAU Capture cost per ton of steel in route choice: captured process and \
+		combustion CO2 times the CCS module's O&M, transport and storage and \
+		capture energy, less transport-and-storage and capture subsidies; \
+		captured combustion CO2 also earns back the carbon tax already in the \
+		fuel price (the CCS rebate). Captured process CO2 is simply not taxed \
+		(the process carbon term in the operating cost is scaled by one less the \
+		capture share).
 	|
 
 BAU Steel Pathway Choice Weight[Steel Production Pathway]=
@@ -17935,7 +18087,7 @@ BAU Steel Pathway Clean Heat Production Subsidy per Ton[Steel Production Pathway
 BAU Steel Pathway Investment Subsidy Amount Paid=
 	SUM(
 	  BAU Steel Pathway Capital Subsidy Rate[Steel Production Pathway!]
-	  * SPCC Steel Pathway Capital Cost per Unit Annual Capacity[Steel Production Pathway!]
+	  * Steel Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment[Steel Production Pathway!]
 	  * BAU New Steel Production Capacity by Pathway[Steel Production Pathway!]
 	)
 	~	$
@@ -17964,8 +18116,10 @@ BAU Steel Pathway Operating Cost per Ton[Steel Production Pathway]=
 	+ Steel Process CO2 Intensity per Ton by Pathway[Steel Production Pathway]
 	  / Grams per Metric Ton CO2e
 	  * BAU Steel Process Emissions Carbon Tax Rate
+	  * (1 - Steel Pathway CO2 Capture Share[Steel Production Pathway])
 	- BAU Steel Pathway Clean Heat Production Subsidy per Ton[Steel Production Pathway]
 	+ Steel Pathway Non Energy Operating Cost per Ton[Steel Production Pathway]
+	+ BAU Steel Pathway Capture Operating Cost per Ton[Steel Production Pathway]
 	~	$/metric ton
 	~	BAU twin of Steel Pathway Operating Cost per Ton.
 	|
@@ -18103,6 +18257,18 @@ BAU Steel Retirement Alternative Cost per Ton=
 	  ^ SRNE Steel Retirement Need Exponent
 	~	$/metric ton
 	~	BAU twin of Steel Retirement Alternative Cost per Ton.
+	|
+
+BAU Steel Retrofit Net Value of Capture=
+	BAU Value of CCS[iron and steel 241,process emissions]
+	- BAU Steel Capture Energy Cost per Ton CO2
+	- CCSTaSC CCS Transportation and Storage Costs
+	~	$/metric ton CO2e
+	~	What capturing a ton of CO2 is worth to a blast furnace owner, net of \
+		the costs EPS prices itself: the carbon price plus capture and \
+		transport-and-storage subsidies (Value of CCS), less capture energy and \
+		transport and storage. Compared with the plant-by-plant capture cost \
+		curve.
 	|
 
 BAU Steel Use by End Use[steel for vehicles]=
@@ -19210,11 +19376,15 @@ BAU This Year Energy Related Pollutants Sequestered by Industry Sector[Industry 
 		,Pollutant] :EXCEPT: [Industry Category,CO2]=
 	0 ~~|
 BAU This Year Energy Related Pollutants Sequestered by Industry Sector[Industry Category\
-		,CO2] :EXCEPT: [cement and other nonmetallic minerals 239,CO2]=
+		,CO2] :EXCEPT: [cement and other nonmetallic minerals 239,CO2], [iron and steel 241,CO2]=
 	SUM(BAU Industrial Sector Energy Related Emissions before CCS[Industrial Fuel!,Industry Category\
 		,CO2])
 	* BAU Fraction of CO2 Captured by Industry[Industry Category,energy related emissions\
 		] ~~|
+BAU This Year Energy Related Pollutants Sequestered by Industry Sector[iron and steel 241,CO2]=
+	MAX(0, SUM(BAU Industrial Sector Energy Related Emissions before CCS[Industrial Fuel!,iron and steel 241,CO2]) - BAU Steel Combustion CO2 Emissions)
+	* BAU Fraction of CO2 Captured by Industry[iron and steel 241,energy related emissions]
+	+ BAU Steel Module CO2 Captured by Emissions Type[energy related emissions] ~~|
 BAU This Year Energy Related Pollutants Sequestered by Industry Sector[cement and other nonmetallic minerals 239\
 		,CO2]=
 	MAX(
@@ -19384,7 +19554,7 @@ BAU This Year Increase in Pollutants Sequestered by Hydrogen Sector[Pollutant]=
 
 BAU This Year Increase in Pollutants Sequestered by Industry Sector[Industry Category\
 		 ,Pollutant,Emissions Type] :EXCEPT: [cement and other nonmetallic minerals 239,CO2\
-		,Emissions Type]=
+		,Emissions Type], [iron and steel 241,CO2,Emissions Type]=
 	
 	  MAX(
 	    0,
@@ -19394,6 +19564,13 @@ BAU This Year Increase in Pollutants Sequestered by Industry Sector[Industry Cat
 	    - BAU Last Year Potential Pollutants Sequestered by Industry Sector[Industry Category\
 		,Pollutant ,Emissions Type]
 	  ) ~~|
+BAU This Year Increase in Pollutants Sequestered by Industry Sector[iron and steel 241,CO2,Emissions Type]=
+	MAX(
+	  0,
+	  BAU This Year Pollutants Sequestered by Industry Sector[iron and steel 241,CO2,Emissions Type]
+	  - BAU Last Year Potential Pollutants Sequestered by Industry Sector[iron and steel 241,CO2,Emissions Type]
+	  - BAU Steel Module Change in CO2 Captured by Pathway Capture[Emissions Type]
+	) ~~|
 BAU This Year Increase in Pollutants Sequestered by Industry Sector[cement and other nonmetallic minerals 239\
 		 ,CO2,Emissions Type]=
 	MAX(
@@ -19542,9 +19719,13 @@ BAU This Year Process Pollutants Sequestered by Industry Sector[Industry Categor
 		] :EXCEPT: [Industry Category,CO2]=
 	0 ~~|
 BAU This Year Process Pollutants Sequestered by Industry Sector[Industry Category,CO2\
-		] :EXCEPT: [cement and other nonmetallic minerals 239,CO2]=
+		] :EXCEPT: [cement and other nonmetallic minerals 239,CO2], [iron and steel 241,CO2]=
 	BAU Process Emissions before CCS[Industry Category,CO2]
 	* BAU Fraction of CO2 Captured by Industry[Industry Category,process emissions] ~~|
+BAU This Year Process Pollutants Sequestered by Industry Sector[iron and steel 241,CO2]=
+	MAX(0, BAU Process Emissions before CCS[iron and steel 241,CO2] - BAU Steel Process CO2 Emissions)
+	* BAU Fraction of CO2 Captured by Industry[iron and steel 241,process emissions]
+	+ BAU Steel Module CO2 Captured by Emissions Type[process emissions] ~~|
 BAU This Year Process Pollutants Sequestered by Industry Sector[cement and other nonmetallic minerals 239\
 		,CO2]=
 	(BAU Process Emissions before CCS[cement and other nonmetallic minerals 239,CO2]
@@ -23502,6 +23683,19 @@ BLAPE BAU LULUCF Anthropogenic Pollutant Emissions[Pollutant]:INTERPOLATE::=
 	)
 	~	g pollutant
 	~		|
+
+Blast Furnace Capacity Share Retrofitted with Capture This Year=
+	MAX(
+	  0,
+	  Cost Effective Share of Blast Furnace Capacity for Capture Retrofit
+	  - Share of Blast Furnace Capacity Retrofitted with Capture
+	)
+	* SoCECRCSiaY Share of Cost Effective CCS Retrofit Construction Started in a Year
+	~	1/Year
+	~	Retrofits started this year: the gap between the cost-effective share \
+		and what is already retrofitted, closed at the same pace the CCS sector \
+		uses for industrial retrofits.
+	|
 
 Blended Industrial Combustion Fuel Cost per Unit Energy[Industry Category]=
 	ZIDZ(
@@ -35148,6 +35342,20 @@ Cost Driven Steel Reline Share at Decision[Steel Production Pathway]=
 		Ton, with the SRSW calibration weight on the reline branch. The BAU twin \
 		is the whole BAU reline share; the policy share applies the reline \
 		moratorium lever on top of this.
+	|
+
+Cost Effective Share of Blast Furnace Capacity for Capture Retrofit=
+	IF THEN ELSE(
+	  Steel Retrofit Net Value of Capture <= 0,
+	  0,
+	  LOOKUP BACKWARD(
+	    SCRSbVoC Steel CCS Retrofit Share by Value of Capture,
+	    Steel Retrofit Net Value of Capture / One Dollar * One Metric Ton CO2e
+	  )
+	)
+	~	Dmnl
+	~	Share of US blast furnace capacity whose capture cost (excluding energy \
+		and transport and storage) is covered by the net value of capture.
 	|
 
 Cost of Capacity Construction before Construction Subsidies[Electricity Source]=
@@ -53137,6 +53345,14 @@ Last Year Steel in New Vehicles= DELAY FIXED(
 		production itself moves.
 	|
 
+Last Year Steel Module CO2 Captured by Pathway Capture[Emissions Type]= DELAY FIXED (
+	Steel Module CO2 Captured by Pathway Capture[Emissions Type],
+	1,
+	0)
+	~	g CO2/Year
+	~	Last year's capture-route CO2 captured.
+	|
+
 Last Year Subsidies Paid per Unit Electricity Output for Newly Eligible Generation Capacity\
 		[Electricity Source]= INTEG (
 	(Subsidies Paid per Unit Electricity Output for Newly Eligible Generation Capacity[Electricity Source\
@@ -70902,6 +71118,35 @@ Scrap EAF New Capacity Headroom=
 	~	Room for additional scrap EAF nameplate capacity under the scrap supply limit (MASSfS adjusted by the scrap supply lever; the BAU twin keeps MASSfS) (converted to steel at the scrap charge per ton SSCT and grossed up to nameplate at the target utilization). Nets out scrap capacity retiring at this year's reline decisions, matching the production basis (review finding 7).
 	|
 
+SCRSbVoC Steel CCS Retrofit Share by Value of Capture=
+	GET DIRECT LOOKUPS(
+	   'InputData/ccs/CECRCbI/SCRSbVoC.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	Dmnl
+	~	Share of US blast furnace capacity whose NETL capture cost, excluding \
+		energy and transport and storage, is at or below each net value of \
+		capture (2012 $ per t CO2), built plant by plant from the NETL Carbon \
+		Capture Retrofit Database (ccs/CECRCbI workbook, Steel and SCRSbVoC \
+		tabs).
+	|
+
+SCSoMC Steel Capture Share of Mill CO2=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/SCSoMC/SCSoMC.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Dmnl
+	~	Share of an integrated steel mill's direct CO2 that carbon capture \
+		removes: NETL captures 90 percent of the three high-concentration \
+		streams (1.48 t CO2 per t steel), about 61 percent of the mill's direct \
+		CO2 in EPS. Used for the blast furnace with carbon capture route and for \
+		retrofits.
+	|
+
 Season:
 	summer,
 	winter
@@ -71075,6 +71320,16 @@ Share of Available Capacity Actually Dispatched by Hour[Electricity Timeslice, H
 	)
 	~	Dmnl
 	~		~	:SUPPLEMENTARY 
+	|
+
+Share of Blast Furnace Capacity Retrofitted with Capture= INTEG(
+	Blast Furnace Capacity Share Retrofitted with Capture This Year,
+		0)
+	~	Dmnl
+	~	Share of traditional blast furnace capacity fitted with carbon capture. \
+		Retrofitted plants are assumed to retire in the same proportion as the \
+		rest of the blast furnace fleet, so the share carries over; it never \
+		falls (capture equipment is not removed).
 	|
 
 Share of Buildings Sector Energy Use by Building Component[Building Type,Building Fuel\
@@ -73298,6 +73553,34 @@ Steel Capacity under CCfD Contract by Pathway[Steel Production Pathway]=
 		pathway.
 	|
 
+Steel Capture Energy Cost per Ton CO2=
+	SUM(
+	  CC Energy Use per Ton Industry CO2 Sequestered[iron and steel 241,Industrial Fuel!,process emissions]
+	  * Industrial Fuel Cost per Unit Energy[iron and steel 241,Industrial Fuel!]
+	)
+	* Grams per Metric Ton CO2e
+	* (1 - RnD CCS Fuel Use Perc Reduction This Year)
+	~	$/metric ton CO2e
+	~	Cost of the gas and electricity a capture unit at a steel mill uses per \
+		ton of CO2 captured, at this year's fuel prices (CCS module energy use, \
+		NETL 2023).
+	|
+
+Steel Capture Equipment Capital Cost per Unit Annual Capacity[Steel Production Pathway]=
+	Steel Pathway CO2 Capture Share[Steel Production Pathway]
+	* (
+	  Steel Process CO2 Intensity per Ton by Pathway[Steel Production Pathway]
+	  + Steel Combustion CO2 Intensity per Ton by Pathway with BAU Trend[Steel Production Pathway]
+	)
+	/ Grams per Metric Ton CO2e
+	* CC Capital Cost of Eqpt to Sequester One Ton of Industry CO2 per Year[iron and steel 241,process emissions]
+	~	$/(metric ton/Year)
+	~	Capture equipment capital per ton of yearly steel capacity: tons of CO2 \
+		captured per ton of steel times the CCS module's capital cost per ton of \
+		yearly capture capacity for iron and steel (ccs/CC, NETL 2023). Replaces \
+		the fixed +$300 that SPCC used to carry for the capture route.
+	|
+
 Steel Carbon Price Faced by Pathways=
 	Carbon Tax Rate[industry sector]
 	* Fraction of Industry Category Subject to Carbon Tax[iron and steel 241]
@@ -73474,6 +73757,18 @@ Steel Combustion CO2 Intensity per Ton by Pathway[Steel Production Pathway]=
 		procurement thresholds.
 	|
 
+Steel Combustion CO2 Intensity per Ton by Pathway with BAU Trend[Steel Production Pathway]=
+	SUM(
+	  Steel Energy Intensity by Pathway and Fuel with BAU Trend[Steel Production Pathway,Industrial Fuel!]
+	  * (1 - Steel Fuel Feedstock Share[Industrial Fuel!])
+	  * Steel Fuel CO2 Emissions Intensity[Industrial Fuel!]
+	)
+	~	g CO2/metric ton
+	~	Combustion CO2 per ton of steel by route before any furnace fuel shift \
+		(BAU trend only); the BAU counterpart of Steel Combustion CO2 Intensity \
+		per Ton by Pathway, also used to size capture equipment.
+	|
+
 Steel Combustion Energy per Ton by Pathway and Fuel[Steel Production Pathway,Industrial Fuel]=
 	Steel Energy Intensity by Pathway and Fuel after Furnace Fuel Shift[Steel Production Pathway,Industrial Fuel]
 	* (1 - Steel Fuel Feedstock Share[Industrial Fuel])
@@ -73576,7 +73871,8 @@ Steel Feedstock Energy per Ton by Pathway and Fuel[Steel Production Pathway,Indu
 
 Steel Fleet CO2 Intensity=
 	ZIDZ(
-	  Steel Process CO2 Emissions + Steel Combustion CO2 Emissions,
+	  Steel Process CO2 Emissions + Steel Combustion CO2 Emissions
+	  - SUM(Steel Module CO2 Captured by Emissions Type[Emissions Type!]),
 	  SUM(Steel Production by Pathway[Steel Production Pathway!])
 	) / Grams per Metric Ton CO2e
 	~	metric tons/metric ton
@@ -73735,6 +74031,64 @@ Steel Material Efficiency Multiplier by End Use[Steel End Use]=
 		industry's share of the end use's steel.
 	|
 
+Steel Module Change in CO2 Captured by Pathway Capture[Emissions Type]=
+	Steel Module CO2 Captured by Pathway Capture[Emissions Type]
+	- Last Year Steel Module CO2 Captured by Pathway Capture[Emissions Type]
+	~	g CO2/Year
+	~	Year-on-year change in capture-route CO2 captured. Subtracted from iron \
+		and steel's increase in sequestered CO2 so the CCS sector does not buy \
+		capture equipment the route's own capital already paid for.
+	|
+
+Steel Module CO2 Captured by Emissions Type[Emissions Type]=
+	Steel Module CO2 Captured by Pathway Capture[Emissions Type]
+	+ Steel Module CO2 Captured by Retrofits[Emissions Type]
+	~	g CO2/Year
+	~	All CO2 the steel module captures this year (capture route plus \
+		retrofits), by emissions type: what iron and steel adds to the CCS \
+		sector's sequestered CO2.
+	|
+
+Steel Module CO2 Captured by Pathway Capture[process emissions]=
+	SUM(
+	  Steel Production by Pathway[Steel Production Pathway!]
+	  * Steel Process CO2 Intensity per Ton by Pathway after Furnace Fuel Shift[Steel Production Pathway!]
+	  * Steel Energy Intensity Multiplier by Pathway[Steel Production Pathway!]
+	  * Steel Pathway CO2 Capture Share[Steel Production Pathway!]
+	) ~~|
+Steel Module CO2 Captured by Pathway Capture[energy related emissions]=
+	SUM(
+	  Steel Production by Pathway[Steel Production Pathway!]
+	  * Steel Combustion CO2 Intensity per Ton by Pathway[Steel Production Pathway!]
+	  * Steel Energy Intensity Multiplier by Pathway[Steel Production Pathway!]
+	  * Steel Pathway CO2 Capture Share[Steel Production Pathway!]
+	)
+	~	g CO2/Year
+	~	CO2 captured this year by the blast furnace with carbon capture route, \
+		by emissions type. Added to iron and steel's sequestered CO2 in the CCS \
+		sector, which books transport and storage, subsidies, capture O&M, \
+		capture energy and the carbon tax rebate once; the route's own capital \
+		carries the capture equipment.
+	|
+
+Steel Module CO2 Captured by Retrofits[process emissions]=
+	Steel Production by Pathway[traditional BF BOF]
+	* Steel Process CO2 Intensity per Ton by Pathway after Furnace Fuel Shift[traditional BF BOF]
+	* Steel Energy Intensity Multiplier by Pathway[traditional BF BOF]
+	* Share of Blast Furnace Capacity Retrofitted with Capture
+	* SCSoMC Steel Capture Share of Mill CO2 ~~|
+Steel Module CO2 Captured by Retrofits[energy related emissions]=
+	Steel Production by Pathway[traditional BF BOF]
+	* Steel Combustion CO2 Intensity per Ton by Pathway[traditional BF BOF]
+	* Steel Energy Intensity Multiplier by Pathway[traditional BF BOF]
+	* Share of Blast Furnace Capacity Retrofitted with Capture
+	* SCSoMC Steel Capture Share of Mill CO2
+	~	g CO2/Year
+	~	CO2 captured this year at blast furnaces retrofitted with capture, by \
+		emissions type. Retrofit capital, O&M, energy and transport and storage \
+		are all booked by the CCS sector at the CCS module's rates.
+	|
+
 Steel Module Energy Use by Fuel Type[Industrial Fuel]=
 	SUM(
 	  Steel Production by Pathway[Steel Production Pathway!]
@@ -73766,6 +74120,7 @@ Steel Net Imports=
 Steel Pathway Capital Cost per Unit Annual Capacity after RnD[Steel Production Pathway]=
 	SPCC Steel Pathway Capital Cost per Unit Annual Capacity[Steel Production Pathway]
 	* (1 - RnD Steel Pathway Capital Cost Perc Reduction This Year[Steel Production Pathway])
+	+ Steel Capture Equipment Capital Cost per Unit Annual Capacity[Steel Production Pathway]
 	~	$/(metric tons/Year)
 	~	Greenfield capital cost per unit of annual crude steel capacity after the \
 		steel pathway R&D capital-cost lever (policy case). Feeds the \
@@ -73784,6 +74139,15 @@ Steel Pathway Capital Cost per Unit Annual Capacity after Subsidy[Steel Producti
 		pathway choice; the capital booking and the financing ladders carry the \
 		gross (after-R&D) cost, and the subsidized share is paid by government \
 		through Steel Pathway Investment Subsidy Amount Paid.
+	|
+
+Steel Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment[Steel Production Pathway]=
+	SPCC Steel Pathway Capital Cost per Unit Annual Capacity[Steel Production Pathway]
+	+ Steel Capture Equipment Capital Cost per Unit Annual Capacity[Steel Production Pathway]
+	~	$/(metric ton/Year)
+	~	Route capital cost per ton of yearly capacity including capture \
+		equipment (BAU basis; the policy case applies the R&D lever to the SPCC \
+		part in Steel Pathway Capital Cost per Unit Annual Capacity after RnD).
 	|
 
 Steel Pathway Capital Recovery Factor[Steel Production Pathway]=
@@ -73816,6 +74180,39 @@ Steel Pathway Capital Subsidy Rate[Steel Production Pathway]=
 	)
 	~	Dmnl
 	~	Fraction of the greenfield capital cost of new steel capacity that government pays in the policy case: the BAU subsidy plus the steel pathway capital subsidy lever plus the clean industrial heat investment credit for qualifying pathways, capped at the whole cost. Mirrors Cement Pathway Capital Subsidy Rate.
+	|
+
+Steel Pathway Capture Operating Cost per Ton[Steel Production Pathway]=
+	Steel Pathway CO2 Capture Share[Steel Production Pathway]
+	* (
+	    Steel Process CO2 Intensity per Ton by Pathway after Furnace Fuel Shift[Steel Production Pathway] / Grams per Metric Ton CO2e
+	    * (
+	      CC CCS Total OM Cost per Industry Ton Sequestered[iron and steel 241,process emissions]
+	      + CCSTaSC CCS Transportation and Storage Costs
+	      - Industrial CCS Transportation and Storage Subsidy
+	      - Industry Sector CCS Subsidy by Industry Category[iron and steel 241]
+	      + Steel Capture Energy Cost per Ton CO2
+	    )
+	  + Steel Combustion CO2 Intensity per Ton by Pathway[Steel Production Pathway] / Grams per Metric Ton CO2e
+	    * (
+	      CC CCS Total OM Cost per Industry Ton Sequestered[iron and steel 241,energy related emissions]
+	      + CCSTaSC CCS Transportation and Storage Costs
+	      - Industrial CCS Transportation and Storage Subsidy
+	      - Industry Sector CCS Subsidy by Industry Category[iron and steel 241]
+	      + Steel Capture Energy Cost per Ton CO2
+	      - Carbon Tax Rate[industry sector]
+	      * Fraction of Industry Category Subject to Carbon Tax[iron and steel 241]
+	      * Marginal Carbon Price Factor for Steel
+	    )
+	)
+	~	$/metric ton
+	~	Capture cost per ton of steel in route choice: captured process and \
+		combustion CO2 times the CCS module's O&M, transport and storage and \
+		capture energy, less transport-and-storage and capture subsidies; \
+		captured combustion CO2 also earns back the carbon tax already in the \
+		fuel price (the CCS rebate). Captured process CO2 is simply not taxed \
+		(the process carbon term in the operating cost is scaled by one less the \
+		capture share).
 	|
 
 Steel Pathway Choice Weight[Steel Production Pathway]=
@@ -73879,6 +74276,17 @@ Steel Pathway Clean Heat Production Subsidy per Ton[Steel Production Pathway]=
 		on production. Applies the current rate to all qualifying production (the \
 		generic equipment credit latches each vintage's rate for the PTC duration \
 		- a documented simplification here).
+	|
+
+Steel Pathway CO2 Capture Share[Steel Production Pathway] :EXCEPT: [BF BOF with CCS]=
+	0 ~~|
+Steel Pathway CO2 Capture Share[BF BOF with CCS]=
+	SCSoMC Steel Capture Share of Mill CO2
+	~	Dmnl
+	~	Share of each route's direct CO2 (process and combustion) that is \
+		captured: the mill capture share for the blast furnace with carbon \
+		capture route, zero for every other route. Entered in Vensim, \
+		2026-11-04.
 	|
 
 Steel Pathway Cost of Capital[Steel Production Pathway]=
@@ -74051,8 +74459,10 @@ Steel Pathway Operating Cost per Ton[Steel Production Pathway]=
 	  / Grams per Metric Ton CO2e
 	  * Steel Process Emissions Carbon Tax Rate
 	  * Marginal Carbon Price Factor for Steel
+	  * (1 - Steel Pathway CO2 Capture Share[Steel Production Pathway])
 	- Steel Pathway Clean Heat Production Subsidy per Ton[Steel Production Pathway]
 	+ Steel Pathway Non Energy Operating Cost per Ton[Steel Production Pathway]
+	+ Steel Pathway Capture Operating Cost per Ton[Steel Production Pathway]
 	~	$/metric ton
 	~	Non-capital cost per ton by pathway (policy case): non-energy operating \
 		cost (iron feed, labor, fluxes, electrodes, O&M), plus fuel burned for energy \
@@ -74392,6 +74802,18 @@ Steel Retirement Alternative Cost per Ton=
 		plants, without a steel price model.
 	|
 
+Steel Retrofit Net Value of Capture=
+	Value of CCS[iron and steel 241,process emissions]
+	- Steel Capture Energy Cost per Ton CO2
+	- CCSTaSC CCS Transportation and Storage Costs
+	~	$/metric ton CO2e
+	~	What capturing a ton of CO2 is worth to a blast furnace owner, net of \
+		the costs EPS prices itself: the carbon price plus capture and \
+		transport-and-storage subsidies (Value of CCS), less capture energy and \
+		transport and storage. Compared with the plant-by-plant capture cost \
+		curve.
+	|
+
 Steel Scrap Share Basis:
 	no scrap,
 	all scrap
@@ -74401,12 +74823,13 @@ Steel Scrap Share Basis:
 
 Steel Taxed CO2 for Output Based Allocation=
 	(
-	  Steel Process CO2 Emissions
+	  (Steel Process CO2 Emissions - Steel Module CO2 Captured by Emissions Type[process emissions])
 	  * (1 - Does Carbon Tax Exempt Process Emissions This Year[iron and steel 241])
 	  + SUM(
 	    Steel Production by Pathway[Steel Production Pathway!]
 	    * Steel Combustion CO2 Intensity per Ton by Pathway[Steel Production Pathway!]
 	  )
+	  - Steel Module CO2 Captured by Emissions Type[energy related emissions]
 	)
 	* Industry Pollutants Taxed by Carbon Pricing[iron and steel 241,CO2]
 	/ Grams per Metric Ton CO2e
@@ -74418,8 +74841,11 @@ Steel Taxed CO2 for Output Based Allocation=
 	|
 
 Steel Total Direct CO2 Intensity per Ton by Pathway[Steel Production Pathway]=
+	(
 	Steel Process CO2 Intensity per Ton by Pathway after Furnace Fuel Shift[Steel Production Pathway]
 	+ Steel Combustion CO2 Intensity per Ton by Pathway[Steel Production Pathway]
+	)
+	* (1 - Steel Pathway CO2 Capture Share[Steel Production Pathway])
 	~	g CO2/metric ton
 	~	Direct (scope 1) CO2 per ton of crude steel by pathway: process plus combustion CO2, before any capture. The BF BOF with CCS pathway carries no capture in the current data, so its value equals the traditional route's; when a capture fraction is added the net intensity belongs here. Until then a lever that steers capacity to the CCS route (mandate, CCfD, capital subsidy) shows no emissions benefit (2026-10-19).
 	|
@@ -77396,11 +77822,15 @@ This Year Energy Related Pollutants Sequestered by Industry Sector[Industry Cate
 		Pollutant] :EXCEPT:  [Industry Category,CO2]=
 	0 ~~|
 This Year Energy Related Pollutants Sequestered by Industry Sector[Industry Category,\
-		CO2] :EXCEPT: [cement and other nonmetallic minerals 239,CO2]=
+		CO2] :EXCEPT: [cement and other nonmetallic minerals 239,CO2], [iron and steel 241,CO2]=
 	SUM(Industrial Sector Energy Related Emissions before CCS[Industrial Fuel!,Industry Category\
 		,CO2])
 	* Fraction of CO2 Captured by Industry Category[Industry Category,energy related emissions\
 		] ~~|
+This Year Energy Related Pollutants Sequestered by Industry Sector[iron and steel 241,CO2]=
+	MAX(0, SUM(Industrial Sector Energy Related Emissions before CCS[Industrial Fuel!,iron and steel 241,CO2]) - Steel Combustion CO2 Emissions)
+	* Fraction of CO2 Captured by Industry Category[iron and steel 241,energy related emissions]
+	+ Steel Module CO2 Captured by Emissions Type[energy related emissions] ~~|
 This Year Energy Related Pollutants Sequestered by Industry Sector[cement and other nonmetallic minerals 239\
 		,CO2]=
 	MAX(
@@ -77674,7 +78104,7 @@ This Year Increase in Pollutants Sequestered by Hydrogen Sector[Pollutant]=
 
 This Year Increase in Pollutants Sequestered by Industry Sector[Industry Category,Pollutant\
 		 ,Emissions Type] :EXCEPT: [cement and other nonmetallic minerals 239,CO2 ,Emissions Type\
-		]=
+		], [iron and steel 241,CO2,Emissions Type]=
 	
 	  MAX(
 	    0,
@@ -77684,6 +78114,13 @@ This Year Increase in Pollutants Sequestered by Industry Sector[Industry Categor
 	    - Last Year Potential Pollutants Sequestered by Industry Sector[Industry Category\
 		,Pollutant ,Emissions Type]
 	  ) ~~|
+This Year Increase in Pollutants Sequestered by Industry Sector[iron and steel 241,CO2,Emissions Type]=
+	MAX(
+	  0,
+	  This Year Pollutants Sequestered by Industry Sector[iron and steel 241,CO2,Emissions Type]
+	  - Last Year Potential Pollutants Sequestered by Industry Sector[iron and steel 241,CO2,Emissions Type]
+	  - Steel Module Change in CO2 Captured by Pathway Capture[Emissions Type]
+	) ~~|
 This Year Increase in Pollutants Sequestered by Industry Sector[cement and other nonmetallic minerals 239\
 		 ,CO2,Emissions Type]=
 	MAX(
@@ -77851,10 +78288,14 @@ This Year Process Pollutants Sequestered by Industry Sector[Industry Category,Po
 		] :EXCEPT: [Industry Category,CO2]=
 	0 ~~|
 This Year Process Pollutants Sequestered by Industry Sector[Industry Category,CO2] :EXCEPT:\
-		 [cement and other nonmetallic minerals 239,CO2]=
+		 [cement and other nonmetallic minerals 239,CO2], [iron and steel 241,CO2]=
 	Process Emissions before CCS[Industry Category,CO2]
 	* Fraction of CO2 Captured by Industry Category[Industry Category,process emissions]\
 		 ~~|
+This Year Process Pollutants Sequestered by Industry Sector[iron and steel 241,CO2]=
+	MAX(0, Process Emissions before CCS[iron and steel 241,CO2] - Steel Process CO2 Emissions)
+	* Fraction of CO2 Captured by Industry Category[iron and steel 241,process emissions]
+	+ Steel Module CO2 Captured by Emissions Type[process emissions] ~~|
 This Year Process Pollutants Sequestered by Industry Sector[cement and other nonmetallic minerals 239\
 		,CO2]=
 	(Process Emissions before CCS[cement and other nonmetallic minerals 239,CO2]
@@ -100577,7 +101018,7 @@ BAU Steel Pathway Capital Cost, Subsidies and Cost of Capital
 10,748,BAU Steel Pathway Capital Recovery Factor,5815,7681,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,749,Steel Pathway Clean Heat Investment Credit Qualification,5295,7451,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,750,SPAL Steel Pathway Asset Life,5815,7796,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,751,SPCC Steel Pathway Capital Cost per Unit Annual Capacity,5815,7336,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,751,Steel Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment,5815,7336,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 10,752,BSPCS BAU Steel Pathway Capital Subsidy,5815,7221,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
 10,753,BCoISC Weighted Average Cost of Capital by Industry,5815,7566,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 10,754,One Year,5555,7681,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
@@ -100791,7 +101232,7 @@ Financing Steel Capital Expenditures
 10,956,SoICETAF Share of Industry Capital Expenditures That Are Financed,924,11480,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 10,957,Steel Pathway Financing Annuity Factor,664,11990,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,958,BAU New Steel Production Capacity by Pathway,404,11875,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,959,SPCC Steel Pathway Capital Cost per Unit Annual Capacity,404,11990,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,959,Steel Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment,404,11990,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 10,960,BAU Steel Capacity Relined by Pathway,924,11703,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,961,SRCC Steel Reline Capital Cost per Unit Annual Capacity,924,11990,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 10,962,SoICETAF Share of Industry Capital Expenditures That Are Financed,404,12105,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
@@ -100862,7 +101303,7 @@ The CCfD payments, production credit, procurement premium and border fee revenue
 10,1025,Steel Production Support Payments by ISIC Code,2883,11147,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,1026,Low Carbon Steel Procurement Premium Paid by Buyers by ISIC Code,2363,10917,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,1027,BAU Steel Pathway Capital Subsidy Rate,2103,11032,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,1028,SPCC Steel Pathway Capital Cost per Unit Annual Capacity,2103,10917,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1028,Steel Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment,2103,10917,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 10,1029,BAU New Steel Production Capacity by Pathway,2623,10917,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,1030,Steel Pathway Capital Subsidy Rate,2103,11262,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,1031,Steel Pathway Capital Cost per Unit Annual Capacity after RnD,2103,11147,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -101133,6 +101574,219 @@ BAU Steel Use by End Use
 1,1294,1290,1287,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1295,1286,1288,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1296,1287,1288,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,1297,0,5330,4710,1080,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Capturing Steel CO2: Capture Route and Blast Furnace Retrofits
+10,1298,Steel Pathway Capture Operating Cost per Ton,4745,5305,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1299,Steel Module CO2 Captured by Pathway Capture,5005,5305,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1300,Last Year Steel Module CO2 Captured by Pathway Capture,5265,5210,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1301,Steel Module Change in CO2 Captured by Pathway Capture,5525,5210,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1302,Steel Module CO2 Captured by Emissions Type,5785,5305,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,1303,Steel Capture Energy Cost per Ton CO2,4745,5495,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1304,Steel Retrofit Net Value of Capture,5005,5495,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1305,Cost Effective Share of Blast Furnace Capacity for Capture Retrofit,5265,5495,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1306,Steel Module CO2 Captured by Retrofits,6045,5400,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1307,SCSoMC Steel Capture Share of Mill CO2,4485,5115,75,20,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,1308,Steel Pathway CO2 Capture Share,4745,5115,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1309,Steel Combustion CO2 Intensity per Ton by Pathway with BAU Trend,5005,5020,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1310,Steel Capture Equipment Capital Cost per Unit Annual Capacity,5265,5115,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1311,Steel Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment,5525,5115,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1312,SCRSbVoC Steel CCS Retrofit Share by Value of Capture,5265,5400,75,27,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,1313,Share of Blast Furnace Capacity Retrofitted with Capture,5785,5495,75,34,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,1314,48,5454,5495,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,1315,1317,1313,4,0,0,22,0,0,0,-1--1--1,,1|(5637,5495)|
+1,1316,1317,1314,100,0,0,22,0,0,0,-1--1--1,,1|(5509,5495)|
+11,1317,0,5564,5495,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,1318,Blast Furnace Capacity Share Retrofitted with Capture This Year,5564,5541,75,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,1319,Steel Process CO2 Intensity per Ton by Pathway after Furnace Fuel Shift,4615,5210,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1320,Grams per Metric Ton CO2e,4485,5305,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,1321,CC CCS Total OM Cost per Industry Ton Sequestered,4615,5400,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1322,CCSTaSC CCS Transportation and Storage Costs,4875,5400,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,1323,Industrial CCS Transportation and Storage Subsidy,4355,5210,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1324,Industry Sector CCS Subsidy by Industry Category,4355,5400,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1325,Steel Combustion CO2 Intensity per Ton by Pathway,5005,5162,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1326,Carbon Tax Rate,5005,4830,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1327,Fraction of Industry Category Subject to Carbon Tax,4745,5020,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1328,Marginal Carbon Price Factor for Steel,4485,5495,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1329,Steel Production by Pathway,6045,5305,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
+10,1330,Steel Process CO2 Intensity per Ton by Pathway after Furnace Fuel Shift,6045,5495,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1331,Steel Energy Intensity Multiplier by Pathway,5785,5400,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1332,SCSoMC Steel Capture Share of Mill CO2,6305,5305,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1333,Steel Combustion CO2 Intensity per Ton by Pathway,5785,5210,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1334,CC Energy Use per Ton Industry CO2 Sequestered,4745,5590,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1335,Industrial Fuel Cost per Unit Energy,4485,5590,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1336,Grams per Metric Ton CO2e,5005,5590,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,1337,RnD CCS Fuel Use Perc Reduction This Year,4485,5685,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,1338,Steel Production by Pathway,5265,5305,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
+10,1339,Steel Process CO2 Intensity per Ton by Pathway after Furnace Fuel Shift,5525,5400,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1340,Steel Energy Intensity Multiplier by Pathway,5265,5685,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1341,Steel Energy Intensity by Pathway and Fuel with BAU Trend,5135,4925,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
+10,1342,Steel Fuel Feedstock Share,5265,5020,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1343,Steel Fuel CO2 Emissions Intensity,5395,4925,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1344,Steel Process CO2 Intensity per Ton by Pathway,5525,5020,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1345,Grams per Metric Ton CO2e,5655,4830,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,1346,CC Capital Cost of Eqpt to Sequester One Ton of Industry CO2 per Year,5525,5305,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1347,Value of CCS,4745,5685,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1348,One Dollar,5395,5590,75,19,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1349,One Metric Ton CO2e,5005,5685,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1350,Share of Blast Furnace Capacity Retrofitted with Capture,5564,5636,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1351,SoCECRCSiaY Share of Cost Effective CCS Retrofit Construction Started in a Year,5824,5588,75,41,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1352,Steel Module CO2 Captured by Pathway Capture,6045,5210,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1353,Steel Module CO2 Captured by Retrofits,6045,5115,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1354,SPCC Steel Pathway Capital Cost per Unit Annual Capacity,5785,5020,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,1355,1307,1308,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1356,1308,1298,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1357,1303,1298,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1358,1308,1299,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1359,1303,1304,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1360,1308,1310,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1361,1309,1310,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1362,1299,1300,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1363,1304,1305,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1364,1312,1305,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1365,1310,1311,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1366,1299,1301,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1367,1300,1301,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1368,1305,1318,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1369,1313,1306,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1370,1319,1298,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1371,1320,1298,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1372,1321,1298,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1373,1322,1298,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1374,1323,1298,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1375,1324,1298,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1376,1325,1298,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1377,1326,1298,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1378,1327,1298,1,0,0,0,0,128,0,-1--1--1,,1|(4875,5162)|
+1,1379,1328,1298,1,0,0,0,0,128,0,-1--1--1,,1|(4668,5472)|
+1,1380,1329,1306,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1381,1330,1306,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1382,1331,1306,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1383,1332,1306,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1384,1333,1306,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1385,1334,1303,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1386,1335,1303,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1387,1336,1303,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1388,1337,1303,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1389,1338,1299,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1390,1339,1299,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1391,1340,1299,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1392,1325,1299,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1393,1341,1309,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1394,1342,1309,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1395,1343,1309,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1396,1344,1310,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1397,1345,1310,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1398,1346,1310,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1399,1347,1304,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1400,1322,1304,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1401,1348,1305,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1402,1349,1305,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1403,1350,1318,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1404,1351,1318,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1405,1352,1302,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1406,1353,1302,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1407,1354,1311,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,1408,0,2645,9440,1145,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+BAU Capturing Steel CO2: Capture Route and Blast Furnace Retrofits
+10,1409,BAU Steel Pathway Capture Operating Cost per Ton,2125,9859,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1410,BAU Steel Module CO2 Captured by Pathway Capture,2385,9859,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1411,BAU Last Year Steel Module CO2 Captured by Pathway Capture,2645,9764,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1412,BAU Steel Module Change in CO2 Captured by Pathway Capture,2905,9764,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1413,BAU Steel Module CO2 Captured by Emissions Type,3165,9859,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,1414,BAU Steel Capture Energy Cost per Ton CO2,2125,10049,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1415,BAU Steel Retrofit Net Value of Capture,2385,10049,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1416,BAU Cost Effective Share of Blast Furnace Capacity for Capture Retrofit,2645,10049,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1417,BAU Steel Module CO2 Captured by Retrofits,3425,9954,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1418,BAU Steel Combustion CO2 Emissions,3425,9669,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1419,BAU Share of Blast Furnace Capacity Retrofitted with Capture,3165,10049,75,34,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,1420,48,2834,10049,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,1421,1423,1419,4,0,0,22,0,0,0,-1--1--1,,1|(3017,10049)|
+1,1422,1423,1420,100,0,0,22,0,0,0,-1--1--1,,1|(2889,10049)|
+11,1423,0,2944,10049,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,1424,BAU Blast Furnace Capacity Share Retrofitted with Capture This Year,2944,10095,75,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,1425,Steel Pathway CO2 Capture Share,2125,9764,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1426,Steel Process CO2 Intensity per Ton by Pathway,1865,9859,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1427,Grams per Metric Ton CO2e,1995,9954,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,1428,CC CCS Total OM Cost per Industry Ton Sequestered,1865,9764,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1429,CCSTaSC CCS Transportation and Storage Costs,2385,9764,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,1430,CCSTaSC CCS Transportation and Storage Subsidies,1865,9669,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,1431,BCS BAU Industry CCS Subsidy,2385,9669,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,1432,Steel Combustion CO2 Intensity per Ton by Pathway with BAU Trend,2255,9954,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1433,BCTR BAU Carbon Tax Rate,1735,9954,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,1434,BFoICStCT BAU Fraction of Industry Category Subject to Carbon Tax,1605,9764,75,34,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,1435,BAU Steel Production by Pathway,2645,9669,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
+10,1436,Steel Process CO2 Intensity per Ton by Pathway,2515,9954,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1437,BAU Steel Production by Pathway,3425,9859,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
+10,1438,Steel Process CO2 Intensity per Ton by Pathway,3425,10049,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1439,SCSoMC Steel Capture Share of Mill CO2,3165,9954,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1440,Steel Combustion CO2 Intensity per Ton by Pathway with BAU Trend,3685,9859,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1441,CC Energy Use per Ton Industry CO2 Sequestered,2125,10144,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1442,BAU Industrial Fuel Cost per Unit Energy,1865,10049,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1443,SCRSbVoC Steel CCS Retrofit Share by Value of Capture,2645,10144,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,1444,One Dollar,2645,9859,75,19,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1445,One Metric Ton CO2e,2775,9954,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1446,BAU Value of CCS,2385,10144,75,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1447,CCSTaSC CCS Transportation and Storage Costs,2125,10239,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
+10,1448,BAU Share of Blast Furnace Capacity Retrofitted with Capture,2944,9952,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1449,SoCECRCSiaY Share of Cost Effective CCS Retrofit Construction Started in a Year,2944,10190,75,41,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,1450,BAU Steel Module CO2 Captured by Pathway Capture,3165,9764,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1451,BAU Steel Module CO2 Captured by Retrofits,2905,9859,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1452,Steel Combustion CO2 Intensity per Ton by Pathway with BAU Trend,3425,9574,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1453,1414,1409,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1454,1414,1415,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1455,1410,1411,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1456,1415,1416,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1457,1410,1412,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1458,1411,1412,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1459,1416,1424,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1460,1419,1417,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1461,1425,1409,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1462,1426,1409,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1463,1427,1409,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1464,1428,1409,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1465,1429,1409,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1466,1430,1409,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1467,1431,1409,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1468,1432,1409,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1469,1433,1409,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1470,1434,1409,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1471,1435,1410,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1472,1436,1410,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1473,1425,1410,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1474,1432,1410,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1475,1437,1417,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1476,1438,1417,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1477,1439,1417,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1478,1440,1417,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1479,1441,1414,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1480,1442,1414,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1481,1427,1414,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1482,1443,1416,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1483,1444,1416,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1484,1445,1416,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1485,1446,1415,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1486,1447,1415,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1487,1448,1424,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1488,1449,1424,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1489,1450,1413,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1490,1451,1413,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1491,1437,1418,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1492,1452,1418,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1493,Steel Pathway CO2 Capture Share,4085,1641,70,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1494,1493,77,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1495,Steel Pathway Capture Operating Cost per Ton,4085,1526,70,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1496,1495,77,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1497,1493,76,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1498,Steel Module CO2 Captured by Emissions Type,885,4082,70,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1499,1498,428,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1500,Steel Module CO2 Captured by Emissions Type,1055,4204,70,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1501,1500,469,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1502,Steel Capture Equipment Capital Cost per Unit Annual Capacity,6075,1878,70,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1503,1502,126,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1504,Steel Pathway CO2 Capture Share,3565,7559,70,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1505,1504,709,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1506,BAU Steel Pathway Capture Operating Cost per Ton,4085,7329,70,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1507,1506,709,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Industry - Chemicals
@@ -103213,7 +103867,7 @@ Thermal Battery Costs
 10,1133,Steel Reline Capital Cost per Unit Annual Capacity after RnD,11643,3189,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,1134,BAU New Steel Production Capacity by Pathway,11624,3455,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,1135,BAU Steel Capacity Relined by Pathway,11624,3529,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,1136,SPCC Steel Pathway Capital Cost per Unit Annual Capacity,11624,3603,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1136,Steel Pathway Capital Cost per Unit Annual Capacity Including Capture Equipment,11624,3603,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,1137,SRCC Steel Reline Capital Cost per Unit Annual Capacity,11624,3677,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,1138,Annual Financing Repayment for Newly Purchased Steel Pathway Equipment,13250,3210,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,1139,Last Year Financing Repayments for Steel Pathway Equipment,13149,3307,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -105878,6 +106532,24 @@ or average profit over 2 years or something in case fuel prices jump around
 1,686,685,667,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,687,BAU Chemicals Stack Process CO2 Abated by Electrified Heat,2900,-1330,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,688,687,667,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,689,Steel Process CO2 Emissions,74,337,70,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,690,689,101,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,691,Steel Module CO2 Captured by Emissions Type,464,165,70,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,692,691,101,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,693,691,100,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,694,Steel Combustion CO2 Emissions,-186,194,70,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,695,694,100,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,696,Steel Module Change in CO2 Captured by Pathway Capture,977,126,70,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,697,696,65,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,698,BAU Steel Process CO2 Emissions,-141,1842,70,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,699,698,106,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,700,BAU Steel Module CO2 Captured by Emissions Type,379,2072,70,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,701,700,106,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,702,700,107,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,703,BAU Steel Combustion CO2 Emissions,-141,1964,70,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,704,703,107,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,705,BAU Steel Module Change in CO2 Captured by Pathway Capture,502,2189,70,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,706,705,68,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Geoengineering
