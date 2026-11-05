@@ -3056,7 +3056,7 @@ BAU Battery Storage Usage Factor Discount in Binding Peak Hour=
 BAU Binding Hour Demand Shifting Headroom for Reliability=
 	SUM(BAU Binding Peak Hour for Reliability Additions[peak day electricity timeslice!,\
 		Hour!]
-	    * BAU Demand Shifting Headroom for Reliability by Hour[peak day electricity timeslice\
+	    * BAU Credited Demand Shifting Power for Reliability by Hour[peak day electricity timeslice\
 		!,Hour!]
 	    * ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies[peak day electricity timeslice\
 		!,Hour!])
@@ -3097,15 +3097,16 @@ BAU Binding Hour Reliability Shortfall after Fossil Backstop=
 	~		|
 
 BAU Binding Peak Hour for Reliability Additions[peak day electricity timeslice,Hour]=
-	IF THEN ELSE(BAU Net Electricity Demand Relative to Available Supply by Hour before Reliability Additions\
-		[peak day electricity timeslice,Hour]<=0,0,
-	
-	IF THEN ELSE(BAU Net Electricity Demand Relative to Available Supply by Hour before Reliability Additions\
-		[peak day electricity timeslice,Hour]=VMAX(BAU Net Electricity Demand Relative to Available Supply by Hour before Reliability Additions\
-		[peak day electricity timeslice!,Hour!]),1,0)
-	
+	IF THEN ELSE(BAU Net Electricity Demand Relative to Available Supply by Hour before Reliability Additions[peak day electricity timeslice,Hour] <= 0, 0,
+	  IF THEN ELSE(BAU Reliability Binding Hour Selection Key[peak day electricity timeslice,Hour] = VMAX(BAU Reliability Binding Hour Selection Key[peak day electricity timeslice!,Hour!]), 1, 0)
 	)
 	~	Dmnl
+	~		|
+
+BAU Reliability Binding Hour Selection Key[peak day electricity timeslice,Hour]=
+	BAU Net Electricity Demand Relative to Available Supply by Hour before Reliability Additions[peak day electricity timeslice,Hour]
+	+ 1e-06 * MAX(0, BAU Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Hour])
+	~	MW*hour
 	~		|
 
 BAU Boolean Cost Driven Retirement Gate at Last Pass[Electricity Source]=
@@ -4949,12 +4950,129 @@ BAU Demand Responsive Electricity Capacity for Electrolyzers=
 	~		|
 
 BAU Demand Shifting Headroom for Reliability by Hour[Electricity Timeslice,Hour]=
+	BAU Non Hybrid Demand Shifting Capacity in MW[Electricity Timeslice,Hour]
+	+ SUM(BAU Last Year Hybrid Grid Battery Storage Capacity[Electricity Source!])
+	  / GBSC Diurnal Grid Battery Daily Storage Duration
+	  * RAF Regional Availability Factor for Demand Altering Technologies
+	~	MW
+	~		|
+
+BAU Electricity Demand by Hour Plus Reserve Margin for Reliability[Electricity Timeslice\
+		,Hour]=
 	MAX(0,
-	  BAU Non Hybrid Demand Shifting Capacity in MW[Electricity Timeslice,Hour]
-	  + MIN(0, BAU Change in Electricity Demand from Demand Altering Technologies for Net Peak Load Reduction\
-		[Electricity Timeslice,Hour]) / One Hour
+	  BAU Total Electricity Demand by Hour Before Demand Altering Technologies[Electricity Timeslice\
+		,Hour]
+	  - SUM(BAU Electricity Exports by Hour[Electricity Timeslice,Hour,last pass!])
+	)
+	* (1 + RM Reserve Margin)
+	+ MAX(
+	    BAU Increase in Demand by Hour for Seasonal Net Peak Load Reduction[Electricity Timeslice\
+		,Hour]
+	    - BAU Decrease in Demand by Hour for Seasonal Net Peak Load Reduction[Electricity Timeslice\
+		,Hour],
+	    - BAU Total Electricity Demand by Hour Before Demand Altering Technologies[Electricity Timeslice\
+		,Hour] * 0.95
+	  )
+	  * ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies[Electricity Timeslice\
+		,Hour]
+	~	MW*hr
+	~		|
+
+BAU Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Hour\
+		]=
+	BAU Electricity Demand by Hour Plus Reserve Margin for Reliability[peak day electricity timeslice\
+		,Hour]
+	- SUM(BAU Electricity Generation Capacity before Reliability Additions[Electricity Source\
+		!]
+	    * BAU Last Year Hourly Bid Electricity Capacity Factors for Reliability by Plant Type\
+		[peak day electricity timeslice,Hour,Electricity Source!])
+	  * One Hour
+	~	MW*hour
+	~		|
+
+BAU Hours Needing Demand Shifting for Reliability[peak day electricity timeslice]=
+	SUM(
+	  IF THEN ELSE(BAU Reliability Need before Demand Shifting by Hour[peak day electricity timeslice\
+		,Hour!] > 0, 1, 0)
+	)
+	~	Dmnl
+	~		|
+
+BAU Daily Energy Available from Demand Shifting for Reliability[Electricity Timeslice\
+		]=
+	BAU Maximum Daily Quantity of Electricity Absorbed for Diurnal Net Peak Load Reduction\
+		[Electricity Timeslice]
+	* BAU Weighted Average Round Trip Efficiency for Diurnal Shifting[Electricity Timeslice\
+		]
+	+ BAU Maximum Daily Quantity of Electricity Reduced by Demand Response Programs for Net Peak Load Reduction\
+		[Electricity Timeslice]
+	~	MW*hr
+	~		|
+
+BAU Credited Demand Shifting Power for Reliability by Hour[peak day electricity timeslice,Hour]=
+	MIN(
+	  BAU Demand Shifting Headroom for Reliability by Hour[peak day electricity timeslice,Hour],
+	  ZIDZ(MAX(0, BAU Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Hour] - BAU Reliability Shaving Level[peak day electricity timeslice]), ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies[peak day electricity timeslice,Hour] * One Hour)
 	)
 	~	MW
+	~		|
+
+BAU Reliability Shaving Level Candidate at Need[peak day electricity timeslice,Hour]=
+	MAX(0, BAU Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Hour])
+	~	MW*hour
+	~		|
+
+BAU Reliability Shaving Level Candidate at Power Limit[peak day electricity timeslice,Hour]=
+	MAX(0, BAU Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Hour] - ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies[peak day electricity timeslice,Hour] * BAU Demand Shifting Headroom for Reliability by Hour[peak day electricity timeslice,Hour] * One Hour)
+	~	MW*hour
+	~		|
+
+BAU Demand Shifting Energy Used at Need Candidate[peak day electricity timeslice,Hour]=
+	SUM(MIN(BAU Demand Shifting Headroom for Reliability by Hour[peak day electricity timeslice,Shaving Hour!] * One Hour, ZIDZ(MAX(0, BAU Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Shaving Hour!] - BAU Reliability Shaving Level Candidate at Need[peak day electricity timeslice,Hour]), ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies[peak day electricity timeslice,Shaving Hour!])))
+	~	MW*hour
+	~		|
+
+BAU Demand Shifting Energy Used at Power Limit Candidate[peak day electricity timeslice,Hour]=
+	SUM(MIN(BAU Demand Shifting Headroom for Reliability by Hour[peak day electricity timeslice,Shaving Hour!] * One Hour, ZIDZ(MAX(0, BAU Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Shaving Hour!] - BAU Reliability Shaving Level Candidate at Power Limit[peak day electricity timeslice,Hour]), ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies[peak day electricity timeslice,Shaving Hour!])))
+	~	MW*hour
+	~		|
+
+BAU Demand Shifting Energy to Cover All Reliability Need[peak day electricity timeslice]=
+	SUM(MIN(BAU Demand Shifting Headroom for Reliability by Hour[peak day electricity timeslice,Hour!] * One Hour, ZIDZ(MAX(0, BAU Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Hour!] - 0), ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies[peak day electricity timeslice,Hour!])))
+	~	MW*hour
+	~		|
+
+BAU Maximum Reliability Need before Demand Shifting[peak day electricity timeslice]=
+	VMAX(BAU Reliability Shaving Level Candidate at Need[peak day electricity timeslice,Hour!])
+	~	MW*hour
+	~		|
+
+BAU Reliability Shaving Level Lower Bracket[peak day electricity timeslice]=
+	MAX(VMAX(IF THEN ELSE(BAU Demand Shifting Energy Used at Need Candidate[peak day electricity timeslice,Hour!] >= BAU Daily Energy Available from Demand Shifting for Reliability[peak day electricity timeslice], BAU Reliability Shaving Level Candidate at Need[peak day electricity timeslice,Hour!], 0)),
+	    VMAX(IF THEN ELSE(BAU Demand Shifting Energy Used at Power Limit Candidate[peak day electricity timeslice,Hour!] >= BAU Daily Energy Available from Demand Shifting for Reliability[peak day electricity timeslice], BAU Reliability Shaving Level Candidate at Power Limit[peak day electricity timeslice,Hour!], 0)))
+	~	MW*hour
+	~		|
+
+BAU Reliability Shaving Level Upper Bracket[peak day electricity timeslice]=
+	MIN(VMIN(IF THEN ELSE(BAU Demand Shifting Energy Used at Need Candidate[peak day electricity timeslice,Hour!] <= BAU Daily Energy Available from Demand Shifting for Reliability[peak day electricity timeslice], BAU Reliability Shaving Level Candidate at Need[peak day electricity timeslice,Hour!], BAU Maximum Reliability Need before Demand Shifting[peak day electricity timeslice])),
+	    VMIN(IF THEN ELSE(BAU Demand Shifting Energy Used at Power Limit Candidate[peak day electricity timeslice,Hour!] <= BAU Daily Energy Available from Demand Shifting for Reliability[peak day electricity timeslice], BAU Reliability Shaving Level Candidate at Power Limit[peak day electricity timeslice,Hour!], BAU Maximum Reliability Need before Demand Shifting[peak day electricity timeslice])))
+	~	MW*hour
+	~		|
+
+BAU Demand Shifting Energy Used at Lower Bracket[peak day electricity timeslice]=
+	SUM(MIN(BAU Demand Shifting Headroom for Reliability by Hour[peak day electricity timeslice,Hour!] * One Hour, ZIDZ(MAX(0, BAU Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Hour!] - BAU Reliability Shaving Level Lower Bracket[peak day electricity timeslice]), ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies[peak day electricity timeslice,Hour!])))
+	~	MW*hour
+	~		|
+
+BAU Demand Shifting Energy Used at Upper Bracket[peak day electricity timeslice]=
+	SUM(MIN(BAU Demand Shifting Headroom for Reliability by Hour[peak day electricity timeslice,Hour!] * One Hour, ZIDZ(MAX(0, BAU Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Hour!] - BAU Reliability Shaving Level Upper Bracket[peak day electricity timeslice]), ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies[peak day electricity timeslice,Hour!])))
+	~	MW*hour
+	~		|
+
+BAU Reliability Shaving Level[peak day electricity timeslice]=
+	IF THEN ELSE(BAU Demand Shifting Energy to Cover All Reliability Need[peak day electricity timeslice] <= BAU Daily Energy Available from Demand Shifting for Reliability[peak day electricity timeslice], 0,
+	  BAU Reliability Shaving Level Lower Bracket[peak day electricity timeslice] + ZIDZ((BAU Demand Shifting Energy Used at Lower Bracket[peak day electricity timeslice] - BAU Daily Energy Available from Demand Shifting for Reliability[peak day electricity timeslice]) * (BAU Reliability Shaving Level Upper Bracket[peak day electricity timeslice] - BAU Reliability Shaving Level Lower Bracket[peak day electricity timeslice]), BAU Demand Shifting Energy Used at Lower Bracket[peak day electricity timeslice] - BAU Demand Shifting Energy Used at Upper Bracket[peak day electricity timeslice]))
+	~	MW*hour
 	~		|
 
 BAU Desired Cost Driven Capacity Retirements[Electricity Source,Optimization Pass]=
@@ -5997,6 +6115,7 @@ BAU Existing Credited Binding Hour Supply for Dispatchable Reliability=
 	!]
 	)
 	* One Hour
+	+ BAU Binding Hour Demand Shifting Headroom for Reliability * One Hour
 	~	MW*hour
 	~		|
 
@@ -9958,6 +10077,7 @@ BAU Maximum Achievable Binding Hour Supply for Dispatchable Reliability[Optimiza
 	  * ESTRTE Grid Battery Round Trip Efficiency
 	  / GBSC Diurnal Grid Battery Daily Storage Duration
 	  * One Hour
+	+ BAU Binding Hour Demand Shifting Headroom for Reliability * One Hour
 	~	MW*hour
 	~		|
 
@@ -10106,6 +10226,7 @@ BAU Maximum Potential Binding Hour Electricity Output by Hour for Dispatchable R
 	
 	)
 	* One Hour
+	+ BAU Binding Hour Demand Shifting Headroom for Reliability * One Hour
 	~	MW*hour
 	~		|
 
@@ -10147,7 +10268,7 @@ BAU Minimum Buildable Capacity for Plants[Electricity Source]=
 BAU Net Electricity Demand Relative to Achievable Supply in Binding Hour by Optimization Pass\
 		[Optimization Pass]=
 	MIN(
-	  SUM(BAU Total Electricity Demand by Hour Plus Reserve Margin After Demand Altering Technologies\
+	  SUM(BAU Electricity Demand by Hour Plus Reserve Margin for Reliability\
 		[peak day electricity timeslice
 	!,Hour!]
 	    * BAU Binding Peak Hour for Reliability Additions[peak day electricity timeslice\
@@ -10164,21 +10285,20 @@ BAU Net Electricity Demand Relative to Achievable Supply in Binding Hour by Opti
 	~		|
 
 BAU Net Electricity Demand Relative to Available Supply by Hour before Reliability Additions\
-		[peak day electricity timeslice
-,Hour]=
-	BAU Total Electricity Demand by Hour Plus Reserve Margin After Demand Altering Technologies\
-		[peak day electricity timeslice
-	,Hour]
-	
-	  - SUM(BAU Electricity Generation Capacity before Reliability Additions[Electricity Source\
-		!]*BAU Last Year Hourly Bid Electricity Capacity Factors for Reliability by Plant Type
-	[peak day electricity timeslice,Hour,Electricity Source!])* One Hour
+		[peak day electricity timeslice,Hour]=
+	BAU Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Hour\
+		]
+	- BAU Credited Demand Shifting Power for Reliability by Hour[peak day electricity timeslice\
+		,Hour]
+	  * ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies[peak day electricity timeslice\
+		,Hour]
+	  * One Hour
 	~	MW*hour
 	~		|
 
 BAU Net Electricity Demand Relative to Available Supply in Binding Hour by Optimization Pass\
 		[Optimization Pass]=
-	SUM(BAU Total Electricity Demand by Hour Plus Reserve Margin After Demand Altering Technologies\
+	SUM(BAU Electricity Demand by Hour Plus Reserve Margin for Reliability\
 		[peak day electricity timeslice!,
 	Hour!]*BAU Binding Peak Hour for Reliability Additions[peak day electricity timeslice\
 		!,Hour!])
@@ -16658,7 +16778,7 @@ BIFUbC BAU Industrial Fuel Use before CCS[Industry Category,hydrogen if]:=
 Binding Hour Demand Shifting Headroom for Reliability=
 	SUM(Binding Peak Hour for Reliability Additions[peak day electricity timeslice!,Hour\
 		!]
-	    * Demand Shifting Headroom for Reliability by Hour[peak day electricity timeslice\
+	    * Credited Demand Shifting Power for Reliability by Hour[peak day electricity timeslice\
 		!,Hour!]
 	    * ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies[peak day electricity timeslice\
 		!,Hour!])
@@ -16698,15 +16818,16 @@ Binding Hour Reliability Shortfall after Fossil Backstop=
 	~		|
 
 Binding Peak Hour for Reliability Additions[peak day electricity timeslice,Hour]=
-	IF THEN ELSE(Net Electricity Demand Relative to Available Supply by Hour before Reliability Additions\
-		[peak day electricity timeslice,Hour]<=0,0,
-	
-	IF THEN ELSE(Net Electricity Demand Relative to Available Supply by Hour before Reliability Additions\
-		[peak day electricity timeslice,Hour]=VMAX(Net Electricity Demand Relative to Available Supply by Hour before Reliability Additions\
-		[peak day electricity timeslice!,Hour!]),1,0)
-	
+	IF THEN ELSE(Net Electricity Demand Relative to Available Supply by Hour before Reliability Additions[peak day electricity timeslice,Hour] <= 0, 0,
+	  IF THEN ELSE(Reliability Binding Hour Selection Key[peak day electricity timeslice,Hour] = VMAX(Reliability Binding Hour Selection Key[peak day electricity timeslice!,Hour!]), 1, 0)
 	)
 	~	Dmnl
+	~		|
+
+Reliability Binding Hour Selection Key[peak day electricity timeslice,Hour]=
+	Net Electricity Demand Relative to Available Supply by Hour before Reliability Additions[peak day electricity timeslice,Hour]
+	+ 1e-06 * MAX(0, Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Hour])
+	~	MW*hour
 	~		|
 
 biomass and biofuel within all fuels:
@@ -25416,12 +25537,129 @@ Demand Responsive Electricity Capacity for Electrolyzers=
 	~		|
 
 Demand Shifting Headroom for Reliability by Hour[Electricity Timeslice,Hour]=
+	Non Hybrid Demand Shifting Capacity in MW[Electricity Timeslice,Hour]
+	+ SUM(Last Year Hybrid Grid Battery Storage Capacity[Electricity Source!])
+	  / GBSC Diurnal Grid Battery Daily Storage Duration
+	  * RAF Regional Availability Factor for Demand Altering Technologies
+	~	MW
+	~		|
+
+Electricity Demand by Hour Plus Reserve Margin for Reliability[Electricity Timeslice\
+		,Hour]=
 	MAX(0,
-	  Non Hybrid Demand Shifting Capacity in MW[Electricity Timeslice,Hour]
-	  + MIN(0, Change in Electricity Demand from Demand Altering Technologies for Net Peak Load Reduction\
-		[Electricity Timeslice,Hour]) / One Hour
+	  Total Electricity Demand by Hour Before Demand Altering Technologies[Electricity Timeslice\
+		,Hour]
+	  - SUM(Electricity Exports by Hour[Electricity Timeslice,Hour,last pass!])
+	)
+	* (1 + RM Reserve Margin)
+	+ MAX(
+	    Increase in Demand by Hour for Seasonal Net Peak Load Reduction[Electricity Timeslice\
+		,Hour]
+	    - Decrease in Demand by Hour for Seasonal Net Peak Load Reduction[Electricity Timeslice\
+		,Hour],
+	    - Total Electricity Demand by Hour Before Demand Altering Technologies[Electricity Timeslice\
+		,Hour] * 0.95
+	  )
+	  * ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies[Electricity Timeslice\
+		,Hour]
+	~	MW*hr
+	~		|
+
+Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Hour\
+		]=
+	Electricity Demand by Hour Plus Reserve Margin for Reliability[peak day electricity timeslice\
+		,Hour]
+	- SUM(Electricity Generation Capacity before Reliability Additions[Electricity Source\
+		!]
+	    * Last Year Hourly Bid Electricity Capacity Factors for Reliability by Plant Type\
+		[peak day electricity timeslice,Hour,Electricity Source!])
+	  * One Hour
+	~	MW*hour
+	~		|
+
+Hours Needing Demand Shifting for Reliability[peak day electricity timeslice]=
+	SUM(
+	  IF THEN ELSE(Reliability Need before Demand Shifting by Hour[peak day electricity timeslice\
+		,Hour!] > 0, 1, 0)
+	)
+	~	Dmnl
+	~		|
+
+Daily Energy Available from Demand Shifting for Reliability[Electricity Timeslice\
+		]=
+	Maximum Daily Quantity of Electricity Absorbed for Diurnal Net Peak Load Reduction\
+		[Electricity Timeslice]
+	* Weighted Average Round Trip Efficiency for Diurnal Shifting[Electricity Timeslice\
+		]
+	+ Maximum Daily Quantity of Electricity Reduced by Demand Response Programs for Net Peak Load Reduction\
+		[Electricity Timeslice]
+	~	MW*hr
+	~		|
+
+Credited Demand Shifting Power for Reliability by Hour[peak day electricity timeslice,Hour]=
+	MIN(
+	  Demand Shifting Headroom for Reliability by Hour[peak day electricity timeslice,Hour],
+	  ZIDZ(MAX(0, Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Hour] - Reliability Shaving Level[peak day electricity timeslice]), ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies[peak day electricity timeslice,Hour] * One Hour)
 	)
 	~	MW
+	~		|
+
+Reliability Shaving Level Candidate at Need[peak day electricity timeslice,Hour]=
+	MAX(0, Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Hour])
+	~	MW*hour
+	~		|
+
+Reliability Shaving Level Candidate at Power Limit[peak day electricity timeslice,Hour]=
+	MAX(0, Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Hour] - ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies[peak day electricity timeslice,Hour] * Demand Shifting Headroom for Reliability by Hour[peak day electricity timeslice,Hour] * One Hour)
+	~	MW*hour
+	~		|
+
+Demand Shifting Energy Used at Need Candidate[peak day electricity timeslice,Hour]=
+	SUM(MIN(Demand Shifting Headroom for Reliability by Hour[peak day electricity timeslice,Shaving Hour!] * One Hour, ZIDZ(MAX(0, Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Shaving Hour!] - Reliability Shaving Level Candidate at Need[peak day electricity timeslice,Hour]), ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies[peak day electricity timeslice,Shaving Hour!])))
+	~	MW*hour
+	~		|
+
+Demand Shifting Energy Used at Power Limit Candidate[peak day electricity timeslice,Hour]=
+	SUM(MIN(Demand Shifting Headroom for Reliability by Hour[peak day electricity timeslice,Shaving Hour!] * One Hour, ZIDZ(MAX(0, Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Shaving Hour!] - Reliability Shaving Level Candidate at Power Limit[peak day electricity timeslice,Hour]), ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies[peak day electricity timeslice,Shaving Hour!])))
+	~	MW*hour
+	~		|
+
+Demand Shifting Energy to Cover All Reliability Need[peak day electricity timeslice]=
+	SUM(MIN(Demand Shifting Headroom for Reliability by Hour[peak day electricity timeslice,Hour!] * One Hour, ZIDZ(MAX(0, Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Hour!] - 0), ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies[peak day electricity timeslice,Hour!])))
+	~	MW*hour
+	~		|
+
+Maximum Reliability Need before Demand Shifting[peak day electricity timeslice]=
+	VMAX(Reliability Shaving Level Candidate at Need[peak day electricity timeslice,Hour!])
+	~	MW*hour
+	~		|
+
+Reliability Shaving Level Lower Bracket[peak day electricity timeslice]=
+	MAX(VMAX(IF THEN ELSE(Demand Shifting Energy Used at Need Candidate[peak day electricity timeslice,Hour!] >= Daily Energy Available from Demand Shifting for Reliability[peak day electricity timeslice], Reliability Shaving Level Candidate at Need[peak day electricity timeslice,Hour!], 0)),
+	    VMAX(IF THEN ELSE(Demand Shifting Energy Used at Power Limit Candidate[peak day electricity timeslice,Hour!] >= Daily Energy Available from Demand Shifting for Reliability[peak day electricity timeslice], Reliability Shaving Level Candidate at Power Limit[peak day electricity timeslice,Hour!], 0)))
+	~	MW*hour
+	~		|
+
+Reliability Shaving Level Upper Bracket[peak day electricity timeslice]=
+	MIN(VMIN(IF THEN ELSE(Demand Shifting Energy Used at Need Candidate[peak day electricity timeslice,Hour!] <= Daily Energy Available from Demand Shifting for Reliability[peak day electricity timeslice], Reliability Shaving Level Candidate at Need[peak day electricity timeslice,Hour!], Maximum Reliability Need before Demand Shifting[peak day electricity timeslice])),
+	    VMIN(IF THEN ELSE(Demand Shifting Energy Used at Power Limit Candidate[peak day electricity timeslice,Hour!] <= Daily Energy Available from Demand Shifting for Reliability[peak day electricity timeslice], Reliability Shaving Level Candidate at Power Limit[peak day electricity timeslice,Hour!], Maximum Reliability Need before Demand Shifting[peak day electricity timeslice])))
+	~	MW*hour
+	~		|
+
+Demand Shifting Energy Used at Lower Bracket[peak day electricity timeslice]=
+	SUM(MIN(Demand Shifting Headroom for Reliability by Hour[peak day electricity timeslice,Hour!] * One Hour, ZIDZ(MAX(0, Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Hour!] - Reliability Shaving Level Lower Bracket[peak day electricity timeslice]), ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies[peak day electricity timeslice,Hour!])))
+	~	MW*hour
+	~		|
+
+Demand Shifting Energy Used at Upper Bracket[peak day electricity timeslice]=
+	SUM(MIN(Demand Shifting Headroom for Reliability by Hour[peak day electricity timeslice,Hour!] * One Hour, ZIDZ(MAX(0, Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Hour!] - Reliability Shaving Level Upper Bracket[peak day electricity timeslice]), ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies[peak day electricity timeslice,Hour!])))
+	~	MW*hour
+	~		|
+
+Reliability Shaving Level[peak day electricity timeslice]=
+	IF THEN ELSE(Demand Shifting Energy to Cover All Reliability Need[peak day electricity timeslice] <= Daily Energy Available from Demand Shifting for Reliability[peak day electricity timeslice], 0,
+	  Reliability Shaving Level Lower Bracket[peak day electricity timeslice] + ZIDZ((Demand Shifting Energy Used at Lower Bracket[peak day electricity timeslice] - Daily Energy Available from Demand Shifting for Reliability[peak day electricity timeslice]) * (Reliability Shaving Level Upper Bracket[peak day electricity timeslice] - Reliability Shaving Level Lower Bracket[peak day electricity timeslice]), Demand Shifting Energy Used at Lower Bracket[peak day electricity timeslice] - Demand Shifting Energy Used at Upper Bracket[peak day electricity timeslice]))
+	~	MW*hour
 	~		|
 
 Demographic Trait:
@@ -28697,6 +28935,7 @@ Existing Credited Binding Hour Supply for Dispatchable Reliability=
 	]
 	)
 	* One Hour
+	+ Binding Hour Demand Shifting Headroom for Reliability * One Hour
 	~	MW*hour
 	~		|
 
@@ -32905,6 +33144,11 @@ HOIpTP Health Outcome Incidence per Ton Pollutant[Health Outcome,geoengineering 
 
 Hour:
 	(Hour0-Hour23)
+	~	
+	~		|
+
+Shaving Hour<->
+	Hour
 	~	
 	~		|
 
@@ -37980,6 +38224,7 @@ Maximum Achievable Binding Hour Supply for Dispatchable Reliability[Optimization
 	  * ESTRTE Grid Battery Round Trip Efficiency
 	  / GBSC Diurnal Grid Battery Daily Storage Duration
 	  * One Hour
+	+ Binding Hour Demand Shifting Headroom for Reliability * One Hour
 	~	MW*hour
 	~		|
 
@@ -38127,6 +38372,7 @@ Maximum Potential Binding Hour Electricity Output by Hour for Dispatchable Relia
 	
 	)
 	* One Hour
+	+ Binding Hour Demand Shifting Headroom for Reliability * One Hour
 	~	MW*hour
 	~		|
 
@@ -39823,7 +40069,7 @@ NBPoNVP Non Battery Portion of New Vehicle Price[motorbikes,freight,Vehicle Tech
 Net Electricity Demand Relative to Achievable Supply in Binding Hour by Optimization Pass\
 		[Optimization Pass]=
 	MIN(
-	  SUM(Total Electricity Demand by Hour Plus Reserve Margin After Demand Altering Technologies\
+	  SUM(Electricity Demand by Hour Plus Reserve Margin for Reliability\
 		[peak day electricity timeslice
 	!,Hour!]
 	    * Binding Peak Hour for Reliability Additions[peak day electricity timeslice!,Hour\
@@ -39839,21 +40085,20 @@ Net Electricity Demand Relative to Achievable Supply in Binding Hour by Optimiza
 	~		|
 
 Net Electricity Demand Relative to Available Supply by Hour before Reliability Additions\
-		[peak day electricity timeslice
-,Hour]=
-	Total Electricity Demand by Hour Plus Reserve Margin After Demand Altering Technologies\
-		[peak day electricity timeslice
-	,Hour]
-	
-	  - SUM(Electricity Generation Capacity before Reliability Additions[Electricity Source\
-		!]*Last Year Hourly Bid Electricity Capacity Factors for Reliability by Plant Type
-	[peak day electricity timeslice,Hour,Electricity Source!])*One Hour
+		[peak day electricity timeslice,Hour]=
+	Reliability Need before Demand Shifting by Hour[peak day electricity timeslice,Hour\
+		]
+	- Credited Demand Shifting Power for Reliability by Hour[peak day electricity timeslice\
+		,Hour]
+	  * ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies[peak day electricity timeslice\
+		,Hour]
+	  * One Hour
 	~	MW*hour
 	~		|
 
 Net Electricity Demand Relative to Available Supply in Binding Hour by Optimization Pass\
 		[Optimization Pass]=
-	SUM(Total Electricity Demand by Hour Plus Reserve Margin After Demand Altering Technologies\
+	SUM(Electricity Demand by Hour Plus Reserve Margin for Reliability\
 		[peak day electricity timeslice!,
 	Hour!]*Binding Peak Hour for Reliability Additions[peak day electricity timeslice!,Hour\
 		!])
@@ -59775,7 +60020,6 @@ We have consolidated the calculations in the reliability mechanism to save runti
 1,1107,1106,1088,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
 1,1108,1106,1086,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1109,169,1098,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,1110,Total Electricity Demand by Hour Plus Reserve Margin After Demand Altering Technologies,7025,-1025,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,1111,One Hour,-662,3117,75,30,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,1112,1111,548,0,1,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,1113,One Hour,598,3169,75,30,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -60796,13 +61040,9 @@ Determining Annual Net Energy Revenues
 1,2103,1740,2093,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,2104,One Hour,7289,-1041,42,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,2105,2104,2093,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,2106,893,2094,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,2107,Net Electricity Demand Relative to Available Supply in Binding Hour by Optimization Pass,6808,-928,110,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,2108,1110,2107,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,2109,2093,2107,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,2110,2107,853,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,2111,Total Electricity Demand by Hour Plus Reserve Margin After Demand Altering Technologies,8286,-1142,114,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,2112,2111,2094,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,2113,Binding Peak Hour for Reliability Additions,6808,-1024,77,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,2114,2113,2107,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,2115,1966,1896,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -61515,7 +61755,6 @@ We discount the amount of load shifting capacity for grid batteries based on obs
 1,2813,803,770,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,2814,Last Year Hourly Bid Electricity Capacity Factors for Reliability by Plant Type,8286,-931,102,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,2815,2479,2814,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,2816,2814,2094,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,2817,2814,2097,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,2818,ELCCAfR ELCC Adjustment for Reliability for Generation Sources,8286,-1049,87,34,8,131,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
 1,2819,2818,2814,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -62024,8 +62263,6 @@ This adjustment is only for historical years where capacity is hard coded, so it
 1,3318,3317,3246,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,3319,One Hour,10228,-1324,42,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,3320,3319,3246,0,1,0,0,2,128,0,-1--1--1,|||0-0-0,1|(0,0)|
-10,3321,Total Electricity Demand by Hour Plus Reserve Margin After Demand Altering Technologies,7307,-548,113,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,3322,3321,3248,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,3323,Binding Peak Hour for Reliability Additions,7307,-671,77,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,3324,3323,3248,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,3325,2093,3248,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
@@ -62330,7 +62567,6 @@ Demand Shifting Headroom Credited in the Reliability Check
 10,3623,Total EV Battery Capacity Available in MW,2272,-4712,85,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,3624,Non Hybrid Demand Shifting Capacity in MW,2592,-4712,90,28,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
 10,3625,RAF Regional Availability Factor for Demand Altering Technologies,2912,-4712,88,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,3626,Change in Electricity Demand from Demand Altering Technologies for Net Peak Load Reduction,2272,-4592,96,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,3627,Demand Shifting Headroom for Reliability by Hour,2592,-4592,90,28,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
 10,3628,Binding Peak Hour for Reliability Additions,2272,-4472,77,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,3629,Binding Hour Demand Shifting Headroom for Reliability,2592,-4472,90,28,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
@@ -62350,8 +62586,6 @@ Demand Shifting Headroom Credited in the Reliability Check
 1,3643,3623,3624,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,3644,3625,3624,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,3645,3624,3627,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,3646,3626,3627,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,3647,3627,3629,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,3648,3628,3629,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,3649,3630,3629,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,3650,3631,3632,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -62457,8 +62691,6 @@ Netting Scheduled Retirements against Economic Retirements
 1,3748,3747,3257,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,3749,One Hour,8285,-1248,42,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,3750,3749,3739,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,3751,One Hour,2912,-4590,42,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,3752,3751,3627,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,3753,Max Capacity Buildable after Cost Effective and RPS Additions,5988,-1108,92,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,3754,3753,3684,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,3755,Capacity Supply Curve Parameters by Power Plant Type,5988,-1035,87,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -62630,6 +62862,169 @@ Netting Scheduled Retirements against Economic Retirements
 1,3921,3920,2984,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,3922,Total Electricity Demand by Hour After Demand Altering Technologies,594,-152,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,3923,3922,2904,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3924,Electricity Demand by Hour Plus Reserve Margin for Reliability,6869,573,110,21,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3925,Reliability Need before Demand Shifting by Hour,2705,-4261,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3926,Hours Needing Demand Shifting for Reliability,2818,-4331,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3927,Daily Energy Available from Demand Shifting for Reliability,2932,-4535,110,21,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3928,Credited Demand Shifting Power for Reliability by Hour,2251,-4528,110,21,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3929,Decrease in Demand by Hour for Seasonal Net Peak Load Reduction,7062,503,90,21,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+1,3930,3929,3924,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3931,ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies,7093,573,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3932,3931,3924,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3933,1887,3924,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3934,Increase in Demand by Hour for Seasonal Net Peak Load Reduction,6652,609,90,21,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+1,3935,3934,3924,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3936,RM Reserve Margin,6629,423,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3937,3936,3924,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3938,Total Electricity Demand by Hour Before Demand Altering Technologies,6453,573,90,28,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+1,3939,3938,3924,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3940,Electricity Demand by Hour Plus Reserve Margin for Reliability,2795,-4204,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3941,3940,3925,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3942,Electricity Generation Capacity before Reliability Additions,2600,-4195,90,21,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+1,3943,3942,3925,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3944,Last Year Hourly Bid Electricity Capacity Factors for Reliability by Plant Type,2481,-4261,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3945,3944,3925,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3946,One Hour,2929,-4261,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3947,3946,3925,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3948,3925,3926,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3949,Maximum Daily Quantity of Electricity Absorbed for Diurnal Net Peak Load Reduction,3063,-4617,90,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+1,3950,3949,3927,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3951,Maximum Daily Quantity of Electricity Reduced by Demand Response Programs for Net Peak Load Reduction,3156,-4535,90,35,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+1,3952,3951,3927,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3953,Weighted Average Round Trip Efficiency for Diurnal Shifting,3125,-4465,90,21,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+1,3954,3953,3927,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3957,3627,3928,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3960,One Hour,2057,-4598,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3961,3960,3928,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3962,GBSC Diurnal Grid Battery Daily Storage Duration,2394,-4625,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3963,3962,3627,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3964,3631,3627,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3965,3625,3627,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3966,Credited Demand Shifting Power for Reliability by Hour,8057,-1197,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3967,3966,2094,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3968,ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies,8104,-1133,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3969,3968,2094,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3970,Reliability Need before Demand Shifting by Hour,8057,-1069,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3971,3970,2094,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3972,3928,3629,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3973,Binding Hour Demand Shifting Headroom for Reliability,7238,-761,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3974,3973,3246,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3975,3973,3247,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3976,3633,2093,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3977,Electricity Demand by Hour Plus Reserve Margin for Reliability,6912,-601,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3978,3977,3248,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3979,Electricity Demand by Hour Plus Reserve Margin for Reliability,6993,-1043,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3980,3979,2107,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,3981,0,2881,5951,1260,25,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Peak-Shaving Storage Credit for Reliability (test)
+10,3982,Reliability Shaving Level Candidate at Need,2251,6171,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3983,Reliability Shaving Level Candidate at Power Limit,2251,6431,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3984,Demand Shifting Energy Used at Need Candidate,2671,6171,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3985,Demand Shifting Energy Used at Power Limit Candidate,2671,6431,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3986,Maximum Reliability Need before Demand Shifting,2671,6691,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3987,Reliability Shaving Level Lower Bracket,3091,6171,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3988,Reliability Shaving Level Upper Bracket,3091,6431,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3989,Demand Shifting Energy Used at Lower Bracket,3511,6171,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3990,Demand Shifting Energy Used at Upper Bracket,3511,6431,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3991,Demand Shifting Energy to Cover All Reliability Need,3511,6691,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3992,Reliability Shaving Level,3931,6301,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3993,Reliability Binding Hour Selection Key,7673,-1044,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+1,3994,2094,3993,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3995,Reliability Need before Demand Shifting by Hour,7595,-862,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3996,3995,3993,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3997,Reliability Need before Demand Shifting by Hour,2251,6091,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3998,3997,3982,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3999,Demand Shifting Headroom for Reliability by Hour,2251,6351,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4000,3999,3983,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4001,ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies,2315,6500,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4002,4001,3983,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4003,One Hour,2106,6483,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4004,4003,3983,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4005,Reliability Need before Demand Shifting by Hour,2027,6431,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4006,4005,3983,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4007,3999,3984,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4008,ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies,2671,6091,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4009,4008,3984,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4010,One Hour,2761,6227,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4011,4010,3984,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4012,3997,3984,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4013,3982,3984,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4014,3999,3985,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4015,ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies,2671,6351,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4016,4015,3985,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4017,One Hour,2761,6487,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4018,4017,3985,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4019,Reliability Need before Demand Shifting by Hour,2566,6496,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4020,4019,3985,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4021,3983,3985,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4022,Reliability Shaving Level Candidate at Need,2671,6611,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4023,4022,3986,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4024,Daily Energy Available from Demand Shifting for Reliability,3091,6091,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4025,4024,3987,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4026,3984,3987,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4027,Demand Shifting Energy Used at Power Limit Candidate,3181,6227,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4028,4027,3987,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4029,Reliability Shaving Level Candidate at Need,2986,6236,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4030,4029,3987,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4031,Reliability Shaving Level Candidate at Power Limit,2897,6101,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4032,4031,3987,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4033,Daily Energy Available from Demand Shifting for Reliability,3091,6351,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4034,4033,3988,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4035,Demand Shifting Energy Used at Need Candidate,3181,6487,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4036,4035,3988,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4037,Demand Shifting Energy Used at Power Limit Candidate,2986,6496,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4038,4037,3988,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4039,Maximum Reliability Need before Demand Shifting,2897,6361,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4040,4039,3988,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4041,Reliability Shaving Level Candidate at Need,3301,6355,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4042,4041,3988,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4043,Reliability Shaving Level Candidate at Power Limit,3418,6485,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4044,4043,3988,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4045,Demand Shifting Headroom for Reliability by Hour,3511,6091,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4046,4045,3989,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4047,ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies,3575,6240,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4048,4047,3989,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4049,One Hour,3379,6253,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4050,4049,3989,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4051,Reliability Need before Demand Shifting by Hour,3727,6134,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4052,4051,3989,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4053,3987,3989,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4054,Demand Shifting Headroom for Reliability by Hour,3511,6351,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4055,4054,3990,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4056,ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies,3615,6496,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4057,4056,3990,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4058,One Hour,3727,6394,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4059,4058,3990,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4060,Reliability Need before Demand Shifting by Hour,3820,6482,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4061,4060,3990,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4062,3988,3990,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4063,Demand Shifting Headroom for Reliability by Hour,3511,6611,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4064,4063,3991,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4065,ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies,3575,6760,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4066,4065,3991,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4067,One Hour,3366,6743,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4068,4067,3991,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4069,Reliability Need before Demand Shifting by Hour,3727,6654,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4070,4069,3991,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4071,Daily Energy Available from Demand Shifting for Reliability,3931,6221,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4072,4071,3992,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4073,Demand Shifting Energy to Cover All Reliability Need,4021,6357,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4074,4073,3992,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4075,Demand Shifting Energy Used at Lower Bracket,4147,6264,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4076,4075,3992,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4077,Demand Shifting Energy Used at Upper Bracket,3714,6337,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4078,4077,3992,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4079,Reliability Shaving Level Lower Bracket,4221,6349,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4080,4079,3992,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4081,Reliability Shaving Level Upper Bracket,4423,6301,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4082,4081,3992,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4083,ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies,2073,-4464,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4084,4083,3928,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4085,Reliability Need before Demand Shifting by Hour,2197,-4651,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4086,4085,3928,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4087,Reliability Shaving Level,2027,-4528,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4088,4087,3928,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4089,3993,2095,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Electricity Supply - BAU
@@ -63558,7 +63953,6 @@ We have consolidated the calculations in the reliability mechanism to save runti
 1,835,834,66,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,836,BAU Weighted Average Heat Rate by Electricity Fuel,-6362,5871,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,837,836,2,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,838,BAU Total Electricity Demand by Hour Plus Reserve Margin After Demand Altering Technologies,2407,823,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,839,One Hour,-5231,4817,75,30,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,840,839,290,0,1,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,841,One Hour,-4468,4911,75,30,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -64383,7 +64777,6 @@ New Capacity Built for Green Hydrogen Production
 10,1646,BAU Capacity Market Steps in Positive Direction for Seasonal Dispatchable Reliability,2082,1050,100,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,1647,BAU Net Electricity Demand Relative to Available Supply in Binding Hour by Optimization Pass,2195,897,111,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,1648,1647,1634,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1649,838,1647,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,1650,BAU Maximum Potential Binding Hour Electricity Output by Hour for Dispatchable Reliability,2889,909,113,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,1651,One Hour,2885,805,42,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,1652,1432,1650,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -64400,9 +64793,6 @@ New Capacity Built for Green Hydrogen Production
 1,1663,1658,1657,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1664,1657,1650,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,1665,BAU Electricity Generation Capacity before Reliability Additions,3137,691,92,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,1666,1665,1659,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,1667,BAU Total Electricity Demand by Hour Plus Reserve Margin After Demand Altering Technologies,3749,579,114,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,1668,1667,1659,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1669,1665,1660,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,1670,BAU Profitable Capacity for Seasonal Dispatchable Reliability Additions,2202,470,91,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,1671,SoCtMbCtbDP Share of Costs that Must be Covered to Be Deemed Profitable,2058,405,105,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -65311,7 +65701,6 @@ Total Dispatch Using Five Year Averages
 10,2566,ELCCAfR ELCC Adjustment for Reliability for Generation Sources,3850,793,91,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,2567,2566,2565,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,2568,2565,1657,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,2569,2565,1659,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,2570,ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies,2221,2350,100,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,2571,2570,498,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,2572,BAU Variable Subsidies per Unit New Electricity Output,-6199,-1048,83,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -65817,8 +66206,6 @@ Capacity Construction Caps
 1,3069,3061,2999,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,3070,3062,2999,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,3071,3063,2999,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,3072,BAU Total Electricity Demand by Hour Plus Reserve Margin After Demand Altering Technologies,2670,1211,112,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,3073,3072,3000,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,3074,BAU Binding Peak Hour for Reliability Additions,2413,1213,84,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,3075,3074,3000,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,3076,1650,3000,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
@@ -66128,7 +66515,6 @@ Demand Shifting Headroom Credited in the Reliability Check
 10,3379,BAU Total EV Battery Capacity Available in MW,-3270,-2886,85,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,3380,BAU Non Hybrid Demand Shifting Capacity in MW,-2950,-2886,90,28,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
 10,3381,RAF Regional Availability Factor for Demand Altering Technologies,-2630,-2886,88,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,3382,BAU Change in Electricity Demand from Demand Altering Technologies for Net Peak Load Reduction,-3270,-2766,96,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,3383,BAU Demand Shifting Headroom for Reliability by Hour,-2950,-2766,90,28,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
 10,3384,BAU Binding Peak Hour for Reliability Additions,-3270,-2646,77,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,3385,BAU Binding Hour Demand Shifting Headroom for Reliability,-2950,-2646,90,28,8,3,0,4,0,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
@@ -66148,8 +66534,6 @@ Demand Shifting Headroom Credited in the Reliability Check
 1,3399,3379,3380,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,3400,3381,3380,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,3401,3380,3383,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,3402,3382,3383,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,3403,3383,3385,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,3404,3384,3385,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,3405,3386,3385,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,3406,3387,3388,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -66158,7 +66542,6 @@ Demand Shifting Headroom Credited in the Reliability Check
 1,3409,3384,3388,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,3410,3386,3388,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,3411,One Hour,-2950,-2719,42,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,3412,3411,3383,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 10,3413,BAU Electricity Sector CCS Transportation and Storage Costs per MWh,555,-1603,96,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 1,3414,3413,179,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 10,3415,BAU New Entrant Dispatch Cost per Unit Electricity Output before Subsidies,-4950,-1709,95,38,8,3,0,0,0,0,0,0,0,0,0,0,0,0
@@ -66431,6 +66814,167 @@ New Entrant Dispatch Cost for Entry Predictions
 1,3681,3680,2695,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,3682,BAU Total Electricity Demand by Hour After Demand Altering Technologies,-2826,1766,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,3683,3682,2686,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3684,BAU Electricity Demand by Hour Plus Reserve Margin for Reliability,1944,2106,110,21,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3685,BAU Reliability Need before Demand Shifting by Hour,-2732,-2526,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3686,BAU Hours Needing Demand Shifting for Reliability,-2618,-2455,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3687,BAU Daily Energy Available from Demand Shifting for Reliability,-2628,-2712,110,21,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3688,BAU Credited Demand Shifting Power for Reliability by Hour,-3290,-2702,110,21,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3689,BAU Decrease in Demand by Hour for Seasonal Net Peak Load Reduction,2061,2032,90,21,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+1,3690,3689,3684,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3691,1569,3684,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3692,BAU Increase in Demand by Hour for Seasonal Net Peak Load Reduction,2168,2106,90,21,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+1,3693,3692,3684,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3694,2496,3684,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3695,ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies,1700,2106,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3696,3695,3684,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3697,RM Reserve Margin,1676,2272,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3698,3697,3684,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3699,BAU Electricity Demand by Hour Plus Reserve Margin for Reliability,-2515,-2562,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3700,3699,3685,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3701,BAU Electricity Generation Capacity before Reliability Additions,-2814,-2332,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3702,3701,3685,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3703,BAU Last Year Hourly Bid Electricity Capacity Factors for Reliability by Plant Type,-2404,-2471,90,35,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3704,3703,3685,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3705,One Hour,-2200,-2526,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3706,3705,3685,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3707,3685,3686,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3708,BAU Maximum Daily Quantity of Electricity Absorbed for Diurnal Net Peak Load Reduction,-2564,-2781,90,28,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+1,3709,3708,3687,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3710,BAU Maximum Daily Quantity of Electricity Reduced by Demand Response Programs for Net Peak Load Reduction,-2411,-2675,90,35,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+1,3711,3710,3687,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3712,BAU Weighted Average Round Trip Efficiency for Diurnal Shifting,-2355,-2757,90,21,8,130,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+1,3713,3712,3687,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3716,3383,3688,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3719,3411,3688,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3720,BAU Last Year Hybrid Grid Battery Storage Capacity,-3147,-2799,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3721,3720,3383,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3722,GBSC Diurnal Grid Battery Daily Storage Duration,-3346,-2766,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3723,3722,3383,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3724,3381,3383,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3725,BAU Credited Demand Shifting Power for Reliability by Hour,3611,654,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3726,3725,1659,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3727,BAU Reliability Need before Demand Shifting by Hour,3611,727,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3728,3727,1659,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3729,ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies,3184,615,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3730,3729,1659,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3731,3688,3385,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3732,BAU Binding Hour Demand Shifting Headroom for Reliability,2189,975,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3733,3732,2998,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3734,BAU Binding Hour Demand Shifting Headroom for Reliability,2214,1585,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3735,3734,2999,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3736,3389,1650,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3737,BAU Electricity Demand by Hour Plus Reserve Margin for Reliability,2616,1171,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3738,3737,3000,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3739,BAU Electricity Demand by Hour Plus Reserve Margin for Reliability,2405,821,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3740,3739,1647,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,3741,0,-2660,8787,1260,25,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Peak-Shaving Storage Credit for Reliability (test)
+10,3742,BAU Reliability Shaving Level Candidate at Need,-3290,9007,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3743,BAU Reliability Shaving Level Candidate at Power Limit,-3290,9267,110,21,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3744,BAU Demand Shifting Energy Used at Need Candidate,-2870,9007,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3745,BAU Demand Shifting Energy Used at Power Limit Candidate,-2870,9267,110,21,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3746,BAU Maximum Reliability Need before Demand Shifting,-2870,9527,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3747,BAU Reliability Shaving Level Lower Bracket,-2450,9007,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3748,BAU Reliability Shaving Level Upper Bracket,-2450,9267,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3749,BAU Demand Shifting Energy Used at Lower Bracket,-2030,9007,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3750,BAU Demand Shifting Energy Used at Upper Bracket,-2030,9267,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3751,BAU Demand Shifting Energy to Cover All Reliability Need,-2030,9527,110,21,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3752,BAU Reliability Shaving Level,-1610,9137,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3753,BAU Reliability Binding Hour Selection Key,3612,786,110,19,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3754,BAU Net Electricity Demand Relative to Available Supply by Hour before Reliability Additions,3805,716,90,35,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3755,3754,3753,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3756,3727,3753,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3757,BAU Reliability Need before Demand Shifting by Hour,-3290,8927,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3758,3757,3742,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3759,BAU Demand Shifting Headroom for Reliability by Hour,-3290,9187,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3760,3759,3743,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3761,BAU Reliability Need before Demand Shifting by Hour,-3199,9323,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3762,3761,3743,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3763,ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies,-3394,9332,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3764,3763,3743,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3765,One Hour,-3096,9197,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3766,3765,3743,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3767,3759,3744,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3768,3757,3744,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3769,3742,3744,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3770,ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies,-2870,8927,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3771,3770,3744,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3772,3765,3744,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3773,BAU Demand Shifting Headroom for Reliability by Hour,-2870,9187,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3774,3773,3745,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3775,3761,3745,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3776,3743,3745,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3777,ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies,-2806,9336,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3778,3777,3745,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3779,3765,3745,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3780,BAU Reliability Shaving Level Candidate at Need,-2870,9447,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3781,3780,3746,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3782,BAU Daily Energy Available from Demand Shifting for Reliability,-2450,8927,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3783,3782,3747,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3784,3744,3747,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3785,BAU Demand Shifting Energy Used at Power Limit Candidate,-2359,9063,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3786,3785,3747,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3787,BAU Reliability Shaving Level Candidate at Need,-2554,9072,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3788,3787,3747,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3789,BAU Reliability Shaving Level Candidate at Power Limit,-2256,8937,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3790,3789,3747,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3791,BAU Daily Energy Available from Demand Shifting for Reliability,-2450,9187,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3792,3791,3748,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3793,BAU Demand Shifting Energy Used at Need Candidate,-2359,9323,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3794,3793,3748,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3795,BAU Demand Shifting Energy Used at Power Limit Candidate,-2554,9332,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3796,3795,3748,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3797,BAU Maximum Reliability Need before Demand Shifting,-2256,9197,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3798,3797,3748,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3799,BAU Reliability Shaving Level Candidate at Need,-2660,9191,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3800,3799,3748,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3801,BAU Reliability Shaving Level Candidate at Power Limit,-2122,9321,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3802,3801,3748,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3803,BAU Demand Shifting Headroom for Reliability by Hour,-2030,8927,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3804,3803,3749,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3805,BAU Reliability Need before Demand Shifting by Hour,-1939,9063,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3806,3805,3749,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3807,3747,3749,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3808,ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies,-2134,9072,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3809,3808,3749,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3810,One Hour,-1836,8937,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3811,3810,3749,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3812,BAU Demand Shifting Headroom for Reliability by Hour,-2030,9187,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3813,3812,3750,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3814,BAU Reliability Need before Demand Shifting by Hour,-1925,9332,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3815,3814,3750,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3816,3748,3750,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3817,ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies,-1836,9197,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3818,3817,3750,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3819,One Hour,-1806,9267,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3820,3819,3750,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3821,BAU Demand Shifting Headroom for Reliability by Hour,-2030,9447,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3822,3821,3751,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3823,BAU Reliability Need before Demand Shifting by Hour,-1939,9583,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3824,3823,3751,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3825,ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies,-2134,9592,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3826,3825,3751,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3827,One Hour,-1836,9457,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3828,3827,3751,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3829,BAU Daily Energy Available from Demand Shifting for Reliability,-1610,9057,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3830,3829,3752,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3831,BAU Demand Shifting Energy to Cover All Reliability Need,-1519,9193,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3832,3831,3752,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3833,BAU Demand Shifting Energy Used at Lower Bracket,-1416,9067,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3834,3833,3752,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3835,BAU Demand Shifting Energy Used at Upper Bracket,-1386,9137,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3836,3835,3752,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3837,BAU Reliability Shaving Level Lower Bracket,-1692,9330,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3838,3837,3752,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3839,BAU Reliability Shaving Level Upper Bracket,-2237,9137,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3840,3839,3752,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3841,BAU Reliability Need before Demand Shifting by Hour,-3467,-2638,90,21,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3842,3841,3688,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3843,BAU Reliability Shaving Level,-3514,-2702,90,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3844,3843,3688,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,3845,ELCCAfR ELCC Adjustment for Reliability for Demand Altering Technologies,-3502,-2569,90,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3846,3845,3688,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,3847,3753,1658,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Electricity Supply - Cash Flow
