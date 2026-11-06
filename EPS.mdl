@@ -1061,19 +1061,23 @@ Amount Spent on Importing Electricity=
 	~		|
 
 Amount Spent on Industry Fuels[Industry Category,Industrial Fuel]=
-	Industrial Fuel Use for Energy Purposes[Industrial Fuel,Industry Category]
+	Purchased Industrial Fuel Use for Energy Purposes[Industry Category,Industrial Fuel]
 	  * Industrial Fuel Cost per Unit Energy[Industry Category,Industrial Fuel]
-	  * (1 - SoFCTiBoSFbI Share of Fuel Consumption That is Byproduct or Secondary Fuels by Industry\
-		[Industry Category,Industrial Fuel])
+	
+	+ (Byproduct Fuel Used by Industry[Industry Category,Industrial Fuel]
+	    + Flared Byproduct Fuel[Industry Category,Industrial Fuel])
+	  * Industrial Fuel Carbon Tax Amount per Unit Energy[Industry Category,Industrial Fuel]
 	
 	+ Industrial Fuel Use for Non Energy Purposes[Industry Category,Industrial Fuel]
 	  * (
 	      Industrial Fuel Cost per Unit Energy[Industry Category,Industrial Fuel]
 	      - Industrial Fuel Carbon Tax Amount per Unit Energy[Industry Category,Industrial Fuel\
 		]
+	      - Biomass Supply Curve Price Increase * Industrial Feedstock Outside the National Biomass Market[Industry Category,Industrial Fuel]
 	    )
 	~	$
-	~		|
+	~	Feedstock outside the national biomass market (corn for ethanol) does not pay the biomass supply-curve price increase.
+	|
 
 Amount Spent on New Building Components[Building Type,Building Component]=
 	BASoBC BAU Amount Spent on Building Components[Building Type,Building Component]
@@ -2875,10 +2879,12 @@ BAU Amount Spent on Importing Electricity=
 	~		|
 
 BAU Amount Spent on Industry Fuels[Industry Category,Industrial Fuel]=
-	BAU Industrial Fuel Use for Energy Purposes[Industry Category,Industrial Fuel]
+	BAU Purchased Industrial Fuel Use for Energy Purposes[Industry Category,Industrial Fuel]
 	  * BAU Industrial Fuel Cost per Unit Energy[Industry Category,Industrial Fuel]
-	  * (1 - SoFCTiBoSFbI Share of Fuel Consumption That is Byproduct or Secondary Fuels by Industry\
-		[Industry Category,Industrial Fuel])
+	
+	+ (BAU Byproduct Fuel Used by Industry[Industry Category,Industrial Fuel]
+	    + BAU Flared Byproduct Fuel[Industry Category,Industrial Fuel])
+	  * BAU Industrial Fuel Carbon Tax Amount per Unit Energy[Industry Category,Industrial Fuel]
 	
 	+ BAU Industrial Fuel Use for Non Energy Purposes[Industry Category,Industrial Fuel]
 	  * (
@@ -4258,6 +4264,40 @@ BAU Buildings Sector Pollutant Emissions Summed Across Building Types[Pollutant]
 	~	g pollutant
 	~	This variable is only used to populate a graph in Vensim.
 	~	:SUPPLEMENTARY 
+	|
+
+BAU Byproduct Fuel Available to Industry[Industry Category,Industrial Fuel]=
+	SoFCTiBoSFbI Share of Fuel Consumption That is Byproduct or Secondary Fuels by Industry\
+		[Industry Category,Industrial Fuel]
+	* BAU Industrial Fuel Use for Energy Purposes[Industry Category,Industrial Fuel]
+	~	BTU
+	~	Byproduct fuel the industry produces (refinery still gas and petroleum coke, pulping liquor, wood residues, waste gas): the byproduct share of fuel use times business-as-usual fuel use for energy. It does not grow when the industry chooses to burn more of that fuel. BAU twin.
+	|
+
+BAU Byproduct Fuel Used by Industry[Industry Category,Industrial Fuel]=
+	MIN(BAU Industrial Fuel Use for Energy Purposes[Industry Category,Industrial Fuel], BAU Byproduct Fuel Available to Industry[Industry Category,Industrial Fuel])
+	~	BTU
+	~	Fuel used for energy that comes from the industry's own byproduct, up to what is available. BAU twin.
+	|
+
+BAU Byproduct Share of Marginal Fuel Use[Industry Category,Industrial Fuel]=
+	MIN(1,
+	  BAU Last Year Byproduct Unused Fraction[Industry Category,Industrial Fuel]
+	  / Byproduct Availability Transition Width
+	)
+	~	Dmnl
+	~	Share of an additional unit of this fuel that would come from the industry's own byproduct, and so be free: 1 when at least the transition width of last year's byproduct went unused, 0 when the industry used all of it (more fuel must be bought), linear in between. Replaces the fixed byproduct share in the fuel choice cost, so byproduct fuel is free only while some of it is going unused. BAU twin.
+	|
+
+BAU Byproduct Unused Fraction[Industry Category,Industrial Fuel]=
+	MAX(0,
+	  ZIDZ(
+	    BAU Byproduct Fuel Available to Industry[Industry Category,Industrial Fuel] - BAU Industrial Fuel Use for Energy Purposes[Industry Category,Industrial Fuel],
+	    BAU Byproduct Fuel Available to Industry[Industry Category,Industrial Fuel]
+	  )
+	)
+	~	Dmnl
+	~	Share of the byproduct fuel the industry produces that it does not use for energy. BAU twin.
 	|
 
 BAU Capacity Construction Subsidies Paid[Electricity Source]=
@@ -9605,6 +9645,13 @@ BAU Five Year Forward Weighted Average Electricity Fuel Cost per Unit Electricit
 	~	$/(MW*hr)
 	~		|
 
+BAU Flared Byproduct Fuel[Industry Category,Industrial Fuel]=
+	MAX(0, BAU Byproduct Fuel Available to Industry[Industry Category,Industrial Fuel] - BAU Industrial Fuel Use for Energy Purposes[Industry Category,Industrial Fuel])
+	* BBDiC Boolean Byproduct Disposal is Combustion[Industrial Fuel]
+	~	BTU
+	~	Byproduct fuel the industry produces but does not use for energy, where unused byproduct is burned anyway (flared). Its emissions are counted with the industry's energy-related emissions and it pays carbon tax. BAU twin.
+	|
+
 BAU Fleet[Vehicle Type,Cargo Type]=
 	SUM(BAU Vehicles[Vehicle Type,Cargo Type,Vehicle Technology!])
 	~	vehicles
@@ -11407,8 +11454,9 @@ BAU Industrial Emissions per Unit Output[Industry Category]=
 
 BAU Industrial Energy Related Emissions Excluding Fuels to Power CCS[Industrial Fuel,\
 		Industry Category,Pollutant]=
-	BAU Industrial Fuel Use for Energy before CCS and Methane Capture[Industrial Fuel,Industry Category\
+	(BAU Industrial Fuel Use for Energy before CCS and Methane Capture[Industrial Fuel,Industry Category\
 		]
+	  + BAU Flared Byproduct Fuel[Industry Category,Industrial Fuel])
 	* Industrial Fuel Pollutant Emissions Intensities This Year[Industry Category,Pollutant\
 		,Industrial Fuel]
 	~	g pollutant
@@ -11659,11 +11707,14 @@ BAU Industrial Feedstock Use after Adjustments[Industry Category,Industrial Fuel
 	* (1 + Perc Change in Sectoral Energy Use due to Exogenous GDP Adjustment[industry sector\
 		]) ~~|
 BAU Industrial Feedstock Use after Adjustments[energy industries within industry category\
-		,Industrial Fuel]=
+		,Industrial Fuel] :EXCEPT: [refined petroleum and coke 19,biomass if]=
 	BIFU BAU Industrial Fuel Use as Feedstock[energy industries within industry category\
 		,Industrial Fuel]
 	* (1 + Last Year BAU Percent Change in Fuel Production from Calculated Fuel Demand[energy industries within industry category\
 		]) ~~|
+BAU Industrial Feedstock Use after Adjustments[refined petroleum and coke 19,biomass if]=
+	BFPIaE BAU Fuel Production Imports and Exports[biofuel gasoline,production]
+	* BIFU Corn Feedstock per Unit Ethanol Produced ~~|
 BAU Industrial Feedstock Use after Adjustments[cement and other nonmetallic minerals 239\
 		,Industrial Fuel]=
 	BAU Cement Residual Feedstock Use[Industrial Fuel]
@@ -11926,7 +11977,8 @@ BAU Industry Sector Carbon Tax Rebate from Output Based Allocation[cement and ot
 	|
 
 BAU Industry Sector Carbon Tax Revenue[Industry Category]=
-	SUM(BAU Industrial Fuel Use for Energy Purposes[Industry Category,Industrial Fuel!]
+	SUM((BAU Industrial Fuel Use for Energy Purposes[Industry Category,Industrial Fuel!]
+	  + BAU Flared Byproduct Fuel[Industry Category,Industrial Fuel!])
 	* BAU Industrial Fuel Carbon Tax Amount per Unit Energy[Industry Category,Industrial Fuel\
 		!])
 	
@@ -14279,6 +14331,15 @@ BAU Model Run Steel Capacity Retirements by Pathway[Steel Production Pathway]=
 	~	BAU twin of Model Run Steel Capacity Retirements by Pathway.
 	|
 
+BAU National Market Biomass Demand=
+	SUM(BAU Total Energy Use by Sector[Sectors!,biomass] * Sectors Buying Biomass on the National Market[Sectors!])
+	- SUM(BAU Industrial Fuel Use for Non Energy Purposes[Industry Category!,biomass if]
+	    * Industrial Feedstock Outside the National Biomass Market[Industry Category!,biomass if])
+	- SUM(BAU Byproduct Fuel Used by Industry[Industry Category!,biomass if])
+	~	BTU
+	~	Biomass bought on the national market: biomass use in the sectors that buy on it, minus the corn used to make ethanol (a separate market) and minus byproduct biomass industries burn from their own production (never traded). BAU twin.
+	|
+
 BAU Net CCS Cost per Unit New Blue Hydrogen Production=
 	BAU CCS Cost per Unit New Blue Hydrogen Production
 	- BAU Carbon Tax Rebate per Unit New Blue Hydrogen Production
@@ -16373,12 +16434,11 @@ BAU Present Value of Industrial Equipment Costs per Unit Energy including Clean 
 	 + BAU Present Value of Industrial Fuel Tax or Subsidy Rate by Fuel in Future Years[\
 		Industry Category,Industrial Fuel,Industrial Process])
 	
-	* (1 - SoFCTiBoSFbI Share of Fuel Consumption That is Byproduct or Secondary Fuels by Industry\
-		[Industry Category,Industrial Fuel
-	])
+	* (1 - BAU Byproduct Share of Marginal Fuel Use[Industry Category,Industrial Fuel])
 	
 	+ BAU Present Value of Industrial Fuel Carbon Tax per Unit Energy in Future Years[Industry Category\
-		,Industrial Fuel,Industrial Process] ~~|
+		,Industrial Fuel,Industrial Process]
+	* (1 - BAU Byproduct Share of Marginal Fuel Use[Industry Category,Industrial Fuel] * BBDiC Boolean Byproduct Disposal is Combustion[Industrial Fuel]) ~~|
 BAU Present Value of Industrial Equipment Costs per Unit Energy including Clean Heat Subsidy\
 		[Industry Category,Industrial Fuel
 ,industrial heating process]=
@@ -16387,11 +16447,11 @@ BAU Present Value of Industrial Equipment Costs per Unit Energy including Clean 
 	 + BAU Present Value of Industrial Fuel Tax or Subsidy Rate by Fuel in Future Years[\
 		Industry Category,Industrial Fuel,industrial heating process])
 	
-	* (1 - SoFCTiBoSFbI Share of Fuel Consumption That is Byproduct or Secondary Fuels by Industry\
-		[Industry Category,Industrial Fuel])
+	* (1 - BAU Byproduct Share of Marginal Fuel Use[Industry Category,Industrial Fuel])
 	
 	+ BAU Present Value of Industrial Fuel Carbon Tax per Unit Energy in Future Years[Industry Category\
 		,Industrial Fuel,industrial heating process]
+	* (1 - BAU Byproduct Share of Marginal Fuel Use[Industry Category,Industrial Fuel] * BBDiC Boolean Byproduct Disposal is Combustion[Industrial Fuel])
 	
 	- BAU Present Value of Clean Industrial Heat Subsidy[Industry Category,Industrial Fuel\
 		,industrial heating process]
@@ -16828,6 +16888,13 @@ BAU Profitable Capacity for Seasonal Dispatchable Reliability Additions[Electric
 	~	If we do not test for :NA: (no number), then an out-of-bounds lookup in \
 		the prior variable can produce a large random number here, which can throw \
 		off the model. It may be better to output zero for an out-of-bounds lookup.
+	|
+
+BAU Purchased Industrial Fuel Use for Energy Purposes[Industry Category,Industrial Fuel]=
+	BAU Industrial Fuel Use for Energy Purposes[Industry Category,Industrial Fuel]
+	- BAU Byproduct Fuel Used by Industry[Industry Category,Industrial Fuel]
+	~	BTU
+	~	Fuel used for energy that the industry buys: use beyond its own byproduct. BAU twin.
 	|
 
 BAU Qualifying Hourly Supply for Reliability Credit[Clean Elec Requirement,Electricity Timeslice\
@@ -18869,11 +18936,13 @@ BAU Taxes Paid on Hydrogen Sector Fuels Mapped to All Fuels Subscript[hydrogen]=
 	~		|
 
 BAU Taxes Paid on Industry Fuels[Industry Category,Industrial Fuel]=
-	BAU Industrial Fuel Use for Energy Purposes[Industry Category,Industrial Fuel]
+	BAU Purchased Industrial Fuel Use for Energy Purposes[Industry Category,Industrial Fuel]
 	  * BAU Industrial Fuel Total Tax or Subsidy Amount per Unit Energy[Industry Category\
 		,Industrial Fuel]
-	  * (1 - SoFCTiBoSFbI Share of Fuel Consumption That is Byproduct or Secondary Fuels by Industry\
-		[Industry Category,Industrial Fuel])
+	
+	+ (BAU Byproduct Fuel Used by Industry[Industry Category,Industrial Fuel]
+	    + BAU Flared Byproduct Fuel[Industry Category,Industrial Fuel])
+	  * BAU Industrial Fuel Carbon Tax Amount per Unit Energy[Industry Category,Industrial Fuel]
 	
 	+ BAU Industrial Fuel Use for Non Energy Purposes[Industry Category,Industrial Fuel]
 	  * (
@@ -22014,6 +22083,16 @@ BAU ZEV Sales Share Without ZEV Standard[Subregion,Vehicle Type,Cargo Type]=
 	~	Dmnl
 	~		|
 
+BBDiC Boolean Byproduct Disposal is Combustion[Industrial Fuel]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/BBDiC/BBDiC.csv',
+	   ',',
+	   'B2'
+	)
+	~	Dmnl
+	~	Whether byproduct fuel an industry produces but does not burn for energy is still burned (1, flared, so its emissions and carbon tax count) or not (0, sold or landfilled). Fossil byproduct gases and liquids are 1; byproduct biomass is 0.
+	|
+
 BBNPPTY BAU Ban New Power Plants This Year[Electricity Source]:INTERPOLATE::=
 	GET DIRECT DATA(
 	   'InputData/elec/BBNPPTY/BBNPPTY.csv',
@@ -23718,6 +23797,16 @@ BIFU BAU Industrial Fuel Use for Energy[Industry Category,hydrogen if]:INTERPOLA
 	~	BTU
 	~		|
 
+BIFU Corn Feedstock per Unit Ethanol Produced=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/BIFU/BIFU-corn-per-ethanol.csv',
+	   ',',
+	   'B2'
+	)
+	~	Dmnl
+	~	Energy in the corn feedstock per unit of energy in the ethanol made from it (AEO 2025: ethanol energy plus Biofuels Heat and Coproducts, divided by ethanol energy). The business-as-usual corn feedstock is ethanol production times this ratio, so it follows the ethanol the model produces.
+	|
+
 BIISRP BAU Individual Industrial Site Retirement Profile[Industry Category]:=
 	GET DIRECT DATA(
 	   'InputData/indst/BIISRP/BIISRP.csv',
@@ -23797,6 +23886,32 @@ biomass and biofuel within all fuels:
 	biofuel diesel
 	~	Dmnl
 	~		|
+
+Biomass Supply Curve Price Increase=
+	(1 - Biomass Supply Mature Market Weight This Year) * BSC Biomass Supply Curve Near Term(Last Year Change in National Market Biomass Demand)
+	+ Biomass Supply Mature Market Weight This Year * BSC Biomass Supply Curve Mature Market(Last Year Change in National Market Biomass Demand)
+	~	$/BTU
+	~	Increase in the biomass price paid this year in every sector buying on the national market: the supply curve read at last year's rise in national market demand above business-as-usual. Zero when demand is at or below business-as-usual. Last year's demand avoids a same-year loop between price and fuel choice.
+	|
+
+Biomass Supply Mature Market Weight[Future Year]=
+	MAX(0, MIN(1,
+	  ZIDZ(
+	    MAX(Time, Numerical Future Year Definitions[Future Year]) - INITIAL TIME,
+	    BSC Year Biomass Supply Reaches Mature Market - INITIAL TIME
+	  )
+	))
+	~	Dmnl
+	~	Weight on the mature-market supply curve in each future year (0 in the model start year, 1 from the mature-market year).
+	|
+
+Biomass Supply Mature Market Weight This Year=
+	MAX(0, MIN(1,
+	  ZIDZ(Time - INITIAL TIME, BSC Year Biomass Supply Reaches Mature Market - INITIAL TIME)
+	))
+	~	Dmnl
+	~	Weight on the mature-market supply curve for this year's biomass price.
+	|
 
 BLAPE BAU LULUCF Anthropogenic Pollutant Emissions[Pollutant]:INTERPOLATE::=
 	GET DIRECT DATA(
@@ -25872,6 +25987,38 @@ BS Duration of Subsidies per Unit Electricity Output[Electricity Source]:=
 	~	Year
 	~		|
 
+BSC Biomass Supply Curve Mature Market(
+	GET DIRECT LOOKUPS(
+	   'InputData/fuels/BSC/BSC-mature-market.csv',
+	   ',',
+	   '1',
+	   'B2'
+	))
+	~	$/BTU
+	~	Increase in the price of biomass (y) when national market demand for biomass is x BTU per year above business-as-usual, once energy crops are established (BT23 mature-market medium scenario). From the DOE 2023 Billion-Ton Report supply at increasing prices; see the BSC workbook. Beyond the last point the last increase holds.
+	|
+
+BSC Biomass Supply Curve Near Term(
+	GET DIRECT LOOKUPS(
+	   'InputData/fuels/BSC/BSC-near-term.csv',
+	   ',',
+	   '1',
+	   'B2'
+	))
+	~	$/BTU
+	~	Increase in the price of biomass (y) when national market demand for biomass is x BTU per year above business-as-usual, with resources available today (no energy crops). From the DOE 2023 Billion-Ton Report supply at increasing prices; see the BSC workbook. Beyond the last point the last increase holds.
+	|
+
+BSC Year Biomass Supply Reaches Mature Market=
+	GET DIRECT CONSTANTS(
+	   'InputData/fuels/BSC/BSC-mature-year.csv',
+	   ',',
+	   'B2'
+	)
+	~	Year
+	~	Year by which biomass supply follows the mature-market curve. The model blends linearly from the near-term curve in its start year.
+	|
+
 BSfGBP BAU Subsidy for Grid Battery Production:INTERPOLATE::=
 	GET DIRECT DATA(
 	   'InputData/elec/BSfGBP/BSfGBP.csv',
@@ -26714,6 +26861,47 @@ BwCCSSpM Biomass with CCS Storage per MWh=
 	)
 	~	metric ton CO2e/(MW*hour)
 	~		|
+
+Byproduct Availability Transition Width=
+	0.1
+	~	Dmnl
+	~	Width, as a fraction of byproduct fuel available, of the band over which an extra unit of a byproduct fuel goes from free (the industry has unused byproduct) to market priced (the industry already uses all of its byproduct). Smooths the fuel choice so it does not switch abruptly at the availability limit. Entered in Vensim.
+	|
+
+Byproduct Fuel Available to Industry[Industry Category,Industrial Fuel]=
+	SoFCTiBoSFbI Share of Fuel Consumption That is Byproduct or Secondary Fuels by Industry\
+		[Industry Category,Industrial Fuel]
+	* BAU Industrial Fuel Use for Energy Purposes[Industry Category,Industrial Fuel]
+	* (1 + Percent Change in Production due to Policies[Industry Category])
+	~	BTU
+	~	Byproduct fuel the industry produces (refinery still gas and petroleum coke, pulping liquor, wood residues, waste gas): the byproduct share of fuel use times business-as-usual fuel use for energy, scaled with the change in the industry's production. It does not grow when the industry chooses to burn more of that fuel.
+	|
+
+Byproduct Fuel Used by Industry[Industry Category,Industrial Fuel]=
+	MIN(Industrial Fuel Use for Energy Purposes[Industrial Fuel,Industry Category], Byproduct Fuel Available to Industry[Industry Category,Industrial Fuel])
+	~	BTU
+	~	Fuel used for energy that comes from the industry's own byproduct, up to what is available.
+	|
+
+Byproduct Share of Marginal Fuel Use[Industry Category,Industrial Fuel]=
+	MIN(1,
+	  Last Year Byproduct Unused Fraction[Industry Category,Industrial Fuel]
+	  / Byproduct Availability Transition Width
+	)
+	~	Dmnl
+	~	Share of an additional unit of this fuel that would come from the industry's own byproduct, and so be free: 1 when at least the transition width of last year's byproduct went unused, 0 when the industry used all of it (more fuel must be bought), linear in between. Replaces the fixed byproduct share in the fuel choice cost, so byproduct fuel is free only while some of it is going unused.
+	|
+
+Byproduct Unused Fraction[Industry Category,Industrial Fuel]=
+	MAX(0,
+	  ZIDZ(
+	    Byproduct Fuel Available to Industry[Industry Category,Industrial Fuel] - Industrial Fuel Use for Energy Purposes[Industrial Fuel,Industry Category],
+	    Byproduct Fuel Available to Industry[Industry Category,Industrial Fuel]
+	  )
+	)
+	~	Dmnl
+	~	Share of the byproduct fuel the industry produces that it does not use for energy.
+	|
 
 BZECfNP BAU Zero Emissions Credit for Nuclear Plants[Electricity Source]=
 	GET DIRECT CONSTANTS(
@@ -31088,7 +31276,7 @@ Change in Average Household Transportation Energy Expenditures[Transportation Fu
 	~		|
 
 Change in Baseline Energy Costs[All Fuels,Sectors] :EXCEPT: [electricity,Sectors],[hydrogen\
-		,Sectors]=
+		,Sectors],[biomass,Sectors]=
 	IF THEN ELSE(
 	  BAEPAbCiPC Boolean Are Energy Prices Affected by Changes in Production Costs[All Fuels\
 		] > 0,
@@ -31101,6 +31289,17 @@ Change in Baseline Energy Costs[All Fuels,Sectors] :EXCEPT: [electricity,Sectors
 	) ~~|
 Change in Baseline Energy Costs[electricity,Sectors]=
 	0 ~~|
+Change in Baseline Energy Costs[biomass,Sectors]=
+	IF THEN ELSE(
+	  BAEPAbCiPC Boolean Are Energy Prices Affected by Changes in Production Costs[biomass] > 0,
+	
+	  Last Year Change in Energy Supplier Cost per Unit Fuel Produced[biomass]
+	  * (1 - Toggle Whether Policies Affect Energy Prices This Year[biomass]),
+	
+	  Last Year Change in Energy Supplier Cost per Unit Fuel Produced[biomass]
+	  * Toggle Whether Policies Affect Energy Prices This Year[biomass]
+	)
+	+ Biomass Supply Curve Price Increase * Sectors Buying Biomass on the National Market[Sectors] ~~|
 Change in Baseline Energy Costs[hydrogen,Sectors]=
 	IF THEN ELSE(
 	  BAEPAbCiPC Boolean Are Energy Prices Affected by Changes in Production Costs[hydrogen\
@@ -33151,6 +33350,15 @@ Change in National Debt Interest Received by Cash Flow Entity[Cash Flow Entity]=
 	~	$
 	~		|
 
+Change in National Market Biomass Demand=
+	QUANTUM(
+	  National Market Biomass Demand - BAU National Market Biomass Demand,
+	  QSfE Quantization Size for Energy
+	)
+	~	BTU
+	~	Rise in national market biomass demand above business-as-usual. Quantized so that rounding noise between the two runs (a few billion BTU) does not move the biomass price in a run with no policies.
+	|
+
 Change in Net Imports of Electricity=
 	Net Imports of Electricity
 	- BAU Net Imports of Electricity
@@ -33677,11 +33885,8 @@ Change in Schedule Netting Credit from Economic Retirements[Electricity Source]=
 
 Change in Secondary and Byproduct Fuel Consumption[Industry Category,Industrial Fuel]\
 		=
-	(Industrial Fuel Use for Energy Purposes[Industrial Fuel,Industry Category]
-	  - BAU Industrial Fuel Use for Energy Purposes[Industry Category,Industrial Fuel])
-	* SoFCTiBoSFbI Share of Fuel Consumption That is Byproduct or Secondary Fuels by Industry\
-		[Industry Category,Industrial Fuel
-	]
+	Byproduct Fuel Used by Industry[Industry Category,Industrial Fuel]
+	- BAU Byproduct Fuel Used by Industry[Industry Category,Industrial Fuel]
 	~	BTU
 	~		|
 
@@ -41552,6 +41757,16 @@ Expected Elec Portfolio Qualifying Dispatch from Last Year Capacity and This Yea
 	~	MW*hour
 	~		|
 
+Expected Further Biomass Supply Curve Price Increase in Future Years[Future Year]=
+	(1 - Biomass Supply Mature Market Weight[Future Year])
+	* BSC Biomass Supply Curve Near Term(Projected Change in National Market Biomass Demand in Future Years[Future Year])
+	+ Biomass Supply Mature Market Weight[Future Year]
+	* BSC Biomass Supply Curve Mature Market(Projected Change in National Market Biomass Demand in Future Years[Future Year])
+	- Biomass Supply Curve Price Increase
+	~	$/BTU
+	~	How much more than this year's increase buyers expect biomass to cost in each future year: the supply curve read at demand projected forward from last year's rise above business-as-usual at last year's rate of increase (only increases are projected). Equipment chosen this year sees this expected price path. The curve's last point caps the expectation.
+	|
+
 Expected Hourly Output from CES Qualifying Resources Irrespective of Electricity Demand\
 		[Electricity Timeslice,
 Hour,
@@ -42592,6 +42807,13 @@ Fixed Electricity Demand Vector[ElecDemand,pprofile]=
 	0
 	~	$/(MW*hr)
 	~		|
+
+Flared Byproduct Fuel[Industry Category,Industrial Fuel]=
+	MAX(0, Byproduct Fuel Available to Industry[Industry Category,Industrial Fuel] - Industrial Fuel Use for Energy Purposes[Industrial Fuel,Industry Category])
+	* BBDiC Boolean Byproduct Disposal is Combustion[Industrial Fuel]
+	~	BTU
+	~	Byproduct fuel the industry produces but does not use for energy, where unused byproduct is burned anyway (flared). Its emissions are counted with the industry's energy-related emissions and it pays carbon tax.
+	|
 
 Fleet Average Capacity Factor x Hours per Year by Power Plant Type[Electricity Source\
 		]=
@@ -50471,8 +50693,9 @@ Industrial Emissions per Unit Output[Industry Category]=
 
 Industrial Energy Related Emissions Excluding Fuels to Power CCS[Industrial Fuel,Industry Category\
 		,Pollutant]=
-	Industrial Fuel Use for Energy before CCS and Methane Capture[Industrial Fuel,Industry Category\
+	(Industrial Fuel Use for Energy before CCS and Methane Capture[Industrial Fuel,Industry Category\
 		]
+	  + Flared Byproduct Fuel[Industry Category,Industrial Fuel])
 	* Industrial Fuel Pollutant Emissions Intensities This Year[Industry Category,Pollutant\
 		,Industrial Fuel]
 	~	g pollutant
@@ -50772,6 +50995,14 @@ Industrial Equipment Utilization Factor[Industry Category,Industrial Process]=
 	~	Dmnl
 	~		|
 
+Industrial Feedstock Outside the National Biomass Market[Industry Category,Industrial Fuel] :EXCEPT: [refined petroleum and coke 19,biomass if]=
+	0 ~~|
+Industrial Feedstock Outside the National Biomass Market[refined petroleum and coke 19,biomass if]=
+	1
+	~	Dmnl
+	~	1 for feedstock bought outside the national biomass market: corn for ethanol, whose energy EPS books as refining biomass feedstock. It is left out of national market biomass demand and does not pay the biomass supply-curve price increase. Entered in Vensim.
+	|
+
 Industrial Fuel:
 	electricity if,
 	hard coal if,
@@ -50930,10 +51161,16 @@ Industrial Fuel Use for Energy Purposes[natural gas if,Industry Category]=
 	~		|
 
 Industrial Fuel Use for Non Energy Purposes[Industry Category,Industrial Fuel] :EXCEPT:\
-		 [cement and other nonmetallic minerals 239,Industrial Fuel], [iron and steel 241,Industrial Fuel]=
+		 [cement and other nonmetallic minerals 239,Industrial Fuel], [iron and steel 241,Industrial Fuel]\
+		, [refined petroleum and coke 19,biomass if]=
 	BAU Industrial Feedstock Use after Adjustments[Industry Category,Industrial Fuel]
 	* (1 + Percent Change in Production due to Policies[Industry Category])
 	+ Change in Industrial Feedstock Use due to Chemicals Levers[Industry Category,Industrial Fuel\
+		] ~~|
+Industrial Fuel Use for Non Energy Purposes[refined petroleum and coke 19,biomass if]=
+	BAU Industrial Feedstock Use after Adjustments[refined petroleum and coke 19,biomass if]
+	* (1 + Last Year Percent Change in Domestic Fuel Production by Fuel[biofuel gasoline])
+	+ Change in Industrial Feedstock Use due to Chemicals Levers[refined petroleum and coke 19,biomass if\
 		] ~~|
 Industrial Fuel Use for Non Energy Purposes[cement and other nonmetallic minerals 239\
 		,Industrial Fuel]=
@@ -51469,7 +51706,8 @@ Industry Sector Carbon Tax Rebate from Output Based Allocation[iron and steel 24
 	|
 
 Industry Sector Carbon Tax Revenue[Industry Category]=
-	SUM(Industrial Fuel Use for Energy Purposes[Industrial Fuel!,Industry Category]
+	SUM((Industrial Fuel Use for Energy Purposes[Industrial Fuel!,Industry Category]
+	  + Flared Byproduct Fuel[Industry Category,Industrial Fuel!])
 	* Industrial Fuel Carbon Tax Amount per Unit Energy[Industry Category,Industrial Fuel\
 		!])
 	
@@ -52811,12 +53049,24 @@ Last Year BAU Hydrogen Cost by Sector[Sectors]= DELAY FIXED(
 		price of every sector equals its BFPaT price.
 	|
 
+BAU Last Year Byproduct Unused Fraction[Industry Category,Industrial Fuel]= DELAY FIXED (
+	BAU Byproduct Unused Fraction[Industry Category,Industrial Fuel], 1, 0)
+	~	Dmnl
+	~	BAU twin.
+	|
+
 Last Year BAU Percent Change in Fuel Production from Calculated Fuel Demand[Industry Category\
 		]=
 	DELAY FIXED(BAU Percent Change in Fuel Production from Calculated Fuel Demand[Industry Category\
 		], 1 , 0 )
 	~	Dmnl
 	~		|
+
+Last Year Byproduct Unused Fraction[Industry Category,Industrial Fuel]= DELAY FIXED (
+	Byproduct Unused Fraction[Industry Category,Industrial Fuel], 1, 0)
+	~	Dmnl
+	~	
+	|
 
 Last Year Below Standard Preexisting Clinker Capacity by Pathway[Cement Production Pathway\
 		]= INTEG (
@@ -53042,6 +53292,11 @@ Last Year Change in National Debt Interest Received by Cash Flow Entity[Cash Flo
 	1,
 	0)
 	~	$
+	~		|
+
+Last Year Change in National Market Biomass Demand= DELAY FIXED (
+	Change in National Market Biomass Demand, 1, 0)
+	~	BTU
 	~		|
 
 Last Year Chemicals Hydrogen Injected= DELAY FIXED (
@@ -57526,6 +57781,15 @@ MWhr Tolerance Unit Correction Factor=
 	1
 	~	1/(MW*hr)
 	~		|
+
+National Market Biomass Demand=
+	SUM(Total Energy Use by Sector[Sectors!,biomass] * Sectors Buying Biomass on the National Market[Sectors!])
+	- SUM(Industrial Fuel Use for Non Energy Purposes[Industry Category!,biomass if]
+	    * Industrial Feedstock Outside the National Biomass Market[Industry Category!,biomass if])
+	- SUM(Byproduct Fuel Used by Industry[Industry Category!,biomass if])
+	~	BTU
+	~	Biomass bought on the national market: biomass use in the sectors that buy on it, minus the corn used to make ethanol (a separate market) and minus byproduct biomass industries burn from their own production (never traded).
+	|
 
 NBFYIbFP Non BAU First Year Impacted by Future Policies=
 	GET DIRECT CONSTANTS(
@@ -66228,7 +66492,9 @@ Percent Change in Domestic Fuel Industry Production[oil and gas extraction 06]=
 	  + BAU Fuel Production Imports and Exports[crude oil,production]
 	) ~~|
 Percent Change in Domestic Fuel Industry Production[refined petroleum and coke 19]=
-	ZIDZ(
+	SoRFUaEP Share of Refining Fuel Use at Ethanol Plants * Percent Change in Domestic Fuel Production by Fuel[biofuel gasoline]
+	+ (1 - SoRFUaEP Share of Refining Fuel Use at Ethanol Plants)
+	* ZIDZ(
 	  SUM(
 	    Percent Change in Domestic Fuel Production by Fuel[secondary petroleum product within all fuels\
 		!]
@@ -68379,12 +68645,11 @@ Present Value of Industrial Equipment Costs per Unit Energy including Clean Heat
 	 + Present Value of Industrial Fuel Tax or Subsidy Rate by Fuel in Future Years[Industry Category\
 		,Industrial Fuel,Industrial Process])
 	
-	* (1 - SoFCTiBoSFbI Share of Fuel Consumption That is Byproduct or Secondary Fuels by Industry\
-		[Industry Category,Industrial Fuel
-	])
+	* (1 - Byproduct Share of Marginal Fuel Use[Industry Category,Industrial Fuel])
 	
 	+ Present Value of Industrial Fuel Carbon Tax per Unit Energy in Future Years[Industry Category\
-		,Industrial Fuel,Industrial Process] ~~|
+		,Industrial Fuel,Industrial Process]
+	* (1 - Byproduct Share of Marginal Fuel Use[Industry Category,Industrial Fuel] * BBDiC Boolean Byproduct Disposal is Combustion[Industrial Fuel]) ~~|
 Present Value of Industrial Equipment Costs per Unit Energy including Clean Heat Subsidy\
 		[Industry Category,Industrial Fuel,industrial heating process]=
 	(Present Value of Pretax Industrial Fuel Price in Future Years[Industry Category,Industrial Fuel\
@@ -68392,12 +68657,11 @@ Present Value of Industrial Equipment Costs per Unit Energy including Clean Heat
 	 + Present Value of Industrial Fuel Tax or Subsidy Rate by Fuel in Future Years[Industry Category\
 		,Industrial Fuel,industrial heating process])
 	
-	* (1 - SoFCTiBoSFbI Share of Fuel Consumption That is Byproduct or Secondary Fuels by Industry\
-		[Industry Category,Industrial Fuel
-	])
+	* (1 - Byproduct Share of Marginal Fuel Use[Industry Category,Industrial Fuel])
 	
 	+ Present Value of Industrial Fuel Carbon Tax per Unit Energy in Future Years[Industry Category\
 		,Industrial Fuel,industrial heating process]
+	* (1 - Byproduct Share of Marginal Fuel Use[Industry Category,Industrial Fuel] * BBDiC Boolean Byproduct Disposal is Combustion[Industrial Fuel])
 	
 	- Present Value of Clean Industrial Heat Subsidy[Industry Category,Industrial Fuel,industrial heating process
 	]
@@ -68545,7 +68809,7 @@ Pretax Fuel Price by Sector in Future Years after Fuel Price Deregulation[electr
 	~		|
 
 Pretax Fuel Price by Sector in Future Years After Modeled Price Adjustments[All Fuels\
-		,Sectors,Future Year]=
+		,Sectors,Future Year] :EXCEPT: [biomass,Sectors,Future Year]=
 	IF THEN ELSE(
 	  Dimensionless Time < FYIbFP First Year Impacted by Future Policies,
 	  BAU Pretax Fuel Price by Sector Including Modeled Hydrogen Cost[All Fuels,Sectors,\
@@ -68561,6 +68825,29 @@ Pretax Fuel Price by Sector in Future Years After Modeled Price Adjustments[All 
 	      BAU Pretax Fuel Price by Sector Including Modeled Hydrogen Cost[All Fuels,Sectors\
 		,Future Year]
 	      + Change in Baseline Energy Costs[All Fuels,Sectors]
+	    ),
+	
+	    0
+	  )
+	) ~~|
+Pretax Fuel Price by Sector in Future Years After Modeled Price Adjustments[biomass,Sectors,Future Year]=
+	IF THEN ELSE(
+	  Dimensionless Time < FYIbFP First Year Impacted by Future Policies,
+	  BAU Pretax Fuel Price by Sector Including Modeled Hydrogen Cost[biomass,Sectors,\
+		Future Year],
+	
+	  IF THEN ELSE(
+	    BAU Pretax Fuel Price by Sector Including Modeled Hydrogen Cost[biomass,Sectors\
+		,Future Year] > 0,
+	 
+	    MAX(
+	      0,
+	
+	      BAU Pretax Fuel Price by Sector Including Modeled Hydrogen Cost[biomass,Sectors\
+		,Future Year]
+	      + Change in Baseline Energy Costs[biomass,Sectors]
+	      + Expected Further Biomass Supply Curve Price Increase in Future Years[Future Year]
+	      * Sectors Buying Biomass on the National Market[Sectors]
 	    ),
 	
 	    0
@@ -69920,6 +70207,14 @@ Profitable Capacity for Seasonal Dispatchable Reliability Additions[Electricity 
 		off the model. It may be better to output zero for an out-of-bounds lookup.
 	|
 
+Projected Change in National Market Biomass Demand in Future Years[Future Year]=
+	Last Year Change in National Market Biomass Demand
+	+ MAX(0, Last Year Change in National Market Biomass Demand - Two Years Ago Change in National Market Biomass Demand)
+	* MAX(0, Numerical Future Year Definitions[Future Year] - Time) / One Year
+	~	BTU
+	~	Rise in national market biomass demand above business-as-usual that buyers expect in each future year: last year's rise, growing at last year's rate of increase (only increases are projected).
+	|
+
 Proportion of Primary Energy from Non Fossil Sources=
 	Non Fossil Primary Energy
 	/
@@ -70012,6 +70307,13 @@ PTFURfE Percentage Transportation Fuel Use Reduction for Electricity[Vehicle Typ
 		fuel type for that vehicle type (e.g. gasoline for LDVs, diesel for HDVs, \
 		etc.) due to the fact that electricity can be converted into work more \
 		efficiently than other fuel types.
+	|
+
+Purchased Industrial Fuel Use for Energy Purposes[Industry Category,Industrial Fuel]=
+	Industrial Fuel Use for Energy Purposes[Industrial Fuel,Industry Category]
+	- Byproduct Fuel Used by Industry[Industry Category,Industrial Fuel]
+	~	BTU
+	~	Fuel used for energy that the industry buys: use beyond its own byproduct.
 	|
 
 PVTStL Policy Vehicle Types Subject to LCFS[Vehicle Type,Cargo Type]=
@@ -72029,6 +72331,16 @@ Sectors:
 		residential and commercial buildings.
 	|
 
+Sectors Buying Biomass on the National Market[Sectors] :EXCEPT: [residential buildings sector],[transportation sector]=
+	1 ~~|
+Sectors Buying Biomass on the National Market[residential buildings sector]=
+	0 ~~|
+Sectors Buying Biomass on the National Market[transportation sector]=
+	0
+	~	Dmnl
+	~	1 for sectors whose biomass is bought on the national market and so counts toward demand on the supply curve and pays its price increase. Residential biomass (mostly firewood) and transportation (liquid biofuels are separate fuels) are excluded. Entered in Vensim.
+	|
+
 SEIbPaF Steel Energy Intensity by Pathway and Fuel[Steel Production Pathway,Industrial Fuel\
 		]=
 	GET DIRECT CONSTANTS(
@@ -73544,6 +73856,16 @@ SoPEASbRIC Share of Process Emissions Abatement Spending by Recipient ISIC Code[
 	)
 	~	Dmnl
 	~		|
+
+SoRFUaEP Share of Refining Fuel Use at Ethanol Plants=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/SoRFUaEP/SoRFUaEP.csv',
+	   ',',
+	   'B2'
+	)
+	~	Dmnl
+	~	Share of refining industry fuel use (excluding the corn feedstock) that takes place at ethanol plants, from AEO 2025 Table 24. Weights the change in ethanol output against the change in petroleum product output in the refining production index.
+	|
 
 SoSVbFF Share of Syngas Vent CO2 by Feedstock Fuel[Industrial Fuel]=
 	GET DIRECT CONSTANTS(
@@ -77406,11 +77728,13 @@ Taxes Paid on Geoengineering Fuels[Industrial Fuel]=
 	|
 
 Taxes Paid on Industry Fuels[Industry Category,Industrial Fuel]=
-	Industrial Fuel Use for Energy Purposes[Industrial Fuel,Industry Category]
+	Purchased Industrial Fuel Use for Energy Purposes[Industry Category,Industrial Fuel]
 	  * Industrial Fuel Total Tax or Subsidy Amount per Unit Energy[Industry Category,Industrial Fuel\
 		]
-	  * (1 - SoFCTiBoSFbI Share of Fuel Consumption That is Byproduct or Secondary Fuels by Industry\
-		[Industry Category,Industrial Fuel])
+	
+	+ (Byproduct Fuel Used by Industry[Industry Category,Industrial Fuel]
+	    + Flared Byproduct Fuel[Industry Category,Industrial Fuel])
+	  * Industrial Fuel Carbon Tax Amount per Unit Energy[Industry Category,Industrial Fuel]
 	
 	+ Industrial Fuel Use for Non Energy Purposes[Industry Category,Industrial Fuel]
 	  * (
@@ -81823,6 +82147,11 @@ Two Year Average Wholesale Energy Market Costs=
 	 0
 	)
 	~	$
+	~		|
+
+Two Years Ago Change in National Market Biomass Demand= DELAY FIXED (
+	Last Year Change in National Market Biomass Demand, 1, 0)
+	~	BTU
 	~		|
 
 Two Years Prior Boolean Deep Unviable for Cost Driven Retirement[Electricity Source]=
