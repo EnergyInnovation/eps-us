@@ -21,6 +21,7 @@ MASSfS 70 Mt flat (USGS 2025e consumption 57 + exports 13); H2-DRI electricity
 import csv, os
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "InputData", "indst")
+STEEL_ROOT = os.path.join(ROOT, "_steel")  # steel module inputs live in InputData/indst/_steel/
 YEARS = list(range(2021, 2051))
 PATHWAYS = ["traditional BF BOF", "BF BOF with CCS", "natural gas DRI",
             "hydrogen DRI", "molten oxide electrolysis", "aqueous electrolysis", "scrap EAF"]
@@ -40,7 +41,7 @@ BPF_FILE = {"electricity if": "electricity", "hard coal if": "hard-coal", "natur
             "green hydrogen if": "green-hydrogen", "low carbon hydrogen if": "lowcarbon-hydrogen"}
 
 def write(folder, name, rows):
-    d = os.path.join(ROOT, folder)
+    d = os.path.join(STEEL_ROOT, folder)
     os.makedirs(d, exist_ok=True)
     p = os.path.join(d, name)
     with open(p, "w", newline="") as f:
