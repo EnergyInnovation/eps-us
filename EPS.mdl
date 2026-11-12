@@ -6408,7 +6408,7 @@ BAU Clean Industrial Heat Investment Subsidy Amount Paid[chemicals 20]=
 
 BAU Clean Industrial Heat Investment Subsidy Rate[Industry Category,industrial heating process\
 		,Industrial Fuel]=
-	Industrial Equipment Base Capital Cost per Unit Annual Energy Use[Industry Category\
+	BAU Industrial Equipment Capital Cost per Unit Annual Energy Use after Heat Pump Learning[Industry Category\
 		,Industrial Fuel,industrial heating process]
 	* BCHSR BAU Clean Heat Investment Subsidy Rate[industrial heating process]
 	* BAU Industrial Fuel Eligibility for Clean Heat Investment Subsidy[Industrial Fuel]
@@ -6979,6 +6979,12 @@ BAU Cumulative EV Battery Capacity Deployed as of Last Year=
 	)
 	/ kWh per MWh
 	~	MW*hr
+	~		|
+
+BAU Cumulative Industrial Heat Pump Heat Output Deployed= INTEG (
+	BAU New Industrial Heat Pump Heat Output Capacity / One Year,
+		Start Year Industrial Heat Pump Heat Output)
+	~	BTU
 	~		|
 
 BAU Cumulative New Capacity Added or Retrofitted due to Elec Portfolio Stds[Electricity Source\
@@ -10125,6 +10131,23 @@ BAU Guaranteed Dispatch Percentage for Elec Portfolio Std Qualifying Resources[E
 	~	Dmnl
 	~		|
 
+BAU Heat Pump Capacity Affecting Learning=
+	Heat Pump Capacity Outside Modeled Region Affecting Learning
+	+ BAU Cumulative Industrial Heat Pump Heat Output Deployed
+	~	BTU
+	~		|
+
+BAU Heat Pump Cost Reduction from Learning=
+	FoHPCSL Fraction of Heat Pump Cost Subject to Learning
+	* (1 - (1 - PDiHPCpDoC Perc Decline in Heat Pump Cost per Doubling of Capacity)
+	  ^ (LN(MAX(1, ZIDZ(BAU Heat Pump Capacity Affecting Learning, Start Year Heat Pump Capacity Affecting Learning
+		))) / LN(2)))
+	~	Dmnl
+	~	The experience ratio is floored at 1 so the cost never rises when \
+		deployment counted toward learning shrinks, and a zero start-year value \
+		leaves cost unchanged instead of stopping the run.
+	|
+
 BAU Heat Rate by Electricity Fuel for Plants Built This Year[Electricity Source]=
 	SUM(
 	  BHRaSYC BAU Heat Rates[Electricity Source,Modeled Vintage!]
@@ -11128,6 +11151,15 @@ BAU Industrial Equipment Annual Financing Repayment per Unit Energy[Industry Cat
 	~	$/BTU
 	~		|
 
+BAU Industrial Equipment Capital Cost per Unit Annual Energy Use after Heat Pump Learning[Industry Category,Industrial Fuel,Industrial Process] :EXCEPT: [Industry Category,electricity if,low temperature heating process]=
+	Industrial Equipment Base Capital Cost per Unit Annual Energy Use[Industry Category,Industrial Fuel,Industrial Process] ~~|
+BAU Industrial Equipment Capital Cost per Unit Annual Energy Use after Heat Pump Learning[Industry Category,electricity if,low temperature heating process]=
+	Industrial Equipment Base Capital Cost per Unit Annual Energy Use[Industry Category,electricity if,low temperature heating process]
+	* (1 - IECCpUAEU Heat Pump Share of Electric Equipment Capital Cost[Industry Category,low temperature heating process]
+	  * BAU Heat Pump Cost Reduction from Learning)
+	~	$/BTU
+	~		|
+
 BAU Industrial Equipment Capital Cost per Unit Energy After Subsidy[Industry Category\
 		,Industrial Fuel,Industrial Process] :EXCEPT:   [Industry Category,Industrial Fuel,\
 		industrial heating process]=
@@ -11145,12 +11177,11 @@ BAU Industrial Equipment Capital Cost per Unit Energy After Subsidy[Industry Cat
 BAU Industrial Equipment Capital Cost per Unit Energy Before Subsidy[Industry Category\
 		,Industrial Fuel,Industrial Process] :EXCEPT:   [Industry Category,Industrial Fuel,\
 		other nonprocess]=
-	Industrial Equipment Base Capital Cost per Unit Annual Energy Use[Industry Category\
+	BAU Industrial Equipment Capital Cost per Unit Annual Energy Use after Heat Pump Learning[Industry Category\
 		,Industrial Fuel,Industrial Process] ~~|
 BAU Industrial Equipment Capital Cost per Unit Energy Before Subsidy[Industry Category\
 		,Industrial Fuel,other nonprocess]=
-	Industrial Equipment Base Capital Cost per Unit Annual Energy Use[Industry Category\
-		,Industrial Fuel,other nonprocess]
+	BAU Industrial Equipment Capital Cost per Unit Annual Energy Use after Heat Pump Learning[Industry Category,Industrial Fuel,other nonprocess]
 	* (1 - PoONEUTiMEbIC Perc of Other Nonprocess Eqpt E Use That is Mobile Eqpt by Indst Category\
 		[Industry Category])
 	
@@ -14535,6 +14566,12 @@ BAU New Industrial Equipment Energy Use by Fuel Type and Process in Electricity 
 BAU New Industrial Equipment Energy Use by Fuel Type and Process in Electricity Equivalent\
 		[iron and steel 241,Industrial Fuel,industrial process end use]=
 	0
+	~	BTU
+	~		|
+
+BAU New Industrial Heat Pump Heat Output Capacity=
+	SUM(BAU New Industrial Equipment Energy Use by Fuel Type and Process[Industry Category!,electricity if,low temperature heating process!]
+	  * IECCpUAEU Heat Pump Heat Output per Unit Electric Equipment Energy Use[Industry Category!,low temperature heating process!])
 	~	BTU
 	~		|
 
@@ -22663,6 +22700,16 @@ BGDPbES BAU Guaranteed Dispatch Percentage by Electricity Source[Electricity Sou
 	   'B2'
 	)
 	~	Dmnl
+	~		|
+
+BGHPC BAU Global Heat Pump Capacity:INTERPOLATE::=
+	GET DIRECT DATA(
+	   'InputData/endo-learn/BGHPC/BGHPC.csv',
+	   ',',
+	   '1',
+	   'B2'
+	)
+	~	BTU
 	~		|
 
 BGSaWC BAU Global Solar and Wind Capacities[Electricity Source]:INTERPOLATE::=
@@ -35039,6 +35086,12 @@ Cumulative EV Battery Capacity Deployed as of Last Year=
 	~	MW*hr
 	~		|
 
+Cumulative Industrial Heat Pump Heat Output Deployed= INTEG (
+	New Industrial Heat Pump Heat Output Capacity / One Year,
+		Start Year Industrial Heat Pump Heat Output)
+	~	BTU
+	~		|
+
 Cumulative New Capacity Added or Retrofitted due to Elec Portfolio Stds[Electricity Source\
 		,Clean Elec Requirement]=
 	Last Year Cumulative New Capacity Added or Retrofitted due to Elec Portfolio Stds[Electricity Source\
@@ -40869,6 +40922,16 @@ FoHERbA Fraction of Hydrogen Equipment Retiring by Age[summer]=
 		subscripts.
 	|
 
+FoHPCSL Fraction of Heat Pump Cost Subject to Learning=
+	GET DIRECT CONSTANTS(
+	   'InputData/endo-learn/FoHPCSL/FoHPCSL.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Dmnl [0,1]
+	~	
+	|
+
 FoICbCTBA Fraction of Industry Covered by Carbon Tax Border Adjustment[Industry Category\
 		]:=
 	GET DIRECT DATA(
@@ -44209,6 +44272,29 @@ Health Outcome Valuation[Health Outcome]=
 	~	$/incident
 	~		|
 
+Heat Pump Capacity Affecting Learning=
+	Heat Pump Capacity Outside Modeled Region Affecting Learning
+	+ Cumulative Industrial Heat Pump Heat Output Deployed
+	~	BTU
+	~		|
+
+Heat Pump Capacity Outside Modeled Region Affecting Learning=
+	MAX(0, (BGHPC BAU Global Heat Pump Capacity - BAU Cumulative Industrial Heat Pump Heat Output Deployed)
+	  * FoTOMRAEL Fraction of Technology Outside Modeled Region Affecting Endogenous Learning)
+	~	BTU
+	~		|
+
+Heat Pump Cost Reduction from Learning=
+	FoHPCSL Fraction of Heat Pump Cost Subject to Learning
+	* (1 - (1 - PDiHPCpDoC Perc Decline in Heat Pump Cost per Doubling of Capacity)
+	  ^ (LN(MAX(1, ZIDZ(Heat Pump Capacity Affecting Learning, Start Year Heat Pump Capacity Affecting Learning
+		))) / LN(2)))
+	~	Dmnl
+	~	The experience ratio is floored at 1 so the cost never rises when \
+		deployment counted toward learning shrinks, and a zero start-year value \
+		leaves cost unchanged instead of stopping the run.
+	|
+
 Heat Rate by Electricity Fuel for Plants Built This Year[Electricity Source]=
 	BAU Heat Rate by Electricity Fuel for Plants Built This Year[Electricity Source]
 	* (1 - RnD Electricity Fuel Use Perc Reduction This Year[Electricity Source])
@@ -46221,6 +46307,26 @@ Identity Matrix for ISIC Codes[Source ISIC Code,Target ISIC Code]=
 	~	Dmnl
 	~		|
 
+IECCpUAEU Heat Pump Heat Output per Unit Electric Equipment Energy Use[Industry Category,low temperature heating process]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/IECCpUAEU/IECCpUAEU-hp-heat-output.csv',
+	   ',',
+	   'B2'
+	)
+	~	Dmnl
+	~	
+	|
+
+IECCpUAEU Heat Pump Share of Electric Equipment Capital Cost[Industry Category,low temperature heating process]=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/IECCpUAEU/IECCpUAEU-hp-cost-share.csv',
+	   ',',
+	   'B2'
+	)
+	~	Dmnl
+	~	
+	|
+
 IECCpUAEU Industrial Eqpt Capital Cost per Unit Annual E Use for Mobile Eqpt[Industrial Fuel\
 		]=
 	GET DIRECT CONSTANTS(
@@ -48147,6 +48253,15 @@ Industrial Equipment Capital Cost per Unit Annual Energy Use[Industry Category,I
 	~	$/BTU
 	~		|
 
+Industrial Equipment Capital Cost per Unit Annual Energy Use after Heat Pump Learning[Industry Category,Industrial Fuel,Industrial Process] :EXCEPT: [Industry Category,electricity if,low temperature heating process]=
+	Industrial Equipment Base Capital Cost per Unit Annual Energy Use[Industry Category,Industrial Fuel,Industrial Process] ~~|
+Industrial Equipment Capital Cost per Unit Annual Energy Use after Heat Pump Learning[Industry Category,electricity if,low temperature heating process]=
+	Industrial Equipment Base Capital Cost per Unit Annual Energy Use[Industry Category,electricity if,low temperature heating process]
+	* (1 - IECCpUAEU Heat Pump Share of Electric Equipment Capital Cost[Industry Category,low temperature heating process]
+	  * Heat Pump Cost Reduction from Learning)
+	~	$/BTU
+	~		|
+
 Industrial Equipment Capital Cost per Unit Energy Before Clean Heat Subsidy[Industry Category\
 		,Industrial Fuel,Industrial Process]=
 	Industrial Equipment Capital Cost per Unit Energy Before Efficiency Standards[Industry Category\
@@ -48159,7 +48274,7 @@ Industrial Equipment Capital Cost per Unit Energy Before Clean Heat Subsidy[Indu
 Industrial Equipment Capital Cost per Unit Energy Before Efficiency Standards[Industry Category\
 		,Industrial Fuel,Industrial Process] :EXCEPT:  [Industry Category,Industrial Fuel,other nonprocess\
 		]=
-	Industrial Equipment Base Capital Cost per Unit Annual Energy Use[Industry Category\
+	Industrial Equipment Capital Cost per Unit Annual Energy Use after Heat Pump Learning[Industry Category\
 		,Industrial Fuel,Industrial Process]
 	* (1 - RnD Industry Capital Cost Perc Reduction This Year[Industrial Process,Industrial Fuel\
 		]) ~~|
@@ -48168,8 +48283,7 @@ Industrial Equipment Capital Cost per Unit Energy Before Efficiency Standards[In
 	(1 - PoONEUTiMEbIC Perc of Other Nonprocess Eqpt E Use That is Mobile Eqpt by Indst Category\
 		[Industry Category])
 	* 
-	Industrial Equipment Base Capital Cost per Unit Annual Energy Use[Industry Category\
-		,Industrial Fuel,other nonprocess]
+	Industrial Equipment Capital Cost per Unit Annual Energy Use after Heat Pump Learning[Industry Category,Industrial Fuel,other nonprocess]
 	
 	+
 	
@@ -56338,6 +56452,12 @@ New Industrial Equipment Potential Energy Use by Fuel Type and Process in Electr
 		for those cells. Nonprocess end uses keep generic purchases.
 	|
 
+New Industrial Heat Pump Heat Output Capacity=
+	SUM(New Industrial Equipment Potential Energy Use by Fuel Type and Process[Industry Category!,electricity if,low temperature heating process!]
+	  * IECCpUAEU Heat Pump Heat Output per Unit Electric Equipment Energy Use[Industry Category!,low temperature heating process!])
+	~	BTU
+	~		|
+
 New Low Carbon Hydrogen Production Capacity Shares This Year[Hydrogen Production Pathway\
 		]=
 	ZIDZ(
@@ -61777,6 +61897,16 @@ PDiCECpDoC Perc Decline in CCS Eqpt Cost per Doubling of Capacity=
 	)
 	~	Dmnl
 	~		|
+
+PDiHPCpDoC Perc Decline in Heat Pump Cost per Doubling of Capacity=
+	GET DIRECT CONSTANTS(
+	   'InputData/endo-learn/PDiHPCpDoC/PDiHPCpDoC.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Dmnl
+	~	
+	|
 
 PEAAC Mass CO2e Additions and Costs[cement industry measures,Marginal Abatement Cost]\
 		:INTERPOLATE::=
@@ -70696,9 +70826,20 @@ Start Year Grid Battery Storage Capacity in MWh=
 	~	MW*hr
 	~		|
 
+Start Year Heat Pump Capacity Affecting Learning= INITIAL(
+	BAU Heat Pump Capacity Affecting Learning)
+	~	BTU
+	~		|
+
 Start Year Industrial Heat Fuel Intensity for Measures[Industry Category]= INITIAL(
 	Industrial Heat Fuel Intensity for Measures[Industry Category])
 	~	BTU/$
+	~		|
+
+Start Year Industrial Heat Pump Heat Output= INITIAL(
+	SUM(BAU Industrial Equipment Energy Use from Input Data by Industrial Process[Industry Category!,electricity if,low temperature heating process!]
+	  * IECCpUAEU Heat Pump Heat Output per Unit Electric Equipment Energy Use[Industry Category!,low temperature heating process!]))
+	~	BTU
 	~		|
 
 Start Year Low Carbon Steel Production=
@@ -93833,7 +93974,7 @@ We need to use "Last Year" versions of "Output by ISIC Code" and "Percent Change
 1,392,385,386,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
 1,393,386,387,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
 10,394,Industrial Equipment Capital Cost per Unit Energy Before Efficiency Standards,3615,1854,91,28,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
-10,395,IECCpUAEU Industrial Equipment Capital Cost per Unit Annual Energy Use,3130,1775,73,32,8,131,0,4,-1,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,395,IECCpUAEU Industrial Equipment Capital Cost per Unit Annual Energy Use,3130,1660,73,32,8,131,0,4,-1,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
 1,396,395,1768,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
 10,397,One Year,3125,1699,50,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,398,Present Value of Industrial Equipment Costs per Unit Energy,4303,2270,73,32,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
@@ -94249,7 +94390,7 @@ This variable is fairly large as it includes four subscripts. Therefore, rather 
 10,790,Time,3902,2001,26,11,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,791,790,783,0,1,0,0,0,64,0,-1--1--1,,1|(0,0)|
 10,792,Present Value Unmasked Discount Factor,4537,2134,65,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-12,793,0,3350,1641,107,28,8,7,0,4,-1,0,0,0,-1--1--1,255-0-0,|||0-0-0,0,0,0,0,0,0
+12,793,0,3130,1560,107,28,8,7,0,4,-1,0,0,0,-1--1--1,255-0-0,|||0-0-0,0,0,0,0,0,0
 EAFs much higher cost than other high-temp electric options like for glass; consider an EXCEPT
 10,794,Efficiency Measure Energy Use Multiplier,9672,4534,69,19,8,3,0,4,-1,0,0,0,-1--1--1,192-192-192,|||0-0-0,0,0,0,0,0,0
 10,795,Efficiency Measure Energy Use Multiplier,13718,2481,74,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -95241,10 +95382,16 @@ Sets next year's fuel choice cost (Fuel Choice for New Industrial Equipment)
 1,1765,1764,298,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,1766,BFPIaE BAU Fuel Production Imports and Exports,100,290,75,30,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
 1,1767,1766,298,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,1768,Industrial Equipment Base Capital Cost per Unit Annual Energy Use,3380,1722,91,28,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
-10,1769,IECCpUAEU Electric Equipment Capital Cost per Unit Annual Energy Use for Low Temperature Heat,3130,1862,95,34,8,131,0,4,-1,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,1768,Industrial Equipment Base Capital Cost per Unit Annual Energy Use,3380,1590,91,28,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,1769,IECCpUAEU Electric Equipment Capital Cost per Unit Annual Energy Use for Low Temperature Heat,3130,1760,95,34,8,131,0,4,-1,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
 1,1770,1769,1768,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
-1,1771,1768,394,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,1771,1768,1772,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,1772,Industrial Equipment Capital Cost per Unit Annual Energy Use after Heat Pump Learning,3380,1722,105,28,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,1773,IECCpUAEU Heat Pump Share of Electric Equipment Capital Cost,3130,1860,75,34,8,131,0,4,-1,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,1774,Heat Pump Cost Reduction from Learning,3615,1600,75,28,8,2,0,7,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
+1,1775,1772,394,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1776,1773,1772,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1777,1774,1772,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Industry - Cement
@@ -99615,16 +99762,16 @@ Fuel Choice for New Industrial Equipment
 10,415,BAU Present Value of Industrial Fuel Tax or Subsidy Rate by Fuel in Future Years,6885,5279,75,41,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 10,416,BAU Byproduct Share of Marginal Fuel Use,6885,5394,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,417,BAU Present Value of Industrial Fuel Carbon Tax per Unit Energy in Future Years,6365,5566,75,41,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,418,Industrial Equipment Base Capital Cost per Unit Annual Energy Use,5325,5060,91,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,418,Industrial Equipment Base Capital Cost per Unit Annual Energy Use,5325,5175,91,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,419,PoONEUTiMEbIC Perc of Other Nonprocess Eqpt E Use That is Mobile Eqpt by Indst Category,5325,4945,75,41,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
-10,420,IECCpUAEU Industrial Eqpt Capital Cost per Unit Annual E Use for Mobile Eqpt,5325,5175,75,41,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,420,IECCpUAEU Industrial Eqpt Capital Cost per Unit Annual E Use for Mobile Eqpt,5325,5300,75,41,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 10,421,BAU Present Value of Industrial Fuel Carbon Tax per Unit Energy in Future Years,6625,5509,75,41,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
 10,422,PIFURfE Percentage Industry Fuel Use Reduction for Electricity,6885,4945,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 10,423,BAU New Industrial Equipment Energy Intensity,6885,5175,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,424,SYIEUEFbIPaF Start Year Industrial Equipment Unit Energy Factor by Industrial Process and Fuel,6625,4945,75,48,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 10,425,IFTQfS Industrial Fuel Types Qualifying for Clean Heat Investment Subsidy,5585,4796,75,41,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 10,426,BAU Clean Share of Industry Hydrogen Demand,5325,4796,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,427,Industrial Equipment Base Capital Cost per Unit Annual Energy Use,5845,4796,91,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,427,BAU Industrial Equipment Capital Cost per Unit Annual Energy Use after Heat Pump Learning,5845,4796,110,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,428,BCHSR BAU Clean Heat Investment Subsidy Rate,6105,4796,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
 10,429,BCHSR BAU Clean Heat Production Subsidy Rate,6105,5336,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-128-192,|||128-128-128,0,0,0,0,0,0
 10,430,BAU Industrial Fuel Eligibility for Clean Heat Investment Subsidy,5845,5336,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -99665,7 +99812,7 @@ Fuel Choice for New Industrial Equipment
 1,465,415,412,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,466,416,412,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,467,417,412,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,468,418,394,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,468,418,644,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,469,419,394,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,470,420,394,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,471,414,413,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -99845,6 +99992,12 @@ Sets next year's fuel choice cost (Fuel Choice for New Industrial Equipment)
 1,641,623,626,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,642,623,627,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,643,626,627,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,644,BAU Industrial Equipment Capital Cost per Unit Annual Energy Use after Heat Pump Learning,5325,5060,105,36,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,645,IECCpUAEU Heat Pump Share of Electric Equipment Capital Cost,5110,5000,90,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,646,BAU Heat Pump Cost Reduction from Learning,5110,5120,75,28,8,2,0,7,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
+1,647,644,394,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,648,646,644,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,649,645,644,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Industry - Cash Flow
@@ -105773,6 +105926,70 @@ We assume no meaningful retirement of CCS equipment during the model run, so the
 10,258,One Year,1543,688,41,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,259,258,224,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,260,226,223,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+12,261,0,656,1498,963,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
+Heat Pump Learning
+12,262,0,656,1648,963,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Counting Heat Pump Deployment and Learning Heat Pump Costs
+10,263,IECCpUAEU Heat Pump Heat Output per Unit Electric Equipment Energy Use,-176,2030,75,34,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,264,Start Year Industrial Heat Pump Heat Output,188,2030,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,265,BGHPC BAU Global Heat Pump Capacity,604,2030,75,20,8,3,0,4,0,0,0,0,-1--1--1,192-128-192,|||0-0-0,0,0,0,0,0,0
+10,266,Heat Pump Capacity Outside Modeled Region Affecting Learning,864,2030,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,267,Heat Pump Capacity Affecting Learning,968,1915,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,268,BAU Heat Pump Capacity Affecting Learning,968,2145,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,269,Start Year Heat Pump Capacity Affecting Learning,1228,2030,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,270,Heat Pump Cost Reduction from Learning,1384,1915,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,271,BAU Heat Pump Cost Reduction from Learning,1384,2145,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-192-128,|||0-0-0,0,0,0,0,0,0
+10,272,PDiHPCpDoC Perc Decline in Heat Pump Cost per Doubling of Capacity,1254,1800,75,34,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,273,FoHPCSL Fraction of Heat Pump Cost Subject to Learning,1514,1800,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,274,Cumulative Industrial Heat Pump Heat Output Deployed,526,1915,75,30,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,275,48,195,1915,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,276,278,274,4,0,0,22,0,0,0,-1--1--1,,1|(378,1915)|
+1,277,278,275,100,0,0,22,0,0,0,-1--1--1,,1|(250,1915)|
+11,278,0,305,1915,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,279,New Industrial Heat Pump Heat Output Capacity,305,1954,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,280,BAU Cumulative Industrial Heat Pump Heat Output Deployed,526,2145,75,30,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,281,48,195,2145,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,282,284,280,4,0,0,22,0,0,0,-1--1--1,,1|(378,2145)|
+1,283,284,281,100,0,0,22,0,0,0,-1--1--1,,1|(250,2145)|
+11,284,0,305,2145,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,285,BAU New Industrial Heat Pump Heat Output Capacity,305,2184,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,286,New Industrial Equipment Potential Energy Use by Fuel Type and Process,305,1782,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,287,IECCpUAEU Heat Pump Heat Output per Unit Electric Equipment Energy Use,45,1954,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,288,BAU New Industrial Equipment Energy Use by Fuel Type and Process,305,2299,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,289,IECCpUAEU Heat Pump Heat Output per Unit Electric Equipment Energy Use,45,2184,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,290,One Year,526,1800,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,291,Start Year Industrial Heat Pump Heat Output,396,2030,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,292,FoHPCSL Fraction of Heat Pump Cost Subject to Learning,1384,2260,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,293,PDiHPCpDoC Perc Decline in Heat Pump Cost per Doubling of Capacity,1514,2030,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,294,BAU Industrial Equipment Energy Use from Input Data by Industrial Process,-202,2145,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,295,One Year,526,2260,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,296,FoTOMRAEL Fraction of Technology Outside Modeled Region Affecting Endogenous Learning,864,1800,75,48,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,297,263,264,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,298,264,280,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,299,265,266,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,300,280,266,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,301,266,267,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,302,274,267,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,303,266,268,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,304,280,268,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,305,268,269,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,306,273,270,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,307,272,270,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,308,267,270,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,309,269,270,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,310,268,271,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,311,269,271,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,312,286,279,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,313,287,279,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,314,288,285,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,315,289,285,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,316,290,274,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,317,291,274,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,318,292,271,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,319,293,271,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,320,294,264,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,321,295,280,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,322,296,266,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Cross-Sector Totals
