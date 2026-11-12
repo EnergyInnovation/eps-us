@@ -26598,18 +26598,19 @@ Carbon Border Charge Receipts[Industry Category]=
 
 Carbon Border Charge Share of Import Value[Industry Category] :EXCEPT: [energy industries within industry category\
 		]=
-	IF THEN ELSE(
-	  Is Carbon Tax Border Adjustment Disabled > 0,
-	  0,
-	  MAX(0,
+	MAX(0,
+	  IF THEN ELSE(
+	    Is Carbon Tax Border Adjustment Disabled > 0,
+	    0,
 	    Carbon Tax Rate[industry sector]
 	    * MAX(0,
 	        CO2e Intensity of Imports Subject to Carbon Border Charge[Industry Category]
 	        - Carbon Border Charge Benchmark Intensity[Industry Category]
 	      )
 	    * Fraction of Industry Covered by Carbon Tax Border Adjustment[Industry Category]
-	    - Foreign Carbon Cost Share of Import Value[Industry Category]
 	  )
+	  + Pollution Border Fee Share of Import Value[Industry Category]
+	  - Foreign Carbon Cost Share of Import Value[Industry Category]
 	) ~~|
 Carbon Border Charge Share of Import Value[energy industries within industry category]=
 	0
@@ -28691,7 +28692,8 @@ Cement Pathway Clean Heat Investment Subsidy Rate[Cement Production Pathway]=
 	Cement Pathway Qualifies for Clean Heat Subsidies[Cement Production Pathway]
 	* Industrial Fuel Eligibility for Clean Heat Investment Subsidy[electricity if]
 	* (BCHSR BAU Clean Heat Investment Subsidy Rate[heat above 1000 C]
-	   + Perc Subsidy for Clean Industrial Heat Equipment This Year[heat above 1000 C])
+	   + Perc Subsidy for Clean Industrial Heat Equipment This Year[heat above 1000 C]
+	     * Industry Eligibility for Clean Heat Credits[cement and other nonmetallic minerals 239])
 	~	Dmnl
 	~		|
 
@@ -28701,8 +28703,11 @@ Cement Pathway Clean Heat Production Subsidy per Ton of Clinker[Cement Productio
 	* SUM(
 	    Cement Energy Intensity by Pathway and Fuel after Kiln Fuel Shift[Cement Production Pathway\
 		,Industrial Fuel!]
-	    * Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel!,heat above 1000 C\
-		]
+	    * (IF THEN ELSE(Industry Eligibility for Clean Heat Credits[cement and other nonmetallic minerals 239] >= 1,
+	    Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel!,heat above 1000 C],
+	    BAU Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel!,heat above 1000 C]
+	    + Industry Eligibility for Clean Heat Credits[cement and other nonmetallic minerals 239] * (Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel!,heat above 1000 C]
+	      - BAU Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel!,heat above 1000 C])))
 	  )
 	~	$/metric ton
 	~		|
@@ -31309,7 +31314,8 @@ Change in Government Cash Flow by Cash Flow Type[indst clean materials support]=
 	- Change in Cement Production Support Paid by Program[low carbon production credit]
 	- Steel CCfD Payments
 	- Low Carbon Steel Credit Payments
-	- Low Carbon Steel Procurement Premium Paid by Government ~~|
+	- Low Carbon Steel Procurement Premium Paid by Government
+	- Chemicals Abatement Payments Paid ~~|
 Change in Government Cash Flow by Cash Flow Type[hydgn production subsidy]=
 	- SUM(Change in Hydrogen Production Subsidy Payments[Hydrogen Production Pathway!])
 	- SUM(Change in Hydrogen Production Capital Subsidies Paid[Hydrogen Production Pathway\
@@ -32940,12 +32946,14 @@ Chemicals Abatement Option Cost of Converting per Ton CO2[electrified heat]=
 		]
 	* (1 - Chemicals Electrified Heat Investment Subsidy Rate)
 	+ EEpTSCA Electricity per Ton of Stack CO2 Abated
-	* Industrial Fuel Cost per Unit Energy[chemicals 20,electricity if] ~~|
+	* Industrial Fuel Cost per Unit Energy[chemicals 20,electricity if]
+	- Chemicals Abatement Payment Received per Ton CO2[electrified heat] ~~|
 Chemicals Abatement Option Cost of Converting per Ton CO2[hydrogen injection]=
 	Chemicals Hydrogen Injected per Ton of Syngas Vent CO2
 	* MAX(0, This Year Low Carbon Hydrogen Cost
 	  + Industrial Fuel Total Tax or Subsidy Amount per Unit Energy[chemicals 20,hydrogen if\
 		])
+	- Chemicals Abatement Payment Received per Ton CO2[hydrogen injection]
 	~	$/metric ton
 	~		|
 
@@ -33018,6 +33026,78 @@ Chemicals Abatement Option Share of Decisions That Convert[Chemicals Abatement O
 	~	Dmnl
 	~		|
 
+Chemicals Abatement Payment Is Contract for Difference=
+	0
+	~	Dmnl [0,1,1]
+	~	0 = the chemicals abatement payment is a flat amount per ton (a \
+		production credit or a grant per ton). 1 = it is a one-sided carbon \
+		contract for difference: the payment is the strike price minus the carbon \
+		price the plant would otherwise pay, never below zero. Either way it is \
+		paid on every converted ton every year, with no fixed contract term and no \
+		strike locked at signing.
+	|
+
+Chemicals Abatement Payment per Ton CO2[Chemicals Abatement Option]=
+	0
+	~	output currency unit/metric ton CO2e [0,300,5]
+	~	Government payment per ton of process CO2 avoided by each chemicals \
+		abatement option (hydrogen injection into syngas, electrified cracker \
+		heat), paid on mandated and cost-driven conversions alike. With the \
+		contract for difference switch on, this is the strike price. Stacks with \
+		any hydrogen production credit on the injected hydrogen and with the \
+		clean heat investment credit on the electrified heat capital.
+	|
+
+Chemicals Abatement Payment per Ton CO2 in Dollars[Chemicals Abatement Option]=
+	Chemicals Abatement Payment per Ton CO2[Chemicals Abatement Option]
+	* OCCF Dollars per Small Output Currency Unit
+	~	$/metric ton CO2e
+	~		|
+
+Chemicals Abatement Payment per Ton CO2 This Year[Chemicals Abatement Option]=
+	Chemicals Abatement Payment per Ton CO2 in Dollars[Chemicals Abatement Option]
+	* VECTOR ELM MAP(
+	    Selected Policy Implementation Schedule[indst chemicals abatement payment X hydrogen injection\
+		],
+	    (Chemicals Abatement Option-1)
+	  )
+	~	$/metric ton CO2e
+	~		|
+
+Chemicals Abatement Payment Received per Ton CO2[Chemicals Abatement Option]=
+	IF THEN ELSE(
+	  Chemicals Abatement Payment Is Contract for Difference > 0,
+	  MAX(0,
+	    Chemicals Abatement Payment per Ton CO2 This Year[Chemicals Abatement Option]
+	    - Chemicals Process CO2 Carbon Price),
+	  Chemicals Abatement Payment per Ton CO2 This Year[Chemicals Abatement Option]
+	)
+	~	$/metric ton CO2e
+	~		|
+
+Chemicals Abatement Payments Paid=
+	(
+	  Chemicals Abatement Payment Received per Ton CO2[hydrogen injection]
+	  * Chemicals Syngas Vent CO2 Avoided by Hydrogen Injection
+	  + Chemicals Abatement Payment Received per Ton CO2[electrified heat]
+	  * Chemicals Stack CO2 Freed from Furnaces by Electrified Heat
+	)
+	* (1 + Percent Change in Production due to Policies[chemicals 20])
+	/ Grams per Metric Ton Pollutant
+	~	$
+	~	Electrified heat is paid on all stack CO2 freed from the furnaces, the \
+		same per-ton basis as its conversion cost, including the share whose \
+		off-gas then displaces purchased natural gas.
+	|
+
+Chemicals Abatement Payments Paid by Industry[Industry Category] :EXCEPT: [chemicals 20\
+		]=
+	0 ~~|
+Chemicals Abatement Payments Paid by Industry[chemicals 20]=
+	Chemicals Abatement Payments Paid
+	~	$
+	~		|
+
 Chemicals Electricity Added for Electrified Heat=
 	Chemicals Stack CO2 Freed from Furnaces by Electrified Heat
 	* (1 + Percent Change in Production due to Policies[chemicals 20])
@@ -33056,7 +33136,8 @@ Chemicals Electrified Heat Capital Cost by Industry and Process[chemicals 20,hea
 Chemicals Electrified Heat Investment Subsidy Rate=
 	MIN(1,
 	  (BCHSR BAU Clean Heat Investment Subsidy Rate[heat above 1000 C]
-	   + Perc Subsidy for Clean Industrial Heat Equipment This Year[heat above 1000 C])
+	   + Perc Subsidy for Clean Industrial Heat Equipment This Year[heat above 1000 C]
+	     * Industry Eligibility for Clean Heat Credits[chemicals 20])
 	  * Industrial Fuel Eligibility for Clean Heat Investment Subsidy[electricity if])
 	~	Dmnl
 	~		|
@@ -33367,7 +33448,8 @@ Clean Industrial Heat Investment Subsidy Rate[Industry Category,industrial heati
 		,Industrial Fuel,industrial heating process]
 	* (BCHSR BAU Clean Heat Investment Subsidy Rate[industrial heating process]
 	  + Perc Subsidy for Clean Industrial Heat Equipment This Year[industrial heating process\
-		])
+		]
+	    * Industry Eligibility for Clean Heat Credits[Industry Category])
 	* Industrial Fuel Eligibility for Clean Heat Investment Subsidy[Industrial Fuel]
 	~	$/BTU
 	~		|
@@ -46411,6 +46493,25 @@ IELC Industrial Equipment Logit Coefficient for Process Choice=
 	~	The cement overhaul shareweights (CRSW) are fitted at this value; re-fit them if it changes.
 	|
 
+Industrial Electricity Price Reduction Amount per Unit Energy[Industry Category,Industrial Fuel\
+		] :EXCEPT: [Industry Category,electricity if]=
+	0 ~~|
+Industrial Electricity Price Reduction Amount per Unit Energy[Industry Category,electricity if\
+		]=
+	MAX(0,
+	  MIN(
+	    This Year Pretax Electricity Price by Sector[industry sector]
+	    * Percent Reduction in Industrial Electricity Price by Industry This Year[Industry Category\
+		],
+	    This Year Pretax Electricity Price by Sector[industry sector]
+	    + Fuel Tax or Subsidy by Sector[electricity,industry sector]
+	  ))
+	~	$/BTU
+	~	Capped so that, stacked with the industry sector entry of the \
+		Additional Fuel Tax or Subsidy Rate by Fuel lever, the price never goes \
+		below zero.
+	|
+
 Industrial Equipment Base Capital Cost per Unit Annual Energy Use[Industry Category\
 		,Industrial Fuel,Industrial Process] :EXCEPT: [Industry Category,electricity if,low temperature heating process\
 		]=
@@ -48158,9 +48259,11 @@ Industrial CCS Transportation and Storage Subsidy=
 
 Industrial Clean Heat Production Subsidy Amount Paid[Industry Category] :EXCEPT: [iron and steel 241]=
 	SUM(
-	  Clean Industrial Heat Production Subsidy Rate by Equipment Vintage[Industrial Fuel\
-		!,industrial heating process!,Model Run Vintage
-	!]
+	  IF THEN ELSE(Industry Eligibility for Clean Heat Credits[Industry Category] >= 1,
+	    Clean Industrial Heat Production Subsidy Rate by Equipment Vintage[Industrial Fuel!,industrial heating process!,Model Run Vintage!],
+	    BAU Clean Industrial Heat Production Subsidy Rate by Equipment Vintage[Industrial Fuel!,industrial heating process!,Model Run Vintage!]
+	    + Industry Eligibility for Clean Heat Credits[Industry Category] * (Clean Industrial Heat Production Subsidy Rate by Equipment Vintage[Industrial Fuel!,industrial heating process!,Model Run Vintage!]
+	      - BAU Clean Industrial Heat Production Subsidy Rate by Equipment Vintage[Industrial Fuel!,industrial heating process!,Model Run Vintage!]))
 	  * Output from Industrial Equipment Installed During Model Run[Industry Category,industrial heating process\
 		!,Model Run Vintage
 	!]
@@ -48177,8 +48280,11 @@ Industrial Clean Heat Production Subsidy Amount Paid[Industry Category] :EXCEPT:
 	+
 
 	SUM(
-	  Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel!,industrial heating process\
-		!]
+	  (IF THEN ELSE(Industry Eligibility for Clean Heat Credits[Industry Category] >= 1,
+	    Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel!,industrial heating process!],
+	    BAU Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel!,industrial heating process!]
+	    + Industry Eligibility for Clean Heat Credits[Industry Category] * (Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel!,industrial heating process!]
+	      - BAU Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel!,industrial heating process!])))
 	  * Output from New Industrial Equipment[Industry Category,industrial heating process\
 		!]
 	  * Share of New Industrial Equipment by Fuel Type and Process in Electricity Equivalent\
@@ -48640,6 +48746,8 @@ Industrial Fuel Total Tax or Subsidy Amount per Unit Energy[Industry Category,In
 		]=
 	Industrial Fuel Carbon Tax Amount per Unit Energy[Industry Category,Industrial Fuel]
 	+ Industrial Fuel Other Tax or Subsidy Amount per Unit Energy[Industrial Fuel]
+	- Industrial Electricity Price Reduction Amount per Unit Energy[Industry Category,Industrial Fuel\
+		]
 	~	$/BTU
 	~		|
 
@@ -48748,6 +48856,17 @@ Industrial Heat Fuel Intensity for Measures[Industry Category]=
 	)
 	~	BTU/$
 	~		|
+
+Industry Eligibility for Clean Heat Credits[Industry Category]=
+	1
+	~	Dmnl [0,1,1]
+	~	1 = the industry can claim the clean heat investment and production \
+		credits and the thermal battery credits set by the policy levers; 0 = it \
+		cannot. Credits already in the baseline (BCHSR) are unaffected. Setting a \
+		fraction between 0 and 1 scales the policy credits. The clean hydrogen \
+		buyer credit is averaged over all industry and does not follow this \
+		setting.
+	|
 
 Industry Sector Change in Capital and OM Spending by Recipient ISIC Code[ISIC Code]=
 	(
@@ -49487,7 +49606,8 @@ Industry Sector Change in Government Subsidy Amount Paid[Industry Category] :EXC
 		]
 	+ SUM(Government Incentives for Process Emissions Policies Paid to Abating Industries\
 		[Industry Category,Industry Process Emissions Policy
-	!]) ~~|
+	!])
+	+ Chemicals Abatement Payments Paid by Industry[Industry Category] ~~|
 Industry Sector Change in Government Subsidy Amount Paid[cement and other nonmetallic minerals 239\
 		]=
 	Industry Sector Change in CCS Subsidy Amount Paid[cement and other nonmetallic minerals 239\
@@ -49968,6 +50088,11 @@ Industry Sector Other Fuel Tax Revenue=
 	* Industrial Fuel Other Tax or Subsidy Amount per Unit Energy[Industrial Fuel!]
 	* (1 - SoFCTiBoSFbI Share of Fuel Consumption That is Byproduct or Secondary Fuels by Industry\
 		[Industry Category!,Industrial Fuel!]))
+	- SUM(Industrial Fuel Use[electricity if,Industry Category!]
+	* Industrial Electricity Price Reduction Amount per Unit Energy[Industry Category!,electricity if\
+		]
+	* (1 - SoFCTiBoSFbI Share of Fuel Consumption That is Byproduct or Secondary Fuels by Industry\
+		[Industry Category!,electricity if]))
 	~	$
 	~		|
 
@@ -64090,6 +64215,29 @@ Percent Reduction in Fossil Fuel Exports This Year[All Fuels]=
 	~	Dmnl
 	~		|
 
+Percent Reduction in Industrial Electricity Price by Industry[Industry Category]=
+	0
+	~	Dmnl [0,1,0.01]
+	~	Government-funded reduction in the electricity price an industry pays, \
+		as a fraction of the pretax industrial electricity price. Stacks with the \
+		industry sector entry of Additional Fuel Tax or Subsidy Rate by Fuel. It \
+		covers all of the industry's purchased electricity, not only new or added \
+		load, and the cost falls on government (fuel tax revenue), not on other \
+		ratepayers. Other metals 242 includes aluminum with the other nonferrous \
+		metals.
+	|
+
+Percent Reduction in Industrial Electricity Price by Industry This Year[Industry Category\
+		]=
+	Percent Reduction in Industrial Electricity Price by Industry[Industry Category]
+	* VECTOR ELM MAP(
+	    Selected Policy Implementation Schedule[indst elec price reduction X agriculture and forestry 01T03\
+		],
+	    (Industry Category-1)
+	  )
+	~	Dmnl
+	~		|
+
 Percent Reduction in Nonenergy Intermediate Inputs from Material Efficiency[Industry Category\
 		]=
 	0,	{agriculture and forestry 01T03}
@@ -64838,6 +64986,74 @@ pollutant with calculated health outcomes:
 	~	
 	~		|
 
+Pollution Border Fee Charges Full Import Intensity=
+	0
+	~	Dmnl [0,1,1]
+	~	0 = the pollution border fee is charged only on the amount by which the \
+		imports' CO2e intensity exceeds the domestic industry's (Clean Competition \
+		Act and Foreign Pollution Fee Act designs); 1 = on the imports' full \
+		intensity. Separate from Carbon Border Charge Uses Full Import Intensity, \
+		which sets the carbon tax border adjustment's basis.
+	|
+
+Pollution Border Fee Rate by Industry[Industry Category]=
+	0
+	~	output currency unit/metric ton CO2e [0,200,5]
+	~	Fee per ton of CO2e on imports, charged by default on the amount by \
+		which the imports' CO2e intensity (FCIoI) exceeds this geography's own \
+		industry intensity (see Pollution Border Fee Charges Full Import \
+		Intensity), whether or not a domestic carbon tax is in force. Where \
+		domestic output is the more intensive (chemicals in the US data), the \
+		excess-based fee is zero. Stacks with the carbon tax border adjustment \
+		when both are on. Not applied to cement 239 or iron and steel 241, which \
+		have their own border fee levers. Other metals 242 is an all-metals \
+		average intensity, not aluminum's. No rebate on exports.
+	|
+
+Pollution Border Fee Rate by Industry in Dollars[Industry Category]=
+	Pollution Border Fee Rate by Industry[Industry Category]
+	* OCCF Dollars per Small Output Currency Unit
+	~	$/metric ton CO2e
+	~		|
+
+Pollution Border Fee Rate by Industry This Year[Industry Category] :EXCEPT: [cement and other nonmetallic minerals 239\
+		],[iron and steel 241]=
+	Pollution Border Fee Rate by Industry in Dollars[Industry Category]
+	* VECTOR ELM MAP(
+	    Selected Policy Implementation Schedule[indst pollution border fee X agriculture and forestry 01T03\
+		],
+	    (Industry Category-1)
+	  ) ~~|
+Pollution Border Fee Rate by Industry This Year[cement and other nonmetallic minerals 239\
+		]=
+	0 ~~|
+Pollution Border Fee Rate by Industry This Year[iron and steel 241]=
+	0
+	~	$/metric ton CO2e
+	~	Zero for cement and steel: their own border fee levers (Cement Border \
+		Fee Rate, Steel Border Fee Rate) apply.
+	|
+
+Pollution Border Fee Share of Import Value[Industry Category] :EXCEPT: [energy industries within industry category\
+		]=
+	Pollution Border Fee Rate by Industry This Year[Industry Category]
+	* MAX(0,
+	    CO2e Intensity of Imports Subject to Carbon Border Charge[Industry Category]
+	    - IF THEN ELSE(
+	        Pollution Border Fee Charges Full Import Intensity > 0,
+	        0,
+	        Industrial Emissions per Unit Output[Industry Category]
+	      )
+	  ) ~~|
+Pollution Border Fee Share of Import Value[energy industries within industry category\
+		]=
+	0
+	~	Dmnl
+	~	The benchmark is the domestic industry's CO2e per dollar of output \
+		(all its emissions), not the taxed intensity the carbon border charge uses, \
+		so the fee works without a domestic carbon tax.
+	|
+
 PoNDHbE Percent of National Debt Held by Entity[Cash Flow Entity] :EXCEPT: [cash flow entity excluding energy suppliers\
 		]=
 	0 ~~|
@@ -65411,8 +65627,13 @@ Present Value Discount and Lifetime Window Denominator[Industry Category,Industr
 
 Present Value of Clean Industrial Heat Subsidy[Industry Category,Industrial Fuel,industrial heating process\
 		]=
-	Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel,industrial heating process\
-		]
+	(
+	IF THEN ELSE(Industry Eligibility for Clean Heat Credits[Industry Category] >= 1,
+	    Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel,industrial heating process],
+	    BAU Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel,industrial heating process]
+	    + Industry Eligibility for Clean Heat Credits[Industry Category] * (Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel,industrial heating process]
+	      - BAU Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel,industrial heating process]))
+	)
 	* Clean Industrial Heat Subsidy Annuity Factor[Industry Category]
 	~	$/BTU
 	~		|
@@ -71744,6 +71965,7 @@ Steel Pathway Clean Heat Investment Credit Qualification[Steel Production Pathwa
 Steel Pathway Clean Heat Investment Credit Rate[Steel Production Pathway]=
 	(
 	  Perc Subsidy for Clean Industrial Heat Equipment This Year[heat above 1000 C]
+	  * Industry Eligibility for Clean Heat Credits[iron and steel 241]
 	  + BCHSR BAU Clean Heat Investment Subsidy Rate[heat above 1000 C]
 	)
 	* Steel Pathway Clean Heat Investment Credit Qualification[Steel Production Pathway]
@@ -71761,7 +71983,11 @@ Steel Pathway Clean Heat Production Subsidy Amount Paid=
 Steel Pathway Clean Heat Production Subsidy per Ton[Steel Production Pathway]=
 	SUM(
 	  Steel Combustion Energy per Ton by Pathway and Fuel[Steel Production Pathway,Industrial Fuel!]
-	  * Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel!,heat above 1000 C]
+	  * (IF THEN ELSE(Industry Eligibility for Clean Heat Credits[iron and steel 241] >= 1,
+	    Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel!,heat above 1000 C],
+	    BAU Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel!,heat above 1000 C]
+	    + Industry Eligibility for Clean Heat Credits[iron and steel 241] * (Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel!,heat above 1000 C]
+	      - BAU Clean Industrial Heat Subsidy Rate by Fuel Type[Industrial Fuel!,heat above 1000 C])))
 	)
 	* Steel Pathway Clean Heat Investment Credit Qualification[Steel Production Pathway]
 	~	$/metric ton
@@ -73810,6 +74036,7 @@ industrial heating process]=
 		]
 	    / BpTPEU BTU per Medium Primary Energy Unit
 	    * Thermal Battery Production Subsidy Annuity Factor[Industry Category]
+	    * Industry Eligibility for Clean Heat Credits[Industry Category]
 	)
 	~	$/BTU
 	~	Deliberately does NOT apply the electric-equipment efficiency-improvement \
@@ -73822,7 +74049,8 @@ Thermal Battery Annual Financing Repayment per Unit Energy in Electricity Equiva
 	TBCC Thermal Battery Capital Cost per Unit Annual Energy Served[industrial heating process\
 		]
 	  * (1 - Perc Subsidy for Thermal Battery Equipment This Year[industrial heating process\
-		])
+		]
+	      * Industry Eligibility for Clean Heat Credits[Industry Category])
 	  * Capital Recovery Factor by Industry Fuel and Process[Industry Category,electricity if\
 		,industrial heating process]
 	  * Industrial Equipment Capital Annuity Factor[Industry Category,industrial heating process\
@@ -74113,6 +74341,7 @@ Thermal Battery Investment Subsidy Amount Paid[Industry Category]=
 	  * Thermal Battery New Energy Service[Industry Category,industrial heating process!\
 		]
 	)
+	* Industry Eligibility for Clean Heat Credits[Industry Category]
 	~	$
 	~	The capex booking in New Industrial Equipment Capital Cost stays gross; \
 		this subsidy is booked separately via Industry Sector Change in Government \
@@ -74228,6 +74457,7 @@ Thermal Battery Production Subsidy Amount Paid[Industry Category]=
 	)
 	* Start Year Energy Intensity of Industrial Production in Electricity Equivalent[Industry Category\
 		]
+	* Industry Eligibility for Clean Heat Credits[Industry Category]
 
 	+ SUM(
 	    Thermal Battery New Energy Service[Industry Category,industrial heating process!\
@@ -74236,6 +74466,7 @@ Thermal Battery Production Subsidy Amount Paid[Industry Category]=
 		!]
 	    / BpTPEU BTU per Medium Primary Energy Unit
 	  )
+	* Industry Eligibility for Clean Heat Credits[Industry Category]
 	~	$
 	~	The second term pays this year's new installs at the current rate (they \
 		are not yet in the installed-during-model-run stock).
@@ -80363,6 +80594,15 @@ Steel (continued)
 10,293,Tariff Rate on Imports,250,868,70,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 12,294,0,343,868,12,16,3,135,0,12,-1,2,0,0,-1--1--1,255-128-192,|16||0-0-0,0,0,0,0,0,0
 S
+12,295,0,-762,3165,762,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
+Clean Industry Levers
+12,296,0,-1029,3315,495,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Electricity Price Reduction, Pollution Border Fee and Chemicals Abatement Payments
+10,297,Percent Reduction in Industrial Electricity Price by Industry,-1419,3449,75,34,8,3,0,4,0,0,0,0,-1--1--1,128-192-255,|||0-0-0,0,0,0,0,0,0
+10,298,Pollution Border Fee Rate by Industry,-1159,3449,75,20,8,3,0,4,0,0,0,0,-1--1--1,128-192-255,|||0-0-0,0,0,0,0,0,0
+10,299,Pollution Border Fee Charges Full Import Intensity,-1159,3559,75,27,8,3,0,4,0,0,0,0,-1--1--1,128-192-255,|||0-0-0,0,0,0,0,0,0
+10,300,Chemicals Abatement Payment per Ton CO2,-899,3449,75,20,8,3,0,4,0,0,0,0,-1--1--1,128-192-255,|||0-0-0,0,0,0,0,0,0
+10,301,Chemicals Abatement Payment Is Contract for Difference,-639,3449,75,27,8,3,0,4,0,0,0,0,-1--1--1,128-192-255,|||0-0-0,0,0,0,0,0,0
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Control Settings
@@ -80476,6 +80716,9 @@ S
 10,76,Share of Lost Exports Replaced by Foreign Production,1292,323,90,30,8,3,0,4,-1,0,0,0,-1--1--1,192-255-192,|||0-0-0,0,0,0,0,0,0
 10,77,Boolean Cement Border Fee Follows Carbon Tax Rate,1500,385,75,30,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
 10,78,Boolean Steel Border Fee Follows Carbon Tax Rate,1500,475,75,30,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+12,79,0,176,1596,105,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Clean Heat Credit Eligibility by Industry
+10,80,Industry Eligibility for Clean Heat Credits,176,1723,75,27,8,3,0,4,0,0,0,0,-1--1--1,128-192-0,|||0-0-0,0,0,0,0,0,0
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Policy Implementation Schedule
@@ -81357,6 +81600,32 @@ Steel Pathway Policies
 1,849,110,805,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,850,807,806,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,851,79,806,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,852,0,-522,4377,600,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
+Clean Industry Levers
+12,853,0,-549,4527,495,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Scheduling the Clean Industry Levers
+10,854,Percent Reduction in Industrial Electricity Price by Industry This Year,-419,4771,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,855,Pollution Border Fee Rate by Industry in Dollars,-679,4881,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,856,Pollution Border Fee Rate by Industry This Year,-419,4881,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,857,Chemicals Abatement Payment per Ton CO2 in Dollars,-679,4991,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,858,Chemicals Abatement Payment per Ton CO2 This Year,-419,4991,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,859,Pollution Border Fee Rate by Industry,-679,4771,75,20,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,860,OCCF Dollars per Small Output Currency Unit,-939,4881,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,861,Chemicals Abatement Payment per Ton CO2,-679,5101,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,862,Percent Reduction in Industrial Electricity Price by Industry,-419,4661,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,863,Selected Policy Implementation Schedule,-679,4661,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,864,Selected Policy Implementation Schedule,-159,4771,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,865,Selected Policy Implementation Schedule,-419,5101,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,866,855,856,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,867,857,858,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,868,859,855,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,869,860,855,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,870,861,857,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,871,860,857,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,872,862,854,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,873,863,854,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,874,864,856,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,875,865,858,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Transportation - Main
@@ -95486,6 +95755,35 @@ Sets next year's fuel choice cost (Fuel Choice for New Industrial Equipment)
 10,1772,IELC Industrial Equipment Logit Coefficient for Fuel Choice,11269,2382,54,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,1773,1771,771,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1774,1772,1168,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,1775,0,-443,5992,600,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
+Pollution Border Fee
+12,1776,0,-650,6142,235,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Pricing Imports at the Pollution Border Fee
+10,1777,Pollution Border Fee Share of Import Value,-520,6379,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1778,Pollution Border Fee Rate by Industry This Year,-520,6269,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,1779,CO2e Intensity of Imports Subject to Carbon Border Charge,-520,6489,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1780,Pollution Border Fee Charges Full Import Intensity,-780,6379,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,1781,Industrial Emissions per Unit Output,-780,6269,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1782,Pollution Border Fee Share of Import Value,1140,-1306,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1783,Industry Eligibility for Clean Heat Credits,3829,1662,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1784,BAU Clean Industrial Heat Subsidy Rate by Fuel Type,3629,2549,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1785,Industry Eligibility for Clean Heat Credits,3979,2062,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1786,Industry Eligibility for Clean Heat Credits,11032,2271,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1787,Industry Eligibility for Clean Heat Credits,10224,2227,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1788,Industry Eligibility for Clean Heat Credits,11635,3642,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1789,Industry Eligibility for Clean Heat Credits,11440,3934,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1790,1778,1777,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1791,1779,1777,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1792,1780,1777,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1793,1781,1777,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1794,1782,1574,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1795,1783,527,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1796,1784,414,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1797,1785,414,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1798,1786,1167,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1799,1787,1351,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1800,1788,1363,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1801,1789,1366,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Industry - Cement
@@ -97475,6 +97773,12 @@ Cement Output Graphs
 Industry_Cement_Clinker_Production_by_Route
 12,1929,0,-171,9336,431,240,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Industry_Cement_CO2_Emissions_by_Route
+10,1930,Industry Eligibility for Clean Heat Credits,5515,478,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1931,BAU Clean Industrial Heat Subsidy Rate by Fuel Type,6165,701,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1932,Industry Eligibility for Clean Heat Credits,6165,890,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1933,1930,1456,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1934,1931,1457,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1935,1932,1457,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Industry - Steel
@@ -99067,11 +99371,17 @@ Choosing Pathways for New Steel Capacity
 10,1549,Steel Fuel Feedstock Share,3690,1930,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,1550,1549,33,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1551,1427,1429,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,1552,0,3720,12340,3720,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
+10,1552,Industry Eligibility for Clean Heat Credits,5105,1853,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1553,1552,81,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1554,BAU Clean Industrial Heat Subsidy Rate by Fuel Type,4780,1800,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1555,1554,35,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1556,Industry Eligibility for Clean Heat Credits,4155,1664,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1557,1556,35,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,1558,0,3720,12340,3720,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
 Steel Output Graphs
-12,1553,0,431,12700,431,240,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1559,0,431,12700,431,240,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Industry_Steel_Production_by_Route
-12,1554,0,1393,12700,431,240,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1560,0,1393,12700,431,240,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Industry_Steel_CO2_Emissions_by_Route
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
@@ -99423,6 +99733,33 @@ Chemicals Output Graphs
 Industry_Chemicals_Process_CO2_Emitted_Captured_and_Abated
 12,327,0,48,4380,431,240,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Industry_Chemicals_Fraction_of_Process_CO2_Converted
+12,328,0,-688,5090,687,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
+Chemicals Abatement Payments
+12,329,0,-880,5240,495,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Paying Plants per Ton of Process CO2 Avoided
+10,330,Chemicals Abatement Payment Received per Ton CO2,-1010,5477,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,331,Chemicals Abatement Payments Paid,-750,5477,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,332,Chemicals Abatement Payments Paid by Industry,-490,5477,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,333,Chemicals Syngas Vent CO2 Avoided by Hydrogen Injection,-750,5367,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,334,Chemicals Stack CO2 Freed from Furnaces by Electrified Heat,-750,5587,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,335,Percent Change in Production due to Policies,-1010,5367,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
+10,336,Grams per Metric Ton Pollutant,-490,5367,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,337,Chemicals Abatement Payment Is Contract for Difference,-1010,5587,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,338,Chemicals Abatement Payment per Ton CO2 This Year,-1270,5477,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,339,Chemicals Process CO2 Carbon Price,-1270,5367,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,340,Chemicals Abatement Payment Received per Ton CO2,-320,1283,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,341,Industry Eligibility for Clean Heat Credits,395,1249,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,342,330,331,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,343,331,332,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,344,333,331,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,345,334,331,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,346,335,331,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,347,336,331,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,348,337,330,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,349,338,330,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,350,339,330,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,351,340,87,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,352,341,82,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Industry - BAU
@@ -101438,6 +101775,25 @@ Splitting New Equipment Spending into Equipment and Installation
 1,1309,1288,1274,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1310,1289,1280,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1311,1279,1280,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,1312,0,7460,8510,600,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
+Industrial Electricity Price Reduction
+12,1313,0,7460,8660,235,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Reducing the Electricity Price for Chosen Industries
+10,1314,Industrial Electricity Price Reduction Amount per Unit Energy,7590,8897,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1315,This Year Pretax Electricity Price by Sector,7590,8787,75,27,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,1316,Percent Reduction in Industrial Electricity Price by Industry This Year,7590,9007,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,1317,Fuel Tax or Subsidy by Sector,7330,8897,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1318,BAU Clean Industrial Heat Production Subsidy Rate by Equipment Vintage,13193,4438,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1319,BAU Clean Industrial Heat Subsidy Rate by Fuel Type,11178,4411,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1320,Industry Eligibility for Clean Heat Credits,11903,3812,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1321,Chemicals Abatement Payments Paid by Industry,8540,7209,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1322,1315,1314,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1323,1316,1314,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1324,1317,1314,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1325,1318,336,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1326,1319,336,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1327,1320,336,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1328,1321,339,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *District Heating
@@ -105794,6 +106150,8 @@ Pricing Biomass Against Its Supply Curve
 10,1375,Industrial Feedstock Outside the National Biomass Market,3075,-510,75,30,8,3,0,4,-1,0,0,0,-1--1--1,192-255-192,|||0-0-0,0,0,0,0,0,0
 1,1376,1375,1305,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1377,1375,1311,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1378,Industrial Electricity Price Reduction Amount per Unit Energy,-2844,975,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1379,1378,53,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Endogenous Learning
@@ -106812,13 +107170,15 @@ Fuel Use by End Use
 1,649,642,637,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,650,643,637,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,651,644,637,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,652,0,-2347,1906,232,135,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+10,652,Industrial Electricity Price Reduction Amount per Unit Energy,1585,-535,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,653,652,296,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,654,0,-2347,1906,232,135,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Fossil_Fuel_Use_by_End_Use
-12,653,0,-1844,1906,232,135,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,655,0,-1844,1906,232,135,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Coal_Use_by_End_Use
-12,654,0,-1341,1906,232,135,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,656,0,-1341,1906,232,135,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Natural_Gas_Use_by_End_Use
-12,655,0,-836,1906,232,135,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,657,0,-836,1906,232,135,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Output_Refined_Petroleum_Fuels_Use_by_End_Use
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
@@ -107681,6 +108041,8 @@ Supply-chain expansion uses a price-free demand vector: energy ISICs enter as ph
 1,796,794,246,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 10,797,Domestic Production and Export Revenue Change by ISIC Code,-400,232,110,26,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,798,797,438,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,799,Chemicals Abatement Payments Paid,-3587,1275,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,800,799,238,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Macroeconomic Feedbacks
