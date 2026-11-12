@@ -26825,6 +26825,12 @@ Carbon Tax on Process Emissions by Industry[Industry Category]=
 	    QSfCF Quantization Size for Cash Flows
 	  )
 	)
+	+ QUANTUM(
+	    SUM(Process Emissions in CO2e in Metric Tons[Industry Category,Pollutant!]
+	    * Chemicals Intensity Standard Price by Industry[Industry Category]
+	    * Industry Pollutants Taxed by Carbon Pricing[Industry Category,Pollutant!]),
+	    QSfCF Quantization Size for Cash Flows
+	  )
 	~	$
 	~		|
 
@@ -29938,6 +29944,22 @@ Change in CES Costs=
 	~		~	:SUPPLEMENTARY 
 	|
 
+Change in Chemicals Intensity Standard Compliance Price=
+	IF THEN ELSE(
+	  Chemicals CO2e Intensity Standard This Year > 0,
+	  MIN(
+	    (Chemicals Intensity Standard Price Ceiling in Dollars
+	     - Chemicals Intensity Standard Compliance Price) / One Year,
+	    MAX(
+	      - Chemicals Intensity Standard Compliance Price / One Year,
+	      CISPAR Chemicals Intensity Standard Price Adjustment Rate
+	      * Chemicals CO2e Intensity Standard Gap
+	      * IF THEN ELSE(Chemicals CO2e Intensity Standard Gap < 0,
+	          CISPDF Chemicals Intensity Standard Price Downward Adjustment Fraction, 1))),
+	  - Chemicals Intensity Standard Compliance Price / One Year)
+	~	$/(metric ton CO2e*Year)
+	~		|
+
 Change in Compensation per Domestic Employee=
 	Weighted Average Compensation per Employee
 	- BAU Weighted Average Compensation per Employee
@@ -31315,7 +31337,8 @@ Change in Government Cash Flow by Cash Flow Type[indst clean materials support]=
 	- Steel CCfD Payments
 	- Low Carbon Steel Credit Payments
 	- Low Carbon Steel Procurement Premium Paid by Government
-	- Chemicals Abatement Payments Paid ~~|
+	- Chemicals Abatement Payments Paid
+	- Chemicals Commitment Premium Paid by Government ~~|
 Change in Government Cash Flow by Cash Flow Type[hydgn production subsidy]=
 	- SUM(Change in Hydrogen Production Subsidy Payments[Hydrogen Production Pathway!])
 	- SUM(Change in Hydrogen Production Capital Subsidies Paid[Hydrogen Production Pathway\
@@ -32910,6 +32933,15 @@ Chemicals Abatement Option:
 	~	
 	~		|
 
+Chemicals Abatement Option Commitment Allocation Weight[Chemicals Abatement Option]=
+	Chemicals Abatement Option Share of Decisions That Convert[Chemicals Abatement Option\
+		]
+	* Chemicals Abatement Option Is Available This Year[Chemicals Abatement Option]
+	* (1 - Chemicals Abatement Option Converted Fraction before Commitments[Chemicals Abatement Option])
+	* Chemicals Abatement Option Process CO2 Reachable[Chemicals Abatement Option]
+	~	g pollutant
+	~		|
+
 Chemicals Abatement Option Conversion Rate[Chemicals Abatement Option]=
 	(Chemicals Abatement Option Converted Fraction Including This Year[Chemicals Abatement Option\
 		]
@@ -32926,8 +32958,7 @@ Chemicals Abatement Option Converted Fraction[Chemicals Abatement Option]= INTEG
 		inventory projection and is not counted here.
 	|
 
-Chemicals Abatement Option Converted Fraction Including This Year[Chemicals Abatement Option\
-		]=
+Chemicals Abatement Option Converted Fraction before Commitments[Chemicals Abatement Option]=
 	MIN(1,
 	  MAX(
 	    Chemicals Abatement Option Converted Fraction[Chemicals Abatement Option]
@@ -32937,6 +32968,16 @@ Chemicals Abatement Option Converted Fraction Including This Year[Chemicals Abat
 	    Chemicals Abatement Option Fraction Mandated by Lever This Year[Chemicals Abatement Option\
 		]
 	  ))
+	~	Dmnl
+	~		|
+
+Chemicals Abatement Option Converted Fraction Including This Year[Chemicals Abatement Option\
+		]=
+	MAX(
+	  Chemicals Abatement Option Converted Fraction before Commitments[Chemicals Abatement Option],
+	  Chemicals Abatement Option Fraction Required by Purchase Commitments[Chemicals Abatement Option\
+		]
+	)
 	~	Dmnl
 	~		|
 
@@ -32981,6 +33022,23 @@ Chemicals Abatement Option Fraction Mandated by Lever This Year[electrified heat
 	~	Dmnl
 	~		|
 
+Chemicals Abatement Option Fraction Required by Purchase Commitments[Chemicals Abatement Option\
+		]=
+	MIN(1,
+	  Chemicals Abatement Option Converted Fraction before Commitments[Chemicals Abatement Option]
+	  + ZIDZ(
+	      Chemicals Purchase Commitment Volume Not Yet Converted
+	      * Chemicals Abatement Option Commitment Allocation Weight[Chemicals Abatement Option],
+	      SUM(Chemicals Abatement Option Commitment Allocation Weight[Chemicals Abatement Option!])
+	      * Chemicals Abatement Option Process CO2 Reachable[Chemicals Abatement Option]
+	  ))
+	~	Dmnl
+	~	The volume not yet converted is split between the options in \
+		proportion to their cost-based conversion shares and remaining \
+		unconverted CO2, so the cheaper option takes more; each option is capped \
+		at the CO2 it can reach.
+	|
+
 Chemicals Abatement Option Is Available This Year[Chemicals Abatement Option]=
 	IF THEN ELSE(
 	  Time >= CAOFYA Chemicals Abatement Option First Year Available[Chemicals Abatement Option\
@@ -33014,6 +33072,13 @@ Chemicals Abatement Option Policy Driven Conversion Rate[Chemicals Abatement Opt
 	~	The share difference must exceed one millionth so float noise between the \
 		policy and BAU price chains cannot start conversions.
 	|
+
+Chemicals Abatement Option Process CO2 Reachable[hydrogen injection]=
+	BAU Chemicals Process CO2 by Pool[syngas vent] ~~|
+Chemicals Abatement Option Process CO2 Reachable[electrified heat]=
+	BAU Chemicals Process CO2 by Pool[other stack]
+	~	g pollutant
+	~		|
 
 Chemicals Abatement Option Share of Decisions That Convert[Chemicals Abatement Option\
 		]=
@@ -33095,7 +33160,90 @@ Chemicals Abatement Payments Paid by Industry[Industry Category] :EXCEPT: [chemi
 	0 ~~|
 Chemicals Abatement Payments Paid by Industry[chemicals 20]=
 	Chemicals Abatement Payments Paid
+	+ Chemicals Commitment Premium Paid by Government
 	~	$
+	~		|
+
+Chemicals CO2e Intensity Standard=
+	0
+	~	Dmnl [0,0.9,0.01]
+	~	Required cut in the chemicals industry's direct CO2e per dollar of \
+		output, as a fraction below its 2025 level, met through a tradable \
+		performance standard. Modeled as a chemicals-only compliance price that \
+		rises while the industry is above the target and falls once it is below, \
+		with an output-based rebate at the target intensity, so the industry pays \
+		only for emissions above the standard. The price reaches fuel and \
+		equipment choice, capture, the process-emissions abatement measures and \
+		the two chemicals abatement options. Compliance lags by a year, and the \
+		price is an implied compliance cost, not a market price.
+	|
+
+Chemicals CO2e Intensity Standard Gap=
+	IF THEN ELSE(
+	  Chemicals CO2e Intensity Standard This Year > 0,
+	  ZIDZ(
+	    Industrial Emissions per Unit Output[chemicals 20]
+	    - Chemicals CO2e Intensity Standard Target,
+	    Chemicals CO2e Intensity Standard Target),
+	  0)
+	~	Dmnl
+	~	Positive = the industry is above the standard (short of compliance), as \
+		a fraction of the target.
+	|
+
+Chemicals CO2e Intensity Standard Target=
+	Chemicals Reference CO2e Intensity
+	* (1 - Chemicals CO2e Intensity Standard This Year)
+	~	metric tons CO2e/$
+	~		|
+
+Chemicals CO2e Intensity Standard This Year=
+	Chemicals CO2e Intensity Standard
+	* Selected Policy Implementation Schedule[indst chemicals intensity standard X]
+	~	Dmnl
+	~		|
+
+Chemicals Commitment Premium Paid=
+	SUM(
+	  Chemicals Commitment Premium per Ton CO2[Chemicals Abatement Option!]
+	  * Chemicals Abatement Option Converted Fraction Including This Year[Chemicals Abatement Option\
+		!]
+	  * Chemicals Abatement Option Process CO2 Reachable[Chemicals Abatement Option!]
+	)
+	* MIN(1,
+	    ZIDZ(
+	      Chemicals Purchase Commitment Volume,
+	      SUM(Chemicals Abatement Option Converted Fraction Including This Year[Chemicals Abatement Option\
+		!]
+	        * Chemicals Abatement Option Process CO2 Reachable[Chemicals Abatement Option!])
+	  ))
+	* (1 + Percent Change in Production due to Policies[chemicals 20])
+	/ Grams per Metric Ton Pollutant
+	~	$
+	~	Buyers pay the premium on converted tons up to the committed volume, \
+		spread across the options in proportion to their converted CO2.
+	|
+
+Chemicals Commitment Premium Paid by Buyers=
+	Chemicals Commitment Premium Paid
+	* (1 - Share of Chemicals Commitment Premium Paid by Government)
+	~	$
+	~		|
+
+Chemicals Commitment Premium Paid by Government=
+	Chemicals Commitment Premium Paid
+	* Share of Chemicals Commitment Premium Paid by Government
+	~	$
+	~		|
+
+Chemicals Commitment Premium per Ton CO2[Chemicals Abatement Option]=
+	MAX(0,
+	  Chemicals Abatement Option Cost of Converting per Ton CO2[Chemicals Abatement Option\
+		]
+	  - Chemicals Abatement Option Cost of Not Converting per Ton CO2[Chemicals Abatement Option\
+		]
+	)
+	~	$/metric ton
 	~		|
 
 Chemicals Electricity Added for Electrified Heat=
@@ -33186,6 +33334,60 @@ Chemicals Hydrogen Injected per Ton of Syngas Vent CO2=
 	~	BTU/metric ton
 	~		|
 
+Chemicals Intensity Standard Compliance Price= INTEG (
+	Change in Chemicals Intensity Standard Compliance Price,
+	0)
+	~	$/metric ton CO2e
+	~		|
+
+Chemicals Intensity Standard Price Annuity Factor[Industry Category,Industrial Process\
+		]=
+	SUM(
+	  ZIDZ(
+	    1,
+	    Present Value Discount and Lifetime Window Denominator[Industry Category,Industrial Process\
+		,Future Year!]
+	  )
+	)
+	~	Dmnl
+	~	Firms expect this year's compliance price to persist over the \
+		equipment's life.
+	|
+
+Chemicals Intensity Standard Price by Industry[Industry Category] :EXCEPT: [chemicals 20\
+		]=
+	0 ~~|
+Chemicals Intensity Standard Price by Industry[chemicals 20]=
+	Chemicals Intensity Standard Compliance Price
+	~	$/metric ton CO2e
+	~		|
+
+Chemicals Intensity Standard Price Ceiling=
+	0
+	~	output currency unit/metric ton CO2e [0,1000,10]
+	~	Highest compliance price the standard can reach (an alternative \
+		compliance payment); 0 = no ceiling. Above it the industry pays the \
+		ceiling and the standard is not met, which shows as a positive gap.
+	|
+
+Chemicals Intensity Standard Price Ceiling in Dollars=
+	IF THEN ELSE(
+	  Chemicals Intensity Standard Price Ceiling > 0,
+	  Chemicals Intensity Standard Price Ceiling * OCCF Dollars per Small Output Currency Unit,
+	  1e+06)
+	~	$/metric ton CO2e
+	~		|
+
+Chemicals Intensity Standard Rebate=
+	Chemicals Intensity Standard Compliance Price
+	* Chemicals CO2e Intensity Standard Target
+	* Last Year Output by ISIC Code[ISIC 20]
+	~	$
+	~	Output-based rebate at the target intensity: with the compliance charge \
+		on actual emissions, the industry pays only for emissions above the \
+		standard and is paid for emissions below it.
+	|
+
 Chemicals Natural Gas Displaced by Freed Off Gas by Industry[Industry Category] :EXCEPT:\
 		 [chemicals 20]=
 	0 ~~|
@@ -33207,6 +33409,7 @@ Chemicals Process CO2 Carbon Price=
 	Carbon Tax Rate[industry sector]
 	* FoICStCT Fraction of Industry Category Subject to Carbon Tax[chemicals 20]
 	* (1 - Does Carbon Tax Exempt Process Emissions This Year[chemicals 20])
+	+ Chemicals Intensity Standard Compliance Price
 	~	$/metric ton CO2e
 	~		|
 
@@ -33215,6 +33418,60 @@ Chemicals Process CO2 Pool:
 	other stack,
 	diffuse feedstock oxidation
 	~	
+	~		|
+
+Chemicals Purchase Commitment Shortfall=
+	MAX(0,
+	  Chemicals Purchase Commitment Volume
+	  - SUM(Chemicals Abatement Option Fraction Required by Purchase Commitments[Chemicals Abatement Option\
+		!]
+	    * Chemicals Abatement Option Process CO2 Reachable[Chemicals Abatement Option!])
+	)
+	* (1 + Percent Change in Production due to Policies[chemicals 20])
+	/ Grams per Metric Ton Pollutant
+	~	metric tons CO2
+	~	Committed tons the available options cannot supply (before 2035 only \
+		hydrogen injection is available).
+	|
+
+Chemicals Purchase Commitment Volume=
+	Share of Chemicals Process CO2 Covered by Purchase Commitments This Year
+	* SUM(Chemicals Abatement Option Process CO2 Reachable[Chemicals Abatement Option!])
+	~	g pollutant
+	~		|
+
+Chemicals Purchase Commitment Volume Not Yet Converted=
+	MAX(0,
+	  Chemicals Purchase Commitment Volume
+	  - SUM(Chemicals Abatement Option Converted Fraction before Commitments[Chemicals Abatement Option!]
+	    * Chemicals Abatement Option Process CO2 Reachable[Chemicals Abatement Option!])
+	)
+	~	g pollutant
+	~	Capacity already converted (by prices, mandates or earlier commitments) \
+		counts toward the commitment first.
+	|
+
+Chemicals Purchases Share by Buying Industry[Industry Category]=
+	ZIDZ(
+	  TIOT Total Input Output Table[ISIC 20,Industry Category ISIC Code]
+	  * BAU Output by ISIC Code by Year[Industry Category ISIC Code],
+	  SUM(TIOT Total Input Output Table[ISIC 20,Industry Category ISIC Code!]
+	    * BAU Output by ISIC Code by Year[Industry Category ISIC Code!])
+	)
+	~	Dmnl
+	~	Buyers' share of the commitment premium follows each industry's \
+		purchases from chemicals in the input-output table; chemicals bought by \
+		households, government and exporters are not counted, so industrial \
+		buyers carry all of it.
+	|
+
+Chemicals Reference CO2e Intensity=
+	SAMPLE IF TRUE(
+	  Time <= INITIAL TIME,
+	  Industrial Emissions per Unit Output[chemicals 20],
+	  Industrial Emissions per Unit Output[chemicals 20]
+	)
+	~	metric tons CO2e/$
 	~		|
 
 Chemicals Stack CO2 Freed from Furnaces by Electrified Heat=
@@ -33346,6 +33603,27 @@ CIRbTF Carbon Intensity Ratios by Transportation Fuel[Transportation Fuel]=
 	)
 	~	Dmnl
 	~		|
+
+CISPAR Chemicals Intensity Standard Price Adjustment Rate=
+	1000
+	~	$/(metric ton CO2e*Year)
+	~	Change in the compliance price per year for each unit of relative gap \
+		(a 10 percent gap raises the price 100 dollars a year). A control \
+		setting tuned for a stable approach to the target; higher values reach \
+		it faster but overshoot.
+	|
+
+CISPDF Chemicals Intensity Standard Price Downward Adjustment Fraction=
+	0
+	~	Dmnl [0,1,0.05]
+	~	The compliance price falls at this fraction of the rate it rises when \
+		the industry is below the standard; 0 = it never falls while the \
+		standard is in force. This stands in for credit banking: firms that \
+		over-comply bank the surplus for the tightening years ahead, so the \
+		price holds. A falling price makes the chemicals F-gas and N2O abatement \
+		measures, which respond to the price at once and in large steps, switch \
+		off and on year to year.
+	|
 
 CKFSR Cement Kiln Fuel Shift Recipient Fractions[Source Industrial Fuel,Target Industrial Fuel\
 		]=
@@ -33523,14 +33801,18 @@ Clean Production Premium Paid by Buying Industry[Industry Category]=
 	    SUM(Steel Use by End Use[Steel End Use!] * SUSbBI Steel Use Share by Buying Industry[Steel End Use!,Industry Category]),
 	    SUM(Steel Use by End Use[Steel End Use!])
 	  )
+	+ Chemicals Commitment Premium Paid by Buyers
+	* Chemicals Purchases Share by Buying Industry[Industry Category]
 	~	$
 	~	Steel not matched to a buying industry (power plants, other markets) is \
 		not allocated; its premium stays in the nonenergy industries' cash flow \
 		only.
 	|
 
-Clean Production Premium Received by Industry[Industry Category] :EXCEPT: [iron and steel 241]=
+Clean Production Premium Received by Industry[Industry Category] :EXCEPT: [iron and steel 241],[chemicals 20]=
 	0 ~~|
+Clean Production Premium Received by Industry[chemicals 20]=
+	Chemicals Commitment Premium Paid by Buyers ~~|
 Clean Production Premium Received by Industry[iron and steel 241]=
 	Low Carbon Steel Procurement Premium Paid by Buyers
 	~	$
@@ -47813,6 +48095,7 @@ Incremental Carbon Tax from Policy[Industry Category]=
 	BCTR BAU Carbon Tax Rate[industry sector]
 	* BFoICStCT BAU Fraction of Industry Category Subject to Carbon Tax[Industry Category\
 		]
+	+ Chemicals Intensity Standard Price by Industry[Industry Category]
 	~	$/metric ton CO2e
 	~		|
 
@@ -48643,6 +48926,10 @@ Industrial Fuel Carbon Tax Amount per Unit Energy[Industry Category,Industrial F
 	* Industrial Fuel Taxable CO2e Emissions Intensity[Industry Category,Industrial Fuel\
 		]
 	* Fraction of Industry Category Subject to Carbon Tax[Industry Category]
+	+ Chemicals Intensity Standard Price by Industry[Industry Category]
+	/ Grams per Metric Ton CO2e
+	* Industrial Fuel Taxable CO2e Emissions Intensity[Industry Category,Industrial Fuel\
+		]
 	~	$/BTU
 	~		|
 
@@ -49294,6 +49581,8 @@ Industry Sector Carbon Tax Rebate due to CCS[Industry Category]=
 	Amount of Combustion CO2 Sequestered by Industry Sector[Industry Category]
 	* Carbon Tax Rate[industry sector]
 	* Fraction of Industry Category Subject to Carbon Tax[Industry Category]
+	+ Amount of Combustion CO2 Sequestered by Industry Sector[Industry Category]
+	* Chemicals Intensity Standard Price by Industry[Industry Category]
 	~	$
 	~	Scoped to combustion CO2: the fuel carbon tax is levied on fuel burned \
 		(pre-capture), so this rebate nets it to residual combustion emissions, \
@@ -49302,8 +49591,10 @@ Industry Sector Carbon Tax Rebate due to CCS[Industry Category]=
 	|
 
 Industry Sector Carbon Tax Rebate from Output Based Allocation[Industry Category] :EXCEPT:\
-		 [cement and other nonmetallic minerals 239], [iron and steel 241]=
+		 [cement and other nonmetallic minerals 239], [iron and steel 241], [chemicals 20]=
 	0 ~~|
+Industry Sector Carbon Tax Rebate from Output Based Allocation[chemicals 20]=
+	Chemicals Intensity Standard Rebate ~~|
 Industry Sector Carbon Tax Rebate from Output Based Allocation[cement and other nonmetallic minerals 239\
 		]=
 	Cement Carbon Tax Rebate from Output Based Allocation ~~|
@@ -65692,6 +65983,11 @@ Present Value of Industrial Fuel Carbon Tax per Unit Energy in Future Years[Indu
 	Industrial Fuel Taxable CO2e Emissions Intensity[Industry Category,Industrial Fuel]
 	* Fraction of Industry Category Subject to Carbon Tax[Industry Category]
 	* Carbon Tax Present Value Factor[Industry Category,Industrial Process]
+	+ Industrial Fuel Taxable CO2e Emissions Intensity[Industry Category,Industrial Fuel]
+	* Chemicals Intensity Standard Price by Industry[Industry Category]
+	/ Grams per Metric Ton CO2e
+	* Chemicals Intensity Standard Price Annuity Factor[Industry Category,Industrial Process\
+		]
 	~	$/BTU
 	~		|
 
@@ -69326,6 +69622,31 @@ Share of Buildings Sector Energy Use by Building Component[Building Type,Buildin
 	  SUM(Building Components Energy Use[Building Type!,Building Fuel,Building Component\
 		!])
 	)
+	~	Dmnl
+	~		|
+
+Share of Chemicals Commitment Premium Paid by Government=
+	0
+	~	Dmnl [0,1,0.05]
+	~	0 = private buyers pay the low-carbon premium (an advance market \
+		commitment); 1 = government pays (procurement). Intermediate values split \
+		it.
+	|
+
+Share of Chemicals Process CO2 Covered by Purchase Commitments=
+	0
+	~	Dmnl [0,1,0.01]
+	~	Share of the process CO2 that the two chemicals abatement options can \
+		reach (syngas-vent CO2 for hydrogen injection, furnace stack CO2 for \
+		electrified heat) that buyers commit to buy as low-carbon production. It \
+		stands in for an advance market commitment or a procurement program for \
+		low-carbon chemicals; EPS has no chemical products, so the volume is set \
+		in tons of process CO2 avoided rather than tons of product.
+	|
+
+Share of Chemicals Process CO2 Covered by Purchase Commitments This Year=
+	Share of Chemicals Process CO2 Covered by Purchase Commitments
+	* Selected Policy Implementation Schedule[indst chemicals purchase commitment X]
 	~	Dmnl
 	~		|
 
@@ -78363,11 +78684,13 @@ Value of CCS[Industry Category,process emissions]=
 	* (1 - Does Carbon Tax Exempt Process Emissions This Year[Industry Category])
 	
 	+ Industrial CCS Transportation and Storage Subsidy
-	+ Industry Sector CCS Subsidy by Industry Category[Industry Category] ~~|
+	+ Industry Sector CCS Subsidy by Industry Category[Industry Category]
+	+ Chemicals Intensity Standard Price by Industry[Industry Category] ~~|
 Value of CCS[Industry Category,energy related emissions]=
 	Industry Sector CCS Subsidy by Industry Category[Industry Category]
 	+ Carbon Tax Rate[industry sector]
 	+ Industrial CCS Transportation and Storage Subsidy
+	+ Chemicals Intensity Standard Price by Industry[Industry Category]
 	~	$/metric ton CO2e
 	~		|
 
@@ -80603,6 +80926,12 @@ Electricity Price Reduction, Pollution Border Fee and Chemicals Abatement Paymen
 10,299,Pollution Border Fee Charges Full Import Intensity,-1159,3559,75,27,8,3,0,4,0,0,0,0,-1--1--1,128-192-255,|||0-0-0,0,0,0,0,0,0
 10,300,Chemicals Abatement Payment per Ton CO2,-899,3449,75,20,8,3,0,4,0,0,0,0,-1--1--1,128-192-255,|||0-0-0,0,0,0,0,0,0
 10,301,Chemicals Abatement Payment Is Contract for Difference,-639,3449,75,27,8,3,0,4,0,0,0,0,-1--1--1,128-192-255,|||0-0-0,0,0,0,0,0,0
+12,302,0,-1029,4006,495,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Chemicals Purchase Commitment and Intensity Standard
+10,303,Share of Chemicals Process CO2 Covered by Purchase Commitments,-1419,4140,75,34,8,3,0,4,0,0,0,0,-1--1--1,128-192-255,|||0-0-0,0,0,0,0,0,0
+10,304,Share of Chemicals Commitment Premium Paid by Government,-1159,4140,75,27,8,3,0,4,0,0,0,0,-1--1--1,128-192-255,|||0-0-0,0,0,0,0,0,0
+10,305,Chemicals CO2e Intensity Standard,-899,4140,75,20,8,3,0,4,0,0,0,0,-1--1--1,128-192-255,|||0-0-0,0,0,0,0,0,0
+10,306,Chemicals Intensity Standard Price Ceiling,-639,4140,75,27,8,3,0,4,0,0,0,0,-1--1--1,128-192-255,|||0-0-0,0,0,0,0,0,0
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Control Settings
@@ -81626,6 +81955,22 @@ Scheduling the Clean Industry Levers
 1,873,863,854,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,874,864,856,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,875,865,858,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,876,0,-887,5548,235,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Scheduling the Chemicals Commitment and Intensity Standard
+10,877,Share of Chemicals Process CO2 Covered by Purchase Commitments This Year,-757,5792,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,878,Chemicals CO2e Intensity Standard This Year,-757,5902,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,879,Chemicals Intensity Standard Price Ceiling in Dollars,-757,6012,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,880,Share of Chemicals Process CO2 Covered by Purchase Commitments,-757,5682,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,881,Selected Policy Implementation Schedule,-1017,5792,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,882,Chemicals CO2e Intensity Standard,-1017,5902,75,20,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,883,Chemicals Intensity Standard Price Ceiling,-757,6122,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,884,OCCF Dollars per Small Output Currency Unit,-1017,6012,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,885,880,877,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,886,881,877,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,887,882,878,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,888,881,878,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,889,883,879,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,890,884,879,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Transportation - Main
@@ -95772,18 +96117,20 @@ Pricing Imports at the Pollution Border Fee
 10,1787,Industry Eligibility for Clean Heat Credits,10224,2227,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,1788,Industry Eligibility for Clean Heat Credits,11635,3642,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,1789,Industry Eligibility for Clean Heat Credits,11440,3934,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,1790,1778,1777,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1791,1779,1777,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1792,1780,1777,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1793,1781,1777,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1794,1782,1574,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1795,1783,527,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1796,1784,414,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1797,1785,414,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1798,1786,1167,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1799,1787,1351,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1800,1788,1363,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1801,1789,1366,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1790,Chemicals Intensity Standard Price by Industry,1618,4197,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1791,1778,1777,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1792,1779,1777,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1793,1780,1777,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1794,1781,1777,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1795,1782,1574,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1796,1783,527,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1797,1784,414,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1798,1785,414,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1799,1786,1167,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1800,1787,1351,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1801,1788,1363,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1802,1789,1366,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1803,1790,465,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Industry - Cement
@@ -97776,9 +98123,11 @@ Industry_Cement_CO2_Emissions_by_Route
 10,1930,Industry Eligibility for Clean Heat Credits,5515,478,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,1931,BAU Clean Industrial Heat Subsidy Rate by Fuel Type,6165,701,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,1932,Industry Eligibility for Clean Heat Credits,6165,890,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,1933,1930,1456,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1934,1931,1457,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1935,1932,1457,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1933,Chemicals Intensity Standard Rebate,4421,7290,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1934,1930,1456,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1935,1931,1457,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1936,1932,1457,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1937,1933,1638,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Industry - Steel
@@ -99377,11 +99726,17 @@ Choosing Pathways for New Steel Capacity
 1,1555,1554,35,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,1556,Industry Eligibility for Clean Heat Credits,4155,1664,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,1557,1556,35,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,1558,0,3720,12340,3720,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
+10,1558,Chemicals Commitment Premium Paid by Buyers,2385,5357,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1559,1558,1190,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1560,Chemicals Purchases Share by Buying Industry,2385,5276,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1561,1560,1190,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1562,Chemicals Commitment Premium Paid by Buyers,2385,5127,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1563,1562,1189,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,1564,0,3720,12340,3720,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
 Steel Output Graphs
-12,1559,0,431,12700,431,240,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1565,0,431,12700,431,240,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Industry_Steel_Production_by_Route
-12,1560,0,1393,12700,431,240,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,1566,0,1393,12700,431,240,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Industry_Steel_CO2_Emissions_by_Route
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
@@ -99551,215 +99906,345 @@ Step 2: how much of the fleet converts this year
 1,153,138,136,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,154,132,137,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,155,133,137,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,156,140,139,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,157,136,139,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,158,137,139,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,159,138,139,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,160,139,145,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,161,140,145,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,162,138,145,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,163,0,2210,1424,237,130,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+1,156,139,145,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,157,140,145,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,158,138,145,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,159,0,2210,1424,237,130,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 Each year one adoption period's worth of the unconverted fleet decides (a furnace life for electrified heat, an electrolyzer build-out for hydrogen injection). Only the share that policy adds over what BAU prices would give converts, so defaults stay bit-identical to develop. The two original fraction levers remain as mandate floors. Conversions accumulate in the stock; the fraction including this year is what the pools above see.
-12,164,0,2730,914,400,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,160,0,2730,914,400,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Step 3: the off-gas the electrified furnaces no longer burn
-10,165,OGHCpTSCA Off Gas Heat Content per Ton of Stack CO2 Abated,2470,1044,75,34,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,166,Percent Change in Production due to Policies,2730,1044,75,34,8,2,0,3,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
-10,167,Grams per Metric Ton Pollutant,2990,1044,75,27,8,2,0,3,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,168,Chemicals Stack CO2 Freed from Furnaces by Electrified Heat,2470,1159,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,169,Chemicals Off Gas Freed by Electrified Heat,2730,1159,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,170,FoOGDNG Fraction of Freed Off Gas Displacing Purchased Natural Gas,2990,1159,75,41,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,171,Chemicals Natural Gas Displaced by Freed Off Gas by Industry,2730,1274,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,172,168,169,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,173,166,169,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,174,167,169,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,175,165,169,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,176,169,171,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,177,170,171,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,178,0,2730,1434,237,105,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+10,161,OGHCpTSCA Off Gas Heat Content per Ton of Stack CO2 Abated,2470,1044,75,34,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,162,Percent Change in Production due to Policies,2730,1044,75,34,8,2,0,3,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
+10,163,Grams per Metric Ton Pollutant,2990,1044,75,27,8,2,0,3,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,164,Chemicals Stack CO2 Freed from Furnaces by Electrified Heat,2470,1159,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,165,Chemicals Off Gas Freed by Electrified Heat,2730,1159,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,166,FoOGDNG Fraction of Freed Off Gas Displacing Purchased Natural Gas,2990,1159,75,41,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,167,Chemicals Natural Gas Displaced by Freed Off Gas by Industry,2730,1274,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,168,164,165,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,169,162,165,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,170,163,165,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,171,161,165,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,172,165,167,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,173,166,167,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,174,0,2730,1434,237,105,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 When furnaces are electrified the fuel gas they burned is freed (mostly hydrogen for US ethane crackers). The share that displaces purchased natural gas comes off chemicals 20's gas use, so its cost and CO2 follow the normal fuel chain, and its own CO2 stays in process emissions. The rest counts as abated process CO2.
-12,179,0,-260,1950,1040,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,175,0,-260,1950,1040,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 BAU twins of step 1
-10,180,SoSVbFF Share of Syngas Vent CO2 by Feedstock Fuel,-1170,2080,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,181,HIR Hydrogen Injection Ratio,-910,2080,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,182,Industrial Fuel Pollutant Emissions Intensities This Year,-650,2080,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,183,ECCpTSCA Electrified Heat Capital Cost per Ton per Year of Stack CO2 Abated,-390,2080,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,184,BAU Annuity Factor by Industry Fuel and Process,-130,2080,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,185,BCHSR BAU Clean Heat Investment Subsidy Rate,130,2080,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,186,BAU Industrial Fuel Eligibility for Clean Heat Investment Subsidy,650,2080,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,187,Chemicals Fossil Feedstock Avoided per Ton of Syngas Vent CO2,-1170,2195,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,188,Chemicals Hydrogen Injected per Ton of Syngas Vent CO2,-650,2195,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,189,EEpTSCA Electricity per Ton of Stack CO2 Abated,-390,2195,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,190,BAU This Year Low Carbon Hydrogen Cost,130,2195,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,191,BAU Chemicals Electrified Heat Investment Subsidy Rate,390,2195,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,192,Grams per Metric Ton Pollutant,-1170,2310,75,27,8,2,0,3,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,193,BAU Industrial Fuel Cost per Unit Energy,-910,2310,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,194,BAU Chemicals Abatement Option Cost of Not Converting per Ton CO2,-650,2310,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,195,BAU Industrial Fuel Total Tax or Subsidy Amount per Unit Energy,130,2440,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,196,BAU Chemicals Abatement Option Cost of Converting per Ton CO2,-130,2310,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,197,BAU Industrial Fuel Cost per Unit Energy,130,2310,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,198,BAU Industrial Fuel Carbon Tax Amount per Unit Energy,-1170,2440,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,199,FoOGDNG Fraction of Freed Off Gas Displacing Purchased Natural Gas,-910,2440,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,200,OGHCpTSCA Off Gas Heat Content per Ton of Stack CO2 Abated,-650,2440,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,201,BAU Chemicals Abatement Option Share of Decisions That Convert,-390,2440,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,202,IELC Industrial Equipment Logit Coefficient for Process Choice,-130,2440,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,203,BCTR BAU Carbon Tax Rate,-650,2560,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,204,BAU Chemicals Process CO2 Carbon Price,-390,2560,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,205,BEPEfCT Boolean Exempt Process Emissions from Carbon Tax,-130,2560,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,206,BFoICStCT BAU Fraction of Industry Category Subject to Carbon Tax,-390,2680,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,207,187,194,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,208,198,194,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,209,193,194,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,210,200,194,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,211,199,194,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,212,204,194,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,213,188,196,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,214,190,196,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,215,183,196,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,216,184,196,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,217,189,196,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,218,195,196,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,219,197,196,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,220,191,196,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,221,185,191,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,222,186,191,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,223,203,204,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,224,205,204,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,225,206,204,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,226,196,201,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,227,194,201,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,228,202,201,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,229,0,450,2590,237,125,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+10,176,SoSVbFF Share of Syngas Vent CO2 by Feedstock Fuel,-1170,2080,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,177,HIR Hydrogen Injection Ratio,-910,2080,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,178,Industrial Fuel Pollutant Emissions Intensities This Year,-650,2080,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,179,ECCpTSCA Electrified Heat Capital Cost per Ton per Year of Stack CO2 Abated,-390,2080,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,180,BAU Annuity Factor by Industry Fuel and Process,-130,2080,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,181,BCHSR BAU Clean Heat Investment Subsidy Rate,130,2080,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,182,BAU Industrial Fuel Eligibility for Clean Heat Investment Subsidy,650,2080,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,183,Chemicals Fossil Feedstock Avoided per Ton of Syngas Vent CO2,-1170,2195,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,184,Chemicals Hydrogen Injected per Ton of Syngas Vent CO2,-650,2195,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,185,EEpTSCA Electricity per Ton of Stack CO2 Abated,-390,2195,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,186,BAU This Year Low Carbon Hydrogen Cost,130,2195,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,187,BAU Chemicals Electrified Heat Investment Subsidy Rate,390,2195,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,188,Grams per Metric Ton Pollutant,-1170,2310,75,27,8,2,0,3,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,189,BAU Industrial Fuel Cost per Unit Energy,-910,2310,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,190,BAU Chemicals Abatement Option Cost of Not Converting per Ton CO2,-650,2310,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,191,BAU Industrial Fuel Total Tax or Subsidy Amount per Unit Energy,130,2440,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,192,BAU Chemicals Abatement Option Cost of Converting per Ton CO2,-130,2310,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,193,BAU Industrial Fuel Cost per Unit Energy,130,2310,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,194,BAU Industrial Fuel Carbon Tax Amount per Unit Energy,-1170,2440,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,195,FoOGDNG Fraction of Freed Off Gas Displacing Purchased Natural Gas,-910,2440,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,196,OGHCpTSCA Off Gas Heat Content per Ton of Stack CO2 Abated,-650,2440,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,197,BAU Chemicals Abatement Option Share of Decisions That Convert,-390,2440,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,198,IELC Industrial Equipment Logit Coefficient for Process Choice,-130,2440,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,199,BCTR BAU Carbon Tax Rate,-650,2560,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,200,BAU Chemicals Process CO2 Carbon Price,-390,2560,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,201,BEPEfCT Boolean Exempt Process Emissions from Carbon Tax,-130,2560,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,202,BFoICStCT BAU Fraction of Industry Category Subject to Carbon Tax,-390,2680,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,203,183,190,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,204,194,190,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,205,189,190,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,206,196,190,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,207,195,190,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,208,200,190,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,209,184,192,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,210,186,192,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,211,179,192,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,212,180,192,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,213,185,192,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,214,191,192,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,215,193,192,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,216,187,192,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,217,181,187,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,218,182,187,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,219,199,200,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,220,201,200,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,221,202,200,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,222,192,197,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,223,190,197,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,224,198,197,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,225,0,450,2590,237,125,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 The same cost comparison at BAU prices, the BAU financing rate and BAU credits. Step 2 converts only the share that the policy case adds over this BAU share.
-10,230,BBPEICA Boolean BAU Process Emissions Include Chemicals Abatement,1170,1274,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,231,230,136,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,232,0,2080,2770,1300,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+10,226,BBPEICA Boolean BAU Process Emissions Include Chemicals Abatement,1170,1274,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,227,226,136,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,228,0,2080,2770,1300,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 BAU twins of steps 2 and 3: what BAU prices alone would convert
-10,233,BBPEICA Boolean BAU Process Emissions Include Chemicals Abatement,910,2900,75,41,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
-10,234,CAOAP Chemicals Abatement Option Adoption Period,1170,2900,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,235,BAU Chemicals Abatement Option Share of Decisions That Convert,1430,2900,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,236,Chemicals Abatement Option Is Available This Year,1690,2900,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,237,BAU Chemicals Abatement Option Price Driven Conversion Rate,1430,3015,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,238,One Year,1430,3130,41,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,239,BAU Chemicals Abatement Option Converted Fraction Including This Year,1690,3130,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,240,BAU Chemicals Abatement Option Converted Fraction,1690,3260,95,28,3,131,0,0,0,0,0,0,0,0,0,0,0,0
-12,241,48,1170,3260,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,242,244,240,4,0,0,22,0,0,0,-1--1--1,,1|(1530,3260)|
-1,243,244,241,100,0,0,22,0,0,0,-1--1--1,,1|(1330,3260)|
-11,244,0,1430,3260,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
-10,245,BAU Chemicals Abatement Option Conversion Rate,1430,3300,69,28,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
-1,246,233,237,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,247,234,237,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,248,235,237,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,249,236,237,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,250,240,237,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,251,238,237,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,252,237,239,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,253,240,239,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,254,238,239,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,255,239,245,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,256,240,245,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,257,238,245,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,258,BAU Chemicals Abatement Option Converted Fraction Including This Year,2210,2900,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,259,BAU Chemicals Process CO2 by Pool,2470,2900,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,260,Grams per Metric Ton Pollutant,2730,2900,75,27,8,2,0,3,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,261,EEpTSCA Electricity per Ton of Stack CO2 Abated,2990,2900,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,262,BAU Chemicals Syngas Vent CO2 Avoided by Hydrogen Injection,2210,3015,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,263,BAU Chemicals Stack CO2 Freed from Furnaces by Electrified Heat,2470,3015,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,264,BAU Chemicals Electricity Added for Electrified Heat,2730,3015,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,265,BAU Chemicals Electricity Added for Electrified Heat by Industry and Process,2990,3015,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,266,BAU Chemicals Stack Process CO2 Abated by Electrified Heat,1950,3130,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,267,BAU Chemicals Electrified Heat Capital Cost,2990,3130,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,268,ECCpTSCA Electrified Heat Capital Cost per Ton per Year of Stack CO2 Abated,3250,3130,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,269,FoOGDNG Fraction of Freed Off Gas Displacing Purchased Natural Gas,1950,3260,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,270,BAU Last Year Chemicals Stack CO2 Freed from Furnaces by Electrified Heat,2210,3260,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,271,BAU Chemicals Off Gas Freed by Electrified Heat,2730,3260,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,272,Grams per Metric Ton Pollutant,2990,3260,75,27,8,2,0,3,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,273,Grams per Metric Ton Pollutant,3250,3260,75,27,8,2,0,3,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,274,OGHCpTSCA Off Gas Heat Content per Ton of Stack CO2 Abated,2470,3380,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,275,BAU Chemicals Natural Gas Displaced by Freed Off Gas by Industry,2730,3380,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,276,BAU Chemicals Electrified Heat Capital Cost by Industry and Process,3250,3380,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,277,FoOGDNG Fraction of Freed Off Gas Displacing Purchased Natural Gas,2730,3500,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,278,259,262,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,279,259,263,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,280,258,262,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,281,258,263,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,282,263,264,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,283,260,264,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,284,261,264,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,285,264,265,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,286,263,266,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,287,269,266,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,288,263,270,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,289,263,267,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,290,270,267,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,229,BBPEICA Boolean BAU Process Emissions Include Chemicals Abatement,910,2900,75,41,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,230,CAOAP Chemicals Abatement Option Adoption Period,1170,2900,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,231,BAU Chemicals Abatement Option Share of Decisions That Convert,1430,2900,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,232,Chemicals Abatement Option Is Available This Year,1690,2900,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,233,BAU Chemicals Abatement Option Price Driven Conversion Rate,1430,3015,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,234,One Year,1430,3130,41,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,235,BAU Chemicals Abatement Option Converted Fraction Including This Year,1690,3130,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,236,BAU Chemicals Abatement Option Converted Fraction,1690,3260,95,28,3,131,0,0,0,0,0,0,0,0,0,0,0,0
+12,237,48,1170,3260,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,238,240,236,4,0,0,22,0,0,0,-1--1--1,,1|(1530,3260)|
+1,239,240,237,100,0,0,22,0,0,0,-1--1--1,,1|(1330,3260)|
+11,240,0,1430,3260,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,241,BAU Chemicals Abatement Option Conversion Rate,1430,3300,69,28,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,242,229,233,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,243,230,233,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,244,231,233,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,245,232,233,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,246,236,233,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,247,234,233,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,248,233,235,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,249,236,235,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,250,234,235,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,251,235,241,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,252,236,241,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,253,234,241,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,254,BAU Chemicals Abatement Option Converted Fraction Including This Year,2210,2900,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,255,BAU Chemicals Process CO2 by Pool,2470,2900,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,256,Grams per Metric Ton Pollutant,2730,2900,75,27,8,2,0,3,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,257,EEpTSCA Electricity per Ton of Stack CO2 Abated,2990,2900,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,258,BAU Chemicals Syngas Vent CO2 Avoided by Hydrogen Injection,2210,3015,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,259,BAU Chemicals Stack CO2 Freed from Furnaces by Electrified Heat,2470,3015,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,260,BAU Chemicals Electricity Added for Electrified Heat,2730,3015,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,261,BAU Chemicals Electricity Added for Electrified Heat by Industry and Process,2990,3015,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,262,BAU Chemicals Stack Process CO2 Abated by Electrified Heat,1950,3130,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,263,BAU Chemicals Electrified Heat Capital Cost,2990,3130,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,264,ECCpTSCA Electrified Heat Capital Cost per Ton per Year of Stack CO2 Abated,3250,3130,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,265,FoOGDNG Fraction of Freed Off Gas Displacing Purchased Natural Gas,1950,3260,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,266,BAU Last Year Chemicals Stack CO2 Freed from Furnaces by Electrified Heat,2210,3260,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,267,BAU Chemicals Off Gas Freed by Electrified Heat,2730,3260,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,268,Grams per Metric Ton Pollutant,2990,3260,75,27,8,2,0,3,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,269,Grams per Metric Ton Pollutant,3250,3260,75,27,8,2,0,3,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,270,OGHCpTSCA Off Gas Heat Content per Ton of Stack CO2 Abated,2470,3380,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,271,BAU Chemicals Natural Gas Displaced by Freed Off Gas by Industry,2730,3380,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,272,BAU Chemicals Electrified Heat Capital Cost by Industry and Process,3250,3380,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,273,FoOGDNG Fraction of Freed Off Gas Displacing Purchased Natural Gas,2730,3500,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,274,255,258,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,275,255,259,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,276,254,258,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,277,254,259,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,278,259,260,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,279,256,260,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,280,257,260,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,281,260,261,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,282,259,262,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,283,265,262,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,284,259,266,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,285,259,263,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,286,266,263,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,287,264,263,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,288,269,263,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,289,263,272,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,290,259,267,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,291,268,267,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,292,273,267,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,293,267,276,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,294,263,271,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,295,272,271,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,296,274,271,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,297,271,275,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,298,277,275,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,299,BAU Industrial Feedstock Use after Adjustments,1170,3440,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,300,BAU Chemicals Fossil Feedstock Avoided by Hydrogen Injection,1430,3440,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,301,BAU Chemicals Hydrogen Injected,1690,3440,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,302,BAU Last Year Chemicals Hydrogen Injected,1950,3440,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,303,BAU Chemicals Syngas Vent CO2 Avoided by Hydrogen Injection,910,3560,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,304,SoSVbFF Share of Syngas Vent CO2 by Feedstock Fuel,1170,3560,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,305,Industrial Fuel Pollutant Emissions Intensities This Year,1690,3560,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,306,HIR Hydrogen Injection Ratio,2210,3560,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,307,BAU Industrial Fuel Use for Non Energy Purposes,910,3680,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,308,BAU Change in Industrial Feedstock Use due to Chemicals Levers,1170,3680,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,309,BAU Chemicals Injected Hydrogen Share of Industry Hydrogen Demand,1950,3680,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,310,BAU Last Year Industry Hydrogen Demand,2210,3680,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,311,303,300,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,312,299,300,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,313,304,300,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,314,305,300,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,315,300,301,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,316,306,301,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,317,301,302,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,318,302,309,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,319,310,309,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,320,300,308,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,321,301,308,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,322,308,307,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,323,299,307,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-12,324,0,2990,3690,237,130,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+1,292,270,267,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,293,267,271,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,294,273,271,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,295,BAU Industrial Feedstock Use after Adjustments,1170,3440,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,296,BAU Chemicals Fossil Feedstock Avoided by Hydrogen Injection,1430,3440,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,297,BAU Chemicals Hydrogen Injected,1690,3440,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,298,BAU Last Year Chemicals Hydrogen Injected,1950,3440,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,299,BAU Chemicals Syngas Vent CO2 Avoided by Hydrogen Injection,910,3560,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,300,SoSVbFF Share of Syngas Vent CO2 by Feedstock Fuel,1170,3560,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,301,Industrial Fuel Pollutant Emissions Intensities This Year,1690,3560,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,302,HIR Hydrogen Injection Ratio,2210,3560,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,303,BAU Industrial Fuel Use for Non Energy Purposes,910,3680,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,304,BAU Change in Industrial Feedstock Use due to Chemicals Levers,1170,3680,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,305,BAU Chemicals Injected Hydrogen Share of Industry Hydrogen Demand,1950,3680,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,306,BAU Last Year Industry Hydrogen Demand,2210,3680,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,307,299,296,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,308,295,296,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,309,300,296,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,310,301,296,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,311,296,297,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,312,302,297,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,313,297,298,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,314,298,305,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,315,306,305,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,316,296,304,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,317,297,304,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,318,304,303,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,319,295,303,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,320,0,2990,3690,237,130,8,7,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
 BAU twins at BAU prices. When BBPEICA is 1 (default) the BAU process-emissions projection is taken to include whatever a BAU carbon price would convert, so nothing converts here. When it is 0, BAU prices convert plants here too, and BAU process CO2, natural gas use, electricity, capital, hydrogen and the clean-hydrogen floor all carry those conversions, so policy minus BAU measures only what policy adds.
-12,325,0,445,4020,1790,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
+12,321,0,445,4020,1790,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
 Chemicals Output Graphs
-12,326,0,-914,4380,431,240,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,322,0,-914,4380,431,240,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Industry_Chemicals_Process_CO2_Emitted_Captured_and_Abated
-12,327,0,48,4380,431,240,3,188,0,0,1,0,0,0,0,0,0,0,0,0
+12,323,0,48,4380,431,240,3,188,0,0,1,0,0,0,0,0,0,0,0,0
 Industry_Chemicals_Fraction_of_Process_CO2_Converted
-12,328,0,-688,5090,687,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
+12,324,0,-688,5090,687,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
 Chemicals Abatement Payments
-12,329,0,-880,5240,495,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+12,325,0,-880,5240,495,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
 Paying Plants per Ton of Process CO2 Avoided
-10,330,Chemicals Abatement Payment Received per Ton CO2,-1010,5477,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,331,Chemicals Abatement Payments Paid,-750,5477,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,332,Chemicals Abatement Payments Paid by Industry,-490,5477,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,333,Chemicals Syngas Vent CO2 Avoided by Hydrogen Injection,-750,5367,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,334,Chemicals Stack CO2 Freed from Furnaces by Electrified Heat,-750,5587,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,335,Percent Change in Production due to Policies,-1010,5367,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
-10,336,Grams per Metric Ton Pollutant,-490,5367,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
-10,337,Chemicals Abatement Payment Is Contract for Difference,-1010,5587,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,338,Chemicals Abatement Payment per Ton CO2 This Year,-1270,5477,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
-10,339,Chemicals Process CO2 Carbon Price,-1270,5367,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,340,Chemicals Abatement Payment Received per Ton CO2,-320,1283,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,341,Industry Eligibility for Clean Heat Credits,395,1249,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,342,330,331,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,343,331,332,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,344,333,331,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,345,334,331,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,346,335,331,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,347,336,331,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,348,337,330,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,349,338,330,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,350,339,330,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,351,340,87,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,352,341,82,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,326,Chemicals Abatement Payment Received per Ton CO2,-1010,5477,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,327,Chemicals Abatement Payments Paid,-750,5477,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,328,Chemicals Abatement Payments Paid by Industry,-490,5477,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,329,Chemicals Syngas Vent CO2 Avoided by Hydrogen Injection,-750,5367,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,330,Chemicals Stack CO2 Freed from Furnaces by Electrified Heat,-750,5587,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,331,Percent Change in Production due to Policies,-1010,5367,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
+10,332,Grams per Metric Ton Pollutant,-490,5367,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,333,Chemicals Abatement Payment Is Contract for Difference,-1010,5587,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,334,Chemicals Abatement Payment per Ton CO2 This Year,-1270,5477,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,335,Chemicals Process CO2 Carbon Price,-1270,5367,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,336,Chemicals Abatement Payment Received per Ton CO2,-320,1283,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,337,Industry Eligibility for Clean Heat Credits,395,1249,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+12,338,0,820,6091,2195,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
+Chemicals Purchase Commitments and Intensity Standard
+12,339,0,-230,6241,1145,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Meeting Chemicals Purchase Commitments
+10,340,Chemicals Abatement Option Process CO2 Reachable,-1010,6775,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,341,Chemicals Abatement Option Converted Fraction before Commitments,-1010,6643,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,342,Chemicals Purchase Commitment Volume,-750,6533,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,343,Chemicals Purchase Commitment Volume Not Yet Converted,-490,6643,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,344,Chemicals Abatement Option Commitment Allocation Weight,-750,6775,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,345,Chemicals Abatement Option Fraction Required by Purchase Commitments,-230,6643,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,346,Chemicals Purchase Commitment Shortfall,30,6775,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,347,Chemicals Commitment Premium per Ton CO2,-230,6511,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,348,Chemicals Commitment Premium Paid,290,6643,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,349,Chemicals Commitment Premium Paid by Government,550,6533,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,350,Chemicals Commitment Premium Paid by Buyers,550,6753,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,351,Chemicals Purchases Share by Buying Industry,810,6863,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,352,Chemicals Abatement Option Converted Fraction Including This Year,290,6533,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,353,Chemicals Abatement Option Process CO2 Reachable,290,6753,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,354,Chemicals Purchase Commitment Volume,30,6643,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,355,Percent Change in Production due to Policies,30,6478,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
+10,356,Grams per Metric Ton Pollutant,30,6698,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,357,Chemicals Abatement Option Converted Fraction,-1010,6533,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,358,Chemicals Abatement Option Policy Driven Conversion Rate,-1270,6643,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,359,One Year,-1270,6533,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,360,Chemicals Abatement Option Fraction Mandated by Lever This Year,-1270,6753,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,361,Chemicals Purchase Commitment Volume,30,6830,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,362,Percent Change in Production due to Policies,-230,6775,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
+10,363,Chemicals Abatement Option Share of Decisions That Convert,-750,6885,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,364,Chemicals Abatement Option Is Available This Year,-1010,6885,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,365,Chemicals Abatement Option Cost of Converting per Ton CO2,-230,6401,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,366,Chemicals Abatement Option Cost of Not Converting per Ton CO2,-490,6511,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,367,Chemicals Abatement Option Converted Fraction before Commitments,-490,6863,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,368,Chemicals Abatement Option Process CO2 Reachable,-490,6368,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,369,TIOT Total Input Output Table,810,6753,75,20,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,370,BAU Output by ISIC Code by Year,810,6973,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,371,BAU Chemicals Process CO2 by Pool,-1270,6830,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,372,Share of Chemicals Process CO2 Covered by Purchase Commitments This Year,-750,6423,75,41,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,373,Chemicals Abatement Option Process CO2 Reachable,-750,7083,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,374,Share of Chemicals Commitment Premium Paid by Government,550,6423,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,375,Share of Chemicals Commitment Premium Paid by Government,550,6643,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+12,376,0,2065,6241,950,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Setting the Chemicals Intensity Standard Price
+10,377,Chemicals Reference CO2e Intensity,1220,6485,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,378,Chemicals CO2e Intensity Standard Target,1480,6485,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,379,Chemicals CO2e Intensity Standard Gap,1740,6617,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,380,CISPAR Chemicals Intensity Standard Price Adjustment Rate,2000,6485,75,34,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,381,CISPDF Chemicals Intensity Standard Price Downward Adjustment Fraction,2000,6749,75,34,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,382,Chemicals Intensity Standard Price by Industry,2780,6617,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,383,Chemicals Intensity Standard Price Annuity Factor,2780,6485,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,384,Chemicals Intensity Standard Rebate,2780,6749,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,385,Chemicals Intensity Standard Compliance Price,2520,6617,75,30,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,386,48,2189,6617,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+11,387,0,2299,6617,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,388,Change in Chemicals Intensity Standard Compliance Price,2299,6656,75,27,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,389,Chemicals CO2e Intensity Standard This Year,2299,6491,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,390,Chemicals Intensity Standard Price Ceiling in Dollars,2299,6766,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,391,Chemicals Intensity Standard Compliance Price,2039,6656,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,392,One Year,2559,6491,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,393,Chemicals CO2e Intensity Standard Gap,2559,6766,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,394,Chemicals CO2e Intensity Standard This Year,1740,6507,75,27,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,395,Industrial Emissions per Unit Output,1740,6727,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,396,Chemicals CO2e Intensity Standard Target,2780,6859,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,397,Last Year Output by ISIC Code,2910,6694,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
+10,398,Industrial Emissions per Unit Output,1220,6375,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,399,Present Value Discount and Lifetime Window Denominator,2780,6375,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,400,Chemicals Abatement Option Converted Fraction before Commitments,1435,1553,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,401,Chemicals Abatement Option Fraction Required by Purchase Commitments,1695,1175,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,402,Chemicals Commitment Premium Paid by Government,-485,5567,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,403,Chemicals Intensity Standard Compliance Price,-580,1614,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,404,326,327,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,405,327,328,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,406,329,327,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,407,330,327,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,408,331,327,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,409,332,327,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,410,333,326,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,411,334,326,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,412,335,326,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,413,336,87,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,414,337,82,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,415,340,342,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,416,341,344,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,417,340,344,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,418,342,343,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,419,341,343,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,420,343,345,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,421,344,345,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,422,345,346,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,423,347,348,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,424,348,349,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,425,348,350,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,426,352,348,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,427,353,348,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,428,354,348,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,429,355,348,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,430,356,348,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,431,357,341,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,432,358,341,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,433,359,341,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,434,360,341,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,435,361,346,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,436,353,346,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,437,362,346,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,438,356,346,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,439,363,344,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,440,364,344,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,441,365,347,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,442,366,347,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,443,367,345,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,444,368,345,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,445,369,351,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,446,370,351,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,447,371,340,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,448,372,342,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,449,373,343,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,450,374,349,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,451,375,350,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,452,387,385,4,0,0,22,0,0,0,-1--1--1,,1|(2372,6617)|
+1,453,387,386,100,0,0,22,0,0,0,-1--1--1,,1|(2244,6617)|
+1,454,377,378,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,455,378,379,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,456,380,388,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,457,381,388,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,458,385,382,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,459,385,384,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,460,389,388,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,461,390,388,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,462,391,388,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,463,392,388,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,464,393,388,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,465,394,379,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,466,395,379,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,467,396,384,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,468,397,384,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,469,398,377,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,470,394,378,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,471,399,383,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,472,400,139,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,473,401,139,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,474,402,328,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,475,403,95,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,476,INITIAL TIME,1280,6548,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,477,476,377,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,478,Time,1280,6440,50,15,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,479,478,377,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Industry - BAU
@@ -101787,13 +102272,17 @@ Reducing the Electricity Price for Chosen Industries
 10,1319,BAU Clean Industrial Heat Subsidy Rate by Fuel Type,11178,4411,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,1320,Industry Eligibility for Clean Heat Credits,11903,3812,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,1321,Chemicals Abatement Payments Paid by Industry,8540,7209,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-1,1322,1315,1314,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1323,1316,1314,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1324,1317,1314,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1325,1318,336,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1326,1319,336,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1327,1320,336,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,1328,1321,339,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1322,Chemicals Intensity Standard Price by Industry,9574,4060,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1323,Chemicals Intensity Standard Price by Industry,11587,4300,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1324,1315,1314,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1325,1316,1314,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1326,1317,1314,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1327,1318,336,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1328,1319,336,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1329,1320,336,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1330,1321,339,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1331,1322,151,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1332,1323,500,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *District Heating
@@ -104428,6 +104917,8 @@ or average profit over 2 years or something in case fuel prices jump around
 1,704,703,107,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,705,BAU Steel Module Change in CO2 Captured by Pathway Capture,580,2080,70,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,706,705,68,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,707,Chemicals Intensity Standard Price by Industry,69,-1199,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,708,707,435,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Geoengineering
@@ -106152,6 +106643,14 @@ Pricing Biomass Against Its Supply Curve
 1,1377,1375,1311,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,1378,Industrial Electricity Price Reduction Amount per Unit Energy,-2844,975,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,1379,1378,53,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1380,Chemicals Intensity Standard Price by Industry,-1289,-130,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1381,1380,397,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1382,Chemicals Intensity Standard Price Annuity Factor,2550,2068,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1383,1382,848,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1384,Chemicals Intensity Standard Price by Industry,2355,2041,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1385,1384,848,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1386,Grams per Metric Ton CO2e,2420,1879,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1387,1386,848,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Endogenous Learning
@@ -108043,6 +108542,8 @@ Supply-chain expansion uses a price-free demand vector: energy ISICs enter as ph
 1,798,797,438,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,799,Chemicals Abatement Payments Paid,-3587,1275,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,800,799,238,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,801,Chemicals Commitment Premium Paid by Government,-3457,1086,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,802,801,238,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Macroeconomic Feedbacks

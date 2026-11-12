@@ -12575,6 +12575,14 @@ PolicyElements = (
     ("Schedule 1",(2025,0),(2026,0),(2050,1)),
     ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
   ),
+  (("indst chemicals purchase commitment"),
+    ("Schedule 1",(2025,0),(2026,0),(2050,1)),
+    ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
+  ),
+  (("indst chemicals intensity standard"),
+    ("Schedule 1",(2025,0),(2026,0),(2050,1)),
+    ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
+  ),
 )
 
 
@@ -13000,3 +13008,7 @@ if CheckForScheduleErrors() == 0:
 # Chemicals Abatement Option order: hydrogen injection, electrified heat, for 'Chemicals Abatement Payment per Ton
 # CO2'). Schedules copy the clean-materials levers ('indst cement border fee' etc.): Schedule 1 linear 2026-2050,
 # Schedule 2 2029-2035, others fall back to Schedule 1.
+
+# NOTE (2026-11-12): appended 'indst chemicals purchase commitment' and 'indst chemicals intensity standard'
+# (one element each, for 'Share of Chemicals Process CO2 Covered by Purchase Commitments' and 'Chemicals CO2e
+# Intensity Standard'). Schedules copy the clean-materials levers.
