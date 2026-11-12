@@ -35254,6 +35254,52 @@ Daily Net Imported Electricity=
 	~	MW*hr
 	~		|
 
+Data Center Electricity Demand by Hour[Electricity Timeslice,Hour]=
+	SUM(
+	  Buildings Sector Electricity Demand[data centers,Building Component!]
+	  * Adjusted Load Factors for Data Centers[Building Component!,Electricity Timeslice\
+		,Hour]
+	)
+	~	MW*hr
+	~		|
+
+Data Center Electricity Shifted by Hour from Load Flexibility[Electricity Timeslice,Hour]=
+	Flexible Share of Data Center Electricity Load This Year
+	* IF THEN ELSE(
+	    SUM(Data Center Electricity Demand by Hour[Electricity Timeslice,Hour!]
+	      * Load Flexibility Refill Weight[Electricity Timeslice,Hour!]) > 0,
+	
+	    SUM(Data Center Electricity Demand by Hour[Electricity Timeslice,Hour!]
+	      * Load Flexibility Avoided Hour Flag[Electricity Timeslice,Hour!])
+	    * Data Center Electricity Demand by Hour[Electricity Timeslice,Hour]
+	    * Load Flexibility Refill Weight[Electricity Timeslice,Hour]
+	    / SUM(Data Center Electricity Demand by Hour[Electricity Timeslice,Hour!]
+	      * Load Flexibility Refill Weight[Electricity Timeslice,Hour!])
+	    - Data Center Electricity Demand by Hour[Electricity Timeslice,Hour]
+	      * Load Flexibility Avoided Hour Flag[Electricity Timeslice,Hour],
+	
+	    0
+	  )
+	~	MW*hr
+	~	Behind the meter solar at data centers is still matched to the unshifted load shape.
+	|
+
+Data Center Load Flexibility Peak Reduction=
+	ZIDZ(
+	  - SUM(MIN(0, Data Center Electricity Shifted by Hour from Load Flexibility[net peak day electricity timeslice!\
+		,Hour!])),
+	  SUM(Load Flexibility Avoided Hour Flag[net peak day electricity timeslice!,Hour!])
+	)
+	/ One Hour
+	~	MW
+	~		|
+
+Data Center Load Flexibility Payments=
+	Data Center Load Flexibility Peak Reduction
+	* Load Flexibility Payment per Unit Peak Reduction This Year
+	~	$
+	~		|
+
 Days per Year=
 	365
 	~	Dmnl
@@ -37917,7 +37963,8 @@ Electricity Sector Change in Nonenergy Expenditures by Entity[electricity suppli
 	Change in Repayment of Financing for Electricity Sector Capital Expenditures
 	+ SUM(Electricity Sector Change in Amount Spent on OM and Decommissioning by ISIC Code\
 		[ISIC Code!])
-	+ SUM(Change in Demand Response Costs by Recipient[Cash Flow Entity!]) ~~|
+	+ SUM(Change in Demand Response Costs by Recipient[Cash Flow Entity!])
+	+ Total Load Flexibility Payments ~~|
 Electricity Sector Change in Nonenergy Expenditures by Entity[nonenergy industries]=
 	SUM(Electricity Sector Change in Amount Spent on Capital Equipment by Recipient ISIC Code\
 		[ISIC Code!])
@@ -37940,7 +37987,8 @@ Electricity Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC Code] 
 	+ Electricity Sector Change in Amount Spent on OM and Decommissioning by ISIC Code[ISIC Code\
 		]
 	
-	+ Change in Nonenergy Industry Demand Response Costs by ISIC Code[ISIC Code] ~~|
+	+ Change in Nonenergy Industry Demand Response Costs by ISIC Code[ISIC Code]
+	+ Load Flexibility Payments by Recipient ISIC Code[ISIC Code] ~~|
 Electricity Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC 64T66 {Financial and insurance activities}\
 		]=
 	Electricity Sector Change in Amount Spent on Capital Equipment by Recipient ISIC Code\
@@ -37959,6 +38007,7 @@ Electricity Sector Change in Nonenergy Industry Revenue by ISIC Code[ISIC 27 {Ma
 		]
 	
 	+ Change in Nonenergy Industry Demand Response Costs by ISIC Code[ISIC 27]
+	+ Load Flexibility Payments by Recipient ISIC Code[ISIC 27]
 	~	$
 	~		|
 
@@ -37976,6 +38025,7 @@ Electricity Sector Change in Revenue by Entity[nonenergy industries]=
 		[ISIC Code!])
 	+ Electricity Sector Change in Fuel Costs by Recipient[nonenergy industries]
 	+ Change in Demand Response Costs by Recipient[nonenergy industries]
+	+ Total Load Flexibility Payments
 	+ Electricity Sector Change in Subsidies and Tax Rebates by Recipient[nonenergy industries\
 		]
 	+ Change in Subsidies Paid for Grid Battery Production Retained by Manufacturers
@@ -38151,6 +38201,7 @@ Electricity Subtotal Change in OM Expenditures=
 	Change in Amount Spent on Importing Electricity
 	+ SUM(Change in Electricity Sector OM Costs by Recipient ISIC Code[ISIC Code!])
 	+ SUM(Change in Demand Response Costs by Recipient[Cash Flow Entity!])
+	+ Total Load Flexibility Payments
 	+ SUM(Change in Electricity Sector CCS Transportation and Storage Costs[Electricity Source\
 		!])
 	+ Change in Transmission OM Costs
@@ -38198,6 +38249,7 @@ Electricity Supplier Costs Recovered through Electricity Rates per Unit Electric
 
 Electricity Supplier Other Expenditures=
 	SUM(Cost of Providing Demand Response by Recipient[Cash Flow Entity!])
+	+ Total Load Flexibility Payments
 	+ Amortized Decommissioning Costs
 	~	$
 	~		|
@@ -40582,6 +40634,33 @@ Fleet Size Ratio to BAU[Vehicle Type,Cargo Type]=
 		[Vehicle Type,Cargo Type]) - 1,
 	  RUoMV Relative Use of Marginal Vehicles[Vehicle Type,Cargo Type]
 	)
+	~	Dmnl
+	~		|
+
+Flexible Share of Industrial Electricity Load[Industry Category]=
+	0
+	~	Dmnl [0,1]
+	~		|
+
+Flexible Share of Industrial Electricity Load This Year[Industry Category]=
+	Flexible Share of Industrial Electricity Load[Industry Category]
+	* VECTOR ELM MAP(
+	    Selected Policy Implementation Schedule[indst load flexibility X agriculture and forestry 01T03\
+		],
+	
+	    (Industry Category-1)
+	  )
+	~	Dmnl
+	~		|
+
+Flexible Share of Data Center Electricity Load=
+	0
+	~	Dmnl [0,1]
+	~		|
+
+Flexible Share of Data Center Electricity Load This Year=
+	Flexible Share of Data Center Electricity Load
+	* Selected Policy Implementation Schedule[bldgs data center load flexibility X]
 	~	Dmnl
 	~		|
 
@@ -46241,6 +46320,27 @@ IECCpUAEU Electric Equipment Capital Cost per Unit Annual Energy Use for Low Tem
 	~	$/BTU
 	~		|
 
+Industrial Electricity Shifted by Hour from Load Flexibility[Electricity Timeslice,Hour,Industry Category]=
+	Flexible Share of Industrial Electricity Load This Year[Industry Category]
+	* IF THEN ELSE(
+	    SUM(Total Industrial Electricity Demand by Hour Before CCS[Electricity Timeslice,Hour!,Industry Category]
+	      * Load Flexibility Refill Weight[Electricity Timeslice,Hour!]) > 0,
+	
+	    SUM(Total Industrial Electricity Demand by Hour Before CCS[Electricity Timeslice,Hour!,Industry Category]
+	      * Load Flexibility Avoided Hour Flag[Electricity Timeslice,Hour!])
+	    * Total Industrial Electricity Demand by Hour Before CCS[Electricity Timeslice,Hour,Industry Category]
+	    * Load Flexibility Refill Weight[Electricity Timeslice,Hour]
+	    / SUM(Total Industrial Electricity Demand by Hour Before CCS[Electricity Timeslice,Hour!,Industry Category]
+	      * Load Flexibility Refill Weight[Electricity Timeslice,Hour!])
+	    - Total Industrial Electricity Demand by Hour Before CCS[Electricity Timeslice,Hour,Industry Category]
+	      * Load Flexibility Avoided Hour Flag[Electricity Timeslice,Hour],
+	
+	    0
+	  )
+	~	MW*hr
+	~	Net change by hour: negative in avoided hours, positive in the other hours of the same day; sums to zero over each day.
+	|
+
 Industrial Equipment Base Capital Cost per Unit Annual Energy Use[Industry Category\
 		,Industrial Fuel,Industrial Process] :EXCEPT: [Industry Category,electricity if,low temperature heating process\
 		]=
@@ -48578,6 +48678,106 @@ Industrial Heat Fuel Intensity for Measures[Industry Category]=
 	  Last Year Output by ISIC Code[Industry Category ISIC Code]
 	)
 	~	BTU/$
+	~		|
+
+Last Year Spare Potential Output from Surviving Capacity by Hour[Electricity Timeslice,Hour]=
+	DELAY FIXED(
+	  Spare Potential Output from Surviving Capacity by Hour[Electricity Timeslice,Hour],
+	  1, 0
+	)
+	~	MW*hr
+	~	One year lag avoids a same year loop: spare capacity depends on the load that load flexibility moves. Initialized to zero, so in the first year every hour ties and the ranking falls back to hour order; policy schedules are zero in the first year.
+	|
+
+Load Flexibility Hour Tightness Rank[Electricity Timeslice,Hour]=
+	SUM(
+	  IF THEN ELSE(
+	    Last Year Spare Potential Output from Surviving Capacity by Hour[Electricity Timeslice,Hour for Comparison!]
+	    < Last Year Spare Potential Output from Surviving Capacity by Hour[Electricity Timeslice,Hour]
+	    :OR: (
+	      Last Year Spare Potential Output from Surviving Capacity by Hour[Electricity Timeslice,Hour for Comparison!]
+	      = Last Year Spare Potential Output from Surviving Capacity by Hour[Electricity Timeslice,Hour]
+	      :AND: Hour Index[Hour for Comparison!] < Hour Index[Hour]
+	    ),
+	    1,
+	    0
+	  )
+	)
+	~	Dmnl
+	~	Ranks on spare capacity, not on marginal dispatch cost as the thermal battery charging window does: hourly marginal cost is nearly flat and its highest hours on the net peak days are overnight, while spare capacity is tightest in the evening hours that set the reliability requirement.
+	|
+
+Load Flexibility Avoided Hour Flag[Electricity Timeslice,Hour]=
+	IF THEN ELSE(
+	  Load Flexibility Hour Tightness Rank[Electricity Timeslice,Hour]
+	  < LFAH Load Flexibility Avoided Hours per Day / One Hour,
+	  LFDT Load Flexibility Day Types[Electricity Timeslice],
+	  0
+	)
+	~	Dmnl
+	~		|
+
+Load Flexibility Refill Weight[Electricity Timeslice,Hour]=
+	(1 - Load Flexibility Avoided Hour Flag[Electricity Timeslice,Hour])
+	* MAX(0, Last Year Spare Potential Output from Surviving Capacity by Hour[Electricity Timeslice,Hour])
+	~	MW*hr
+	~	Moved load returns to the other hours of the same day in proportion to the load already in each hour times its spare capacity, so it leans toward hours with surplus wind and solar.
+	|
+
+Industrial Load Flexibility Peak Reduction[Industry Category]=
+	ZIDZ(
+	  - SUM(MIN(0, Industrial Electricity Shifted by Hour from Load Flexibility[net peak day electricity timeslice!\
+		,Hour!,Industry Category])),
+	  SUM(Load Flexibility Avoided Hour Flag[net peak day electricity timeslice!,Hour!])
+	)
+	/ One Hour
+	~	MW
+	~	Average load removed in the avoided hours of the two net peak day types; the payment basis.
+	|
+
+Load Flexibility Payment per Unit Peak Reduction=
+	0
+	~	$/MW [0,?]
+	~		|
+
+Load Flexibility Payment per Unit Peak Reduction This Year=
+	Load Flexibility Payment per Unit Peak Reduction
+	* Selected Policy Implementation Schedule[elec load flexibility payment X]
+	~	$/MW
+	~		|
+
+Industrial Load Flexibility Payments[Industry Category]=
+	Industrial Load Flexibility Peak Reduction[Industry Category]
+	* Load Flexibility Payment per Unit Peak Reduction This Year
+	~	$
+	~		|
+
+Load Flexibility Payments by Recipient ISIC Code[ISIC Code] :EXCEPT:  [Industry Category ISIC Code],[ISIC 62T63]=
+	0 ~~|
+Load Flexibility Payments by Recipient ISIC Code[Industry Category ISIC Code]=
+	Industrial Load Flexibility Payments[Industry Category] ~~|
+Load Flexibility Payments by Recipient ISIC Code[ISIC 62T63 {IT and other information services}]=
+	Data Center Load Flexibility Payments
+	~	$
+	~	Data center payments go to ISIC 62T63, which includes data processing and hosting.
+	|
+
+LFAH Load Flexibility Avoided Hours per Day=
+	GET DIRECT CONSTANTS(
+	   'InputData/elec/LFAH/LFAH.csv',
+	   ',',
+	   'B2*'
+	)
+	~	hours
+	~		|
+
+LFDT Load Flexibility Day Types[Electricity Timeslice]=
+	GET DIRECT CONSTANTS(
+	   'InputData/elec/LFDT/LFDT.csv',
+	   ',',
+	   'B2*'
+	)
+	~	Dmnl
 	~		|
 
 low temperature heating process:
@@ -60446,7 +60646,10 @@ Output Industrial Electricity Demand by Hour and Industry Category[Electricity T
 	
 	Fuel Used for CCS by Industry Sector[electricity if,Industry Category]
 	* MWh per BTU
-	* Adjusted Load Factors for Industrial CCS[Electricity Timeslice,Hour])
+	* Adjusted Load Factors for Industrial CCS[Electricity Timeslice,Hour]
+	
+	+ Industrial Electricity Shifted by Hour from Load Flexibility[Electricity Timeslice\
+		,Hour,Industry Category])
 	
 	/ MWh per TWh
 	~	TW*hr
@@ -75874,6 +76077,13 @@ Total Electricity Demand by Hour before Distributed Generation and Thermal Batte
 	    * Adjusted Load Factors for Data Centers[Building Component!,Electricity Timeslice\
 		,Hour]
 	  )
+	
+	+ SUM(
+	    Industrial Electricity Shifted by Hour from Load Flexibility[Electricity Timeslice\
+		,Hour,Industry Category!]
+	  )
+	+ Data Center Electricity Shifted by Hour from Load Flexibility[Electricity Timeslice\
+		,Hour]
 	)
 	
 	* (Total Electricity Demand after Tnd Losses and Own Use
@@ -76223,6 +76433,13 @@ Total Input Output Table after Material Efficiency[Source ISIC Code,Target ISIC 
 	* (1 - Material Efficiency Improvement[Source ISIC Code,Target ISIC Code])
 	~	Dmnl
 	~		|
+
+Total Load Flexibility Payments=
+	SUM(Industrial Load Flexibility Payments[Industry Category!])
+	+ Data Center Load Flexibility Payments
+	~	$
+	~	Paid by electricity suppliers and recovered through rates, booked like the demand response program: a payment for a service, so it stays in recipient industry revenue at the IO handoff.
+	|
 
 Total New and Retrofit Capacity Desired due to Cost Effectiveness by CES Optimization Pass\
 		[Electricity Source, Optimization Pass]=
@@ -80125,6 +80342,13 @@ Steel (continued)
 10,293,Tariff Rate on Imports,250,868,70,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 12,294,0,343,868,12,16,3,135,0,12,-1,2,0,0,-1--1--1,255-128-192,|16||0-0-0,0,0,0,0,0,0
 S
+12,295,0,-762,3165,762,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
+Load Flexibility
+12,296,0,-1159,3315,365,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Load Flexibility
+10,297,Flexible Share of Industrial Electricity Load,-1419,3442,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,298,Flexible Share of Data Center Electricity Load,-1159,3442,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,299,Load Flexibility Payment per Unit Peak Reduction,-899,3442,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Control Settings
@@ -81119,6 +81343,24 @@ Steel Pathway Policies
 1,849,110,805,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,850,807,806,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,851,79,806,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,852,0,-522,4377,600,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
+Load Flexibility
+12,853,0,-809,4527,235,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Load Flexibility
+10,854,Flexible Share of Industrial Electricity Load This Year,-679,4764,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,855,Flexible Share of Data Center Electricity Load This Year,-679,4874,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,856,Load Flexibility Payment per Unit Peak Reduction This Year,-679,4984,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,857,Flexible Share of Industrial Electricity Load,-679,4654,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,858,Selected Policy Implementation Schedule,-939,4764,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,859,Flexible Share of Data Center Electricity Load,-939,4874,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,860,Load Flexibility Payment per Unit Peak Reduction,-679,5094,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,861,Selected Policy Implementation Schedule,-939,4984,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,862,857,854,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,863,858,854,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,864,859,855,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,865,858,855,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,866,860,856,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,867,861,856,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Transportation - Main
@@ -87124,6 +87366,67 @@ Expected Capacity Factors for New Plants During and After Time Limited Subsidies
 1,4002,3998,2082,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,4003,3999,2082,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,4004,4000,2082,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,4005,0,207,8968,1220,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
+Flexible Industrial and Data Center Load
+12,4006,0,-518,9118,495,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Ranking Each Day's Tightest Hours for Flexible Load
+10,4007,Last Year Spare Potential Output from Surviving Capacity by Hour,-908,9421,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4008,Load Flexibility Hour Tightness Rank,-648,9421,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4009,LFAH Load Flexibility Avoided Hours per Day,-388,9311,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,4010,LFDT Load Flexibility Day Types,-232,9245,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,4011,Load Flexibility Avoided Hour Flag,-388,9421,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4012,Load Flexibility Refill Weight,-128,9421,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4013,One Hour,-388,9476,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,4014,Spare Potential Output from Surviving Capacity by Hour,-908,9311,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4015,Hour Index,-648,9476,75,19,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,4016,Last Year Spare Potential Output from Surviving Capacity by Hour,-128,9531,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4017,4007,4008,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4018,4008,4011,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4019,4009,4011,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4020,4011,4012,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4021,4013,4011,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4022,4010,4011,1,0,0,0,0,128,0,-1--1--1,,1|(-283,9356)|
+1,4023,4014,4007,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4024,4015,4008,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4025,4016,4012,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,4026,0,802,9118,625,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Moving Flexible Load out of the Tightest Hours
+10,4027,Data Center Electricity Demand by Hour,542,9472,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4028,Industrial Electricity Shifted by Hour from Load Flexibility,802,9362,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4029,Data Center Electricity Shifted by Hour from Load Flexibility,802,9472,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4030,Industrial Load Flexibility Peak Reduction,1062,9362,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4031,Data Center Load Flexibility Peak Reduction,1062,9472,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4032,Flexible Share of Industrial Electricity Load This Year,802,9252,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4033,Total Industrial Electricity Demand by Hour Before CCS,542,9362,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4034,Load Flexibility Refill Weight,542,9252,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4035,Load Flexibility Avoided Hour Flag,1062,9252,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4036,Flexible Share of Data Center Electricity Load This Year,802,9582,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4037,Load Flexibility Refill Weight,542,9582,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4038,Load Flexibility Avoided Hour Flag,1062,9582,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4039,Buildings Sector Electricity Demand,282,9472,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4040,Adjusted Load Factors for Data Centers,282,9362,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4041,One Hour,1322,9252,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,4042,One Hour,1322,9362,75,19,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+1,4043,4027,4029,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4044,4028,4030,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4045,4029,4031,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4046,4032,4028,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4047,4033,4028,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4048,4034,4028,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4049,4035,4028,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4050,4036,4029,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4051,4037,4029,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4052,4038,4029,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4053,4039,4027,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4054,4040,4027,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4055,4035,4030,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4056,4041,4030,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4057,4038,4031,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4058,4042,4031,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4059,Industrial Electricity Shifted by Hour from Load Flexibility,1994,-3520,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4060,4059,3676,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,4061,Data Center Electricity Shifted by Hour from Load Flexibility,2254,-3682,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4062,4061,3676,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Electricity Supply - BAU
@@ -92574,6 +92877,33 @@ BAU CCS Subsidy Payments for Newly Eligible CCS Capacity
 1,1536,1535,999,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,1537,BAU Last Year Time Limited Subsidy Period Capacity Factor Ratio for New Plants,-3686,2994,95,28,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,1538,1537,1507,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,1539,0,-2093,8024,2093,60,3,135,0,12,-1,2,0,0,-1--1--1,255-255-128,|48||0-0-0,0,0,0,0,0,0
+Load Flexibility Payments
+12,1540,0,-3821,8174,365,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Paying for Peak-Hour Load Reduction
+10,1541,Industrial Load Flexibility Payments,-3821,8411,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1542,Data Center Load Flexibility Payments,-3821,8521,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1543,Total Load Flexibility Payments,-3561,8466,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1544,Load Flexibility Payments by Recipient ISIC Code,-3561,8576,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1545,Industrial Load Flexibility Peak Reduction,-3821,8301,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1546,Load Flexibility Payment per Unit Peak Reduction This Year,-4081,8411,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1547,Data Center Load Flexibility Peak Reduction,-3821,8631,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1548,1541,1543,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1549,1542,1543,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1550,1541,1544,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1551,1542,1544,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1552,1545,1541,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1553,1546,1541,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1554,1547,1542,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1555,1546,1542,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1556,Total Load Flexibility Payments,3381,6247,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1557,1556,482,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,1558,Total Load Flexibility Payments,-2878,6696,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1559,1558,120,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,1560,Total Load Flexibility Payments,233,6270,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1561,1560,133,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,1562,Load Flexibility Payments by Recipient ISIC Code,233,6567,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1563,1562,160,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Buildings - Main
@@ -107728,6 +108058,8 @@ This variable is no longer used in the cost metric (because we now subtract out 
 1,261,197,198,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,262,Change in Border Receipts by Industry Category,1980,1560,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,263,262,100,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,264,Total Load Flexibility Payments,1536,987,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,265,264,51,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Additional Outputs
@@ -110520,6 +110852,8 @@ Fuel Use by End Use
 1,2281,2271,2274,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,2282,2270,2275,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,2283,2271,2275,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,2284,Industrial Electricity Shifted by Hour from Load Flexibility,13214,7865,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,2285,2284,1957,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Debugging Assistance
