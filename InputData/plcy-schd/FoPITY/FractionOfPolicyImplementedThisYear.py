@@ -12575,11 +12575,19 @@ PolicyElements = (
     ("Schedule 1",(2025,0),(2026,0),(2050,1)),
     ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
   ),
+  (("indst chemicals abatement payment","bio feedstock"),
+    ("Schedule 1",(2025,0),(2026,0),(2050,1)),
+    ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
+  ),
   (("indst chemicals purchase commitment"),
     ("Schedule 1",(2025,0),(2026,0),(2050,1)),
     ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
   ),
   (("indst chemicals intensity standard"),
+    ("Schedule 1",(2025,0),(2026,0),(2050,1)),
+    ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
+  ),
+  (("indst chemicals bio feedstock"),
     ("Schedule 1",(2025,0),(2026,0),(2050,1)),
     ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
   ),
@@ -13012,3 +13020,8 @@ if CheckForScheduleErrors() == 0:
 # NOTE (2026-11-12): appended 'indst chemicals purchase commitment' and 'indst chemicals intensity standard'
 # (one element each, for 'Share of Chemicals Process CO2 Covered by Purchase Commitments' and 'Chemicals CO2e
 # Intensity Standard'). Schedules copy the clean-materials levers.
+
+# NOTE (2026-11-18): inserted 'indst chemicals abatement payment','bio feedstock' right after the electrified heat
+# element (the payment schedule is read by position in Chemicals Abatement Option order), and appended
+# 'indst chemicals bio feedstock' for 'Fraction of Chemicals Diffuse Feedstock CO2 Avoided by Bio Feedstock'.
+# Schedules copy the clean-materials levers.
