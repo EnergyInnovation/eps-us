@@ -6216,7 +6216,8 @@ BAU Change in Industrial Feedstock Use due to Chemicals Levers[Industry Category
 BAU Change in Industrial Feedstock Use due to Chemicals Levers[chemicals 20,Industrial Fuel]\
 		 :EXCEPT: [chemicals 20,hydrogen if],[chemicals 20,biomass if]=
 	-BAU Chemicals Fossil Feedstock Avoided by Hydrogen Injection[Industrial Fuel]
-	- BAU Chemicals Fossil Feedstock Avoided by Bio Feedstock[Industrial Fuel] ~~|
+	- BAU Chemicals Fossil Feedstock Avoided by Bio Feedstock[Industrial Fuel]
+	- BAU Chemicals Fossil Feedstock Avoided by Recycled Feedstock[Industrial Fuel] ~~|
 BAU Change in Industrial Feedstock Use due to Chemicals Levers[chemicals 20,hydrogen if]=
 	BAU Chemicals Hydrogen Injected ~~|
 BAU Change in Industrial Feedstock Use due to Chemicals Levers[chemicals 20,biomass if]=
@@ -6291,6 +6292,8 @@ BAU Chemicals Abatement Capital Cost by Industry and Process[Industry Category,I
 		,Industrial Process]
 	+ BAU Chemicals Bio Feedstock Capital Cost by Industry and Process[Industry Category\
 		,Industrial Process]
+	+ BAU Chemicals Recycled Feedstock Capital Cost by Industry and Process[Industry Category\
+		,Industrial Process]
 	~	$
 	~		|
 
@@ -6329,6 +6332,14 @@ BAU Chemicals Abatement Option Cost of Converting per Ton CO2[bio feedstock]=
 	  * BAU Annuity Factor by Industry Fuel and Process[chemicals 20,biomass if,other processes]
 	  + BFOCpUFFR Bio Feedstock Operating Cost per Unit Fossil Feedstock Replaced
 	) ~~|
+BAU Chemicals Abatement Option Cost of Converting per Ton CO2[recycled feedstock]=
+	SUM(Chemicals Fossil Feedstock per Ton of Diffuse CO2[Industrial Fuel!])
+	* (
+	  RFPpU Recycled Feedstock Price per Unit Energy
+	  + RFCCpU Recycled Feedstock Capital Cost per Unit Annual Feedstock
+	  * BAU Annuity Factor by Industry Fuel and Process[water and waste 36T39,biomass if,other processes\
+		]
+	) ~~|
 BAU Chemicals Abatement Option Cost of Converting per Ton CO2[electrified heat]=
 	ECCpTSCA Electrified Heat Capital Cost per Ton per Year of Stack CO2 Abated
 	* BAU Annuity Factor by Industry Fuel and Process[chemicals 20,electricity if,heat above 1000 C\
@@ -6352,6 +6363,15 @@ BAU Chemicals Abatement Option Cost of Not Converting per Ton CO2[bio feedstock]
 	  * CFPR Chemicals Feedstock Price Ratio[Industrial Fuel!]
 	)
 	+ BAU Chemicals Process CO2 Carbon Price ~~|
+BAU Chemicals Abatement Option Cost of Not Converting per Ton CO2[recycled feedstock]=
+	SUM(
+	  Chemicals Fossil Feedstock per Ton of Diffuse CO2[Industrial Fuel!]
+	  * (BAU Industrial Fuel Cost per Unit Energy[chemicals 20,Industrial Fuel!]
+	     - BAU Industrial Fuel Carbon Tax Amount per Unit Energy[chemicals 20,Industrial Fuel!])
+	  * CFPR Chemicals Feedstock Price Ratio[Industrial Fuel!]
+	)
+	+ BAU Chemicals Process CO2 Carbon Price
+	* Chemicals Recycled Feedstock Net CO2 Credit per Ton of Diffuse CO2 ~~|
 BAU Chemicals Abatement Option Cost of Not Converting per Ton CO2[electrified heat]=
 	OGHCpTSCA Off Gas Heat Content per Ton of Stack CO2 Abated
 	* FoOGDNG Fraction of Freed Off Gas Displacing Purchased Natural Gas
@@ -6420,6 +6440,14 @@ BAU Chemicals Biomass Feedstock Added for Bio Feedstock=
 BAU Chemicals Diffuse CO2 Avoided by Bio Feedstock=
 	BAU Chemicals Process CO2 by Pool[diffuse feedstock oxidation]
 	* BAU Chemicals Abatement Option Converted Fraction Including This Year[bio feedstock]
+	* (1 - BAU Chemicals Recycled Feedstock Share of Fossil Feedstock)
+	~	g pollutant
+	~		|
+
+BAU Chemicals Diffuse CO2 Avoided by Recycled Feedstock=
+	BAU Chemicals Process CO2 by Pool[diffuse feedstock oxidation]
+	* BAU Chemicals Recycled Feedstock Share of Fossil Feedstock
+	* RFDCCS Recycled Feedstock Diffuse CO2 Credit Share
 	~	g pollutant
 	~		|
 
@@ -6490,10 +6518,26 @@ BAU Chemicals Fossil Feedstock Avoided by Hydrogen Injection[Industrial Fuel]=
 	~	BTU
 	~		|
 
+BAU Chemicals Fossil Feedstock Avoided by Recycled Feedstock[Industrial Fuel]=
+	Chemicals Fossil Feedstock per Ton of Diffuse CO2[Industrial Fuel]
+	* BAU Chemicals Process CO2 by Pool[diffuse feedstock oxidation]
+	/ Grams per Metric Ton Pollutant
+	* BAU Chemicals Recycled Feedstock Share of Fossil Feedstock
+	~	BTU
+	~		|
+
 BAU Chemicals Fossil Feedstock Converted to Bio Feedstock=
 	BAU Chemicals Diffuse CO2 Avoided by Bio Feedstock
 	/ Grams per Metric Ton Pollutant
 	* SUM(Chemicals Fossil Feedstock per Ton of Diffuse CO2[Industrial Fuel!])
+	~	BTU
+	~		|
+
+BAU Chemicals Fossil Feedstock Converted to Recycled Feedstock=
+	SUM(Chemicals Fossil Feedstock per Ton of Diffuse CO2[Industrial Fuel!])
+	* BAU Chemicals Process CO2 by Pool[diffuse feedstock oxidation]
+	/ Grams per Metric Ton Pollutant
+	* BAU Chemicals Recycled Feedstock Share of Fossil Feedstock
 	~	BTU
 	~		|
 
@@ -6540,6 +6584,45 @@ BAU Chemicals Process CO2 Carbon Price=
 	* (1 - BEPEfCT Boolean Exempt Process Emissions from Carbon Tax[chemicals 20])
 	~	$/metric ton CO2e
 	~		|
+
+BAU Chemicals Recycled Feedstock Capital Cost=
+	MAX(0,
+	  BAU Chemicals Fossil Feedstock Converted to Recycled Feedstock
+	  - BAU Last Year Chemicals Fossil Feedstock Converted to Recycled Feedstock)
+	* RFCCpU Recycled Feedstock Capital Cost per Unit Annual Feedstock
+	~	$
+	~		|
+
+BAU Chemicals Recycled Feedstock Capital Cost by Industry and Process[Industry Category,Industrial Process\
+		] :EXCEPT: [water and waste 36T39,other processes]=
+	0 ~~|
+BAU Chemicals Recycled Feedstock Capital Cost by Industry and Process[water and waste 36T39,other processes\
+		]=
+	BAU Chemicals Recycled Feedstock Capital Cost
+	~	$
+	~	The pyrolysis plants belong to the water and waste industry, which sells the oil.
+	|
+
+BAU Chemicals Recycled Feedstock Purchase Spending=
+	BAU Chemicals Fossil Feedstock Converted to Recycled Feedstock
+	* RFPpU Recycled Feedstock Price per Unit Energy
+	~	$
+	~		|
+
+BAU Chemicals Recycled Feedstock Share of Fossil Feedstock=
+	BAU Chemicals Abatement Option Converted Fraction Including This Year[recycled feedstock]
+	* RFMSoFF Recycled Feedstock Maximum Share of Fossil Feedstock
+	~	Dmnl
+	~		|
+
+BAU Chemicals Recycled Feedstock Waste Industry CO2 Change=
+	BAU Chemicals Fossil Feedstock Converted to Recycled Feedstock
+	* (RFPCpU Recycled Feedstock Process CO2 per Unit Feedstock
+	   - RFICApU Recycled Feedstock Incineration CO2 Avoided per Unit Feedstock)
+	~	g pollutant
+	~	Pyrolysis process CO2 added, less incineration CO2 avoided, in the water and waste \
+		industry. Effects on waste-to-energy plants (electricity sector) are not modeled.
+	|
 
 BAU Chemicals Stack CO2 Freed from Furnaces by Electrified Heat=
 	BAU Chemicals Process CO2 by Pool[other stack]
@@ -12336,6 +12419,13 @@ BAU Last Year Chemicals Fossil Feedstock Converted to Bio Feedstock= DELAY FIXED
 	~	BTU
 	~		|
 
+BAU Last Year Chemicals Fossil Feedstock Converted to Recycled Feedstock= DELAY FIXED (
+	BAU Chemicals Fossil Feedstock Converted to Recycled Feedstock,
+	1,
+	0)
+	~	BTU
+	~		|
+
 BAU Last Year Chemicals Hydrogen Injected= DELAY FIXED (
 	BAU Chemicals Hydrogen Injected,
 	1,
@@ -13719,6 +13809,7 @@ BAU Max Capturable Fraction of Industry CO2[chemicals 20,process emissions]=
 	  - BAU Chemicals Syngas Vent CO2 Avoided by Hydrogen Injection
 	  - BAU Chemicals Stack Process CO2 Abated by Electrified Heat
 	  - BAU Chemicals Diffuse CO2 Avoided by Bio Feedstock
+	  - BAU Chemicals Diffuse CO2 Avoided by Recycled Feedstock
 	)
 	~	Dmnl
 	~		|
@@ -16788,14 +16879,19 @@ BAU Process Emissions after GDP and Fuel Production Adjustment[iron and steel 24
 	~		|
 
 BAU Process Emissions before CCS[Industry Category,Pollutant] :EXCEPT: [chemicals 20,CO2\
-		]=
+		],[water and waste 36T39,CO2]=
 	BAU Process Emissions after GDP and Fuel Production Adjustment[Industry Category,Pollutant\
 		] ~~|
+BAU Process Emissions before CCS[water and waste 36T39,CO2]=
+	BAU Process Emissions after GDP and Fuel Production Adjustment[water and waste 36T39,CO2\
+		]
+	+ BAU Chemicals Recycled Feedstock Waste Industry CO2 Change ~~|
 BAU Process Emissions before CCS[chemicals 20,CO2]=
 	BAU Process Emissions after GDP and Fuel Production Adjustment[chemicals 20,CO2]
 	- BAU Chemicals Syngas Vent CO2 Avoided by Hydrogen Injection
 	- BAU Chemicals Stack Process CO2 Abated by Electrified Heat
 	- BAU Chemicals Diffuse CO2 Avoided by Bio Feedstock
+	- BAU Chemicals Diffuse CO2 Avoided by Recycled Feedstock
 	~	g pollutant
 	~	This variable does no math operations.  It changes the name of "BAU \
 		Process Emissions after GDP Adjustment" to "BAU Process Emissions before \
@@ -30978,6 +31074,12 @@ Change in Chemicals Intensity Standard Compliance Price=
 	~	$/(metric ton CO2e*Year)
 	~		|
 
+Change in Chemicals Recycled Feedstock Purchase Spending=
+	Chemicals Recycled Feedstock Purchase Spending
+	- BAU Chemicals Recycled Feedstock Purchase Spending
+	~	$
+	~		|
+
 Change in Compensation per Domestic Employee=
 	Weighted Average Compensation per Employee
 	- BAU Weighted Average Compensation per Employee
@@ -32535,7 +32637,8 @@ Change in Industrial Feedstock Use due to Chemicals Levers[Industry Category,Ind
 Change in Industrial Feedstock Use due to Chemicals Levers[chemicals 20,Industrial Fuel\
 		] :EXCEPT: [chemicals 20,hydrogen if],[chemicals 20,biomass if]=
 	-Chemicals Fossil Feedstock Avoided by Hydrogen Injection[Industrial Fuel]
-	- Chemicals Fossil Feedstock Avoided by Bio Feedstock[Industrial Fuel] ~~|
+	- Chemicals Fossil Feedstock Avoided by Bio Feedstock[Industrial Fuel]
+	- Chemicals Fossil Feedstock Avoided by Recycled Feedstock[Industrial Fuel] ~~|
 Change in Industrial Feedstock Use due to Chemicals Levers[chemicals 20,hydrogen if]=
 	Chemicals Hydrogen Injected ~~|
 Change in Industrial Feedstock Use due to Chemicals Levers[chemicals 20,biomass if]=
@@ -33002,8 +33105,11 @@ Change in Pending Cost Driven Retirements Excluding Capacity Payment[Electricity
 	~		|
 
 Change in Process Emissions due to Chemicals Levers[Industry Category,Pollutant] :EXCEPT:\
-		 [chemicals 20,CO2]=
+		 [chemicals 20,CO2],[water and waste 36T39,CO2]=
 	0 ~~|
+Change in Process Emissions due to Chemicals Levers[water and waste 36T39,CO2]=
+	Chemicals Recycled Feedstock Waste Industry CO2 Change
+	- BAU Chemicals Recycled Feedstock Waste Industry CO2 Change ~~|
 Change in Process Emissions due to Chemicals Levers[chemicals 20,CO2]=
 	-(Chemicals Syngas Vent CO2 Avoided by Hydrogen Injection
 	  - BAU Chemicals Syngas Vent CO2 Avoided by Hydrogen Injection)
@@ -33011,6 +33117,8 @@ Change in Process Emissions due to Chemicals Levers[chemicals 20,CO2]=
 	  - BAU Chemicals Stack Process CO2 Abated by Electrified Heat)
 	- (Chemicals Diffuse CO2 Avoided by Bio Feedstock
 	  - BAU Chemicals Diffuse CO2 Avoided by Bio Feedstock)
+	- (Chemicals Diffuse CO2 Avoided by Recycled Feedstock
+	  - BAU Chemicals Diffuse CO2 Avoided by Recycled Feedstock)
 	~	g pollutant
 	~		|
 
@@ -33971,13 +34079,16 @@ Chemicals Abatement Capital Cost by Industry and Process[Industry Category,Indus
 		,Industrial Process]
 	+ Chemicals Bio Feedstock Capital Cost by Industry and Process[Industry Category\
 		,Industrial Process]
+	+ Chemicals Recycled Feedstock Capital Cost by Industry and Process[Industry Category\
+		,Industrial Process]
 	~	$
 	~		|
 
 Chemicals Abatement Option:
 	hydrogen injection,
 	electrified heat,
-	bio feedstock
+	bio feedstock,
+	recycled feedstock
 	~	
 	~		|
 
@@ -34039,6 +34150,16 @@ Chemicals Abatement Option Cost of Converting per Ton CO2[bio feedstock]=
 	  + BFOCpUFFR Bio Feedstock Operating Cost per Unit Fossil Feedstock Replaced
 	)
 	- Chemicals Abatement Payment Received per Ton CO2[bio feedstock] ~~|
+Chemicals Abatement Option Cost of Converting per Ton CO2[recycled feedstock]=
+	SUM(Chemicals Fossil Feedstock per Ton of Diffuse CO2[Industrial Fuel!])
+	* (
+	  RFPpU Recycled Feedstock Price per Unit Energy
+	  + RFCCpU Recycled Feedstock Capital Cost per Unit Annual Feedstock
+	  * Annuity Factor by Industry Fuel and Process[water and waste 36T39,biomass if,other processes\
+		]
+	)
+	- Chemicals Abatement Payment Received per Ton CO2[recycled feedstock]
+	* Chemicals Recycled Feedstock Net CO2 Credit per Ton of Diffuse CO2 ~~|
 Chemicals Abatement Option Cost of Converting per Ton CO2[electrified heat]=
 	ECCpTSCA Electrified Heat Capital Cost per Ton per Year of Stack CO2 Abated
 	* Annuity Factor by Industry Fuel and Process[chemicals 20,electricity if,heat above 1000 C\
@@ -34064,6 +34185,15 @@ Chemicals Abatement Option Cost of Not Converting per Ton CO2[bio feedstock]=
 	  * CFPR Chemicals Feedstock Price Ratio[Industrial Fuel!]
 	)
 	+ Chemicals Process CO2 Carbon Price ~~|
+Chemicals Abatement Option Cost of Not Converting per Ton CO2[recycled feedstock]=
+	SUM(
+	  Chemicals Fossil Feedstock per Ton of Diffuse CO2[Industrial Fuel!]
+	  * (Industrial Fuel Cost per Unit Energy[chemicals 20,Industrial Fuel!]
+	     - Industrial Fuel Carbon Tax Amount per Unit Energy[chemicals 20,Industrial Fuel!])
+	  * CFPR Chemicals Feedstock Price Ratio[Industrial Fuel!]
+	)
+	+ Chemicals Process CO2 Carbon Price
+	* Chemicals Recycled Feedstock Net CO2 Credit per Ton of Diffuse CO2 ~~|
 Chemicals Abatement Option Cost of Not Converting per Ton CO2[electrified heat]=
 	OGHCpTSCA Off Gas Heat Content per Ton of Stack CO2 Abated
 	* FoOGDNG Fraction of Freed Off Gas Displacing Purchased Natural Gas
@@ -34081,6 +34211,11 @@ Chemicals Abatement Option Cost of Not Converting per Ton CO2[hydrogen injection
 	~	$/metric ton
 	~		|
 
+Chemicals Abatement Option Fraction Mandated by Lever This Year[recycled feedstock]=
+	MIN(1,
+	  ZIDZ(
+	    Recycled Content Share of Chemicals Fossil Feedstock This Year,
+	    RFMSoFF Recycled Feedstock Maximum Share of Fossil Feedstock)) ~~|
 Chemicals Abatement Option Fraction Mandated by Lever This Year[bio feedstock]=
 	Fraction of Chemicals Diffuse Feedstock CO2 Avoided by Bio Feedstock This Year ~~|
 Chemicals Abatement Option Fraction Mandated by Lever This Year[hydrogen injection]=
@@ -34141,6 +34276,9 @@ Chemicals Abatement Option Policy Driven Conversion Rate[Chemicals Abatement Opt
 		policy and BAU price chains cannot start conversions.
 	|
 
+Chemicals Abatement Option Process CO2 Reachable[recycled feedstock]=
+	BAU Chemicals Process CO2 by Pool[diffuse feedstock oxidation]
+	* RFMSoFF Recycled Feedstock Maximum Share of Fossil Feedstock ~~|
 Chemicals Abatement Option Process CO2 Reachable[bio feedstock]=
 	BAU Chemicals Process CO2 by Pool[diffuse feedstock oxidation] ~~|
 Chemicals Abatement Option Process CO2 Reachable[hydrogen injection]=
@@ -34218,6 +34356,8 @@ Chemicals Abatement Payments Paid=
 	  * Chemicals Stack CO2 Freed from Furnaces by Electrified Heat
 	  + Chemicals Abatement Payment Received per Ton CO2[bio feedstock]
 	  * Chemicals Diffuse CO2 Avoided by Bio Feedstock
+	  + Chemicals Abatement Payment Received per Ton CO2[recycled feedstock]
+	  * MAX(0, Chemicals Recycled Feedstock Net CO2 Credited)
 	)
 	* (1 + Percent Change in Production due to Policies[chemicals 20])
 	/ Grams per Metric Ton Pollutant
@@ -34344,6 +34484,14 @@ Chemicals Commitment Premium per Ton CO2[Chemicals Abatement Option]=
 Chemicals Diffuse CO2 Avoided by Bio Feedstock=
 	BAU Chemicals Process CO2 by Pool[diffuse feedstock oxidation]
 	* Chemicals Abatement Option Converted Fraction Including This Year[bio feedstock]
+	* (1 - Chemicals Recycled Feedstock Share of Fossil Feedstock)
+	~	g pollutant
+	~		|
+
+Chemicals Diffuse CO2 Avoided by Recycled Feedstock=
+	BAU Chemicals Process CO2 by Pool[diffuse feedstock oxidation]
+	* Chemicals Recycled Feedstock Share of Fossil Feedstock
+	* RFDCCS Recycled Feedstock Diffuse CO2 Credit Share
 	~	g pollutant
 	~		|
 
@@ -34423,6 +34571,15 @@ Chemicals Fossil Feedstock Avoided by Hydrogen Injection[Industrial Fuel]=
 		inventory pool.
 	|
 
+Chemicals Fossil Feedstock Avoided by Recycled Feedstock[Industrial Fuel]=
+	Chemicals Fossil Feedstock per Ton of Diffuse CO2[Industrial Fuel]
+	* BAU Chemicals Process CO2 by Pool[diffuse feedstock oxidation]
+	/ Grams per Metric Ton Pollutant
+	* Chemicals Recycled Feedstock Share of Fossil Feedstock
+	* (1 + Percent Change in Production due to Policies[chemicals 20])
+	~	BTU
+	~		|
+
 Chemicals Fossil Feedstock Avoided per Ton of Syngas Vent CO2[Industrial Fuel]=
 	ZIDZ(
 	  SoSVbFF Share of Syngas Vent CO2 by Feedstock Fuel[Industrial Fuel]
@@ -34450,6 +34607,14 @@ Chemicals Fossil Feedstock Converted to Bio Feedstock=
 	Chemicals Diffuse CO2 Avoided by Bio Feedstock
 	/ Grams per Metric Ton Pollutant
 	* SUM(Chemicals Fossil Feedstock per Ton of Diffuse CO2[Industrial Fuel!])
+	~	BTU
+	~		|
+
+Chemicals Fossil Feedstock Converted to Recycled Feedstock=
+	SUM(Chemicals Fossil Feedstock per Ton of Diffuse CO2[Industrial Fuel!])
+	* BAU Chemicals Process CO2 by Pool[diffuse feedstock oxidation]
+	/ Grams per Metric Ton Pollutant
+	* Chemicals Recycled Feedstock Share of Fossil Feedstock
 	~	BTU
 	~		|
 
@@ -34615,6 +34780,63 @@ Chemicals Purchases Share by Buying Industry[Industry Category]=
 		purchases from chemicals in the input-output table; chemicals bought by \
 		households, government and exporters are not counted, so industrial \
 		buyers carry all of it.
+	|
+
+Chemicals Recycled Feedstock Capital Cost=
+	MAX(0,
+	  Chemicals Fossil Feedstock Converted to Recycled Feedstock
+	  - Last Year Chemicals Fossil Feedstock Converted to Recycled Feedstock)
+	* RFCCpU Recycled Feedstock Capital Cost per Unit Annual Feedstock
+	~	$
+	~		|
+
+Chemicals Recycled Feedstock Capital Cost by Industry and Process[Industry Category,Industrial Process\
+		] :EXCEPT: [water and waste 36T39,other processes]=
+	0 ~~|
+Chemicals Recycled Feedstock Capital Cost by Industry and Process[water and waste 36T39,other processes\
+		]=
+	Chemicals Recycled Feedstock Capital Cost
+	~	$
+	~	The pyrolysis plants belong to the water and waste industry, which sells the oil.
+	|
+
+Chemicals Recycled Feedstock Net CO2 Credit per Ton of Diffuse CO2=
+	RFDCCS Recycled Feedstock Diffuse CO2 Credit Share
+	+ (RFICApU Recycled Feedstock Incineration CO2 Avoided per Unit Feedstock
+	   - RFPCpU Recycled Feedstock Process CO2 per Unit Feedstock)
+	* SUM(Chemicals Fossil Feedstock per Ton of Diffuse CO2[Industrial Fuel!])
+	/ Grams per Metric Ton Pollutant
+	~	Dmnl
+	~	Reported tons avoided per ton of the diffuse pool converted; can be negative where \
+		pyrolysis CO2 exceeds the credits.
+	|
+
+Chemicals Recycled Feedstock Net CO2 Credited=
+	Chemicals Diffuse CO2 Avoided by Recycled Feedstock
+	- Chemicals Recycled Feedstock Waste Industry CO2 Change
+	~	g pollutant
+	~		|
+
+Chemicals Recycled Feedstock Purchase Spending=
+	Chemicals Fossil Feedstock Converted to Recycled Feedstock
+	* (1 + Percent Change in Production due to Policies[chemicals 20])
+	* RFPpU Recycled Feedstock Price per Unit Energy
+	~	$
+	~		|
+
+Chemicals Recycled Feedstock Share of Fossil Feedstock=
+	Chemicals Abatement Option Converted Fraction Including This Year[recycled feedstock]
+	* RFMSoFF Recycled Feedstock Maximum Share of Fossil Feedstock
+	~	Dmnl
+	~		|
+
+Chemicals Recycled Feedstock Waste Industry CO2 Change=
+	Chemicals Fossil Feedstock Converted to Recycled Feedstock
+	* (RFPCpU Recycled Feedstock Process CO2 per Unit Feedstock
+	   - RFICApU Recycled Feedstock Incineration CO2 Avoided per Unit Feedstock)
+	~	g pollutant
+	~	Pyrolysis process CO2 added, less incineration CO2 avoided, in the water and waste \
+		industry. Effects on waste-to-energy plants (electricity sector) are not modeled.
 	|
 
 Chemicals Reference CO2e Intensity=
@@ -50616,8 +50838,11 @@ Industry Sector Change in Capital and OM Spending by Recipient ISIC Code[ISIC Co
 	  Industry Sector Change in Capital and OM Spending[nonenergy industries]
 	  - SUM(Change in Industrial Fuel Equipment Purchase Spending[Industry Category!])
 	  - SUM(Change in Industrial Fuel Equipment Installation Spending[Industry Category!])
+	  - Change in Chemicals Recycled Feedstock Purchase Spending
 	)
 	* SoCaOMSbRIC Share of Capital and OM Spending by Recipient ISIC Code[ISIC Code]
+	+ Change in Chemicals Recycled Feedstock Purchase Spending
+	* Recycled Feedstock Purchase Share by Recipient ISIC Code[ISIC Code]
 	+ SUM(Change in Industrial Fuel Equipment Purchase Spending[Industry Category!]) * SoCaOMSbRIC Share of Industrial Fuel Equipment Purchase Spending by Recipient ISIC Code[ISIC Code]
 	+ SUM(Change in Industrial Fuel Equipment Installation Spending[Industry Category!]) * SoCaOMSbRIC Share of Industrial Fuel Equipment Installation Spending by Recipient ISIC Code[ISIC Code]
 	~	$
@@ -50637,6 +50862,13 @@ Last Year Additional Retail Electricity Costs per Unit Electricity Billed by Cus
 
 Last Year Chemicals Fossil Feedstock Converted to Bio Feedstock= DELAY FIXED (
 	Chemicals Fossil Feedstock Converted to Bio Feedstock,
+	1,
+	0)
+	~	BTU
+	~		|
+
+Last Year Chemicals Fossil Feedstock Converted to Recycled Feedstock= DELAY FIXED (
+	Chemicals Fossil Feedstock Converted to Recycled Feedstock,
 	1,
 	0)
 	~	BTU
@@ -51166,6 +51398,7 @@ Industry Sector Change in Capital and OM Spending[nonenergy industries]=
 	 + SUM(Measure OM Expenditures[Industry Category!])
 	 + SUM(Industry Sector Change in CCS New Capital Eqpt Cost[Industry Category!])
 	 + SUM(Industry Sector Change in CCS OM Cost[Industry Category!])
+	 + Change in Chemicals Recycled Feedstock Purchase Spending
 	~	$
 	~	No OM is charged for thermal batteries, matching the rest of the \
 		industrial equipment fuel choice, which carries no equipment OM.
@@ -54808,6 +55041,7 @@ Max Capturable Fraction of Chemicals Process CO2=
 	  - Chemicals Syngas Vent CO2 Avoided by Hydrogen Injection
 	  - Chemicals Stack Process CO2 Abated by Electrified Heat
 	  - Chemicals Diffuse CO2 Avoided by Bio Feedstock
+	  - Chemicals Diffuse CO2 Avoided by Recycled Feedstock
 	)
 	~	Dmnl
 	~		|
@@ -61352,6 +61586,13 @@ Output Change in Transportation Petroleum Expenditures per Household=
 	~	output currency unit
 	~		|
 
+Output Chemicals Process CO2 Abated by Option[recycled feedstock]=
+	(
+	  Chemicals Diffuse CO2 Avoided by Recycled Feedstock
+	  - BAU Chemicals Diffuse CO2 Avoided by Recycled Feedstock
+	)
+	* (1 + Percent Change in Production due to Policies[chemicals 20])
+	/ MOU Grams per Large Mass Output Unit Pollutant ~~|
 Output Chemicals Process CO2 Abated by Option[bio feedstock]=
 	(
 	  Chemicals Diffuse CO2 Avoided by Bio Feedstock
@@ -69519,6 +69760,26 @@ Recipient Cash Flow Entity<->
 	~	
 	~		|
 
+Recycled Content Share of Chemicals Fossil Feedstock=
+	0
+	~	Dmnl [0,1,0.01]
+	~	Share of chemicals fossil feedstock outside the syngas routes that must come from \
+		recycled plastic. Capped by the plastic waste available (RFMSoFF).
+	|
+
+Recycled Content Share of Chemicals Fossil Feedstock This Year=
+	Recycled Content Share of Chemicals Fossil Feedstock
+	* Selected Policy Implementation Schedule[indst chemicals recycled feedstock X]
+	~	Dmnl
+	~		|
+
+Recycled Feedstock Purchase Share by Recipient ISIC Code[ISIC Code] :EXCEPT: [ISIC 36T39]=
+	0 ~~|
+Recycled Feedstock Purchase Share by Recipient ISIC Code[ISIC 36T39]=
+	1
+	~	Dmnl
+	~		|
+
 Reduce EV Range Anxiety=
 	0
 	~	Dmnl [0,1]
@@ -70372,6 +70633,66 @@ Revenue from CES Credits per Unit Electricity Output by Plant Type[Electricity S
 	)
 	  * Elec Portfolio Qualifying Sources[Electricity Source,CES]
 	~	$/(MW*hr)
+	~		|
+
+RFCCpU Recycled Feedstock Capital Cost per Unit Annual Feedstock=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/_chemicals/RFI/RFCCpU.csv',
+	   ',',
+	   'B2'
+	)
+	~	$/(BTU/Year)
+	~	Zero by default: the price then carries the pyrolysis plant cost. A region that sets it \
+		should take capital out of the price.
+	|
+
+RFDCCS Recycled Feedstock Diffuse CO2 Credit Share=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/_chemicals/RFI/RFDCCS.csv',
+	   ',',
+	   'B2'
+	)
+	~	Dmnl
+	~	Set by region: whether the inventory stops counting the oxidized share of fossil \
+		feedstock that recycled oil replaces. U.S. 0 until EIA treatment is confirmed.
+	|
+
+RFICApU Recycled Feedstock Incineration CO2 Avoided per Unit Feedstock=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/_chemicals/RFI/RFICApU.csv',
+	   ',',
+	   'B2'
+	)
+	~	g pollutant/BTU
+	~		|
+
+RFMSoFF Recycled Feedstock Maximum Share of Fossil Feedstock=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/_chemicals/RFI/RFMSoFF.csv',
+	   ',',
+	   'B2'
+	)
+	~	Dmnl
+	~	Plastic waste available for chemical recycling, as a share of chemicals fossil \
+		feedstock outside the syngas routes.
+	|
+
+RFPCpU Recycled Feedstock Process CO2 per Unit Feedstock=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/_chemicals/RFI/RFPCpU.csv',
+	   ',',
+	   'B2'
+	)
+	~	g pollutant/BTU
+	~		|
+
+RFPpU Recycled Feedstock Price per Unit Energy=
+	GET DIRECT CONSTANTS(
+	   'InputData/indst/_chemicals/RFI/RFPpU.csv',
+	   ',',
+	   'B2'
+	)
+	~	$/BTU
 	~		|
 
 RHFF Recipient Heat Fuel Fractions[Source Industrial Fuel,Target Industrial Fuel]=
@@ -82973,8 +83294,8 @@ Cement (continued)
 10,255,Required Green Share of Hydrogen Demand by Sector,-1080,-163,79,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,256,Required Low Carbon Share of Hydrogen Demand by Sector,-823,-163,79,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,257,Boolean Use Non BAU Elec Portfolio Qualifying Definitions,-676,546,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
-10,258,Fraction of Chemicals Syngas Vent CO2 Avoided by Hydrogen Injection,790,851,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
-10,259,Fraction of Chemicals Stack Process CO2 Abated by Electrified Heat,790,921,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,258,Fraction of Chemicals Syngas Vent CO2 Avoided by Hydrogen Injection,705,851,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,259,Fraction of Chemicals Stack Process CO2 Abated by Electrified Heat,705,921,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
 12,260,0,790,778,160,28,3,135,0,12,-1,2,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
 Chemicals
 12,261,0,-1263,445,12,16,3,135,0,12,-1,2,0,0,-1--1--1,255-128-192,|16||0-0-0,0,0,0,0,0,0
@@ -83034,7 +83355,8 @@ Chemicals Purchase Commitment and Intensity Standard
 10,305,Chemicals CO2e Intensity Standard,-899,4140,75,20,8,3,0,4,0,0,0,0,-1--1--1,128-192-255,|||0-0-0,0,0,0,0,0,0
 10,306,Chemicals Intensity Standard Price Ceiling,-639,4140,75,27,8,3,0,4,0,0,0,0,-1--1--1,128-192-255,|||0-0-0,0,0,0,0,0,0
 10,307,Boolean Steel Procurement Threshold Relative to Fleet,3108,-1028,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
-10,308,Fraction of Chemicals Diffuse Feedstock CO2 Avoided by Bio Feedstock,790,991,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,308,Fraction of Chemicals Diffuse Feedstock CO2 Avoided by Bio Feedstock,875,851,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,309,Recycled Content Share of Chemicals Fossil Feedstock,875,921,75,30,8,131,0,0,-1,0,0,0,0,0,0,0,0,0
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Control Settings
@@ -84078,6 +84400,10 @@ Scheduling the Chemicals Commitment and Intensity Standard
 10,892,Fraction of Chemicals Diffuse Feedstock CO2 Avoided by Bio Feedstock This Year,1851,3952,75,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,893,891,892,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,894,1,892,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,895,Recycled Content Share of Chemicals Fossil Feedstock,1512,4027,75,30,8,2,0,5,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,896,Recycled Content Share of Chemicals Fossil Feedstock This Year,1851,4027,75,30,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,897,895,896,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,898,1,896,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Transportation - Main
@@ -98872,6 +99198,20 @@ Pricing Imports at the Pollution Border Fee
 1,1833,1828,293,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1834,1829,293,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1835,1830,20,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1836,Chemicals Fossil Feedstock Avoided by Recycled Feedstock,340,3489,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1837,1836,1509,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1838,Chemicals Diffuse CO2 Avoided by Recycled Feedstock,2640,4180,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1839,1838,293,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1840,BAU Chemicals Diffuse CO2 Avoided by Recycled Feedstock,2320,3900,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1841,1840,293,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1842,Chemicals Recycled Feedstock Waste Industry CO2 Change,2560,4440,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1843,1842,293,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1844,BAU Chemicals Recycled Feedstock Waste Industry CO2 Change,2560,4020,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1845,1844,293,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1846,BAU Chemicals Diffuse CO2 Avoided by Recycled Feedstock,2800,4420,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1847,1846,20,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1848,BAU Chemicals Recycled Feedstock Waste Industry CO2 Change,3060,4280,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1849,1848,20,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Industry - Cement
@@ -103748,6 +104088,157 @@ BAU twins: bio feedstock at BAU prices
 1,603,602,85,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,604,CFPR Chemicals Feedstock Price Ratio,-820,2525,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,605,604,190,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,606,0,4310,920,910,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+Replacing Fossil Feedstock with Recycled Plastic Feedstock
+12,607,0,4961,1449,230,55,8,135,0,4,-1,0,0,0,-1--1--1,255-255-128,|||0-0-0,0,0,0,0,0,0
+Oil made by pyrolysis of plastic waste replaces part of the fossil feedstock, up to the plastic waste available. The oil is bought from the water and waste industry, which runs the pyrolysis plants and emits their CO2. Each region sets how much its inventory credits: the feedstock-oxidation CO2 no longer counted, and plastic no longer burned without energy recovery. For the U.S. both are zero.
+10,608,RFMSoFF Recycled Feedstock Maximum Share of Fossil Feedstock,3765,1162,75,34,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,609,Chemicals Recycled Feedstock Share of Fossil Feedstock,3765,1277,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,610,RFDCCS Recycled Feedstock Diffuse CO2 Credit Share,4025,1047,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,611,Chemicals Diffuse CO2 Avoided by Recycled Feedstock,4025,1162,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,612,Chemicals Fossil Feedstock Avoided by Recycled Feedstock,4025,1277,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,613,Chemicals Fossil Feedstock Converted to Recycled Feedstock,4025,1392,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,614,RFPCpU Recycled Feedstock Process CO2 per Unit Feedstock,4285,1288,75,34,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,615,RFICApU Recycled Feedstock Incineration CO2 Avoided per Unit Feedstock,4545,1288,75,41,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,616,Chemicals Recycled Feedstock Waste Industry CO2 Change,4285,1392,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,617,Chemicals Recycled Feedstock Net CO2 Credited,4545,1162,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,618,Chemicals Recycled Feedstock Net CO2 Credit per Ton of Diffuse CO2,4805,1162,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,619,RFPpU Recycled Feedstock Price per Unit Energy,4285,1610,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,620,Chemicals Recycled Feedstock Purchase Spending,4285,1507,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,621,Change in Chemicals Recycled Feedstock Purchase Spending,4545,1507,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,622,Last Year Chemicals Fossil Feedstock Converted to Recycled Feedstock,3765,1507,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,623,Chemicals Recycled Feedstock Capital Cost,4025,1610,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,624,RFCCpU Recycled Feedstock Capital Cost per Unit Annual Feedstock,3765,1668,75,34,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,625,Chemicals Recycled Feedstock Capital Cost by Industry and Process,4025,1725,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,626,Chemicals Fossil Feedstock per Ton of Diffuse CO2,3765,1392,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,627,BAU Chemicals Process CO2 by Pool,3765,1047,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,628,Grams per Metric Ton Pollutant,4285,1219,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,629,Percent Change in Production due to Policies,4285,1047,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
+10,630,BAU Chemicals Process CO2 by Pool,3505,1507,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,631,Grams per Metric Ton Pollutant,4285,1794,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,632,RFDCCS Recycled Feedstock Diffuse CO2 Credit Share,4805,1047,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,633,Chemicals Fossil Feedstock per Ton of Diffuse CO2,4805,1277,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,634,Grams per Metric Ton Pollutant,4545,1047,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,635,Chemicals Abatement Option Converted Fraction Including This Year,3505,1277,75,34,8,2,0,7,-1,0,0,0,128-128-128,128-192-255,|||128-128-128,0,0,0,0,0,0
+10,636,Chemicals Fossil Feedstock Converted to Recycled Feedstock,3505,1622,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,637,RFICApU Recycled Feedstock Incineration CO2 Avoided per Unit Feedstock,4545,1392,75,41,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,638,Percent Change in Production due to Policies,4545,1622,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
+10,639,BAU Chemicals Recycled Feedstock Purchase Spending,4805,1622,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,640,608,609,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,641,609,611,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,642,610,611,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,643,609,612,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,644,609,613,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,645,613,623,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,646,622,623,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,647,624,623,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,648,623,625,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,649,613,616,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,650,614,616,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,651,613,620,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,652,619,620,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,653,611,617,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,654,620,621,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,655,615,618,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,656,614,618,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,657,626,612,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,658,627,612,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,659,628,612,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,660,629,612,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,661,626,613,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,662,630,613,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,663,631,613,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,664,632,618,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,665,633,618,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,666,634,618,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,667,635,609,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,668,636,622,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,669,627,611,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,670,637,616,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,671,638,620,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,672,616,617,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,673,639,621,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,674,0,4025,2020,625,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|16||0-0-0,0,0,0,0,0,0
+BAU twins: recycled feedstock at BAU prices
+10,675,BAU Chemicals Recycled Feedstock Share of Fossil Feedstock,3765,2377,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,676,BAU Chemicals Diffuse CO2 Avoided by Recycled Feedstock,4025,2262,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,677,BAU Chemicals Fossil Feedstock Avoided by Recycled Feedstock,4025,2377,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,678,BAU Chemicals Fossil Feedstock Converted to Recycled Feedstock,4025,2492,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,679,BAU Chemicals Recycled Feedstock Waste Industry CO2 Change,4285,2492,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,680,BAU Chemicals Recycled Feedstock Purchase Spending,4285,2607,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,681,BAU Last Year Chemicals Fossil Feedstock Converted to Recycled Feedstock,3765,2607,75,41,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,682,BAU Chemicals Recycled Feedstock Capital Cost,4025,2710,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,683,BAU Chemicals Recycled Feedstock Capital Cost by Industry and Process,4025,2825,75,34,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,684,Chemicals Fossil Feedstock per Ton of Diffuse CO2,4285,2262,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,685,BAU Chemicals Process CO2 by Pool,4285,2147,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,686,Grams per Metric Ton Pollutant,4285,2377,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,687,Chemicals Fossil Feedstock per Ton of Diffuse CO2,3765,2492,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,688,BAU Chemicals Process CO2 by Pool,4285,2722,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,689,BAU Chemicals Abatement Option Converted Fraction Including This Year,3765,2262,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,690,RFMSoFF Recycled Feedstock Maximum Share of Fossil Feedstock,3505,2377,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,691,RFDCCS Recycled Feedstock Diffuse CO2 Credit Share,4025,2147,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,692,RFPCpU Recycled Feedstock Process CO2 per Unit Feedstock,4545,2377,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,693,RFICApU Recycled Feedstock Incineration CO2 Avoided per Unit Feedstock,4545,2262,75,41,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,694,BAU Chemicals Fossil Feedstock Converted to Recycled Feedstock,3765,2722,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,695,RFCCpU Recycled Feedstock Capital Cost per Unit Annual Feedstock,3765,2825,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+10,696,RFPpU Recycled Feedstock Price per Unit Energy,4545,2492,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,697,675,676,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,698,675,677,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,699,675,678,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,700,678,682,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,701,681,682,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,702,682,683,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,703,678,679,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,704,678,680,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,705,684,677,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,706,685,677,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,707,686,677,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,708,687,678,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,709,688,678,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,710,686,678,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,711,689,675,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,712,690,675,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,713,685,676,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,714,691,676,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,715,692,679,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,716,693,679,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,717,694,681,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,718,695,682,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,719,696,680,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,720,Chemicals Recycled Feedstock Net CO2 Credit per Ton of Diffuse CO2,35,1585,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,721,720,87,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,722,RFPpU Recycled Feedstock Price per Unit Energy,-295,1720,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,723,722,87,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,724,RFCCpU Recycled Feedstock Capital Cost per Unit Annual Feedstock,-220,1165,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,725,724,87,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,726,Chemicals Recycled Feedstock Net CO2 Credit per Ton of Diffuse CO2,-895,1514,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,727,726,85,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,728,RFPpU Recycled Feedstock Price per Unit Energy,-10,2640,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,729,728,192,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,730,RFCCpU Recycled Feedstock Capital Cost per Unit Annual Feedstock,-220,2190,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,731,730,192,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,732,Chemicals Recycled Feedstock Net CO2 Credit per Ton of Diffuse CO2,-970,2175,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,733,732,190,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,734,Recycled Content Share of Chemicals Fossil Feedstock This Year,2115,1159,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,735,734,137,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,736,RFMSoFF Recycled Feedstock Maximum Share of Fossil Feedstock,1880,1360,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,737,736,137,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,738,RFMSoFF Recycled Feedstock Maximum Share of Fossil Feedstock,-1170,6915,75,34,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
+1,739,738,340,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,740,Chemicals Diffuse CO2 Avoided by Recycled Feedstock,1960,450,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,741,740,55,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,742,Chemicals Recycled Feedstock Net CO2 Credited,-975,5657,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,743,742,327,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,744,Chemicals Recycled Feedstock Share of Fossil Feedstock,2963,488,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,745,744,484,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,746,BAU Chemicals Recycled Feedstock Share of Fossil Feedstock,1105,2256,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,747,746,535,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,748,Chemicals Recycled Feedstock Capital Cost by Industry and Process,3873,809,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,749,748,493,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,750,BAU Chemicals Recycled Feedstock Capital Cost by Industry and Process,2015,2597,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,751,750,542,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,752,BAU Chemicals Fossil Feedstock Avoided by Recycled Feedstock,1335,3780,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,753,752,304,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Industry - BAU
@@ -105785,6 +106276,12 @@ Reducing the Electricity Price for Chosen Industries
 1,1330,1326,329,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1331,1327,465,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,1332,1323,330,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1333,Change in Chemicals Recycled Feedstock Purchase Spending,11088,6497,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1334,1333,101,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1335,Change in Chemicals Recycled Feedstock Purchase Spending,15790,6603,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1336,1335,1270,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1337,Recycled Feedstock Purchase Share by Recipient ISIC Code,15790,6683,75,34,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+1,1338,1337,1270,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *District Heating
@@ -108425,6 +108922,8 @@ or average profit over 2 years or something in case fuel prices jump around
 1,708,707,435,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,709,BAU Chemicals Diffuse CO2 Avoided by Bio Feedstock,2510,-1419,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,710,709,667,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,711,BAU Chemicals Diffuse CO2 Avoided by Recycled Feedstock,3200,-1580,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,712,711,667,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Geoengineering
@@ -115258,6 +115757,10 @@ Fuel Use by End Use
 1,2285,2284,2255,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,2286,BAU Chemicals Diffuse CO2 Avoided by Bio Feedstock,18082,6210,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,2287,2286,2255,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,2288,Chemicals Diffuse CO2 Avoided by Recycled Feedstock,18277,6410,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,2289,2288,2255,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,2290,BAU Chemicals Diffuse CO2 Avoided by Recycled Feedstock,18212,6130,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,2291,2290,2255,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Debugging Assistance
