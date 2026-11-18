@@ -12579,6 +12579,10 @@ PolicyElements = (
     ("Schedule 1",(2025,0),(2026,0),(2050,1)),
     ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
   ),
+  (("indst chemicals abatement payment","recycled feedstock"),
+    ("Schedule 1",(2025,0),(2026,0),(2050,1)),
+    ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
+  ),
   (("indst chemicals purchase commitment"),
     ("Schedule 1",(2025,0),(2026,0),(2050,1)),
     ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
@@ -12588,6 +12592,10 @@ PolicyElements = (
     ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
   ),
   (("indst chemicals bio feedstock"),
+    ("Schedule 1",(2025,0),(2026,0),(2050,1)),
+    ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
+  ),
+  (("indst chemicals recycled feedstock"),
     ("Schedule 1",(2025,0),(2026,0),(2050,1)),
     ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
   ),
@@ -13025,3 +13033,7 @@ if CheckForScheduleErrors() == 0:
 # element (the payment schedule is read by position in Chemicals Abatement Option order), and appended
 # 'indst chemicals bio feedstock' for 'Fraction of Chemicals Diffuse Feedstock CO2 Avoided by Bio Feedstock'.
 # Schedules copy the clean-materials levers.
+
+# NOTE (2026-11-18): inserted 'indst chemicals abatement payment','recycled feedstock' after the bio feedstock element
+# (read by position) and appended 'indst chemicals recycled feedstock' for 'Recycled Content Share of Chemicals Fossil
+# Feedstock'. Schedules copy the clean-materials levers.
