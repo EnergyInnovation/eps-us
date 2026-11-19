@@ -1049,7 +1049,14 @@ Amount Spent on Industry Fuels[Industry Category,Industrial Fuel]=
 	    + Flared Byproduct Fuel[Industry Category,Industrial Fuel])
 	  * Industrial Fuel Carbon Tax Amount per Unit Energy[Industry Category,Industrial Fuel]
 	
-	+ Industrial Fuel Use for Non Energy Purposes[Industry Category,Industrial Fuel]
+	+ (
+	    Industrial Fuel Use for Non Energy Purposes[Industry Category,Industrial Fuel]
+	    - (Change in Industrial Feedstock Use due to Chemicals Levers[Industry Category,Industrial Fuel\
+		]
+	       - BAU Change in Industrial Feedstock Use due to Chemicals Levers[Industry Category\
+		,Industrial Fuel])
+	    * (1 - Industrial Feedstock Price Ratio[Industry Category,Industrial Fuel])
+	  )
 	  * (
 	      Industrial Fuel Cost per Unit Energy[Industry Category,Industrial Fuel]
 	      - Industrial Fuel Carbon Tax Amount per Unit Energy[Industry Category,Industrial Fuel\
@@ -1058,7 +1065,12 @@ Amount Spent on Industry Fuels[Industry Category,Industrial Fuel]=
 	    )
 	~	$
 	~	Feedstock outside the national biomass market (corn for ethanol) does not \
-		pay the biomass supply-curve price increase.
+		pay the biomass supply-curve price increase. Feedstock the chemicals \
+		abatement options add or remove beyond BAU is valued at the price the \
+		industry actually pays for feedstock (see Industrial Feedstock Price \
+		Ratio). All other feedstock, including changes that follow production, \
+		keeps the delivered price, so BAU cash flows and the unit cost of \
+		feedstock are unchanged.
 	|
 
 Amount Spent on New Building Components[Building Type,Building Component]=
@@ -6428,6 +6440,12 @@ BAU Chemicals Bio Feedstock Capital Cost by Industry and Process[Industry Catego
 BAU Chemicals Bio Feedstock Capital Cost by Industry and Process[chemicals 20,other processes\
 		]=
 	BAU Chemicals Bio Feedstock Capital Cost
+	~	$
+	~		|
+
+BAU Chemicals Bio Feedstock Operating Cost=
+	SUM(BAU Chemicals Fossil Feedstock Avoided by Bio Feedstock[Industrial Fuel!])
+	* BFOCpUFFR Bio Feedstock Operating Cost per Unit Fossil Feedstock Replaced
 	~	$
 	~		|
 
@@ -30481,8 +30499,8 @@ CFPR Chemicals Feedstock Price Ratio[Industrial Fuel]:INTERPOLATE::=
 	)
 	~	Dmnl
 	~	Chemical plants buy feedstock at hub prices, mostly ethane in the U.S., well below the \
-		delivered industrial price the model gives the fuel. Used only where the chemicals \
-		module values the fossil feedstock that bio feedstock would replace.
+		delivered industrial price the model gives the fuel. Prices chemicals feedstock \
+		purchases and the fossil feedstock that bio and recycled feedstock replace.
 	|
 
 CGSCR Credit Guarantee Subsidy Cost Rate=
@@ -31058,6 +31076,12 @@ Change in CES Costs=
 	~		~	:SUPPLEMENTARY 
 	|
 
+Change in Chemicals Bio Feedstock Operating Cost=
+	Chemicals Bio Feedstock Operating Cost
+	- BAU Chemicals Bio Feedstock Operating Cost
+	~	$
+	~		|
+
 Change in Chemicals Intensity Standard Compliance Price=
 	IF THEN ELSE(
 	  Chemicals CO2e Intensity Standard This Year > 0,
@@ -31067,9 +31091,12 @@ Change in Chemicals Intensity Standard Compliance Price=
 	    MAX(
 	      - Chemicals Intensity Standard Compliance Price / One Year,
 	      CISPAR Chemicals Intensity Standard Price Adjustment Rate
-	      * Chemicals CO2e Intensity Standard Gap
 	      * IF THEN ELSE(Chemicals CO2e Intensity Standard Gap < 0,
-	          CISPDF Chemicals Intensity Standard Price Downward Adjustment Fraction, 1))),
+	          CISPDF Chemicals Intensity Standard Price Downward Adjustment Fraction
+	          * MIN(0,
+	              Chemicals CO2e Intensity Standard Gap
+	              + CISPDB Chemicals Intensity Standard Price Deadband),
+	          Chemicals CO2e Intensity Standard Gap))),
 	  - Chemicals Intensity Standard Compliance Price / One Year)
 	~	$/(metric ton CO2e*Year)
 	~		|
@@ -34278,7 +34305,8 @@ Chemicals Abatement Option Policy Driven Conversion Rate[Chemicals Abatement Opt
 
 Chemicals Abatement Option Process CO2 Reachable[recycled feedstock]=
 	BAU Chemicals Process CO2 by Pool[diffuse feedstock oxidation]
-	* RFMSoFF Recycled Feedstock Maximum Share of Fossil Feedstock ~~|
+	* RFMSoFF Recycled Feedstock Maximum Share of Fossil Feedstock
+	* MAX(0, Chemicals Recycled Feedstock Net CO2 Credit per Ton of Diffuse CO2) ~~|
 Chemicals Abatement Option Process CO2 Reachable[bio feedstock]=
 	BAU Chemicals Process CO2 by Pool[diffuse feedstock oxidation] ~~|
 Chemicals Abatement Option Process CO2 Reachable[hydrogen injection]=
@@ -34286,7 +34314,11 @@ Chemicals Abatement Option Process CO2 Reachable[hydrogen injection]=
 Chemicals Abatement Option Process CO2 Reachable[electrified heat]=
 	BAU Chemicals Process CO2 by Pool[other stack]
 	~	g pollutant
-	~		|
+	~	Reported process CO2 each option avoids at full conversion, which sizes \
+		purchase commitments. Commitments buy reported tons only, so recycled \
+		feedstock counts its net inventory credit and fills none of a commitment \
+		where the region's inventory does not credit it.
+	|
 
 Chemicals Abatement Option Share of Decisions That Convert[Chemicals Abatement Option\
 		]=
@@ -34393,6 +34425,14 @@ Chemicals Bio Feedstock Capital Cost by Industry and Process[chemicals 20,other 
 	~	$
 	~		|
 
+Chemicals Bio Feedstock Operating Cost=
+	SUM(Chemicals Fossil Feedstock Avoided by Bio Feedstock[Industrial Fuel!])
+	* BFOCpUFFR Bio Feedstock Operating Cost per Unit Fossil Feedstock Replaced
+	~	$
+	~	Yearly running cost of bio feedstock conversion other than the biomass \
+		itself (the same cost the option's choice uses).
+	|
+
 Chemicals Biomass Feedstock Added for Bio Feedstock=
 	SUM(Chemicals Fossil Feedstock Avoided by Bio Feedstock[Industrial Fuel!])
 	* BpUFFR Biomass per Unit Fossil Feedstock Replaced
@@ -34471,15 +34511,25 @@ Chemicals Commitment Premium Paid by Government=
 	~	$
 	~		|
 
-Chemicals Commitment Premium per Ton CO2[Chemicals Abatement Option]=
+Chemicals Commitment Premium per Ton CO2[Chemicals Abatement Option] :EXCEPT: [recycled feedstock\
+		]=
 	MAX(0,
 	  Chemicals Abatement Option Cost of Converting per Ton CO2[Chemicals Abatement Option\
 		]
 	  - Chemicals Abatement Option Cost of Not Converting per Ton CO2[Chemicals Abatement Option\
 		]
-	)
+	) ~~|
+Chemicals Commitment Premium per Ton CO2[recycled feedstock]=
+	ZIDZ(
+	  MAX(0,
+	    Chemicals Abatement Option Cost of Converting per Ton CO2[recycled feedstock]
+	    - Chemicals Abatement Option Cost of Not Converting per Ton CO2[recycled feedstock]),
+	  MAX(0, Chemicals Recycled Feedstock Net CO2 Credit per Ton of Diffuse CO2))
 	~	$/metric ton
-	~		|
+	~	Premium per reported ton. Recycled feedstock costs are per ton of the \
+		diffuse pool converted, so its premium is divided by the reported tons \
+		each converted ton earns.
+	|
 
 Chemicals Diffuse CO2 Avoided by Bio Feedstock=
 	BAU Chemicals Process CO2 by Pool[diffuse feedstock oxidation]
@@ -34538,6 +34588,20 @@ Chemicals Electrified Heat Investment Subsidy Rate=
 	  * Industrial Fuel Eligibility for Clean Heat Investment Subsidy[electricity if])
 	~	Dmnl
 	~		|
+
+Chemicals Feedstock Option Running Cost by Industry[Industry Category] :EXCEPT: [chemicals 20\
+		]=
+	0 ~~|
+Chemicals Feedstock Option Running Cost by Industry[chemicals 20]=
+	Change in Chemicals Bio Feedstock Operating Cost
+	+ Change in Chemicals Recycled Feedstock Purchase Spending
+	~	$
+	~	Running costs of the bio and recycled feedstock options that are not \
+		fuel purchases: bio conversion operating cost and pyrolysis oil bought \
+		from the waste industry. They enter the industry's capital and O&M \
+		spending in the cash flows; this variable adds them to chemicals' unit \
+		cost signal.
+	|
 
 Chemicals Fossil Feedstock Avoided by Bio Feedstock[Industrial Fuel]=
 	MIN(
@@ -34697,12 +34761,17 @@ Chemicals Intensity Standard Price Ceiling in Dollars=
 
 Chemicals Intensity Standard Rebate=
 	Chemicals Intensity Standard Compliance Price
-	* Chemicals CO2e Intensity Standard Target
-	* Last Year Output by ISIC Code[ISIC 20]
+	* MIN(
+	    Chemicals CO2e Intensity Standard Target
+	    * Last Year Output by ISIC Code[ISIC 20],
+	    Industrial Sector CO2e Emissions[chemicals 20]
+	    / Grams per Metric Ton CO2e)
 	~	$
 	~	Output-based rebate at the target intensity: with the compliance charge \
 		on actual emissions, the industry pays only for emissions above the \
-		standard and is paid for emissions below it.
+		standard. The rebate never exceeds the charge: when the industry as a \
+		whole is below the standard there is no one inside the program to buy \
+		its surplus credits, so the surplus is banked rather than paid out.
 	|
 
 Chemicals Natural Gas Displaced by Freed Off Gas by Industry[Industry Category] :EXCEPT:\
@@ -34987,16 +35056,25 @@ CISPAR Chemicals Intensity Standard Price Adjustment Rate=
 		it faster but overshoot.
 	|
 
+CISPDB Chemicals Intensity Standard Price Deadband=
+	0.1
+	~	Dmnl [0,0.5,0.01]
+	~	How far below the standard, as a fraction of the target, the industry \
+		can be before the compliance price starts to fall. Inside this band the \
+		price holds, standing in for firms banking a modest surplus for the \
+		tightening years ahead. The band must be wider than the jump in \
+		intensity when the chemicals F-gas and N2O measures switch on or off \
+		(about 7 percent in the U.S.), or the price cycles year to year.
+	|
+
 CISPDF Chemicals Intensity Standard Price Downward Adjustment Fraction=
-	0
+	1
 	~	Dmnl [0,1,0.05]
-	~	The compliance price falls at this fraction of the rate it rises when \
-		the industry is below the standard; 0 = it never falls while the \
-		standard is in force. This stands in for credit banking: firms that \
-		over-comply bank the surplus for the tightening years ahead, so the \
-		price holds. A falling price makes the chemicals F-gas and N2O abatement \
-		measures, which respond to the price at once and in large steps, switch \
-		off and on year to year.
+	~	Once the industry is further below the standard than the deadband, the \
+		compliance price falls at this fraction of the rate it rises, in \
+		proportion to the excess below the band; 0 = it never falls while the \
+		standard is in force. Without a fall, a price that overshot while \
+		emissions lagged would stay high after the industry is far below target.
 	|
 
 CKFSR Cement Kiln Fuel Shift Recipient Fractions[Source Industrial Fuel,Target Industrial Fuel\
@@ -50569,6 +50647,17 @@ Industrial Feedstock Outside the National Biomass Market[refined petroleum and c
 		supply-curve price increase.
 	|
 
+Industrial Feedstock Price Ratio[Industry Category,Industrial Fuel] :EXCEPT: [chemicals 20\
+		,Industrial Fuel]=
+	1 ~~|
+Industrial Feedstock Price Ratio[chemicals 20,Industrial Fuel]=
+	CFPR Chemicals Feedstock Price Ratio[Industrial Fuel]
+	~	Dmnl
+	~	Ratio of the price an industry pays for fuel bought as feedstock to the \
+		delivered industrial price of that fuel. Chemical plants buy feedstock \
+		at hub prices; other industries pay the delivered price.
+	|
+
 Industrial Fuel:
 	electricity if,
 	hard coal if,
@@ -51399,6 +51488,7 @@ Industry Sector Change in Capital and OM Spending[nonenergy industries]=
 	 + SUM(Industry Sector Change in CCS New Capital Eqpt Cost[Industry Category!])
 	 + SUM(Industry Sector Change in CCS OM Cost[Industry Category!])
 	 + Change in Chemicals Recycled Feedstock Purchase Spending
+	 + Change in Chemicals Bio Feedstock Operating Cost
 	~	$
 	~	No OM is charged for thermal batteries, matching the rest of the \
 		industrial equipment fuel choice, which carries no equipment OM.
@@ -60148,6 +60238,7 @@ Normalized Change in Industrial Nonfuel Expenditures[Industry Category ISIC Code
 	      - Change in Industry Sector Carbon Tax Rebates[Industry Category]
 	      - Industry Sector Change in Government Subsidy Amount Paid[Industry Category]
 	      + Net Clean Production Premium Cost by Industry[Industry Category]
+	      + Chemicals Feedstock Option Running Cost by Industry[Industry Category]
 	      + Industry Sector Change in New CCS Capital Eqpt Costs That Are Not Financed[Industry Category\
 		]
 	      + New Measure Capital Expenditures That Are Not Financed[Industry Category]
@@ -71737,12 +71828,14 @@ Share of Chemicals Commitment Premium Paid by Government=
 Share of Chemicals Process CO2 Covered by Purchase Commitments=
 	0
 	~	Dmnl [0,1,0.01]
-	~	Share of the process CO2 that the two chemicals abatement options can \
-		reach (syngas-vent CO2 for hydrogen injection, furnace stack CO2 for \
-		electrified heat) that buyers commit to buy as low-carbon production. It \
-		stands in for an advance market commitment or a procurement program for \
-		low-carbon chemicals; EPS has no chemical products, so the volume is set \
-		in tons of process CO2 avoided rather than tons of product.
+	~	Share of the process CO2 that the chemicals abatement options can reach \
+		(syngas-vent CO2 for hydrogen injection, furnace stack CO2 for \
+		electrified heat, diffuse feedstock CO2 for bio and recycled feedstock, \
+		counting only tons the region's inventory credits) that buyers commit to \
+		buy as low-carbon production. It stands in for an advance market \
+		commitment or a procurement program for low-carbon chemicals; EPS has no \
+		chemical products, so the volume is set in tons of process CO2 avoided \
+		rather than tons of product.
 	|
 
 Share of Chemicals Process CO2 Covered by Purchase Commitments This Year=
@@ -104115,7 +104208,7 @@ Oil made by pyrolysis of plastic waste replaces part of the fossil feedstock, up
 10,628,Grams per Metric Ton Pollutant,4285,1219,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
 10,629,Percent Change in Production due to Policies,4285,1047,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-192-128,|||128-128-128,0,0,0,0,0,0
 10,630,BAU Chemicals Process CO2 by Pool,3505,1507,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,631,Grams per Metric Ton Pollutant,4285,1794,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,631,Grams per Metric Ton Pollutant,3945,1460,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
 10,632,RFDCCS Recycled Feedstock Diffuse CO2 Credit Share,4805,1047,75,27,8,2,0,7,-1,0,0,0,128-128-128,255-128-192,|||128-128-128,0,0,0,0,0,0
 10,633,Chemicals Fossil Feedstock per Ton of Diffuse CO2,4805,1277,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,634,Grams per Metric Ton Pollutant,4545,1047,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
@@ -104239,6 +104332,33 @@ BAU twins: recycled feedstock at BAU prices
 1,751,750,542,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,752,BAU Chemicals Fossil Feedstock Avoided by Recycled Feedstock,1335,3780,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 1,753,752,304,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,754,CISPDB Chemicals Intensity Standard Price Deadband,2039,6839,75,27,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
+10,755,Industrial Sector CO2e Emissions,3040,6755,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,756,Grams per Metric Ton CO2e,3040,6809,75,20,8,2,0,7,-1,0,0,0,128-128-128,192-255-192,|||128-128-128,0,0,0,0,0,0
+10,757,Chemicals Recycled Feedstock Net CO2 Credit per Ton of Diffuse CO2,-750,6690,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,758,Chemicals Recycled Feedstock Net CO2 Credit per Ton of Diffuse CO2,30,6385,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,759,754,388,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,760,755,384,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,761,756,384,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,762,757,340,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,763,758,347,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,764,Chemicals Fossil Feedstock Avoided by Bio Feedstock,4025,1800,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,765,BFOCpUFFR Bio Feedstock Operating Cost per Unit Fossil Feedstock Replaced,4285,1905,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,766,Chemicals Bio Feedstock Operating Cost,4285,1800,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,767,Change in Chemicals Bio Feedstock Operating Cost,4545,1800,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,768,BAU Chemicals Bio Feedstock Operating Cost,4545,1905,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,769,Chemicals Feedstock Option Running Cost by Industry,4805,1800,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,770,BAU Chemicals Bio Feedstock Operating Cost,1820,2170,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,771,BFOCpUFFR Bio Feedstock Operating Cost per Unit Fossil Feedstock Replaced,1820,2090,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,772,764,766,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,773,765,766,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,774,766,767,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,775,768,767,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,776,767,769,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,777,780,769,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,778,536,770,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,779,771,770,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,780,Change in Chemicals Recycled Feedstock Purchase Spending,4805,1905,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Industry - BAU
@@ -106282,6 +106402,18 @@ Reducing the Electricity Price for Chosen Industries
 1,1336,1335,1270,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,1337,Recycled Feedstock Purchase Share by Recipient ISIC Code,15790,6683,75,34,8,3,0,4,0,0,0,0,-1--1--1,255-128-192,|||0-0-0,0,0,0,0,0,0
 1,1338,1337,1270,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1339,Industrial Feedstock Price Ratio,7340,4139,75,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1340,CFPR Chemicals Feedstock Price Ratio,7340,4058,75,30,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1341,Change in Industrial Feedstock Use due to Chemicals Levers,7210,4220,75,25,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1342,1340,1339,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1343,1339,7,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1344,1341,7,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1345,Change in Chemicals Bio Feedstock Operating Cost,11190,6580,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,1346,Chemicals Feedstock Option Running Cost by Industry,11650,5340,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1347,1345,101,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,1348,1346,833,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,1349,BAU Change in Industrial Feedstock Use due to Chemicals Levers,7660,4020,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,1350,1349,7,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *District Heating
