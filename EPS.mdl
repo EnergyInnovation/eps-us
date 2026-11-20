@@ -4307,11 +4307,30 @@ BAU CES Credit Price by Optimization Pass[last pass]= IF THEN ELSE(BAU Highest S
 	~	$/(MW*hour)
 	~		|
 
-BAU CES Eligible for Additional Dispatch[Electricity Timeslice,Hour,Electricity Source\
-		]=
-	IF THEN ELSE(BAU Dispatch or Opportunity Cost per Unit Electricity Output[Electricity Source\
-		]- BAU Last Year Five Year Average Marginal Dispatch Cost by Hour[Electricity Timeslice\
-		,Hour] <= BAU CES Cost Limit for Additional Dispatch, 1, 0)
+BAU CES Pre Round Spare Capacity[Electricity Timeslice,Hour,Electricity Source]=
+	MAX(0, BAU Available Capacity After Guaranteed Dispatch[Electricity Timeslice,Hour,Electricity Source] * One Hour - BAU Zero and Negative Cost Electricity Dispatched to Meet RPS[Electricity Timeslice,Hour,Electricity Source] - BAU Positive Cost Electricity Dispatched to Meet RPS[Electricity Timeslice,Hour,Electricity Source] - BAU Zero And Negative Cost Electricity Dispatched to Meet CES[Electricity Source,Electricity Timeslice,Hour] - BAU Positive Cost Electricity Dispatched to Meet CES[Electricity Timeslice,Hour,Electricity Source] - BAU Additional Electricity Dispatched to Meet RPS[Electricity Timeslice,Hour,Electricity Source])
+	~	MW*hr
+	~		|
+
+BAU CES Pre Round Demand[Electricity Timeslice,Hour,ElecDemand]=
+	QUANTUM(MAX(0, BAU Unmet Electricity Demand before Additional Elec Portfolio Std Dispatch[Electricity Timeslice,Hour] - SUM(BAU Additional Electricity Dispatched to Meet RPS[Electricity Timeslice,Hour,Electricity Source!])),1)
+	~	MW*hr
+	~		|
+
+BAU CES Pre Round Market Price Unadjusted[Electricity Timeslice,Hour]=
+	FIND MARKET PRICE(BAU CES Pre Round Demand[Electricity Timeslice,Hour,demand1],Fixed Electricity Demand Vector[demand1,ptype],
+	BAU CES Pre Round Spare Capacity[Electricity Timeslice,Hour,hard coal es],BAU Power Plant Least Cost Dispatch Parameters as Vector[hard coal es,ptype])
+	~	$/(MW*hour)
+	~		|
+
+BAU CES Pre Round Market Price[Electricity Timeslice,Hour]=
+	IF THEN ELSE(BAU CES Pre Round Demand[Electricity Timeslice,Hour,demand1]*MWhr Tolerance Unit Correction Factor < Tolerance,
+	0, BAU CES Pre Round Market Price Unadjusted[Electricity Timeslice,Hour])
+	~	$/(MW*hour)
+	~		|
+
+BAU CES Eligible for Additional Dispatch[Electricity Timeslice,Hour,Electricity Source]=
+	IF THEN ELSE(BAU Dispatch or Opportunity Cost per Unit Electricity Output[Electricity Source] - BAU CES Pre Round Market Price[Electricity Timeslice,Hour] <= BAU CES Cost Limit for Additional Dispatch, 1, 0)
 	~	Dmnl
 	~		|
 
@@ -13299,11 +13318,30 @@ BAU RPS Credit Price by Optimization Pass[last pass]= IF THEN ELSE(BAU Highest S
 	~	$/(MW*hour)
 	~		|
 
-BAU RPS Eligible for Additional Dispatch[Electricity Timeslice,Hour,Electricity Source\
-		]=
-	IF THEN ELSE(BAU Dispatch or Opportunity Cost per Unit Electricity Output[Electricity Source\
-		]- BAU Last Year Five Year Average Marginal Dispatch Cost by Hour[Electricity Timeslice\
-		,Hour] <= BAU RPS Cost Limit for Additional Dispatch, 1, 0)
+BAU RPS Pre Round Spare Capacity[Electricity Timeslice,Hour,Electricity Source]=
+	MAX(0, BAU Available Capacity After Guaranteed Dispatch[Electricity Timeslice,Hour,Electricity Source] * One Hour - BAU Zero and Negative Cost Electricity Dispatched to Meet RPS[Electricity Timeslice,Hour,Electricity Source] - BAU Positive Cost Electricity Dispatched to Meet RPS[Electricity Timeslice,Hour,Electricity Source] - BAU Zero And Negative Cost Electricity Dispatched to Meet CES[Electricity Source,Electricity Timeslice,Hour] - BAU Positive Cost Electricity Dispatched to Meet CES[Electricity Timeslice,Hour,Electricity Source])
+	~	MW*hr
+	~		|
+
+BAU RPS Pre Round Demand[Electricity Timeslice,Hour,ElecDemand]=
+	QUANTUM(MAX(0, BAU Unmet Electricity Demand before Additional Elec Portfolio Std Dispatch[Electricity Timeslice,Hour]),1)
+	~	MW*hr
+	~		|
+
+BAU RPS Pre Round Market Price Unadjusted[Electricity Timeslice,Hour]=
+	FIND MARKET PRICE(BAU RPS Pre Round Demand[Electricity Timeslice,Hour,demand1],Fixed Electricity Demand Vector[demand1,ptype],
+	BAU RPS Pre Round Spare Capacity[Electricity Timeslice,Hour,hard coal es],BAU Power Plant Least Cost Dispatch Parameters as Vector[hard coal es,ptype])
+	~	$/(MW*hour)
+	~		|
+
+BAU RPS Pre Round Market Price[Electricity Timeslice,Hour]=
+	IF THEN ELSE(BAU RPS Pre Round Demand[Electricity Timeslice,Hour,demand1]*MWhr Tolerance Unit Correction Factor < Tolerance,
+	0, BAU RPS Pre Round Market Price Unadjusted[Electricity Timeslice,Hour])
+	~	$/(MW*hour)
+	~		|
+
+BAU RPS Eligible for Additional Dispatch[Electricity Timeslice,Hour,Electricity Source]=
+	IF THEN ELSE(BAU Dispatch or Opportunity Cost per Unit Electricity Output[Electricity Source] - BAU RPS Pre Round Market Price[Electricity Timeslice,Hour] <= BAU RPS Cost Limit for Additional Dispatch, 1, 0)
 	~	Dmnl
 	~		|
 
@@ -21493,10 +21531,30 @@ CES Credit Price by Optimization Pass[last pass]= IF THEN ELSE(Highest Short CES
 	~	$/(MW*hr)
 	~		|
 
+CES Pre Round Spare Capacity[Electricity Timeslice,Hour,Electricity Source]=
+	MAX(0, Available Capacity After Guaranteed Dispatch[Electricity Timeslice,Hour,Electricity Source] * One Hour - Zero and Negative Cost Electricity Dispatched to Meet RPS[Electricity Timeslice,Hour,Electricity Source] - Positive Cost Electricity Dispatched to Meet RPS[Electricity Timeslice,Hour,Electricity Source] - Zero and Negative Cost Electricity Dispatched to Meet CES[Electricity Source,Electricity Timeslice,Hour] - Positive Cost Electricity Dispatched to Meet CES[Electricity Timeslice,Hour,Electricity Source] - Additional Electricity Dispatched to Meet RPS[Electricity Timeslice,Hour,Electricity Source])
+	~	MW*hr
+	~		|
+
+CES Pre Round Demand[Electricity Timeslice,Hour,ElecDemand]=
+	QUANTUM(MAX(0, Unmet Electricity Demand before Additional Elec Portfolio Std Dispatch[Electricity Timeslice,Hour] - SUM(Additional Electricity Dispatched to Meet RPS[Electricity Timeslice,Hour,Electricity Source!])),1)
+	~	MW*hr
+	~		|
+
+CES Pre Round Market Price Unadjusted[Electricity Timeslice,Hour]=
+	FIND MARKET PRICE(CES Pre Round Demand[Electricity Timeslice,Hour,demand1],Fixed Electricity Demand Vector[demand1,ptype],
+	CES Pre Round Spare Capacity[Electricity Timeslice,Hour,hard coal es],Power Plant Least Cost Dispatch Parameters as Vector[hard coal es,ptype])
+	~	$/(MW*hour)
+	~		|
+
+CES Pre Round Market Price[Electricity Timeslice,Hour]=
+	IF THEN ELSE(CES Pre Round Demand[Electricity Timeslice,Hour,demand1]*MWhr Tolerance Unit Correction Factor < Tolerance,
+	0, CES Pre Round Market Price Unadjusted[Electricity Timeslice,Hour])
+	~	$/(MW*hour)
+	~		|
+
 CES Eligible for Additional Dispatch[Electricity Timeslice,Hour,Electricity Source]=
-	IF THEN ELSE(Dispatch or Opportunity Cost per Unit Electricity Output[Electricity Source\
-		]- Last Year Five Year Average Marginal Dispatch Cost by Hour[Electricity Timeslice\
-		,Hour] <= CES Cost Limit for Additional Dispatch, 1, 0)
+	IF THEN ELSE(Dispatch or Opportunity Cost per Unit Electricity Output[Electricity Source] - CES Pre Round Market Price[Electricity Timeslice,Hour] <= CES Cost Limit for Additional Dispatch, 1, 0)
 	~	Dmnl
 	~		|
 
@@ -50437,10 +50495,30 @@ RPS Credit Price by Optimization Pass[last pass]= IF THEN ELSE(Highest Short RPS
 	~	$/(MW*hr)
 	~		|
 
+RPS Pre Round Spare Capacity[Electricity Timeslice,Hour,Electricity Source]=
+	MAX(0, Available Capacity After Guaranteed Dispatch[Electricity Timeslice,Hour,Electricity Source] * One Hour - Zero and Negative Cost Electricity Dispatched to Meet RPS[Electricity Timeslice,Hour,Electricity Source] - Positive Cost Electricity Dispatched to Meet RPS[Electricity Timeslice,Hour,Electricity Source] - Zero and Negative Cost Electricity Dispatched to Meet CES[Electricity Source,Electricity Timeslice,Hour] - Positive Cost Electricity Dispatched to Meet CES[Electricity Timeslice,Hour,Electricity Source])
+	~	MW*hr
+	~		|
+
+RPS Pre Round Demand[Electricity Timeslice,Hour,ElecDemand]=
+	QUANTUM(MAX(0, Unmet Electricity Demand before Additional Elec Portfolio Std Dispatch[Electricity Timeslice,Hour]),1)
+	~	MW*hr
+	~		|
+
+RPS Pre Round Market Price Unadjusted[Electricity Timeslice,Hour]=
+	FIND MARKET PRICE(RPS Pre Round Demand[Electricity Timeslice,Hour,demand1],Fixed Electricity Demand Vector[demand1,ptype],
+	RPS Pre Round Spare Capacity[Electricity Timeslice,Hour,hard coal es],Power Plant Least Cost Dispatch Parameters as Vector[hard coal es,ptype])
+	~	$/(MW*hour)
+	~		|
+
+RPS Pre Round Market Price[Electricity Timeslice,Hour]=
+	IF THEN ELSE(RPS Pre Round Demand[Electricity Timeslice,Hour,demand1]*MWhr Tolerance Unit Correction Factor < Tolerance,
+	0, RPS Pre Round Market Price Unadjusted[Electricity Timeslice,Hour])
+	~	$/(MW*hour)
+	~		|
+
 RPS Eligible for Additional Dispatch[Electricity Timeslice,Hour,Electricity Source]=
-	IF THEN ELSE(Dispatch or Opportunity Cost per Unit Electricity Output[Electricity Source\
-		]- Last Year Five Year Average Marginal Dispatch Cost by Hour[Electricity Timeslice\
-		,Hour] <= RPS Cost Limit for Additional Dispatch, 1, 0)
+	IF THEN ELSE(Dispatch or Opportunity Cost per Unit Electricity Output[Electricity Source] - RPS Pre Round Market Price[Electricity Timeslice,Hour] <= RPS Cost Limit for Additional Dispatch, 1, 0)
 	~	Dmnl
 	~		|
 
@@ -64549,9 +64627,9 @@ Dispatching More Qualifying Output When the RPS or CES Falls Short
 10,4370,Positive Cost Electricity Dispatched to Meet RPS,-4888,11097,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,4371,Positive Cost Electricity Dispatched to Meet CES,-5158,10867,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,4372,Dispatch or Opportunity Cost per Unit Electricity Output,-4888,10637,75,34,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,4373,Last Year Five Year Average Marginal Dispatch Cost by Hour,-4348,10407,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4373,RPS Pre Round Market Price,-4348,10407,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,4374,Dispatch or Opportunity Cost per Unit Electricity Output,-4888,11327,75,34,8,2,0,7,-1,0,0,0,128-128-128,192-192-192,|||128-128-128,0,0,0,0,0,0
-10,4375,Last Year Five Year Average Marginal Dispatch Cost by Hour,-4348,11557,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4375,CES Pre Round Market Price,-4348,11557,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,4376,Electricity Imports by Hour,-3808,10407,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,4377,Additional Electricity Dispatched to Meet RPS,-3808,11557,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,4378,Electricity Imports by Hour,-4078,11614,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -64753,6 +64831,72 @@ Crediting Plants That Bid at Their Maximum Capacity Factor
 1,4568,2318,4562,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,4569,2332,4562,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,4570,2343,4562,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,4571,0,-2163,10151,780,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+Pricing the Market before Each Additional Dispatch Round
+10,4572,Available Capacity After Guaranteed Dispatch,-2838,10407,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4573,Zero and Negative Cost Electricity Dispatched to Meet RPS,-2838,10522,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4574,Positive Cost Electricity Dispatched to Meet RPS,-2838,10637,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4575,One Hour,-2568,10407,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4576,RPS Pre Round Spare Capacity,-2568,10522,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4577,Zero and Negative Cost Electricity Dispatched to Meet CES,-2568,10637,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4578,Positive Cost Electricity Dispatched to Meet CES,-2298,10407,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4579,Unmet Electricity Demand before Additional Elec Portfolio Std Dispatch,-2028,10292,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4580,RPS Pre Round Demand,-2028,10407,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4581,RPS Pre Round Market Price Unadjusted,-2028,10522,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4582,Fixed Electricity Demand Vector,-2028,10637,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4583,Power Plant Least Cost Dispatch Parameters as Vector,-1758,10637,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4584,RPS Pre Round Market Price,-1758,10522,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4585,MWhr Tolerance Unit Correction Factor,-1488,10637,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4586,Tolerance,-1488,10522,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4587,4572,4576,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4588,4573,4576,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4589,4574,4576,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4590,4575,4576,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4591,4577,4576,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4592,4578,4576,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4593,4579,4580,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4594,4580,4581,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4595,4576,4581,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4596,4582,4581,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4597,4583,4581,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4598,4580,4584,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4599,4581,4584,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4600,4585,4584,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4601,4586,4584,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4602,Available Capacity After Guaranteed Dispatch,-2838,10924,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4603,Zero and Negative Cost Electricity Dispatched to Meet RPS,-2838,11040,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4604,Positive Cost Electricity Dispatched to Meet RPS,-2838,11154,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4605,One Hour,-2568,10924,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4606,CES Pre Round Spare Capacity,-2568,11040,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4607,Zero and Negative Cost Electricity Dispatched to Meet CES,-2568,11154,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4608,Positive Cost Electricity Dispatched to Meet CES,-2298,10924,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4609,Unmet Electricity Demand before Additional Elec Portfolio Std Dispatch,-2028,10810,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4610,CES Pre Round Demand,-2028,10924,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4611,CES Pre Round Market Price Unadjusted,-2028,11040,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4612,Fixed Electricity Demand Vector,-2028,11154,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4613,Power Plant Least Cost Dispatch Parameters as Vector,-1758,11154,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4614,CES Pre Round Market Price,-1758,11040,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4615,MWhr Tolerance Unit Correction Factor,-1488,11154,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4616,Tolerance,-1488,11040,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4617,Additional Electricity Dispatched to Meet RPS,-2298,11154,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4618,Additional Electricity Dispatched to Meet RPS,-2298,10810,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4619,4602,4606,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4620,4603,4606,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4621,4604,4606,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4622,4605,4606,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4623,4607,4606,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4624,4608,4606,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4625,4609,4610,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4626,4610,4611,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4627,4606,4611,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4628,4612,4611,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4629,4613,4611,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4630,4610,4614,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4631,4611,4614,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4632,4615,4614,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4633,4616,4614,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4634,4617,4606,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4635,4618,4610,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Electricity Supply - BAU
@@ -69006,9 +69150,9 @@ Dispatching More Qualifying Output When the RPS or CES Falls Short (BAU)
 10,4126,BAU Positive Cost Electricity Dispatched to Meet RPS,-9782,13896,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,4127,BAU Positive Cost Electricity Dispatched to Meet CES,-9782,13551,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,4128,BAU Dispatch or Opportunity Cost per Unit Electricity Output,-9782,13436,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,4129,BAU Last Year Five Year Average Marginal Dispatch Cost by Hour,-9242,13206,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4129,BAU RPS Pre Round Market Price,-9242,13206,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,4130,BAU Dispatch or Opportunity Cost per Unit Electricity Output,-9782,14126,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
-10,4131,BAU Last Year Five Year Average Marginal Dispatch Cost by Hour,-9242,14356,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4131,BAU CES Pre Round Market Price,-9242,14356,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,4132,BAU Electricity Imports by Hour,-8702,13206,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,4133,BAU Unmet Electricity Demand before Additional Elec Portfolio Std Dispatch,-8702,13781,75,41,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
 10,4134,BAU Additional Electricity Dispatched to Meet RPS,-8702,14356,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
@@ -69214,6 +69358,72 @@ Crediting Plants That Bid at Their Maximum Capacity Factor (BAU)
 1,4328,2082,4322,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,4329,2084,4322,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,4330,2111,4322,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+12,4331,0,-7057,12971,780,22,3,135,0,12,-1,3,0,0,-1--1--1,192-255-255,|18||0-0-0,0,0,0,0,0,0
+Pricing the Market before Each Additional Dispatch Round (BAU)
+10,4332,BAU Available Capacity After Guaranteed Dispatch,-7732,13206,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4333,BAU Zero and Negative Cost Electricity Dispatched to Meet RPS,-7732,13321,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4334,BAU Positive Cost Electricity Dispatched to Meet RPS,-7732,13436,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4335,One Hour,-7462,13206,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4336,BAU RPS Pre Round Spare Capacity,-7462,13321,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4337,BAU Zero And Negative Cost Electricity Dispatched to Meet CES,-7462,13436,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4338,BAU Positive Cost Electricity Dispatched to Meet CES,-7192,13206,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4339,BAU Unmet Electricity Demand before Additional Elec Portfolio Std Dispatch,-6922,13091,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4340,BAU RPS Pre Round Demand,-6922,13206,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4341,BAU RPS Pre Round Market Price Unadjusted,-6922,13321,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4342,Fixed Electricity Demand Vector,-6922,13436,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4343,BAU Power Plant Least Cost Dispatch Parameters as Vector,-6652,13436,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4344,BAU RPS Pre Round Market Price,-6652,13321,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4345,MWhr Tolerance Unit Correction Factor,-6382,13436,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4346,Tolerance,-6382,13321,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4347,4332,4336,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4348,4333,4336,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4349,4334,4336,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4350,4335,4336,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4351,4337,4336,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4352,4338,4336,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4353,4339,4340,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4354,4340,4341,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4355,4336,4341,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4356,4342,4341,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4357,4343,4341,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4358,4340,4344,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4359,4341,4344,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4360,4345,4344,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4361,4346,4344,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,4362,BAU Available Capacity After Guaranteed Dispatch,-7732,13724,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4363,BAU Zero and Negative Cost Electricity Dispatched to Meet RPS,-7732,13838,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4364,BAU Positive Cost Electricity Dispatched to Meet RPS,-7732,13954,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4365,One Hour,-7462,13724,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4366,BAU CES Pre Round Spare Capacity,-7462,13838,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4367,BAU Zero And Negative Cost Electricity Dispatched to Meet CES,-7462,13954,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4368,BAU Positive Cost Electricity Dispatched to Meet CES,-7192,13724,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4369,BAU Unmet Electricity Demand before Additional Elec Portfolio Std Dispatch,-6922,13608,75,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4370,BAU CES Pre Round Demand,-6922,13724,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4371,BAU CES Pre Round Market Price Unadjusted,-6922,13838,75,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4372,Fixed Electricity Demand Vector,-6922,13954,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4373,BAU Power Plant Least Cost Dispatch Parameters as Vector,-6652,13954,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4374,BAU CES Pre Round Market Price,-6652,13838,75,20,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4375,MWhr Tolerance Unit Correction Factor,-6382,13954,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4376,Tolerance,-6382,13838,75,20,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4377,BAU Additional Electricity Dispatched to Meet RPS,-7192,13954,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,4378,BAU Additional Electricity Dispatched to Meet RPS,-7192,13608,75,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,4379,4362,4366,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4380,4363,4366,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4381,4364,4366,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4382,4365,4366,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4383,4367,4366,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4384,4368,4366,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4385,4369,4370,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4386,4370,4371,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4387,4366,4371,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4388,4372,4371,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4389,4373,4371,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4390,4370,4374,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4391,4371,4374,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4392,4375,4374,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4393,4376,4374,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4394,4377,4366,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,4395,4378,4370,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *Electricity Supply - Cash Flow
