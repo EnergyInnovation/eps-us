@@ -2399,10 +2399,6 @@ PolicyElements = (
     ("Schedule 1",(2025,0),(2026,0),(2050,1)),
     ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
   ),
-  (("indst cement carbon price allocation"),
-    ("Schedule 1",(2025,0),(2026,0),(2050,1)),
-    ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
-  ),
   (("indst cement kiln standard"),
     ("Schedule 1",(2025,0),(2026,0),(2050,1)),
     ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
@@ -12298,10 +12294,6 @@ PolicyElements = (
     ("Schedule 1",(2025,0),(2026,0),(2050,1)),
     ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
   ),
-  (("indst steel carbon price allocation"),
-    ("Schedule 1",(2025,0),(2026,0),(2050,1)),
-    ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
-  ),
   (("indst steel furnace standard"),
     ("Schedule 1",(2025,0),(2026,0),(2050,1)),
     ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
@@ -12605,6 +12597,9 @@ PolicyElements = (
   (("indst chemicals recycled feedstock"),
     ("Schedule 1",(2025,0),(2026,0),(2050,1)),
     ("Schedule 2",(2025,0),(2026,0),(2029,0),(2035,1),(2050,1)),
+  ),
+  (("indst non BAU free allocation"),
+    ("Schedule 1",(2025,0),(2026,1),(2050,1)),
   ),
 )
 
@@ -13044,3 +13039,7 @@ if CheckForScheduleErrors() == 0:
 # NOTE (2026-11-18): inserted 'indst chemicals abatement payment','recycled feedstock' after the bio feedstock element
 # (read by position) and appended 'indst chemicals recycled feedstock' for 'Recycled Content Share of Chemicals Fossil
 # Feedstock'. Schedules copy the clean-materials levers.
+
+# NOTE (2026-11-23): removed 'indst cement carbon price allocation' and 'indst steel carbon price allocation'
+# (their levers were replaced by the industry-wide free allocation share) and appended 'indst non BAU free
+# allocation' for 'Boolean Use Non BAU Free Allocation Share': off in 2025, on from 2026 in every schedule.
